@@ -1,0 +1,36 @@
+# Node.js
+node_modules/
+dist/
+build/
+.npm/
+
+# Environment
+.env
+.env.*.local
+*.env.local
+*.envrc
+
+# OS & Editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Go
+bin/
+*.exe
+*.out
+*.test
+*.log
+coverage/
+*.prof
+
+# Dependency/package management
+go.sum
