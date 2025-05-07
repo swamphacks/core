@@ -3,6 +3,7 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
+<<<<<<< HEAD
 import time
 import pathlib
 
@@ -41,3 +42,8 @@ async def on_message(message):
 
 # run the bot
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
+=======
+
+load_dotenv()
+token = os.getenv('DISCORD_TOKEN')
+>>>>>>> 7d89d6c (chore(env): setup development and production python venvs (#2))
