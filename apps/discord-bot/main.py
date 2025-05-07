@@ -4,5 +4,5 @@ import logging
 from dotenv import load_dotenv
 import os
 
-load_dotenv() # loads environment variables from .env file
+load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
