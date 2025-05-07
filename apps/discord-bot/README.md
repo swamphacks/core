@@ -1,7 +1,3 @@
 ### Discord Bot
-
-This is where the discord bot will go. (Hi Stanley!)
-
-You may delete this read me (or not, i don't care!).
-
-Please use virtual envs for development...
+for venv run source .venv/bin/activate if get error about pip commands not found
+(hi alex)
