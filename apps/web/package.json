@@ -11,7 +11,13 @@
     "prepare": "cd ../.. && husky ./apps/web/.husky"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,css,md}": "eslint . && prettier --write --ignore-unknown"
+    "*.{js,jsx,ts,tsx}": [
+      "eslint",
+      "prettier --check"
+    ],
+    "*.{json,css,md}": [
+      "prettier --check"
+    ]
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.5",
