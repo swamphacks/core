@@ -10,8 +10,8 @@ function Index() {
     <div className="p-2">
       <h3>SwampHacks Portal</h3>
       <Button
-        onClick={() => console.log("clicked")}
-        className="bg-blue-300 rounded-md p-2"
+        onClick={() => console.log("Button clicked!")}
+        className="bg-blue-300 rounded-md p-2 cursor-pointer hover:bg-blue-400"
       >
         Click me!
       </Button>
