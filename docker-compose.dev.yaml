@@ -10,6 +10,18 @@ services:
     depends_on:
       - postgres
       - redis
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/web:/app
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - api
 
   postgres:
     image: postgres:17.4
