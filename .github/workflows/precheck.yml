@@ -1,0 +1,51 @@
+name: Code checks
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  web-checks:
+    name: Web Lint & Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run ESLint
+        run: pnpm eslint . --ext .js,.jsx,.ts,.tsx
+
+      - name: Run Prettier
+        run: pnpm prettier . --check
+
+  api-checks:
+    name: Go Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder for API linting
+        run: echo "API linting and formatting will be implemented here"
+
+  discord-bot-checks:
+    name: Discord bot Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder for Discord bot lint + format
+        run: echo "Discord bot linting and formatting will be implemented here"

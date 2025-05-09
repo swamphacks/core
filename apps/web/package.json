@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prepare": "cd ../.. && husky ./apps/web/.husky"
+    "prepare": "cd ../.. && husky ./apps/web/.husky",
+    "format": "prettier --write . && git add --all"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
