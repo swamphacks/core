@@ -34,3 +34,6 @@ coverage/
 
 # Dependency/package management
 go.sum
+
+# Anything Python related
+venv
