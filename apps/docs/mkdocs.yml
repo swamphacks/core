@@ -1,0 +1,37 @@
+site_name: SwampHacks Documentation
+site_url: https://docs.swamphacks.com
+repo_url: https://github.com/swamphacks/core
+repo_name: SwampHacks Core
+docs_dir: src
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/git-alt 
+  palette:
+    primary: green
+  features:
+    - navigation.tabs
+    - navigation.top
+    - navigation.instant
+    - navigation.instant.progress
+    - content.code.copy
+    - content.action.edit
+plugins:
+  - search
+copyright: >
+  Copyright &copy; 2025 SwampHacks
+
+nav:
+  - Home: index.md
+  - Web:
+    - Overview: web/index.md
+    - Features: web/features.md
+  - API:
+    - Overview: api/index.md
+    - Reference: api/reference.md
+  - Discord Bot:
+    - Overview: discord-bot/index.md
+    - Commands: discord-bot/commands.md
+
+extra:
+  generator: false
