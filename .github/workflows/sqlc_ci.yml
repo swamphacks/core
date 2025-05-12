@@ -23,7 +23,7 @@ jobs:
     # Start a PostgreSQL server
     - uses: sqlc-dev/action-setup-postgres@master
       with:
-        postgres-version: "17.4"
+        postgres-version: "17"
       id: postgres
     - run: sqlc vet
       env:
