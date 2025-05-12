@@ -15,6 +15,9 @@ jobs:
 
   vet:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
     steps:
     - uses: actions/checkout@v4
     - uses: sqlc-dev/setup-sqlc@v3
