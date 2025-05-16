@@ -7,7 +7,14 @@ COPY go.mod go.sum ./
 RUN go mod tidy
 
 RUN go install github.com/air-verse/air@latest
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 
 COPY . .
 
-ENTRYPOINT ["air"]
+# Create the entrypoint script
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
+# Set the entrypoint to the script
+ENTRYPOINT ["./entrypoint.sh"]

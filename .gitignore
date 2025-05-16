@@ -6,6 +6,7 @@ build/
 
 # Environment
 .env
+.env.development
 .env.*.local
 *.env.local
 *.envrc
