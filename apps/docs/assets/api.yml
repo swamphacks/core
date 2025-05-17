@@ -1,0 +1,165 @@
+swagger: "2.0"
+info:
+  title: SwampHacks Core API
+  description: API documentation for SwampHacks Core.
+  version: 1.0.0
+host: api.swamphacks.com
+basePath: /v1
+schemes:
+  - https
+paths:
+  /oauth/verify:
+    post:
+      summary: Verify OAuth authentication code
+      description: Accepts an OAuth code and provider to authenticate a user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: OAuth verification parameters
+          required: true
+          schema:
+            type: object
+            required:
+              - code
+              - provider
+            properties:
+              code:
+                type: string
+                description: The authorization code obtained from the OAuth provider
+              provider:
+                type: string
+                description: The OAuth provider name (e.g., 'discord', 'github')
+      responses:
+        200:
+          description: Authentication successful
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              session:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "sess_1234567890abcdef"
+                  expiresAt:
+                    type: string
+                    format: date-time
+              user:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "usr_1234567890abcdef"
+        400:
+          description: Bad request - invalid parameters
+        401:
+          description: Unauthorized - invalid code
+        403:
+          description: Forbidden - provider rejected the request
+        500:
+          description: Internal server error
+
+  /auth/me:
+    get:
+      summary: Get current user information
+      description: Returns the profile information for the currently authenticated user
+      produces:
+        - application/json
+      security:
+        - SessionAuth: []
+      responses:
+        200:
+          description: User details retrieved successfully
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                example: "usr_1234567890abcdef"
+              email:
+                type: string
+                example: "user@example.com"
+              name:
+                type: string
+                example: "John Doe"
+              username:
+                type: string
+                example: "johndoe"
+              avatar:
+                type: string
+                example: "https://cdn.provider.com/avatars/123456.png"
+              roles:
+                type: array
+                items:
+                  type: string
+                  example: "attendee"
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+        401:
+          description: Unauthorized - authentication required
+        403:
+          description: Forbidden - insufficient permissions
+        404:
+          description: Not Found - user does not exist
+        500:
+          description: Internal server error
+
+  /auth/session/me:
+    get:
+      summary: Get current session information
+      description: Returns information about the user's current active session
+      produces:
+        - application/json
+      security:
+        - SessionAuth: []
+      responses:
+        200:
+          description: Session details retrieved successfully
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                example: "sess_1234567890abcdef"
+              userId:
+                type: string
+                example: "usr_1234567890abcdef"
+              createdAt:
+                type: string
+                format: date-time
+              expiresAt:
+                type: string
+                format: date-time
+              lastActiveAt:
+                type: string
+                format: date-time
+              userAgent:
+                type: string
+                example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+              ipAddress:
+                type: string
+                example: "192.168.1.1"
+        401:
+          description: Unauthorized - authentication required
+        404:
+          description: Not Found - session does not exist or has expired
+        500:
+          description: Internal server error
+
+securityDefinitions:
+  SessionAuth:
+    type: apiKey
+    in: header
+    name: Authorization
+    description: Format - "Bearer {session_token}"
