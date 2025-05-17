@@ -39,6 +39,7 @@ jobs:
       - name: Run Prettier
         run: pnpm prettier . --check
 
+
   api-lint:
     name: API Lint
     runs-on: ubuntu-latest
@@ -54,6 +55,7 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: v2.1
+          working-directory: apps/api
 
   discord-bot-checks:
     name: Discord bot Lint & Format
