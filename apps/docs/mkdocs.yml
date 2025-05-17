@@ -21,13 +21,33 @@ plugins:
 copyright: >
   Copyright &copy; 2025 SwampHacks
 
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg  
+
 nav:
-  - Home: index.md
+  - Home:
+    - Introduction: index.md
+    - Getting Started: getting-started.md
   - Web:
     - Overview: web/index.md
     - Features: web/features.md
   - API:
     - Overview: api/index.md
+    - Getting Started: api/getting-started.md
     - Reference: api/reference.md
   - Discord Bot:
     - Overview: discord-bot/index.md
