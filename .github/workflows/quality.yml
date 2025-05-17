@@ -39,12 +39,21 @@ jobs:
       - name: Run Prettier
         run: pnpm prettier . --check
 
-  api-checks:
-    name: Go Lint
+  api-lint:
+    name: API Lint
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
     steps:
-      - name: Placeholder for API linting
-        run: echo "API linting and formatting will be implemented here"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
 
   discord-bot-checks:
     name: Discord bot Lint & Format

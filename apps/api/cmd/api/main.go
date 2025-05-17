@@ -1,26 +1,21 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Request to [GET] / endpoint!")
-	fmt.Fprintf(w, "Hello!\n")
-}
+// @title SwampHacks Core API
+// @version 1.0
+// @description This is the API for SwampHacks. It handles all of the automation and management for SwampHacks's events.
+// @termsOfService https://app.swamphacks.com/terms
 
+// @contact.name API Support
+// @contact.url http://app.swamphacks.com/support
+// @contact.email tech@swamphacks.com
+
+// @host api.swamphacks.com
+// @BasePath /v1
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	http.HandleFunc("/", handler)
-
-	fmt.Println("Server running on 8080")
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		fmt.Println("Error starting server.")
-	}
 }
