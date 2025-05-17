@@ -1,0 +1,92 @@
+basePath: /v1
+definitions:
+  handlers.OAuthVerifyRequest:
+    properties:
+      code:
+        type: string
+      provider:
+        type: string
+    type: object
+  sqlc.AuthUser:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      id:
+        type: string
+      image:
+        type: string
+      name:
+        type: string
+      onboarded:
+        type: boolean
+      updated_at:
+        type: string
+    type: object
+host: api.swamphacks.com
+info:
+  contact:
+    email: tech@swamphacks.com
+    name: API Support
+    url: http://app.swamphacks.com/support
+  description: This is the API for SwampHacks. It handles all of the automation and
+    management for SwampHacks's events.
+  termsOfService: https://app.swamphacks.com/terms
+  title: SwampHacks Core API
+  version: "1.0"
+paths:
+  /auth/me:
+    get:
+      description: Retrieves current user's user information from database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User information
+          schema:
+            $ref: '#/definitions/sqlc.AuthUser'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get authenticated user's information
+      tags:
+      - auth
+  /oauth/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verifies an OAuth code and sets a session token in a cookie
+      parameters:
+      - description: OAuth Verification Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.OAuthVerifyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session token set in cookie
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "401":
+          description: Unauthorized or invalid code
+          schema:
+            type: string
+      summary: Verify OAuth Code
+      tags:
+      - oauth
+swagger: "2.0"
