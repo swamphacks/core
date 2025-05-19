@@ -15,6 +15,8 @@ Before you begin, make sure you have:
 python -m venv .venv
 ```
 
+Make sure to select the path to the interpreter usually located in .venv/bin/pythonX
+
 ## 2. Activate the Environment
 
 ### macOS / Linux
