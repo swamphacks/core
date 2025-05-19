@@ -38,7 +38,7 @@ func NewAPI(log *zerolog.Logger, db *db.DB) {
 	r.Use(middleware.Logger)
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Post("/oauth/verify", hl.OAuthHandler.VerifyOAuth)
+		r.Post("/oauth/verify", hl.AuthHandler.HandleOAuthCallback)
 
 		r.Route("/auth", func(r chi.Router) {
 			r.Use(mw.SessionMiddleware(rdb, db))
