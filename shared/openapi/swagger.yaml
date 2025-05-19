@@ -1,92 +1,81 @@
-basePath: /v1
-definitions:
-  handlers.OAuthVerifyRequest:
-    properties:
-      code:
-        type: string
-      provider:
-        type: string
-    type: object
-  sqlc.AuthUser:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      email_verified:
-        type: boolean
-      id:
-        type: string
-      image:
-        type: string
-      name:
-        type: string
-      onboarded:
-        type: boolean
-      updated_at:
-        type: string
-    type: object
-host: api.swamphacks.com
+openapi: 3.1.0
+x-stoplight:
+  id: zcud8lgb7c4sj
 info:
-  contact:
-    email: tech@swamphacks.com
-    name: API Support
-    url: http://app.swamphacks.com/support
-  description: This is the API for SwampHacks. It handles all of the automation and
-    management for SwampHacks's events.
-  termsOfService: https://app.swamphacks.com/terms
   title: SwampHacks Core API
-  version: "1.0"
+  version: '1.0'
+  summary: 'The API powering SwampHacks, the University of Florida''s flagship hackathon.'
+  description: 'The SwampHacks Core API provides the foundational backend services powering the SwampHacks ecosystem, enabling seamless event management, user authentication, data retrieval, and integrations for hackathon participants, organizers, and partners.'
+  contact:
+    name: Alexander wang
+    url: ''
+    email: alexanderwang@ufl.edu
+  termsOfService: 'https://app.swamphacks.com/terms'
+  license:
+    name: Apache License 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0'
+servers:
+  - url: 'http://localhost:8080'
+    description: Local Development
+  - url: 'https://api.swamphacks.com'
+    description: Production
+  - url: 'https://dev.api.swamphacks.com'
+    description: Staging
 paths:
-  /auth/me:
-    get:
-      description: Retrieves current user's user information from database
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User information
-          schema:
-            $ref: '#/definitions/sqlc.AuthUser'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal server error
-          schema:
-            type: string
-      summary: Get authenticated user's information
-      tags:
-      - auth
-  /oauth/verify:
+  /v1/auth/callback:
     post:
-      consumes:
-      - application/json
-      description: Verifies an OAuth code and sets a session token in a cookie
-      parameters:
-      - description: OAuth Verification Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.OAuthVerifyRequest'
-      produces:
-      - application/json
+      summary: Your POST endpoint
+      tags: []
       responses:
-        "200":
-          description: Session token set in cookie
-          schema:
-            type: string
-        "400":
-          description: Invalid request body
-          schema:
-            type: string
-        "401":
-          description: Unauthorized or invalid code
-          schema:
-            type: string
-      summary: Verify OAuth Code
-      tags:
-      - oauth
-swagger: "2.0"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    code: A008
+                    error: invalid_oauth_params
+                    message: The callbcak query parameters 'code' and/or 'state' was malformed or missing.
+      operationId: post-v1-auth-callback
+      x-stoplight:
+        id: bzvqcbi7yjpv9
+      description: This callback is for OAuth to retrieve the code and state in order to verify and log in a user.
+      security: []
+components:
+  schemas:
+    ErrorResponse:
+      title: ErrorResponse
+      x-stoplight:
+        id: yqeintde5rzg2
+      type: object
+      description: An error response that returns error codes and messages for support and client side.
+      x-internal: false
+      examples:
+        - code: A001
+          error: token_invalid
+          message: 'Your API token was invalid, plese try again.'
+      properties:
+        code:
+          type: string
+          x-stoplight:
+            id: 1mrv1rrphcnip
+        error:
+          type: string
+          x-stoplight:
+            id: sjzi8o7w8wokk
+        message:
+          type: string
+          x-stoplight:
+            id: p096t705rbbb5
+  securitySchemes:
+    sh_session:
+      type: http
+      scheme: basic
+      description: A session id token that persists a logged in state for users.
+  responses: {}
+security:
+  - {}
+  - sh_session: []

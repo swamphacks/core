@@ -8,23 +8,22 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type AuthAccount struct {
-	ID                    uuid.UUID          `json:"id"`
-	UserID                uuid.UUID          `json:"user_id"`
-	ProviderID            string             `json:"provider_id"`
-	AccountID             string             `json:"account_id"`
-	HashedPassword        *string            `json:"hashed_password"`
-	AccessToken           *string            `json:"access_token"`
-	RefreshToken          *string            `json:"refresh_token"`
-	IDToken               *string            `json:"id_token"`
-	AccessTokenExpiresAt  pgtype.Timestamptz `json:"access_token_expires_at"`
-	RefreshTokenExpiresAt pgtype.Timestamptz `json:"refresh_token_expires_at"`
-	Scope                 *string            `json:"scope"`
-	CreatedAt             time.Time          `json:"created_at"`
-	UpdatedAt             time.Time          `json:"updated_at"`
+	ID                    uuid.UUID  `json:"id"`
+	UserID                uuid.UUID  `json:"user_id"`
+	ProviderID            string     `json:"provider_id"`
+	AccountID             string     `json:"account_id"`
+	HashedPassword        *string    `json:"hashed_password"`
+	AccessToken           *string    `json:"access_token"`
+	RefreshToken          *string    `json:"refresh_token"`
+	IDToken               *string    `json:"id_token"`
+	AccessTokenExpiresAt  *time.Time `json:"access_token_expires_at"`
+	RefreshTokenExpiresAt *time.Time `json:"refresh_token_expires_at"`
+	Scope                 *string    `json:"scope"`
+	CreatedAt             time.Time  `json:"created_at"`
+	UpdatedAt             time.Time  `json:"updated_at"`
 }
 
 type AuthSession struct {
