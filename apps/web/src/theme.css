@@ -1,0 +1,56 @@
+:root {
+  --background: oklch(0.9551 0 0);
+  --surface: var(--color-neutral-50);
+  --border: var(--color-zinc-300);
+  --accent-main: var(--color-blue-500);
+
+  /* TEXT */
+  --text-main: var(--color-zinc-900);
+  --text-secondary: var(--color-zinc-600);
+
+  /* BUTTONS */
+  --button-primary: var(--color-blue-500);
+  --button-primary-hover: var(--color-blue-700);
+  --button-primary-disabled: var(--color-blue-300);
+  --button-outline: oklch(0.6187 0.2067 259.23 / 25%);
+  --button-outline-hover: oklch(0.5465 0.2455 262.87 / 25%);
+  --button-outline-disabled: oklch(0.8071 0.10065 250.4462 / 25%);
+}
+
+.dark {
+  --background: var(--color-neutral-900);
+  --surface: var(--color-neutral-800);
+  --border: var(--color-zinc-700);
+  --accent-main: var(--color-blue-400);
+
+  /* TEXT */
+  --text-main: var(--color-zinc-100);
+  --text-secondary: var(--color-zinc-400);
+
+  /* BUTTONS */
+  --button-primary: var(--color-blue-500);
+  --button-primary-hover: var(--color-blue-700);
+  --button-primary-disabled: var(--color-blue-300);
+  --button-outline: oklch(0.6187 0.2067 259.23 / 25%);
+  --button-outline-hover: oklch(0.5465 0.2455 262.87 / 25%);
+  --button-outline-disabled: oklch(0.8071 0.10065 250.4462 / 25%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-accent-main: var(--accent-main);
+
+  --color-text-main: var(--text-main);
+  --color-text-secondary: var(--text-secondary);
+
+  --color-button-primary: var(--button-primary);
+  --color-button-primary-hover: var(--button-primary-hover);
+  --color-button-primary-disabled: var(--button-primary-disabled);
+  --color-button-outline: var(--button-outline);
+  --color-button-outline-hover: var(--button-outline-hover);
+  --color-button-outline-disabled: var(--button-outline-disabled);
+
+  --font-figtree: "Figtree", sans-serif;
+}

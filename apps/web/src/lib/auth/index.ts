@@ -45,7 +45,8 @@ function _signInInternal<T extends AuthConfig>(config: T) {
 
     Cookies.set("oauth_nonce", state.nonce, {
       path: "/",
-      sameSite: "Strict",
+      // Set sameSite to lax so the cookie can be sent when the authorization server redirects to redirect_uri
+      sameSite: "lax",
       secure: true,
     });
 
