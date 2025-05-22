@@ -12,8 +12,6 @@ SPAM_PATTERNS: List[Pattern] = [
     re.compile(r"""
         (?i)
         \bselling\b
-        .{0,60}?
-        (tickets?|passes?|spots?|seats?)
         (.{0,20}?\bfor\b.{0,20}?\$?\d{2,5})?
     """, re.VERBOSE),
 
@@ -62,7 +60,7 @@ class AntiSpam(commands.Cog):
         """
         content: str = message.content
 
-        for pattern in SPAM_PATTERNS:
+        for i, pattern in enumerate(SPAM_PATTERNS):
             if pattern.search(content):
                 return True
             

@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import app_commands
 import discord
-from typing import Optional, Literal
+from typing import Literal
 
 
 class General(commands.Cog):
@@ -12,7 +12,6 @@ class General(commands.Cog):
     - Role management
     - Fun commands
     """
-
     def __init__(self, bot: commands.Bot) -> None:
         """Initialize the General cog
         
@@ -30,6 +29,40 @@ class General(commands.Cog):
         """
         await ctx.send("Testing")
 
+    @app_commands.command(name="delete", description="Delete X amount of messages based on the number you provide")
+    @app_commands.describe(
+        amount="The amount of messages to delete"
+    )
+    async def delete(
+        self,
+        interaction: discord.Interaction,
+        amount: int
+    ) -> None:
+        """Delete X amount of messages based on the number you provide
+        
+        Args:
+            interaction: The interaction that triggered this command
+            amount: The amount of messages to delete
+        """
+        guild = interaction.guild
+        staff_role = discord.utils.get(guild.roles, name="Staff")
+        if not staff_role or staff_role not in interaction.user.roles:
+            await interaction.response.send_message(
+                "You don't have permission to use this command.",
+                ephemeral=True
+            )
+            return
+        
+        # defer the response to avoid 3-second rate limiting (so it doesn't say application did not respond)
+        await interaction.response.defer(ephemeral=True)
+        deleted = await interaction.channel.purge(limit=amount)
+        await interaction.followup.send(
+            f"Deleted {len(deleted)} messages.",
+            ephemeral=True
+        )
+        
+    
+    
     @app_commands.command(
         name="role",
         description="Assign or remove a role from yourself"
@@ -58,8 +91,8 @@ class General(commands.Cog):
             2. Assign or remove the role if conditions are met
             3. Send appropriate feedback messages
         """
-        staff_role = discord.utils.get(interaction.guild.roles, name="Staff")
-
+        guild = interaction.guild
+        staff_role = discord.utils.get(guild.roles, name="Staff")
         if not staff_role or staff_role not in interaction.user.roles:
             await interaction.response.send_message(
                 "You don't have permission to use this command.",

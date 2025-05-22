@@ -16,6 +16,7 @@ handler: logging.FileHandler = logging.FileHandler(
     mode='w'
 )
 logging.basicConfig(
+    #level=logging.INFO,
     level=logging.DEBUG,
     handlers=[handler],
 )
