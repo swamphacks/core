@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Login } from "@/features/auth/components/Login";
+import { Login } from "@/features/common/Auth/components/Login";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <div className="font-[Figtree] flex items-center justify-center pb-20 bg-background">
+    <div className="h-full flex items-center justify-center pb-20">
       <Login />
     </div>
   );
