@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: sqlc-dev/setup-sqlc@v3
         with:
-          sqlc-version: '1.28.0'
+          sqlc-version: '1.29.0'
       - run: sqlc diff
 
   vet:
