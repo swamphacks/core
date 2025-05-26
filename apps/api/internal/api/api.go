@@ -1,48 +1,33 @@
 package api
 
 import (
-	"sync"
-
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
-	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
-	"github.com/swamphacks/core/apps/api/internal/db"
-	"github.com/swamphacks/core/apps/api/internal/db/repository"
-	"github.com/swamphacks/core/apps/api/internal/services"
 )
 
 type API struct {
-	Router *chi.Mux
-	Logger *zerolog.Logger
-	Wg     *sync.WaitGroup
+	Router   *chi.Mux
+	Logger   *zerolog.Logger
+	Handlers *handlers.Handlers
 }
 
-func NewAPI(log *zerolog.Logger, db *db.DB) {
-	// Obviously don't make a new client here..., this is just for testing
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
+func NewAPI(log *zerolog.Logger, handlers *handlers.Handlers) *API {
+	api := &API{
+		Router:   chi.NewRouter(),
+		Logger:   log,
+		Handlers: handlers,
+	}
 
-	ur := repository.NewUserRepository(db)
-	as := services.NewAuthService(ur)
-	hl := handlers.NewHandlers(as)
+	api.setupRoutes()
 
-	r := chi.NewRouter()
-	r.Use(middleware.RealIP)
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
+	return api
+}
 
-	r.Route("/v1", func(r chi.Router) {
-		r.Post("/oauth/verify", hl.AuthHandler.HandleOAuthCallback)
-
+func (api *API) setupRoutes() {
+	api.Router.Route("/v1", func(r chi.Router) {
 		r.Route("/auth", func(r chi.Router) {
-			r.Use(mw.SessionMiddleware(rdb, db))
-			r.Get("/me", hl.AuthHandler.HandleGetMe)
+			r.Post("/callback", api.Handlers.Auth.OAuthCallback)
 		})
 	})
 }

@@ -18,7 +18,7 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 	}
 }
 
-func (h *AuthHandler) HandleGetMe(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	// If no userId here, throw
 	user, err := h.authService.GetMe(r.Context())
 	if err != nil {
@@ -40,7 +40,7 @@ type OAuthCallbackRequest struct {
 	Provider string `json:"provider"`
 }
 
-func (h *AuthHandler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	// This will be query params instead...
 	var req OAuthCallbackRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
