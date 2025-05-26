@@ -2,38 +2,24 @@ package main
 
 import (
 	"net/http"
-	"os"
 
-	"github.com/joho/godotenv"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/swamphacks/core/apps/api/internal/api"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
+	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
+	"github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/services"
 )
 
-func init() {
-
-	if err := godotenv.Load(); err != nil {
-		log.Fatal().Msg("Environment variables failed to load from .env file")
-		os.Exit(1)
-	}
-}
-
 func main() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+	logger := logger.New()
+	cfg := config.Load()
 
-	dbURL, exists := os.LookupEnv("DATABASE_URL")
-	if !exists {
-		logger.Error().Msg("DATABASE_URL not found")
-		os.Exit(1)
-	}
-
-	// Init database connection
-	db := db.NewDB(dbURL)
+	// Init database connection and defer close
+	db := db.NewDB(cfg.DatabaseURL)
+	defer db.Close()
 
 	// Injections into repositories
 	userRepo := repository.NewUserRepository(db)
@@ -46,7 +32,8 @@ func main() {
 
 	api := api.NewAPI(&logger, apiHandlers)
 
-	if err := http.ListenAndServe(":8080", api.Router); err != nil {
+	logger.Info().Msgf("API listening on port %s", cfg.Port)
+	if err := http.ListenAndServe(":"+cfg.Port, api.Router); err != nil {
 		log.Fatal().Msg("Failed to start server.")
 	}
 }

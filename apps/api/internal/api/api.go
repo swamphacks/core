@@ -1,6 +1,8 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
@@ -25,6 +27,15 @@ func NewAPI(log *zerolog.Logger, handlers *handlers.Handlers) *API {
 }
 
 func (api *API) setupRoutes() {
+	api.Router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		api.Logger.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("Received ping.")
+
+		if _, err := w.Write([]byte("pong!\n")); err != nil {
+			return
+		}
+
+	})
+
 	api.Router.Route("/v1", func(r chi.Router) {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/callback", api.Handlers.Auth.OAuthCallback)

@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
-	"time"
 
+	"github.com/rs/zerolog/log"
+	"github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/services"
 )
 
@@ -35,35 +37,87 @@ func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-type OAuthCallbackRequest struct {
-	Code     string `json:"code"`
+// OAuth Callbacks
+type OAuthState struct {
+	Nonce    string `json:"nonce"`
 	Provider string `json:"provider"`
+	Redirect string `json:"redirect"`
 }
 
 func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
-	// This will be query params instead...
-	var req OAuthCallbackRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+	log.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("[HIT]")
+
+	q := r.URL.Query()
+
+	codeParam := q.Get("code")
+	stateParam := q.Get("state")
+
+	// Empty parameters
+	if codeParam == "" || stateParam == "" {
+		res := response.NewError("A100", "invalid_callback", "Missing or malformed code or state in callback")
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	sessionId, err := h.authService.AuthenticateWithOAuth(r.Context(), req.Code, req.Provider)
+	decodedStateBytes, err := base64.URLEncoding.DecodeString(stateParam)
 	if err != nil {
-		http.Error(w, "code was invalid", http.StatusUnauthorized)
+		res := response.NewError("A100", "invalid_callback", "Missing or malformed code or state in callback")
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	cookie := &http.Cookie{
-		Name:     "sh_session",
-		Value:    sessionId,
-		Path:     "/", // Available to entire site
-		Expires:  time.Now().Add(time.Hour * 24 * 30),
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+	var state OAuthState
+	if err := json.Unmarshal(decodedStateBytes, &state); err != nil {
+		res := response.NewError("A100", "invalid_callback", "Missing or malformed code or state in callback")
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+		return
 	}
 
-	http.SetCookie(w, cookie)
+	nonceCookie, err := r.Cookie("sh_auth_nonce")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			res := response.NewError("A102", "nonce_missing", "Nonce cookie missing")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			if err := json.NewEncoder(w).Encode(res); err != nil {
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		http.Error(w, "Unknown error", http.StatusInternalServerError)
+		return
+	}
+
+	if nonceCookie.Value != state.Nonce {
+		res := response.NewError("A101", "nonce_mismatch", "Nonce in state does not match cookie. Possible CSRF attack...")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// At this point, nonce has matched, proceed with remaining authentication services
 	w.WriteHeader(http.StatusOK)
+	if _, err = w.Write([]byte("Try again soon~!")); err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+
 }
