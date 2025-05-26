@@ -1,21 +1,39 @@
 package main
 
 import (
-	"github.com/rs/zerolog"
+	"net/http"
+
+	"github.com/rs/zerolog/log"
+	"github.com/swamphacks/core/apps/api/internal/api"
+	"github.com/swamphacks/core/apps/api/internal/api/handlers"
+	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/db"
+	"github.com/swamphacks/core/apps/api/internal/db/repository"
+	"github.com/swamphacks/core/apps/api/internal/logger"
+	"github.com/swamphacks/core/apps/api/internal/services"
 )
 
-// @title SwampHacks Core API
-// @version 1.0
-// @description This is the API for SwampHacks. It handles all of the automation and management for SwampHacks's events.
-// @termsOfService https://app.swamphacks.com/terms
-
-// @contact.name API Support
-// @contact.url http://app.swamphacks.com/support
-// @contact.email tech@swamphacks.com
-
-// @host api.swamphacks.com
-// @BasePath /v1
 func main() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	logger := logger.New()
+	cfg := config.Load()
 
+	// Init database connection and defer close
+	db := db.NewDB(cfg.DatabaseURL)
+	defer db.Close()
+
+	// Injections into repositories
+	userRepo := repository.NewUserRepository(db)
+
+	// Injections into services
+	authService := services.NewAuthService(userRepo)
+
+	// Injections into handlers
+	apiHandlers := handlers.NewHandlers(authService)
+
+	api := api.NewAPI(&logger, apiHandlers)
+
+	logger.Info().Msgf("API listening on port %s", cfg.Port)
+	if err := http.ListenAndServe(":"+cfg.Port, api.Router); err != nil {
+		log.Fatal().Msg("Failed to start server.")
+	}
 }
