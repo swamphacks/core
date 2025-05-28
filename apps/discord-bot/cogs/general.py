@@ -2,6 +2,7 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 from typing import Literal
+from utils.checks import is_mod_slash
 
 
 class General(commands.Cog):
@@ -33,6 +34,7 @@ class General(commands.Cog):
     @app_commands.describe(
         amount="The amount of messages to delete"
     )
+    @is_mod_slash()
     async def delete(
         self,
         interaction: discord.Interaction,
@@ -44,24 +46,30 @@ class General(commands.Cog):
             interaction: The interaction that triggered this command
             amount: The amount of messages to delete
         """
-        guild = interaction.guild
-        staff_role = discord.utils.get(guild.roles, name="Staff")
-        if not staff_role or staff_role not in interaction.user.roles:
-            await interaction.response.send_message(
-                "You don't have permission to use this command.",
-                ephemeral=True
-            )
-            return
-        
-        # defer the response to avoid 3-second rate limiting (so it doesn't say application did not respond)
         await interaction.response.defer(ephemeral=True)
         deleted = await interaction.channel.purge(limit=amount)
         await interaction.followup.send(
             f"Deleted {len(deleted)} messages.",
             ephemeral=True
         )
-        
     
+    @app_commands.command(name="delete_all_threads", description="Delete all threads in a specified channel")
+    @is_mod_slash()
+    async def delete_all_threads(self, interaction: discord.Interaction, channel: discord.TextChannel) -> None:
+        """Delete all threads in a specified channel
+        
+        Args:
+            interaction: The interaction that triggered this command
+        """
+        guild = interaction.guild
+        if channel not in guild.text_channels:
+            await interaction.response.send_message("Error: Could not find the specified channel.", ephemeral=True)
+            return
+        
+        for thread in channel.threads:
+            await thread.delete()
+        
+        await interaction.response.send_message("All threads have been deleted.", ephemeral=True)
     
     @app_commands.command(
         name="role",
@@ -71,6 +79,7 @@ class General(commands.Cog):
         action="Whether to assign or remove the role",
         role="The role to assign or remove"
     )
+    @is_mod_slash()
     async def manage_role(
         self,
         interaction: discord.Interaction,
@@ -91,18 +100,9 @@ class General(commands.Cog):
             2. Assign or remove the role if conditions are met
             3. Send appropriate feedback messages
         """
-        guild = interaction.guild
-        staff_role = discord.utils.get(guild.roles, name="Staff")
-        if not staff_role or staff_role not in interaction.user.roles:
-            await interaction.response.send_message(
-                "You don't have permission to use this command.",
-                ephemeral=True
-            )
-            return
-
+        # fetch the member to give the role to
         member = await interaction.guild.fetch_member(member.id)
 
-        
         has_role = role in member.roles
 
         if action == "assign":

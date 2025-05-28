@@ -1,33 +1,18 @@
 from discord.ext import commands
-from discord import app_commands, Interaction, Embed, Colour, ButtonStyle
-from discord.ui import View, Button, button
+from discord import app_commands, Interaction, Embed, Colour
 from typing import Literal
-from components.support_modal import SupportModal
-
-
-class SupportView(View):
-    """
-    A view for creating tickets
-    
-    This view includes a button for creating a ticket
-    """
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    @button(label="Contact Support", style=ButtonStyle.primary)
-    async def create_report(self, interaction: Interaction, button: Button):
-        # await interaction.response.send_message("Support ticket created", ephemeral=True)
-        await interaction.response.send_modal(SupportModal())
+from components.open_support_button import OpenSupportButton
+from utils.checks import is_mod_slash
 
 class Support(commands.Cog):
     """
-    A cog for creating and managing tickets
+    A cog for creating and managing support requests
     
     This cog includes commands for:
     - Creating panels
-    - Managing tickets
-    - Closing tickets
-    - Viewing ticket logs
+    - Managing support requests and opening threads
+    - Closing support requests and closing threads
+    - Viewing support request logs
     """
     def __init__(self, bot: commands.Bot) -> None:
         """Initialize the Support cog
@@ -43,13 +28,23 @@ class Support(commands.Cog):
         description="The description of the support panel",
         color="Choose the panel's color"
     )
+    @is_mod_slash()
     async def supportpanel(
         self,
         interaction: Interaction,
         title: str,
         description: str,
         color: Literal["red", "blue", "green", "purple", "orange"]
-    ):
+    ) -> None:
+        """
+        Create a support panel mainly used in the #support channel and restricted to @moderators.
+        
+        Args:
+            interaction: The interaction object
+            title: The title of the support panel
+            description: The description of the support panel
+            color: The color of the support panel
+        """
         color_map = {
             "red": Colour.red(),
             "blue": Colour.blue(),
@@ -57,6 +52,8 @@ class Support(commands.Cog):
             "purple": Colour.purple(),
             "orange": Colour.orange()
         }
+        
+        
 
         embed = Embed(
             title=title,
@@ -64,7 +61,9 @@ class Support(commands.Cog):
             color=color_map[color]
         )
         embed.set_footer(text="Powered by SwampHacksXI")
-        await interaction.response.send_message(embed=embed, view=SupportView())
+        await interaction.response.defer(ephemeral=True)
+        await interaction.delete_original_response()
+        await interaction.channel.send(embed=embed, view=OpenSupportButton())
 
         
 
