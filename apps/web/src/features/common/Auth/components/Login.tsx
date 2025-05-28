@@ -2,6 +2,14 @@ import { DiscordIcon } from "@/components/icons/Discord";
 import { Button } from "@/components/ui/Button";
 import { useTheme } from "@/components/ThemeProvider";
 
+// import Auth from "@/lib/auth";
+// import { Discord } from "@/lib/auth/providers";
+
+// const authClient = Auth({
+//   providers: [Discord],
+//   redirect_uri: "test",
+// });
+
 const Logo = ({ src }: { src: string }) => {
   return <img className="py-5" src={src} alt="SwampHacks Logo" />;
 };
@@ -22,7 +30,13 @@ const Login = () => {
       <p className="text-sm text-text-secondary mt-2">
         Log in to access the SwampHacks Portal.
       </p>
-      <Button className="items-center gap-2 w-[80%] my-4">
+      <Button
+        className="items-center gap-2 w-[80%] my-4"
+        onClick={() => {
+          // authClient.signIn("discord", "previous url");
+          console.log("hi");
+        }}
+      >
         <span>
           <DiscordIcon />
         </span>

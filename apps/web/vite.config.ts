@@ -9,7 +9,11 @@ import path from "path";
 export default defineConfig({
   envPrefix: "SWAMPHACKS",
   plugins: [
-    TanStackRouterVite({ target: "react", autoCodeSplitting: true }),
+    TanStackRouterVite({
+      target: "react",
+      autoCodeSplitting: true,
+      routeToken: "layout",
+    }),
     react(),
     tailwindcss(),
   ],
