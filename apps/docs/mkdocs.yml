@@ -54,6 +54,9 @@ nav:
       - Overview: discord-bot/index.md
       - Installation: discord-bot/installation.md
       - Commands: discord-bot/commands.md
+  - Docs:
+      - Overview: docs/index.md
+      - Installation: docs/installation.md
 
 extra:
   generator: false
