@@ -7,9 +7,9 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createSession = `-- name: CreateSession :one
@@ -19,11 +19,11 @@ RETURNING id, user_id, token, expires_at, ip_address, user_agent, created_at, up
 `
 
 type CreateSessionParams struct {
-	UserID    uuid.UUID          `json:"user_id"`
-	Token     string             `json:"token"`
-	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
-	IpAddress *string            `json:"ip_address"`
-	UserAgent *string            `json:"user_agent"`
+	UserID    uuid.UUID `json:"user_id"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+	IpAddress *string   `json:"ip_address"`
+	UserAgent *string   `json:"user_agent"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (AuthSession, error) {
@@ -130,8 +130,8 @@ WHERE id = $1
 `
 
 type UpdateSessionExpirationParams struct {
-	ID        uuid.UUID          `json:"id"`
-	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	ID        uuid.UUID `json:"id"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 func (q *Queries) UpdateSessionExpiration(ctx context.Context, arg UpdateSessionExpirationParams) error {

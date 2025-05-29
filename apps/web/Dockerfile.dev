@@ -1,5 +1,8 @@
 FROM node:22.15.0-slim AS base
 
+# Set working directory
+WORKDIR /app
+
 # Set environment variables
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -15,9 +18,6 @@ RUN pnpm install
 
 # Copy the rest of the project files
 COPY . .
-
-# Set working directory
-WORKDIR /app
 
 # Expose port
 EXPOSE 5173

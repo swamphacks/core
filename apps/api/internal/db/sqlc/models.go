@@ -5,44 +5,45 @@
 package sqlc
 
 import (
+	"time"
+
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type AuthAccount struct {
-	ID                    uuid.UUID          `json:"id"`
-	UserID                uuid.UUID          `json:"user_id"`
-	ProviderID            string             `json:"provider_id"`
-	AccountID             string             `json:"account_id"`
-	HashedPassword        *string            `json:"hashed_password"`
-	AccessToken           *string            `json:"access_token"`
-	RefreshToken          *string            `json:"refresh_token"`
-	IDToken               *string            `json:"id_token"`
-	AccessTokenExpiresAt  pgtype.Timestamptz `json:"access_token_expires_at"`
-	RefreshTokenExpiresAt pgtype.Timestamptz `json:"refresh_token_expires_at"`
-	Scope                 *string            `json:"scope"`
-	CreatedAt             pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt             pgtype.Timestamptz `json:"updated_at"`
+	ID                    uuid.UUID  `json:"id"`
+	UserID                uuid.UUID  `json:"user_id"`
+	ProviderID            string     `json:"provider_id"`
+	AccountID             string     `json:"account_id"`
+	HashedPassword        *string    `json:"hashed_password"`
+	AccessToken           *string    `json:"access_token"`
+	RefreshToken          *string    `json:"refresh_token"`
+	IDToken               *string    `json:"id_token"`
+	AccessTokenExpiresAt  *time.Time `json:"access_token_expires_at"`
+	RefreshTokenExpiresAt *time.Time `json:"refresh_token_expires_at"`
+	Scope                 *string    `json:"scope"`
+	CreatedAt             time.Time  `json:"created_at"`
+	UpdatedAt             time.Time  `json:"updated_at"`
 }
 
 type AuthSession struct {
-	ID        uuid.UUID          `json:"id"`
-	UserID    uuid.UUID          `json:"user_id"`
-	Token     string             `json:"token"`
-	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
-	IpAddress *string            `json:"ip_address"`
-	UserAgent *string            `json:"user_agent"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+	IpAddress *string   `json:"ip_address"`
+	UserAgent *string   `json:"user_agent"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type AuthUser struct {
-	ID            uuid.UUID          `json:"id"`
-	Name          string             `json:"name"`
-	Email         string             `json:"email"`
-	EmailVerified bool               `json:"email_verified"`
-	Onboarded     bool               `json:"onboarded"`
-	Image         *string            `json:"image"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	ID            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	Email         string    `json:"email"`
+	EmailVerified bool      `json:"email_verified"`
+	Onboarded     bool      `json:"onboarded"`
+	Image         *string   `json:"image"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
