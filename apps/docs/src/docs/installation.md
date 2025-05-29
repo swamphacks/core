@@ -1,7 +1,7 @@
 # Gettings Started
 
 1. Install [mkdocs](https://www.mkdocs.org/user-guide/installation/)
-1. Install the python packages listed in /apps/docs/requirements.txt
+1. Install the python packages listed in core/apps/docs/requirements.txt
 1. Run:
 
 ```bash
