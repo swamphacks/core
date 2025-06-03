@@ -14,10 +14,10 @@ type API struct {
 	Handlers *handlers.Handlers
 }
 
-func NewAPI(log *zerolog.Logger, handlers *handlers.Handlers) *API {
+func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers) *API {
 	api := &API{
 		Router:   chi.NewRouter(),
-		Logger:   log,
+		Logger:   logger,
 		Handlers: handlers,
 	}
 

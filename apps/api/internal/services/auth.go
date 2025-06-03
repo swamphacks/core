@@ -2,9 +2,14 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+)
+
+var (
+	ErrProviderUnsupported = errors.New("this provider is unsupported")
 )
 
 type AuthService struct {
@@ -17,10 +22,17 @@ func NewAuthService(userRepo *repository.UserRepository) *AuthService {
 	}
 }
 
-func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider string) (string, error) {
+func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider string) (*sqlc.AuthSession, error) {
 	// Authenticate logic here
+	switch provider {
+	case "discord":
+		// Do discord auth here
+		break
+	default:
+		return nil, ErrProviderUnsupported
+	}
 
-	return "token", nil
+	return nil, nil
 }
 
 func (s *AuthService) GetMe(ctx context.Context) (*sqlc.AuthUser, error) {

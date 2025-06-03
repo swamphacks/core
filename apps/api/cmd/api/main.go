@@ -28,7 +28,7 @@ func main() {
 	authService := services.NewAuthService(userRepo)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService)
+	apiHandlers := handlers.NewHandlers(authService, logger)
 
 	api := api.NewAPI(&logger, apiHandlers)
 

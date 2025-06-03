@@ -5,18 +5,21 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/swamphacks/core/apps/api/internal/api/response"
+	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/services"
 )
 
 type AuthHandler struct {
 	authService *services.AuthService
+	logger      zerolog.Logger
 }
 
-func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+func NewAuthHandler(authService *services.AuthService, logger zerolog.Logger) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
+		logger:      logger.With().Str("handler", "AuthHandler").Str("component", "auth").Logger(),
 	}
 }
 
@@ -54,70 +57,62 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Empty parameters
 	if codeParam == "" || stateParam == "" {
-		res := response.NewError("A100", "invalid_callback", "Missing or malformed code or state in callback")
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_callback", "This callback was invalid. Please try again."))
 		return
 	}
 
 	decodedStateBytes, err := base64.URLEncoding.DecodeString(stateParam)
 	if err != nil {
-		res := response.NewError("A100", "invalid_callback", "Missing or malformed code or state in callback")
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_callback", "This callback was invalid. Please try again."))
 		return
 	}
 
 	var state OAuthState
 	if err := json.Unmarshal(decodedStateBytes, &state); err != nil {
-		res := response.NewError("A100", "invalid_callback", "Missing or malformed code or state in callback")
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_callback", "This callback was invalid. Please try again."))
 		return
 	}
 
 	nonceCookie, err := r.Cookie("sh_auth_nonce")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			res := response.NewError("A102", "nonce_missing", "Nonce cookie missing")
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusForbidden)
-			if err := json.NewEncoder(w).Encode(res); err != nil {
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			}
+			res.SendError(w, http.StatusForbidden, res.NewError("auth_error", "Failed to authenticate. Please try again."))
 			return
 		}
 
-		http.Error(w, "Unknown error", http.StatusInternalServerError)
+		res.SendError(w, http.StatusBadRequest, res.NewError("bad_cookie", "The cookie jar spilled over 😔"))
 		return
 	}
 
 	if nonceCookie.Value != state.Nonce {
-		res := response.NewError("A101", "nonce_mismatch", "Nonce in state does not match cookie. Possible CSRF attack...")
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
+		res.SendError(w, http.StatusUnauthorized, res.NewError("auth_error", "Failed to authenticate. Please try again."))
 		return
 	}
 
 	// At this point, nonce has matched, proceed with remaining authentication services
-	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write([]byte("Try again soon~!")); err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	session, err := h.authService.AuthenticateWithOAuth(r.Context(), codeParam, state.Provider)
+	if err != nil {
+		switch err {
+		case services.ErrProviderUnsupported:
+			res.SendError(w, http.StatusNotImplemented, res.NewError("provider_error", "This provider is not supported... are you sure you're supposed to be here?"))
+			return
+		default:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went horribly wrong!"))
+			return
+		}
 	}
 
+	cookie := &http.Cookie{
+		Name:     "sh_session_id",
+		Value:    session.Token,
+		Domain:   "localhost",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // Only for dev
+		SameSite: http.SameSiteLaxMode,
+		Expires:  session.ExpiresAt,
+	}
+
+	http.SetCookie(w, cookie)
+	http.Redirect(w, r, "http://localhost:3000"+state.Redirect, http.StatusSeeOther)
 }
