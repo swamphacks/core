@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/swamphacks/core/apps/api/internal/api"
@@ -21,11 +22,23 @@ func main() {
 	db := db.NewDB(cfg.DatabaseURL)
 	defer db.Close()
 
+	// Create injectable http client
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			MaxIdleConns:          100,
+			MaxIdleConnsPerHost:   10,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+
 	// Injections into repositories
 	userRepo := repository.NewUserRepository(db)
 
 	// Injections into services
-	authService := services.NewAuthService(userRepo)
+	authService := services.NewAuthService(userRepo, client)
 
 	// Injections into handlers
 	apiHandlers := handlers.NewHandlers(authService, logger)

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
 )
@@ -27,6 +28,9 @@ func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers) *API {
 }
 
 func (api *API) setupRoutes() {
+	api.Router.Use(middleware.Logger)
+	api.Router.Use(middleware.RealIP)
+
 	api.Router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		api.Logger.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("Received ping.")
 

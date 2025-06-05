@@ -1,13 +1,22 @@
 package oauth
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/swamphacks/core/apps/api/internal/config"
+)
+
+var (
+	ErrDiscordExchangeCode = errors.New("error exchanging the discord code")
+	ErrDiscordFetchProfile = errors.New("error fetching user discord profile")
 )
 
 type DiscordUser struct {
@@ -26,47 +35,49 @@ type DiscordExchangeResponse struct {
 	Scope        string        `json:"scope"`
 }
 
-func ExchangeDiscordCode(client *http.Client, code string) (string, error) {
+func ExchangeDiscordCode(ctx context.Context, client *http.Client, oauthCfg *config.OAuthConfig, code string) (*DiscordExchangeResponse, error) {
 	data := url.Values{}
-	data.Set("grant_type", "autorization_code")
+	data.Set("grant_type", "authorization_code")
 	data.Set("code", code)
-	data.Set("redirect_uri", "http://localhost:8080/auth/callback")
-	data.Set("client_id", "ADD FROM ENV")
-	data.Set("client_secret", "ADD FROM ENV")
+	data.Set("redirect_uri", oauthCfg.RedirectUI)
+	data.Set("client_id", oauthCfg.ClientID)
+	data.Set("client_secret", oauthCfg.ClientSecret)
 
-	req, err := http.NewRequest("POST", "https://discord.com/api/v10/oauth2/token", strings.NewReader(data.Encode()))
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://discord.com/api/v10/oauth2/token", strings.NewReader(data.Encode()))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) // Make the request for the code
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		//TODO: HANDLE THIS!
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("%w: %s", ErrDiscordExchangeCode, string(body))
 	}
 
 	var exchangeResp DiscordExchangeResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&exchangeResp); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return exchangeResp.AccessToken, nil
+	return &exchangeResp, nil
 
 }
 
-func GetDiscordUserInfo(client *http.Client, accessToken string) (*DiscordUser, error) {
-	req, err := http.NewRequest("GET", "https://discord.com/api/users/@me", nil)
+func GetDiscordUserInfo(ctx context.Context, client *http.Client, accessToken string) (*DiscordUser, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://discord.com/api/users/@me", nil)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Accept", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -76,7 +87,7 @@ func GetDiscordUserInfo(client *http.Client, accessToken string) (*DiscordUser, 
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("unexpected status: %s - %s", resp.Status, string(bodyBytes))
+		return nil, fmt.Errorf("%w: %s", ErrDiscordFetchProfile, string(bodyBytes))
 	}
 
 	var user DiscordUser
