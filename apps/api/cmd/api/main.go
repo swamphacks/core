@@ -36,9 +36,10 @@ func main() {
 
 	// Injections into repositories
 	userRepo := repository.NewUserRepository(db)
+	accountRepo := repository.NewAccountRespository(db)
 
 	// Injections into services
-	authService := services.NewAuthService(userRepo, client)
+	authService := services.NewAuthService(userRepo, accountRepo, client, logger, &cfg.Auth)
 
 	// Injections into handlers
 	apiHandlers := handlers.NewHandlers(authService, logger)

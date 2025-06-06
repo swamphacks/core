@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -20,24 +21,27 @@ var (
 )
 
 type AuthService struct {
-	userRepo *repository.UserRepository
-	client   *http.Client
-	logger   zerolog.Logger
-	authCfg  *config.AuthConfig
+	userRepo    *repository.UserRepository
+	accountRepo *repository.AccountRepository
+	client      *http.Client
+	logger      zerolog.Logger
+	authCfg     *config.AuthConfig
 }
 
-func NewAuthService(userRepo *repository.UserRepository, client *http.Client, logger zerolog.Logger, authCfg *config.AuthConfig) *AuthService {
+func NewAuthService(userRepo *repository.UserRepository, accountRepo *repository.AccountRepository, client *http.Client, logger zerolog.Logger, authCfg *config.AuthConfig) *AuthService {
 	return &AuthService{
-		userRepo: userRepo,
-		client:   client,
-		logger:   logger.With().Str("service", "AuthService").Str("component", "auth").Logger(),
-		authCfg:  authCfg,
+		userRepo:    userRepo,
+		accountRepo: accountRepo,
+		client:      client,
+		logger:      logger.With().Str("service", "AuthService").Str("component", "auth").Logger(),
+		authCfg:     authCfg,
 	}
 }
 
 func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider string) (*sqlc.AuthSession, error) {
 	// Authenticate logic here
 	switch provider {
+
 	case "discord":
 		discordOAuthResp, err := oauth.ExchangeDiscordCode(ctx, s.client, &s.authCfg.Discord, code)
 		if err != nil {
@@ -52,6 +56,20 @@ func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider 
 		}
 
 		// Start transactions to create user and session and account
+		// Check if user already exists!
+		account, err := s.accountRepo.GetByProviderAndAccountID(ctx, sqlc.GetByProviderAndAccountIDParams{
+			ProviderID: provider,
+			AccountID:  discordUser.ID,
+		})
+		if err != nil && errors.Is(err, sql.ErrNoRows) {
+			// Handle new account creation
+			// Handle new user creation
+			// Handle new session creation
+		} else if err != nil {
+			return nil, err
+		} else {
+			// Handle user already has an account, fetch user and create new session!
+		}
 
 		break
 	default:

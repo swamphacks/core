@@ -10,11 +10,11 @@ INSERT INTO auth.accounts (
 )
 RETURNING *;
 
--- name: GetAccountByProvider :one
+-- name: GetByProviderAndAccountID :one
 SELECT * FROM auth.accounts
 WHERE provider_id = $1 AND account_id = $2;
 
--- name: GetAccountsByUserID :many
+-- name: GetByUserID :many
 SELECT * FROM auth.accounts
 WHERE user_id = $1;
 
