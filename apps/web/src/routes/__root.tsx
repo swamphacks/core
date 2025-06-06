@@ -1,5 +1,5 @@
 import { ThemeSwitch } from "@/components/ThemeProvider";
-import { useAuth } from "@/features/common/Auth/hooks/useAuth";
+import { useAuth } from "@/features/Auth/hooks/useAuth";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
 interface RouterContext {

@@ -1,7 +1,4 @@
-import { createFileRoute, useLoaderData } from "@tanstack/react-router";
-// import { Test as Admin } from "@/features/admin/Dashboard/components/Dashboard";
-import Dashboard from "@/features/admin/Dashboard";
-import HackerDashboard from "@/features/hacker/Dashboard";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/dashboard")({
   component: RouteComponent,
@@ -14,11 +11,12 @@ export const Route = createFileRoute("/_protected/dashboard")({
 });
 
 function RouteComponent() {
-  const data = useLoaderData({ from: "/_protected/dashboard" });
+  // const data = useLoaderData({ from: "/_protected/dashboard" });
 
   return (
     <div>
-      {data.user.role === "admin" ? <Dashboard /> : <HackerDashboard />}
+      {/* {data.user.role === "admin" ? <Dashboard /> : <HackerDashboard />} */}
+      <p>Dashboard</p>
     </div>
   );
 }

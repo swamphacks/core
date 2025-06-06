@@ -7,7 +7,7 @@ import "./index.css";
 import { routeTree } from "./routeTree.gen";
 import { queryClient } from "./lib/query";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { useAuth } from "./features/common/Auth/hooks/useAuth";
+import { useAuth } from "./features/Auth/hooks/useAuth";
 
 const router = createRouter({
   routeTree,

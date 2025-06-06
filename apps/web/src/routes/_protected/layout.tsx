@@ -4,11 +4,19 @@ export const Route = createFileRoute("/_protected")({
   beforeLoad: async ({ context }) => {
     const user = await context.auth.promise;
 
+    // const user = {
+    //   role: "admin",
+    // };
     if (!user) {
-      throw redirect({ to: "/" });
+      throw redirect({
+        to: "/",
+        search: {
+          redirect: location.href,
+        },
+      });
     }
 
-    // Returns the user object to make it available to RouteComponent's context
+    // If authenticated successfully, returns the user object to make it available to RouteComponent's context
     return {
       user,
     };

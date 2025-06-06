@@ -1,7 +1,7 @@
 import Cookies from "js-cookie";
 import { useEffect, useRef } from "react";
 import { APP_URL } from "@/utils/url";
-import type { User } from "@/features/common/Auth/types";
+import type { User } from "@/features/Auth/types";
 
 export const useAuth = () => {
   // // https://github.com/TanStack/router/discussions/1668#discussioncomment-10634735

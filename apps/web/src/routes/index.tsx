@@ -1,7 +1,11 @@
+import { z } from "zod";
 import { createFileRoute } from "@tanstack/react-router";
-import { Login } from "@/features/common/Auth/components/Login";
+import { Login } from "@/features/Auth/components/Login";
 
 export const Route = createFileRoute("/")({
+  validateSearch: z.object({
+    redirect: z.string().optional().catch(""),
+  }),
   component: Index,
 });
 

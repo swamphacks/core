@@ -13,6 +13,10 @@ body,
   background-color: var(--color-background);
 }
 
+.dark {
+  color: var(--text-main);
+}
+
 /* https://stackoverflow.com/questions/68400074/how-to-apply-transition-effects-when-switching-from-light-mode-to-dark-in-tailwi */
 body * {
   @apply transition-colors duration-500;

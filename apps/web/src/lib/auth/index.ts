@@ -35,15 +35,25 @@ function _signInInternal<T extends AuthConfig>(config: T) {
       throw new Error(`OAuth provider "${providerId}" not found.`);
     }
 
+    // Validate returnTo url
+    if (returnTo) {
+      try {
+        new URL(returnTo);
+      } catch {
+        throw new Error(`returnTo URL "${returnTo}" is invalid.`);
+      }
+    }
+
     const url = new URL(provider.authorization.url);
+
     // Set state parameter to prevent CSRF attacks
     const state: OauthState = {
       nonce: crypto.randomUUID(),
-      providerId: providerId,
-      returnTo,
+      provider: providerId,
+      redirect: returnTo,
     };
 
-    Cookies.set("oauth_nonce", state.nonce, {
+    Cookies.set("sh_auth_nonce", state.nonce, {
       path: "/",
       // Set sameSite to lax so the cookie can be sent when the authorization server redirects to redirect_uri
       sameSite: "lax",

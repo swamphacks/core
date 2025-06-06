@@ -19,8 +19,8 @@ export type OauthProvider = {
 
 export type OauthState = {
   nonce: string;
-  providerId: string;
-  returnTo?: string;
+  provider: string;
+  redirect?: string;
 };
 
 export type AuthConfig = {

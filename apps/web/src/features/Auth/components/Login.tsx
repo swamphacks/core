@@ -2,13 +2,15 @@ import { DiscordIcon } from "@/components/icons/Discord";
 import { Button } from "@/components/ui/Button";
 import { useTheme } from "@/components/ThemeProvider";
 
-// import Auth from "@/lib/auth";
-// import { Discord } from "@/lib/auth/providers";
+import Auth from "@/lib/auth";
+import { Discord } from "@/lib/auth/providers";
+import { useSearch } from "@tanstack/react-router";
+import { APP_URL } from "@/utils/url";
 
-// const authClient = Auth({
-//   providers: [Discord],
-//   redirect_uri: "test",
-// });
+const authClient = Auth({
+  providers: [Discord],
+  redirect_uri: APP_URL.REDIRECT_URI,
+});
 
 const Logo = ({ src }: { src: string }) => {
   return <img className="py-5" src={src} alt="SwampHacks Logo" />;
@@ -16,6 +18,8 @@ const Logo = ({ src }: { src: string }) => {
 
 const Login = () => {
   const { theme } = useTheme();
+  const search = useSearch({ from: "/" });
+  const redirectFallback = APP_URL.REDIRECT_FALLBACK;
 
   return (
     <div className="flex flex-col items-center bg-surface rounded-md px-3 pt-6 shadow-md text-text-main">
@@ -32,10 +36,9 @@ const Login = () => {
       </p>
       <Button
         className="items-center gap-2 w-[80%] my-4"
-        onClick={() => {
-          // authClient.signIn("discord", "previous url");
-          console.log("hi");
-        }}
+        onClick={() =>
+          authClient.signIn("discord", search.redirect || redirectFallback)
+        }
       >
         <span>
           <DiscordIcon />
