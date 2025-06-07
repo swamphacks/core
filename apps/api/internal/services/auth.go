@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/oauth"
@@ -23,15 +25,19 @@ var (
 type AuthService struct {
 	userRepo    *repository.UserRepository
 	accountRepo *repository.AccountRepository
+	sessionRepo *repository.SessionRepository
+	txm         *db.TransactionManager
 	client      *http.Client
 	logger      zerolog.Logger
 	authCfg     *config.AuthConfig
 }
 
-func NewAuthService(userRepo *repository.UserRepository, accountRepo *repository.AccountRepository, client *http.Client, logger zerolog.Logger, authCfg *config.AuthConfig) *AuthService {
+func NewAuthService(userRepo *repository.UserRepository, accountRepo *repository.AccountRepository, sessionRepo *repository.SessionRepository, txm *db.TransactionManager, client *http.Client, logger zerolog.Logger, authCfg *config.AuthConfig) *AuthService {
 	return &AuthService{
 		userRepo:    userRepo,
 		accountRepo: accountRepo,
+		sessionRepo: sessionRepo,
+		txm:         txm,
 		client:      client,
 		logger:      logger.With().Str("service", "AuthService").Str("component", "auth").Logger(),
 		authCfg:     authCfg,
@@ -55,16 +61,30 @@ func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider 
 			return nil, fmt.Errorf("%w: provider=%s", ErrFetchUserFailed, provider)
 		}
 
-		// Start transactions to create user and session and account
-		// Check if user already exists!
-		account, err := s.accountRepo.GetByProviderAndAccountID(ctx, sqlc.GetByProviderAndAccountIDParams{
+		// Check if account already exists!
+		_, err = s.accountRepo.GetByProviderAndAccountID(ctx, sqlc.GetByProviderAndAccountIDParams{
 			ProviderID: provider,
 			AccountID:  discordUser.ID,
 		})
+
 		if err != nil && errors.Is(err, sql.ErrNoRows) {
-			// Handle new account creation
-			// Handle new user creation
-			// Handle new session creation
+			s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+				txUserRepo := s.userRepo.NewTx(tx)
+				txAccountRepo := s.accountRepo.NewTx(tx)
+				txSessionRepo := s.sessionRepo.NewTx(tx)
+
+				user, err := txUserRepo.Create(ctx, sqlc.CreateUserParams{
+					Name:  discordUser.Username,
+					Email: discordUser.Email,
+					Image: &discordUser.Avatar,
+				})
+				if err != nil {
+					return err
+				}
+
+				// Create account
+				// create session
+			})
 		} else if err != nil {
 			return nil, err
 		} else {

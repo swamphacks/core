@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 )
@@ -14,6 +15,17 @@ type AccountRepository struct {
 func NewAccountRespository(db *db.DB) *AccountRepository {
 	return &AccountRepository{
 		db: db,
+	}
+}
+
+func (r *AccountRepository) NewTx(tx pgx.Tx) *AccountRepository {
+	txDB := &db.DB{
+		Pool:  r.db.Pool,
+		Query: sqlc.New(tx),
+	}
+
+	return &AccountRepository{
+		db: txDB,
 	}
 }
 

@@ -19,8 +19,11 @@ func main() {
 	cfg := config.Load()
 
 	// Init database connection and defer close
-	db := db.NewDB(cfg.DatabaseURL)
-	defer db.Close()
+	database := db.NewDB(cfg.DatabaseURL)
+	defer database.Close()
+
+	// Create transaction manager
+	txm := db.NewTransactionManager(database)
 
 	// Create injectable http client
 	client := &http.Client{
@@ -35,11 +38,12 @@ func main() {
 	}
 
 	// Injections into repositories
-	userRepo := repository.NewUserRepository(db)
-	accountRepo := repository.NewAccountRespository(db)
+	userRepo := repository.NewUserRepository(database)
+	accountRepo := repository.NewAccountRespository(database)
+	sessionRepo := repository.NewSessionRepository(database)
 
 	// Injections into services
-	authService := services.NewAuthService(userRepo, accountRepo, client, logger, &cfg.Auth)
+	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
 
 	// Injections into handlers
 	apiHandlers := handlers.NewHandlers(authService, logger)
