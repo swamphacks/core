@@ -40,7 +40,7 @@ func ExchangeDiscordCode(ctx context.Context, client *http.Client, oauthCfg *con
 	data := url.Values{}
 	data.Set("grant_type", "authorization_code")
 	data.Set("code", code)
-	data.Set("redirect_uri", oauthCfg.RedirectUI)
+	data.Set("redirect_uri", oauthCfg.RedirectURI)
 	data.Set("client_id", oauthCfg.ClientID)
 	data.Set("client_secret", oauthCfg.ClientSecret)
 

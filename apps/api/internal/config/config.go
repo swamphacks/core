@@ -8,6 +8,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type CookieConfig struct {
+	Domain string `env:"DOMAIN"`
+	Secure bool   `env:"SECURE"`
+}
+
 type OAuthConfig struct {
 	ClientID     string `env:"CLIENT_ID"`
 	ClientSecret string `env:"CLIENT_SECRET"`
@@ -23,7 +28,8 @@ type Config struct {
 	DatabaseURL string `env:"DATABASE_URL"`
 	Port        string `env:"PORT" envDefault:"8080"`
 
-	Auth AuthConfig `envPrefix:"AUTH_"`
+	Auth   AuthConfig   `envPrefix:"AUTH_"`
+	Cookie CookieConfig `envPrefix:"COOKIE_"`
 }
 
 func Load() *Config {

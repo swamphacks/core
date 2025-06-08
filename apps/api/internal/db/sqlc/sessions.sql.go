@@ -56,6 +56,38 @@ func (q *Queries) DeleteExpiredSession(ctx context.Context) error {
 	return err
 }
 
+const getActiveSessionUserInfo = `-- name: GetActiveSessionUserInfo :one
+SELECT u.id AS user_id, u.name, u.onboarded, u.image, u.role, s.last_used_at
+FROM auth.sessions s
+JOIN auth.users u ON s.user_id = u.id
+WHERE s.id = $1
+    AND (s.expires_at > NOW())
+LIMIT 1
+`
+
+type GetActiveSessionUserInfoRow struct {
+	UserID     uuid.UUID    `json:"user_id"`
+	Name       string       `json:"name"`
+	Onboarded  bool         `json:"onboarded"`
+	Image      *string      `json:"image"`
+	Role       AuthUserRole `json:"role"`
+	LastUsedAt time.Time    `json:"last_used_at"`
+}
+
+func (q *Queries) GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error) {
+	row := q.db.QueryRow(ctx, getActiveSessionUserInfo, id)
+	var i GetActiveSessionUserInfoRow
+	err := row.Scan(
+		&i.UserID,
+		&i.Name,
+		&i.Onboarded,
+		&i.Image,
+		&i.Role,
+		&i.LastUsedAt,
+	)
+	return i, err
+}
+
 const getSessionByID = `-- name: GetSessionByID :one
 SELECT id, user_id, expires_at, ip_address, user_agent, created_at, updated_at, last_used_at FROM auth.sessions
 WHERE id = $1
@@ -109,6 +141,22 @@ func (q *Queries) GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]
 		return nil, err
 	}
 	return items, nil
+}
+
+const touchSession = `-- name: TouchSession :exec
+UPDATE auth.sessions
+SET expires_at = $2, last_used_at = NOW()
+WHERE id = $1
+`
+
+type TouchSessionParams struct {
+	ID        uuid.UUID `json:"id"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+func (q *Queries) TouchSession(ctx context.Context, arg TouchSessionParams) error {
+	_, err := q.db.Exec(ctx, touchSession, arg.ID, arg.ExpiresAt)
+	return err
 }
 
 const updateSessionExpiration = `-- name: UpdateSessionExpiration :exec

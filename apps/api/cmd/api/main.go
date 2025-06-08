@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/swamphacks/core/apps/api/internal/api"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
+	"github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
@@ -37,6 +38,9 @@ func main() {
 		},
 	}
 
+	// Create new middleware injectable
+	mw := middleware.NewMiddleware(database, logger, cfg)
+
 	// Injections into repositories
 	userRepo := repository.NewUserRepository(database)
 	accountRepo := repository.NewAccountRespository(database)
@@ -46,9 +50,9 @@ func main() {
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, logger)
+	apiHandlers := handlers.NewHandlers(authService, cfg, logger)
 
-	api := api.NewAPI(&logger, apiHandlers)
+	api := api.NewAPI(&logger, apiHandlers, mw)
 
 	logger.Info().Msgf("API listening on port %s", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, api.Router); err != nil {

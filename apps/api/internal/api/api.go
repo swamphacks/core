@@ -7,32 +7,39 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
+	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 )
 
 type API struct {
-	Router   *chi.Mux
-	Logger   *zerolog.Logger
-	Handlers *handlers.Handlers
+	Router     *chi.Mux
+	Logger     *zerolog.Logger
+	Handlers   *handlers.Handlers
+	Middleware *mw.Middleware
 }
 
-func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers) *API {
+func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers, middleware *mw.Middleware) *API {
 	api := &API{
-		Router:   chi.NewRouter(),
-		Logger:   logger,
-		Handlers: handlers,
+		Router:     chi.NewRouter(),
+		Logger:     logger,
+		Handlers:   handlers,
+		Middleware: middleware,
 	}
 
-	api.setupRoutes()
+	api.setupRoutes(api.Middleware)
 
 	return api
 }
 
-func (api *API) setupRoutes() {
+func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Use(middleware.Logger)
 	api.Router.Use(middleware.RealIP)
 
 	api.Router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		api.Logger.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("Received ping.")
+
+		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Length", "6") // "pong!\n" is 6 bytes
 
 		if _, err := w.Write([]byte("pong!\n")); err != nil {
 			return
@@ -40,9 +47,36 @@ func (api *API) setupRoutes() {
 
 	})
 
-	api.Router.Route("/v1", func(r chi.Router) {
-		r.Route("/auth", func(r chi.Router) {
-			r.Post("/callback", api.Handlers.Auth.OAuthCallback)
+	api.Router.Route("/auth", func(r chi.Router) {
+		r.Post("/callback", api.Handlers.Auth.OAuthCallback)
+	})
+
+	api.Router.Route("/protected", func(r chi.Router) {
+		r.Use(mw.Auth.RequireAuth)
+		r.Get("/basic", func(w http.ResponseWriter, r *http.Request) {
+			if _, err := w.Write([]byte("Welcome, arbitrarily roled user that I don't know the role of yet!!\n")); err != nil {
+				return
+			}
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleUser))
+
+			r.Get("/user", func(w http.ResponseWriter, r *http.Request) {
+				if _, err := w.Write([]byte("Welcome, user!\n")); err != nil {
+					return
+				}
+			})
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleSuperuser))
+
+			r.Get("/superuser", func(w http.ResponseWriter, r *http.Request) {
+				if _, err := w.Write([]byte("Welcome, superuser!\n")); err != nil {
+					return
+				}
+			})
 		})
 	})
 }

@@ -19,3 +19,16 @@ WHERE id = $1;
 -- name: DeleteExpiredSession :exec
 DELETE FROM auth.sessions
 WHERE expires_at < NOW();
+
+-- name: GetActiveSessionUserInfo :one
+SELECT u.id AS user_id, u.name, u.onboarded, u.image, u.role, s.last_used_at
+FROM auth.sessions s
+JOIN auth.users u ON s.user_id = u.id
+WHERE s.id = $1
+    AND (s.expires_at > NOW())
+LIMIT 1;
+
+-- name: TouchSession :exec
+UPDATE auth.sessions
+SET expires_at = $2, last_used_at = NOW()
+WHERE id = $1;

@@ -8,17 +8,20 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
+	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/services"
 )
 
 type AuthHandler struct {
 	authService *services.AuthService
+	cfg         *config.Config
 	logger      zerolog.Logger
 }
 
-func NewAuthHandler(authService *services.AuthService, logger zerolog.Logger) *AuthHandler {
+func NewAuthHandler(authService *services.AuthService, cfg *config.Config, logger zerolog.Logger) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
+		cfg:         cfg,
 		logger:      logger.With().Str("handler", "AuthHandler").Str("component", "auth").Logger(),
 	}
 }
@@ -109,10 +112,10 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Name:     "sh_session_id",
 		Value:    session.ID.String(),
-		Domain:   "localhost",
+		Domain:   h.cfg.Cookie.Domain,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false, // Only for dev
+		Secure:   h.cfg.Cookie.Secure, // Only for dev
 		SameSite: http.SameSiteLaxMode,
 		Expires:  session.ExpiresAt,
 	}
