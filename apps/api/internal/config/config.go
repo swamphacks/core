@@ -9,9 +9,9 @@ import (
 )
 
 type OAuthConfig struct {
-	ClientID     string `env:"CLIENTID"`
-	ClientSecret string `env:"CLIENTSECRET"`
-	RedirectUI   string `env:"REDIRECTUI"`
+	ClientID     string `env:"CLIENT_ID"`
+	ClientSecret string `env:"CLIENT_SECRET"`
+	RedirectURI  string `env:"REDIRECT_URI"`
 }
 
 type AuthConfig struct {
@@ -20,7 +20,7 @@ type AuthConfig struct {
 }
 
 type Config struct {
-	DatabaseURL string `env:"DATABASEURL"`
+	DatabaseURL string `env:"DATABASE_URL"`
 	Port        string `env:"PORT" envDefault:"8080"`
 
 	Auth AuthConfig `envPrefix:"AUTH_"`
