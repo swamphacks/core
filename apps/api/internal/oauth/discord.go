@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/swamphacks/core/apps/api/internal/config"
 )
 
@@ -53,7 +54,7 @@ func ExchangeDiscordCode(ctx context.Context, client *http.Client, oauthCfg *con
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer gracefullyCloseBody(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -83,7 +84,7 @@ func GetDiscordUserInfo(ctx context.Context, client *http.Client, accessToken st
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer gracefullyCloseBody(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -96,4 +97,11 @@ func GetDiscordUserInfo(ctx context.Context, client *http.Client, accessToken st
 	}
 
 	return &user, nil
+}
+
+// TODO: Refactor more cleanly
+func gracefullyCloseBody(response *http.Response) {
+	if err := response.Body.Close(); err != nil {
+		log.Warn().Str("component", "oauth").Str("provider", "discord").Msg("Failed to close response body")
+	}
 }
