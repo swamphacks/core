@@ -29,7 +29,7 @@ type DiscordUser struct {
 
 type DiscordExchangeResponse struct {
 	AccessToken  string        `json:"access_token"`
-	RefreshToekn string        `json:"refresh_token"`
+	RefreshToken string        `json:"refresh_token"`
 	TokenType    string        `json:"token_type"`
 	ExpiresIn    time.Duration `json:"expires_in"`
 	Scope        string        `json:"scope"`

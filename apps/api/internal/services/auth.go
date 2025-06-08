@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
@@ -44,7 +45,8 @@ func NewAuthService(userRepo *repository.UserRepository, accountRepo *repository
 	}
 }
 
-func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider string) (*sqlc.AuthSession, error) {
+func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider, ipAddress, userAgent string) (*sqlc.AuthSession, error) {
+	var session *sqlc.AuthSession
 	// Authenticate logic here
 	switch provider {
 
@@ -62,20 +64,20 @@ func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider 
 		}
 
 		// Check if account already exists!
-		_, err = s.accountRepo.GetByProviderAndAccountID(ctx, sqlc.GetByProviderAndAccountIDParams{
+		account, err := s.accountRepo.GetByProviderAndAccountID(ctx, sqlc.GetByProviderAndAccountIDParams{
 			ProviderID: provider,
 			AccountID:  discordUser.ID,
 		})
 
 		if err != nil && errors.Is(err, sql.ErrNoRows) {
-			s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+			err = s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 				txUserRepo := s.userRepo.NewTx(tx)
 				txAccountRepo := s.accountRepo.NewTx(tx)
 				txSessionRepo := s.sessionRepo.NewTx(tx)
 
 				user, err := txUserRepo.Create(ctx, sqlc.CreateUserParams{
 					Name:  discordUser.Username,
-					Email: discordUser.Email,
+					Email: &discordUser.Email,
 					Image: &discordUser.Avatar,
 				})
 				if err != nil {
@@ -83,23 +85,67 @@ func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider 
 				}
 
 				// Create account
+				_, err = txAccountRepo.Create(ctx, sqlc.CreateAccountParams{
+					UserID:               user.ID,
+					ProviderID:           provider,
+					AccountID:            discordUser.ID,
+					AccessToken:          &discordOAuthResp.AccessToken,
+					RefreshToken:         &discordOAuthResp.RefreshToken,
+					AccessTokenExpiresAt: expiresAt(discordOAuthResp.ExpiresIn),
+				})
+				if err != nil {
+					return err
+				}
 				// create session
+				session, err = txSessionRepo.Create(ctx, sqlc.CreateSessionParams{
+					UserID:    user.ID,
+					ExpiresAt: time.Now().AddDate(0, 1, 0),
+					IpAddress: &ipAddress,
+					UserAgent: &userAgent,
+				})
+				if err != nil {
+					return err
+				}
+
+				return nil
 			})
+			if err != nil {
+				return nil, err
+			}
+
 		} else if err != nil {
 			return nil, err
 		} else {
 			// Handle user already has an account, fetch user and create new session!
-		}
+			user, err := s.userRepo.GetByID(ctx, account.UserID)
+			if err != nil {
+				return nil, err
+			}
 
-		break
+			session, err = s.sessionRepo.Create(ctx, sqlc.CreateSessionParams{
+				UserID:    user.ID,
+				ExpiresAt: time.Now().AddDate(0, 1, 0),
+				IpAddress: &ipAddress,
+				UserAgent: &userAgent,
+			})
+			if err != nil {
+				return nil, err
+			}
+
+		}
 	default:
 		return nil, ErrProviderUnsupported
 	}
 
-	return nil, nil
+	return session, nil
 }
 
 func (s *AuthService) GetMe(ctx context.Context) (*sqlc.AuthUser, error) {
 	// Pull the userId from the context
 	return nil, nil
+}
+
+func expiresAt(duration time.Duration) *time.Time {
+	expiredAtTime := time.Now().Add(duration)
+	return &expiredAtTime
 }

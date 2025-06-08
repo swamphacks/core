@@ -19,7 +19,7 @@ RETURNING id, name, email, email_verified, onboarded, image, created_at, updated
 
 type CreateUserParams struct {
 	Name  string  `json:"name"`
-	Email string  `json:"email"`
+	Email *string `json:"email"`
 	Image *string `json:"image"`
 }
 
@@ -54,7 +54,7 @@ SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at
 WHERE email = $1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (AuthUser, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email *string) (AuthUser, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
 	var i AuthUser
 	err := row.Scan(
@@ -108,7 +108,7 @@ type UpdateUserParams struct {
 	NameDoUpdate          bool      `json:"name_do_update"`
 	Name                  string    `json:"name"`
 	EmailDoUpdate         bool      `json:"email_do_update"`
-	Email                 string    `json:"email"`
+	Email                 *string   `json:"email"`
 	EmailVerifiedDoUpdate bool      `json:"email_verified_do_update"`
 	EmailVerified         bool      `json:"email_verified"`
 	OnboardedDoUpdate     bool      `json:"onboarded_do_update"`

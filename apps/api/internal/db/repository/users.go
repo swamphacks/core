@@ -55,15 +55,3 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*sqlc.AuthU
 
 	return &user, nil
 }
-
-func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*sqlc.AuthUser, error) {
-	user, err := r.db.Query.GetUserByEmail(ctx, email)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, ErrUserNotFound
-		}
-		return nil, err
-	}
-
-	return &user, nil
-}

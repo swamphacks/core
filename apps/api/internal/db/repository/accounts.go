@@ -29,6 +29,11 @@ func (r *AccountRepository) NewTx(tx pgx.Tx) *AccountRepository {
 	}
 }
 
+func (r *AccountRepository) Create(ctx context.Context, params sqlc.CreateAccountParams) (*sqlc.AuthAccount, error) {
+	account, err := r.db.Query.CreateAccount(ctx, params)
+	return &account, err
+}
+
 func (r *AccountRepository) GetByProviderAndAccountID(ctx context.Context, params sqlc.GetByProviderAndAccountIDParams) (*sqlc.AuthAccount, error) {
 	account, err := r.db.Query.GetByProviderAndAccountID(ctx, params)
 	return &account, err

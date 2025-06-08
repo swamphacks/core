@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
@@ -25,4 +27,9 @@ func (r *SessionRepository) NewTx(tx pgx.Tx) *SessionRepository {
 	return &SessionRepository{
 		db: txDB,
 	}
+}
+
+func (r *SessionRepository) Create(ctx context.Context, params sqlc.CreateSessionParams) (*sqlc.AuthSession, error) {
+	session, err := r.db.Query.CreateSession(ctx, params)
+	return &session, err
 }

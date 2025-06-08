@@ -55,6 +55,10 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	codeParam := q.Get("code")
 	stateParam := q.Get("state")
 
+	// User Agent + IpAddress for session
+	userAgent := r.Header.Get("User-Agent")
+	ipAddress := r.RemoteAddr
+
 	// Empty parameters
 	if codeParam == "" || stateParam == "" {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_callback", "This callback was invalid. Please try again."))
@@ -90,7 +94,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// At this point, nonce has matched, proceed with remaining authentication services
-	session, err := h.authService.AuthenticateWithOAuth(r.Context(), codeParam, state.Provider)
+	session, err := h.authService.AuthenticateWithOAuth(r.Context(), codeParam, state.Provider, ipAddress, userAgent)
 	if err != nil {
 		switch err {
 		case services.ErrProviderUnsupported:
@@ -104,7 +108,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 
 	cookie := &http.Cookie{
 		Name:     "sh_session_id",
-		Value:    session.Token,
+		Value:    session.ID.String(),
 		Domain:   "localhost",
 		Path:     "/",
 		HttpOnly: true,

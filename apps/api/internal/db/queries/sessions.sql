@@ -1,11 +1,11 @@
 -- name: CreateSession :one
-INSERT INTO auth.sessions (user_id, token, expires_at, ip_address, user_agent)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO auth.sessions (user_id, expires_at, ip_address, user_agent)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
--- name: GetSessionByToken :one
+-- name: GetSessionByID :one
 SELECT * FROM auth.sessions
-WHERE TOKEN = $1;
+WHERE id = $1;
 
 -- name: GetSessionsByUserID :many
 SELECT * FROM auth.sessions
@@ -15,10 +15,6 @@ WHERE user_id = $1;
 UPDATE auth.sessions
 SET expires_at = $2
 WHERE id = $1;
-
--- name: DeleteSessionByToken :exec
-DELETE FROM auth.sessions
-WHERE token = $1;
 
 -- name: DeleteExpiredSession :exec
 DELETE FROM auth.sessions
