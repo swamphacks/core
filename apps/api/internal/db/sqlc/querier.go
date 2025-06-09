@@ -16,14 +16,15 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (AuthUser, error)
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) error
 	DeleteExpiredSession(ctx context.Context) error
-	DeleteSessionByToken(ctx context.Context, token string) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
-	GetAccountByProvider(ctx context.Context, arg GetAccountByProviderParams) (AuthAccount, error)
-	GetAccountsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
-	GetSessionByToken(ctx context.Context, token string) (AuthSession, error)
+	GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error)
+	GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error)
+	GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
+	GetSessionByID(ctx context.Context, id uuid.UUID) (AuthSession, error)
 	GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthSession, error)
-	GetUserByEmail(ctx context.Context, email string) (AuthUser, error)
+	GetUserByEmail(ctx context.Context, email *string) (AuthUser, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, error)
+	TouchSession(ctx context.Context, arg TouchSessionParams) error
 	UpdateSessionExpiration(ctx context.Context, arg UpdateSessionExpirationParams) error
 	UpdateTokens(ctx context.Context, arg UpdateTokensParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error

@@ -1,48 +1,82 @@
 package api
 
 import (
-	"sync"
+	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
 	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
-	"github.com/swamphacks/core/apps/api/internal/db"
-	"github.com/swamphacks/core/apps/api/internal/db/repository"
-	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 )
 
 type API struct {
-	Router *chi.Mux
-	Logger *zerolog.Logger
-	Wg     *sync.WaitGroup
+	Router     *chi.Mux
+	Logger     *zerolog.Logger
+	Handlers   *handlers.Handlers
+	Middleware *mw.Middleware
 }
 
-func NewAPI(log *zerolog.Logger, db *db.DB) {
-	// Obviously don't make a new client here..., this is just for testing
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
+func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers, middleware *mw.Middleware) *API {
+	api := &API{
+		Router:     chi.NewRouter(),
+		Logger:     logger,
+		Handlers:   handlers,
+		Middleware: middleware,
+	}
+
+	api.setupRoutes(api.Middleware)
+
+	return api
+}
+
+func (api *API) setupRoutes(mw *mw.Middleware) {
+	api.Router.Use(middleware.Logger)
+	api.Router.Use(middleware.RealIP)
+
+	api.Router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		api.Logger.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("Received ping.")
+
+		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Length", "6") // "pong!\n" is 6 bytes
+
+		if _, err := w.Write([]byte("pong!\n")); err != nil {
+			return
+		}
+
 	})
 
-	ur := repository.NewUserRepository(db)
-	as := services.NewAuthService(ur)
-	hl := handlers.NewHandlers(as)
+	api.Router.Route("/auth", func(r chi.Router) {
+		r.Post("/callback", api.Handlers.Auth.OAuthCallback)
+	})
 
-	r := chi.NewRouter()
-	r.Use(middleware.RealIP)
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
+	api.Router.Route("/protected", func(r chi.Router) {
+		r.Use(mw.Auth.RequireAuth)
+		r.Get("/basic", func(w http.ResponseWriter, r *http.Request) {
+			if _, err := w.Write([]byte("Welcome, arbitrarily roled user that I don't know the role of yet!!\n")); err != nil {
+				return
+			}
+		})
 
-	r.Route("/v1", func(r chi.Router) {
-		r.Post("/oauth/verify", hl.AuthHandler.HandleOAuthCallback)
+		r.Group(func(r chi.Router) {
+			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleUser))
 
-		r.Route("/auth", func(r chi.Router) {
-			r.Use(mw.SessionMiddleware(rdb, db))
-			r.Get("/me", hl.AuthHandler.HandleGetMe)
+			r.Get("/user", func(w http.ResponseWriter, r *http.Request) {
+				if _, err := w.Write([]byte("Welcome, user!\n")); err != nil {
+					return
+				}
+			})
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleSuperuser))
+
+			r.Get("/superuser", func(w http.ResponseWriter, r *http.Request) {
+				if _, err := w.Write([]byte("Welcome, superuser!\n")); err != nil {
+					return
+				}
+			})
 		})
 	})
 }

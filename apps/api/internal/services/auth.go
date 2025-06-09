@@ -2,28 +2,152 @@ package services
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"net/http"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/oauth"
+)
+
+var (
+	ErrProviderUnsupported  = errors.New("this provider is unsupported")
+	ErrAuthenticationFailed = errors.New("failed to authenticate user")
+	ErrFetchUserFailed      = errors.New("failed to fetch user info")
 )
 
 type AuthService struct {
-	userRepo *repository.UserRepository
+	userRepo    *repository.UserRepository
+	accountRepo *repository.AccountRepository
+	sessionRepo *repository.SessionRepository
+	txm         *db.TransactionManager
+	client      *http.Client
+	logger      zerolog.Logger
+	authCfg     *config.AuthConfig
 }
 
-func NewAuthService(userRepo *repository.UserRepository) *AuthService {
+func NewAuthService(userRepo *repository.UserRepository, accountRepo *repository.AccountRepository, sessionRepo *repository.SessionRepository, txm *db.TransactionManager, client *http.Client, logger zerolog.Logger, authCfg *config.AuthConfig) *AuthService {
 	return &AuthService{
-		userRepo: userRepo,
+		userRepo:    userRepo,
+		accountRepo: accountRepo,
+		sessionRepo: sessionRepo,
+		txm:         txm,
+		client:      client,
+		logger:      logger.With().Str("service", "AuthService").Str("component", "auth").Logger(),
+		authCfg:     authCfg,
 	}
 }
 
-func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider string) (string, error) {
-	// Authenticate logic here
-
-	return "token", nil
+func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider, ipAddress, userAgent string) (*sqlc.AuthSession, error) {
+	switch provider {
+	case "discord":
+		return s.authenticateWithDiscord(ctx, code, ipAddress, userAgent)
+	default:
+		return nil, ErrProviderUnsupported
+	}
 }
 
 func (s *AuthService) GetMe(ctx context.Context) (*sqlc.AuthUser, error) {
 	// Pull the userId from the context
 	return nil, nil
+}
+
+func (s *AuthService) authenticateWithDiscord(ctx context.Context, code, ipAddress, userAgent string) (*sqlc.AuthSession, error) {
+	discordOAuthResp, err := oauth.ExchangeDiscordCode(ctx, s.client, &s.authCfg.Discord, code)
+	if err != nil {
+		// Log it
+		s.logger.Err(err).Msg("Failed to exchange discord code for user authentication")
+		return nil, ErrAuthenticationFailed
+	}
+
+	discordUser, err := oauth.GetDiscordUserInfo(ctx, s.client, discordOAuthResp.AccessToken)
+	if err != nil {
+		return nil, fmt.Errorf("%w: provider=discord", ErrFetchUserFailed)
+	}
+
+	// Check if account already exists!
+	account, err := s.accountRepo.GetByProviderAndAccountID(ctx, sqlc.GetByProviderAndAccountIDParams{
+		ProviderID: "discord",
+		AccountID:  discordUser.ID,
+	})
+
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return s.registerNewDiscordUser(ctx, discordUser, discordOAuthResp, ipAddress, userAgent)
+	} else if err != nil {
+		return nil, err
+	}
+
+	return s.createSessionForExistingUser(ctx, account.UserID, ipAddress, userAgent)
+}
+
+func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oauth.DiscordUser, oauthResp *oauth.DiscordExchangeResponse, ipAddress, userAgent string) (*sqlc.AuthSession, error) {
+	var session *sqlc.AuthSession
+
+	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txUserRepo := s.userRepo.NewTx(tx)
+		txAccountRepo := s.accountRepo.NewTx(tx)
+		txSessionRepo := s.sessionRepo.NewTx(tx)
+
+		user, err := txUserRepo.Create(ctx, sqlc.CreateUserParams{
+			Name:  userInfo.Username,
+			Email: &userInfo.Email,
+			Image: &userInfo.Avatar,
+		})
+		if err != nil {
+			return err
+		}
+
+		// Create account
+		_, err = txAccountRepo.Create(ctx, sqlc.CreateAccountParams{
+			UserID:               user.ID,
+			ProviderID:           "discord",
+			AccountID:            userInfo.ID,
+			AccessToken:          &oauthResp.AccessToken,
+			RefreshToken:         &oauthResp.RefreshToken,
+			AccessTokenExpiresAt: expiresAt(oauthResp.ExpiresIn),
+		})
+		if err != nil {
+			return err
+		}
+		// create session
+		session, err = txSessionRepo.Create(ctx, sqlc.CreateSessionParams{
+			UserID:    user.ID,
+			ExpiresAt: time.Now().AddDate(0, 1, 0),
+			IpAddress: &ipAddress,
+			UserAgent: &userAgent,
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return session, nil
+}
+
+func (s *AuthService) createSessionForExistingUser(ctx context.Context, userID uuid.UUID, ipAddress, userAgent string) (*sqlc.AuthSession, error) {
+	return s.sessionRepo.Create(ctx, sqlc.CreateSessionParams{
+		UserID:    userID,
+		ExpiresAt: time.Now().AddDate(0, 1, 0),
+		IpAddress: &ipAddress,
+		UserAgent: &userAgent,
+	})
+}
+
+func expiresAt(duration time.Duration) *time.Time {
+	expiredAtTime := time.Now().Add(duration)
+	return &expiredAtTime
 }
