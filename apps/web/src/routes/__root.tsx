@@ -1,15 +1,22 @@
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { ThemeSwitch } from "@/components/ThemeProvider";
+import { useAuth } from "@/features/Auth/hooks/useAuth";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
-export const Route = createRootRoute({
+interface RouterContext {
+  auth: ReturnType<typeof useAuth>;
+}
+
+const IS_DEV = import.meta.env.DEV;
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: () => (
     <>
-      <div className="p-2 flex gap-2">
-        <Link to="/" className="[&.active]:font-bold">
-          Home
-        </Link>
-      </div>
-      <hr />
       <Outlet />
+      {IS_DEV && (
+        <div className="fixed inline-flex w-fit z-[999] bottom-3 left-3 text-white">
+          <ThemeSwitch />
+        </div>
+      )}
     </>
   ),
 });

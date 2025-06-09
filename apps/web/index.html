@@ -2,9 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- TODO: CHANGE FAVICON -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TODO: Change page title</title>
+    <script>
+      // This script is used to prevent flashing on page load, as it loads the apporiate theme first before loading the css
+      const theme = (localStorage.getItem("swamphacks-ui-theme")) || "system";
+      const root = window.document.documentElement;
+
+      root.classList.remove("light", "dark");
+
+      if (theme === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+
+        root.classList.add(systemTheme);
+      } else {
+        root.classList.add(theme);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

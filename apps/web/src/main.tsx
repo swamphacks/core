@@ -6,8 +6,15 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
 import { queryClient } from "./lib/query";
+import { ThemeProvider } from "./components/ThemeProvider";
+import { useAuth } from "./features/Auth/hooks/useAuth";
 
-const router = createRouter({ routeTree });
+const router = createRouter({
+  routeTree,
+  context: {
+    auth: undefined!,
+  },
+});
 
 declare module "@tanstack/react-router" {
   interface Register {
@@ -16,10 +23,14 @@ declare module "@tanstack/react-router" {
 }
 
 function App() {
+  const auth = useAuth();
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <ThemeProvider defaultTheme="system" storageKey="swamphacks-ui-theme">
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} context={{ auth }} />
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 
