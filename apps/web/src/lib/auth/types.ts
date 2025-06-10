@@ -8,7 +8,7 @@ export type BaseOAuthParams = {
   state?: string;
 };
 
-export type OauthProvider = {
+export type OAuthProvider = {
   id: string;
   authorization: {
     url: string;
@@ -17,13 +17,13 @@ export type OauthProvider = {
   };
 };
 
-export type OauthState = {
+export type OAuthState = {
   nonce: string;
   provider: string;
-  redirect?: string;
+  redirectUri?: string;
 };
 
 export type AuthConfig = {
-  providers: OauthProvider[];
-  redirect_uri: string;
+  providers: OAuthProvider[];
+  redirectUri: string;
 };

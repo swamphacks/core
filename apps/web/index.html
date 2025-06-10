@@ -8,13 +8,14 @@
     <title>TODO: Change page title</title>
     <script>
       // This script is used to prevent flashing on page load, as it loads the apporiate theme first before loading the css
-      const theme = (localStorage.getItem("swamphacks-ui-theme")) || "system";
+      const theme = localStorage.getItem("swamphacks-ui-theme") || "system";
       const root = window.document.documentElement;
 
       root.classList.remove("light", "dark");
 
       if (theme === "system") {
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+          .matches
           ? "dark"
           : "light";
 
