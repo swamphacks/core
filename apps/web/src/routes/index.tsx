@@ -4,14 +4,14 @@ import { Login } from "@/features/Auth/components/Login";
 
 export const Route = createFileRoute("/")({
   validateSearch: z.object({
-    redirect: z.string().optional().catch(""),
+    redirectTo: z.string().optional().catch(""),
   }),
   component: Index,
 });
 
 function Index() {
   return (
-    <div className="h-full flex items-center justify-center pb-20">
+    <div className="h-full flex items-center justify-center pb-15">
       <Login />
     </div>
   );

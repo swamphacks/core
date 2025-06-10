@@ -25,9 +25,6 @@ const button = tv({
 // Combine Tailwind variant types with RAC props
 type ButtonVariants = VariantProps<typeof button>;
 
-// interface ButtonProps
-//   extends ButtonVariants,
-//     Omit<RAC_ButtonProps, "className"> {}
 interface ButtonProps extends ButtonVariants, RAC_ButtonProps {}
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(

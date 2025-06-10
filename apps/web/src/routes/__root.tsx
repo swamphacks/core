@@ -1,9 +1,8 @@
 import { ThemeSwitch } from "@/components/ThemeProvider";
-import { useAuth } from "@/features/Auth/hooks/useAuth";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
 interface RouterContext {
-  auth: ReturnType<typeof useAuth>;
+  user: undefined; // Fill this in with your user type
 }
 
 const IS_DEV = import.meta.env.DEV;

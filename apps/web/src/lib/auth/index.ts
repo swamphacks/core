@@ -1,29 +1,18 @@
 import Cookies from "js-cookie";
-import type {
-  OauthProvider,
-  BaseOAuthParams,
-  AuthConfig,
-  OauthState,
-} from "./types";
+import type { AuthConfig, OAuthState } from "./types";
+import { createOAuthRequestParams } from "./utils";
 
-const buildOauthParams = (
-  provider: OauthProvider,
-  redirectUri: string,
-  state: OauthState,
-): BaseOAuthParams => ({
-  response_type: "code",
-  scope: provider.authorization.scopes,
-  client_id: provider.authorization.clientId,
-  redirect_uri: redirectUri,
-  state: btoa(JSON.stringify(state)),
-});
-
-/*
- * This internal function enables strict typing for "auth.signIn()".
- * It ensures that the "providerId" argument can only be one of the "id" values
- * from the providers specified in the Auth configuration, rather than any string.
+/**
+ * Internal function to handle OAuth sign-in for configured providers.
+ *
+ * @template T - The AuthConfig type containing OAuth providers and configuration.
+ * @param {T} config - The authentication configuration object.
+ * @returns A function that initiates OAuth sign-in for the specified provider ID and optional return URL.
+ *
+ * @throws {Error} Throws if the provider ID is not found in the config.
+ * @throws {Error} Throws if the optional `returnTo` URL is invalid.
  */
-function _signInInternal<T extends AuthConfig>(config: T) {
+function _oauthSignIn<T extends AuthConfig>(config: T) {
   type ProviderId = T["providers"][number]["id"];
 
   return (providerId: ProviderId, returnTo?: string) => {
@@ -47,10 +36,10 @@ function _signInInternal<T extends AuthConfig>(config: T) {
     const url = new URL(provider.authorization.url);
 
     // Set state parameter to prevent CSRF attacks
-    const state: OauthState = {
+    const state: OAuthState = {
       nonce: crypto.randomUUID(),
       provider: providerId,
-      redirect: returnTo,
+      redirectUri: returnTo, // Ask about this
     };
 
     Cookies.set("sh_auth_nonce", state.nonce, {
@@ -60,7 +49,11 @@ function _signInInternal<T extends AuthConfig>(config: T) {
       secure: true,
     });
 
-    const params = buildOauthParams(provider, config.redirect_uri, state);
+    const params = createOAuthRequestParams(
+      provider,
+      config.redirectUri,
+      state,
+    );
 
     for (const [param, value] of Object.entries(params)) {
       url.searchParams.set(param, value);
@@ -73,9 +66,13 @@ function _signInInternal<T extends AuthConfig>(config: T) {
 // The entry point to the auth library
 export default function Auth<const T extends AuthConfig>(config: T) {
   return {
-    signIn: _signInInternal(config),
-    signOut: () => {
-      // TODO: implement logout
+    oauth: {
+      signIn: _oauthSignIn(config),
     },
+
+    // Generic functions
+    logOut: () => {},
+    useUser: () => {},
+    useSession: () => {},
   };
 }
