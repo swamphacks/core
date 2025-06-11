@@ -1,22 +1,46 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Button } from "@/components/ui/Button";
+import { authClient } from "@/lib/authClient";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/dashboard")({
   component: RouteComponent,
-  loader: ({ context }) => {
-    // TODO: fetch approriate data based on user role
-    return {
-      user: context.user,
-    };
+  beforeLoad: async () => {
+    const { user, error } = await authClient.getUser();
+
+    if (error) {
+      console.error("Auth error in beforeLoad:", error);
+      throw error;
+    }
+
+    // If no user, redirect to login
+    if (!user) {
+      console.log("No user found, redirecting to login.");
+      throw redirect({
+        to: "/",
+        search: { redirectTo: "/dashboard" },
+      });
+    }
+
+    return { user };
   },
 });
 
 function RouteComponent() {
-  // const data = useLoaderData({ from: "/_protected/dashboard" });
+  const logout = async () => {
+    try {
+      await authClient.logOut();
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
 
   return (
     <div>
       {/* {data.user.role === "admin" ? <Dashboard /> : <HackerDashboard />} */}
       <p>Dashboard</p>
+      <Button onClick={logout} color="danger">
+        Logout
+      </Button>
     </div>
   );
 }

@@ -19,7 +19,8 @@ import (
 type ctxKey string
 
 // Use this variable to retrieve the user object later from context!
-const userContextKey ctxKey = "user"
+const UserContextKey ctxKey = "user"
+const SessionContextKey ctxKey = "session"
 
 type AuthMiddleware struct {
 	db     *db.DB
@@ -27,13 +28,16 @@ type AuthMiddleware struct {
 	cfg    *config.Config
 }
 
-// Copied from sqlc.GetActiveSessionUserInfoRow for readability when casting in other files
 type UserContext struct {
-	UserID    uuid.UUID
-	Name      string
-	Onboarded bool
-	Image     *string
-	Role      sqlc.AuthUserRole
+	UserID    uuid.UUID         `json:"userId"`
+	Name      string            `json:"name"`
+	Onboarded bool              `json:"onboarded"`
+	Image     *string           `json:"image,omitempty"` // omit if nil
+	Role      sqlc.AuthUserRole `json:"role"`
+}
+
+type SessionContext struct {
+	SessionID uuid.UUID
 }
 
 func NewAuthMiddleware(db *db.DB, logger zerolog.Logger, cfg *config.Config) *AuthMiddleware {
@@ -46,6 +50,7 @@ func NewAuthMiddleware(db *db.DB, logger zerolog.Logger, cfg *config.Config) *Au
 
 func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		m.logger.Trace().Msg("Checking auth status")
 		cookie, err := r.Cookie("sh_session_id")
 		if err != nil {
 			m.logger.Warn().Msg("Missing session cookie.")
@@ -53,6 +58,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
+		m.logger.Trace().Msg("Checking session id")
 		sessionID, err := uuid.Parse(cookie.Value)
 		if err != nil {
 			m.logger.Warn().Msg("Session cookie was unparsable into UUID")
@@ -60,6 +66,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
+		m.logger.Trace().Msg("Checking active session user info")
 		user, err := m.db.Query.GetActiveSessionUserInfo(r.Context(), sessionID)
 		if err != nil && errors.Is(err, sql.ErrNoRows) {
 			m.logger.Info().Msg("Session is no longer valid or does not exist.")
@@ -71,6 +78,8 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
+		m.logger.Trace().Msg("Building contexts")
+		m.logger.Trace().Str("userid", user.UserID.String())
 		userContext := UserContext{
 			UserID:    user.UserID,
 			Name:      user.Name,
@@ -79,9 +88,19 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			Role:      user.Role,
 		}
 
+		sessionContext := SessionContext{
+			SessionID: sessionID,
+		}
+
+		m.logger.Debug().Interface("userContext", userContext).Msg("Debugging user context")
+
+		m.logger.Trace().Msg("Checking last used at")
 		m.checkLastUsedAt(w, r, sessionID, user.LastUsedAt)
 
-		ctx := context.WithValue(r.Context(), userContextKey, userContext)
+		m.logger.Trace().Msg("inserting contexts")
+		ctx := context.WithValue(r.Context(), UserContextKey, &userContext)
+		ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
+		m.logger.Trace().Msg("proceeding")
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -90,7 +109,7 @@ func (m *AuthMiddleware) RequirePlatformRole(role sqlc.AuthUserRole) func(http.H
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// get user from context
-			userCtx, ok := r.Context().Value(userContextKey).(UserContext)
+			userCtx, ok := r.Context().Value(UserContextKey).(UserContext)
 			if !ok {
 				m.logger.Warn().Msg("No user context found.")
 				response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized."))

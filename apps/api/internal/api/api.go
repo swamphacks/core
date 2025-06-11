@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
 	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
@@ -34,6 +35,14 @@ func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers, middleware *mw.
 func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Use(middleware.Logger)
 	api.Router.Use(middleware.RealIP)
+	api.Router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
 
 	api.Router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		api.Logger.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("Received ping.")
@@ -48,9 +57,18 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	})
 
 	api.Router.Route("/auth", func(r chi.Router) {
-		r.Post("/callback", api.Handlers.Auth.OAuthCallback)
+		r.Get("/callback", api.Handlers.Auth.OAuthCallback)
+
+		r.Group(func(r chi.Router) {
+			r.Use(mw.Auth.RequireAuth)
+
+			r.Get("/me", api.Handlers.Auth.GetMe)
+
+			r.Post("/logout", api.Handlers.Auth.Logout)
+		})
 	})
 
+	// Just for testing role perms right now
 	api.Router.Route("/protected", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
 		r.Get("/basic", func(w http.ResponseWriter, r *http.Request) {

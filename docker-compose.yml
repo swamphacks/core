@@ -3,7 +3,7 @@ services:
     build:
       dockerfile: Dockerfile.dev
       context: ./apps/api
-    env_file: "./apps/api/.env.local"
+    env_file: "./apps/api/.env.dev"
     volumes:
       - ./apps/api:/app
     ports:

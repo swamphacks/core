@@ -28,8 +28,9 @@ type Config struct {
 	DatabaseURL string `env:"DATABASE_URL"`
 	Port        string `env:"PORT" envDefault:"8080"`
 
-	Auth   AuthConfig   `envPrefix:"AUTH_"`
-	Cookie CookieConfig `envPrefix:"COOKIE_"`
+	Auth      AuthConfig   `envPrefix:"AUTH_"`
+	Cookie    CookieConfig `envPrefix:"COOKIE_"`
+	ClientUrl string       `env:"CLIENT_URL"`
 }
 
 func Load() *Config {

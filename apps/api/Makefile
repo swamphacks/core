@@ -1,7 +1,3 @@
-# This is the alternate way to migrate and generate SQLC queries
-#
-# Note: Please have an .env.local in the root of the api/ folder
-
 include .env.local
 
 migrate-up:
