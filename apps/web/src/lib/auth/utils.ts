@@ -1,4 +1,5 @@
 import type { BaseOAuthParams, OAuthProvider, OAuthState } from "./types";
+import Cookies from "js-cookie";
 
 export const createOAuthRequestParams = (
   provider: OAuthProvider,
@@ -11,3 +12,7 @@ export const createOAuthRequestParams = (
   redirect_uri: redirectUri,
   state: btoa(JSON.stringify(state)),
 });
+
+export function isInSession() {
+  return !!Cookies.get("sh_session");
+}

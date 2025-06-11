@@ -8,11 +8,12 @@ import "./index.css";
 import { routeTree } from "./routeTree.gen";
 import { queryClient } from "./lib/query";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { authClient } from "@/lib/authClient";
 
 const router = createRouter({
   routeTree,
   context: {
-    user: undefined, // Fill this in with your user type
+    user: undefined!,
   },
 });
 
@@ -23,17 +24,17 @@ declare module "@tanstack/react-router" {
 }
 
 function App() {
-  return (
-    <ThemeProvider defaultTheme="system" storageKey="swamphacks-ui-theme">
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </ThemeProvider>
-  );
+  const user = authClient.useUser();
+
+  return <RouterProvider router={router} context={{ user }} />;
 }
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="system" storageKey="ui-theme">
+        <App />
+      </ThemeProvider>
+    </QueryClientProvider>
   </StrictMode>,
 );

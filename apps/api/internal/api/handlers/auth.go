@@ -120,6 +120,26 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		Expires:  session.ExpiresAt,
 	}
 
+	// This cookie is used to indicate whether or not a user is in a session
+	// I'm not sure whether or not it is secure to expose a cookie like this even though it doesn't contain any sensitive info.
+	// Its purpose is to reduce the number of authentication requests to our backend
+	sessionCookie := &http.Cookie{
+		Name:     "sh_session",
+		Value:    "1",
+		Domain:   h.cfg.Cookie.Domain,
+		Path:     "/",
+		HttpOnly: false,
+		Secure:   h.cfg.Cookie.Secure, // Only for dev
+		SameSite: http.SameSiteLaxMode,
+		Expires:  session.ExpiresAt,
+	}
+
+	redirectURL := state.Redirect
+	if redirectURL == "" {
+		redirectURL = "http://localhost:5173" // TODO: only for dev
+	}
+
 	http.SetCookie(w, cookie)
-	http.Redirect(w, r, "http://localhost:3000"+state.Redirect, http.StatusSeeOther)
+	http.SetCookie(w, sessionCookie)
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }

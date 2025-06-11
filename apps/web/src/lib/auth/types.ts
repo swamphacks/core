@@ -1,3 +1,11 @@
+export type User = {
+  userId: string;
+  name: string;
+  image: string;
+  onboarded: boolean;
+  role: string;
+};
+
 // based on the RFC: https://datatracker.ietf.org/doc/html/rfc6749
 // certain providers will have their own unique params too
 export type BaseOAuthParams = {
@@ -20,7 +28,7 @@ export type OAuthProvider = {
 export type OAuthState = {
   nonce: string;
   provider: string;
-  redirectUri?: string;
+  redirect?: string;
 };
 
 export type AuthConfig = {

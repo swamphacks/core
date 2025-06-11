@@ -1,9 +1,8 @@
 import { DiscordIcon } from "@/components/icons/Discord";
 import { Button } from "@/components/ui/Button";
 import { useTheme } from "@/components/ThemeProvider";
-
-import { useSearch } from "@tanstack/react-router";
 import { authClient } from "@/lib/authClient";
+import { useSearch } from "@tanstack/react-router";
 
 const Logo = ({ src }: { src: string }) => {
   return <img className="py-5" src={src} alt="SwampHacks Logo" />;
@@ -30,6 +29,7 @@ const Login = () => {
       <Button
         className="items-center gap-2 w-[80%] my-4"
         onClick={() => authClient.oauth.signIn("discord", redirectTo)}
+        // onClick={() => authClient.getUser()}
       >
         <span>
           <DiscordIcon />

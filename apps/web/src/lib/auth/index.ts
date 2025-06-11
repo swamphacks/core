@@ -1,6 +1,14 @@
 import Cookies from "js-cookie";
-import type { AuthConfig, OAuthState } from "./types";
-import { createOAuthRequestParams } from "./utils";
+import type { AuthConfig, OAuthState, User } from "./types";
+import { createOAuthRequestParams, isInSession } from "./utils";
+import { authConfig } from "./config";
+import { HTTPError } from "ky";
+import { api } from "../api";
+import { useQuery } from "@tanstack/react-query";
+
+const userApi = api.extend((options) => ({
+  prefixUrl: `${options.prefixUrl}/protected`,
+}));
 
 /**
  * Internal function to handle OAuth sign-in for configured providers.
@@ -15,7 +23,7 @@ import { createOAuthRequestParams } from "./utils";
 function _oauthSignIn<T extends AuthConfig>(config: T) {
   type ProviderId = T["providers"][number]["id"];
 
-  return (providerId: ProviderId, returnTo?: string) => {
+  return (providerId: ProviderId, redirectTo?: string) => {
     const provider = config.providers.find(
       (provider) => provider.id === providerId,
     );
@@ -24,12 +32,12 @@ function _oauthSignIn<T extends AuthConfig>(config: T) {
       throw new Error(`OAuth provider "${providerId}" not found.`);
     }
 
-    // Validate returnTo url
-    if (returnTo) {
+    // Validate redirectTo url
+    if (redirectTo) {
       try {
-        new URL(returnTo);
+        new URL(redirectTo);
       } catch {
-        throw new Error(`returnTo URL "${returnTo}" is invalid.`);
+        throw new Error(`returnTo URL "${redirectTo}" is invalid.`);
       }
     }
 
@@ -39,7 +47,7 @@ function _oauthSignIn<T extends AuthConfig>(config: T) {
     const state: OAuthState = {
       nonce: crypto.randomUUID(),
       provider: providerId,
-      redirectUri: returnTo, // Ask about this
+      redirect: redirectTo,
     };
 
     Cookies.set("sh_auth_nonce", state.nonce, {
@@ -63,6 +71,82 @@ function _oauthSignIn<T extends AuthConfig>(config: T) {
   };
 }
 
+/**
+ * Gets the current user details if they are authenticated. If a session cookie is found, this function performs a
+ * raw network request, so the returned data is up to date. Results are not cached.
+ *
+ * @returns An object containing the user data and error (if any). If there is an error, user is `null`.
+ */
+async function getUser() {
+  try {
+    if (!isInSession()) {
+      throw new Error("cookie session not found");
+    }
+
+    const user = await userApi(authConfig.AUTH_ME_URL, {
+      credentials: "include",
+    }).json<User>();
+
+    return { user, error: null };
+  } catch (error) {
+    // TODO: extract to error handling function
+    let errorMsg = "auth error";
+    if (error instanceof HTTPError) {
+      try {
+        const errorResponse = await error.response.json();
+        errorMsg = errorResponse.message || errorMsg;
+        console.error(errorResponse.message);
+      } catch {
+        console.error("Failed to parse error response");
+      }
+    } else {
+      // console.error(`Network or system error: ${error.message}`);
+    }
+
+    return { user: null, error: errorMsg };
+  }
+}
+
+/**
+ * A React hook that retrieves current user details if they are authenticated. It uses
+ * Tanstack Query to fetch data using the `getUser` function as the query function.
+ * Results will be cached for 5 minutes.
+ *
+ * @returns An object containing the user data, error (if any) and a promise. If there is an error, user is `null`. The promise can be awaited,
+ * and will resolve with the user data.
+ */
+function useUser() {
+  const result = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
+      const { user, error } = await getUser();
+      if (error) {
+        throw new Error(error);
+      }
+
+      // user is guaranteed to not be null here
+      return user as User;
+    },
+    staleTime: 5 * 60 * 1000, // cache for 5 minutes,
+    retry: (failureCount) => {
+      // console.log(error);
+      return isInSession() && failureCount < 3;
+    },
+  });
+
+  return {
+    user: result.data,
+    error: result.error,
+    // https://tanstack.com/query/latest/docs/framework/react/reference/useQuery
+    // this is an experimental feature so I'm not sure if it will cause problem later or not
+    promise: result.promise,
+  };
+}
+
+function logOut() {
+  throw new Error("Not implemented");
+}
+
 // The entry point to the auth library
 export default function Auth<const T extends AuthConfig>(config: T) {
   return {
@@ -71,8 +155,10 @@ export default function Auth<const T extends AuthConfig>(config: T) {
     },
 
     // Generic functions
-    logOut: () => {},
-    useUser: () => {},
-    useSession: () => {},
+    logOut,
+    getUser,
+
+    // Hooks
+    useUser,
   };
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -46,6 +47,7 @@ func NewAuthMiddleware(db *db.DB, logger zerolog.Logger, cfg *config.Config) *Au
 
 func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.Cookies())
 		cookie, err := r.Cookie("sh_session_id")
 		if err != nil {
 			m.logger.Warn().Msg("Missing session cookie.")

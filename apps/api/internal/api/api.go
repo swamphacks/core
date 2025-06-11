@@ -1,10 +1,12 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
 	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
@@ -31,9 +33,21 @@ func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers, middleware *mw.
 	return api
 }
 
+type TestUser struct {
+	Name string `json:"name"`
+	Id   int    `json:"id"`
+}
+
 func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Use(middleware.Logger)
 	api.Router.Use(middleware.RealIP)
+	api.Router.Use(cors.Handler(cors.Options{
+		// TODO: only for dev
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowCredentials: true,
+	}))
 
 	api.Router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		api.Logger.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("Received ping.")
@@ -48,7 +62,17 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	})
 
 	api.Router.Route("/auth", func(r chi.Router) {
-		r.Post("/callback", api.Handlers.Auth.OAuthCallback)
+		r.Get("/callback", api.Handlers.Auth.OAuthCallback)
+		// r.Get("/user", func(w http.ResponseWriter, r *http.Request) {
+
+		// 	user := TestUser{
+		// 		Name: "Test",
+		// 		Id:   1,
+		// 	}
+
+		// 	w.Header().Set("Content-Type", "application/json")
+		// 	json.NewEncoder(w).Encode(user)
+		// })
 	})
 
 	api.Router.Route("/protected", func(r chi.Router) {
@@ -63,9 +87,16 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleUser))
 
 			r.Get("/user", func(w http.ResponseWriter, r *http.Request) {
-				if _, err := w.Write([]byte("Welcome, user!\n")); err != nil {
-					return
+				user := TestUser{
+					Name: "Test",
+					Id:   1,
 				}
+
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user)
+				// if _, err := w.Write([]byte("Welcome, user!\n")); err != nil {
+				// 	return
+				// }
 			})
 		})
 
