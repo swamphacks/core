@@ -66,7 +66,6 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		m.logger.Trace().Msg("Checking active session user info")
 		user, err := m.db.Query.GetActiveSessionUserInfo(r.Context(), sessionID)
 		if err != nil && errors.Is(err, sql.ErrNoRows) {
 			m.logger.Info().Msg("Session is no longer valid or does not exist.")
@@ -78,8 +77,6 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		m.logger.Trace().Msg("Building contexts")
-		m.logger.Trace().Str("userid", user.UserID.String())
 		userContext := UserContext{
 			UserID:    user.UserID,
 			Name:      user.Name,
@@ -92,15 +89,10 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			SessionID: sessionID,
 		}
 
-		m.logger.Debug().Interface("userContext", userContext).Msg("Debugging user context")
-
-		m.logger.Trace().Msg("Checking last used at")
 		m.checkLastUsedAt(w, r, sessionID, user.LastUsedAt)
 
-		m.logger.Trace().Msg("inserting contexts")
 		ctx := context.WithValue(r.Context(), UserContextKey, &userContext)
 		ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
-		m.logger.Trace().Msg("proceeding")
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -64,8 +64,6 @@ func (s *AuthService) GetMe(ctx context.Context) (*middleware.UserContext, error
 		return nil, ErrFetchUserFailed
 	}
 
-	s.logger.Debug().Interface("userContext", userContext).Msg("INside service")
-
 	return userContext, nil
 }
 
@@ -135,7 +133,7 @@ func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oaut
 			AccountID:            userInfo.ID,
 			AccessToken:          &oauthResp.AccessToken,
 			RefreshToken:         &oauthResp.RefreshToken,
-			AccessTokenExpiresAt: expiresAt(oauthResp.ExpiresIn),
+			AccessTokenExpiresAt: expiresAt(time.Duration(oauthResp.ExpiresIn) * time.Second), // Must convert from seconds to time.Duration
 		})
 		if err != nil {
 			return err
@@ -170,6 +168,7 @@ func (s *AuthService) createSessionForExistingUser(ctx context.Context, userID u
 	})
 }
 
+/* HELPER FUNCTIONS BELOW THIS LINE */
 func expiresAt(duration time.Duration) *time.Time {
 	expiredAtTime := time.Now().Add(duration)
 	return &expiredAtTime

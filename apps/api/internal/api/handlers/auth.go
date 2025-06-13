@@ -6,10 +6,8 @@ import (
 	"errors"
 	"net"
 	"net/http"
-	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/cookie"
@@ -60,9 +58,6 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	// Invalidate cookie
 	cookie.ClearSessionCookie(w, h.cfg.Cookie)
-
-	// Redirect back to login screen ("/")
-	http.Redirect(w, r, h.cfg.ClientUrl, http.StatusSeeOther)
 }
 
 // OAuth Callbacks
@@ -80,8 +75,6 @@ func ensureLeadingSlash(s string) string {
 }
 
 func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
-	log.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("[HIT]")
-
 	q := r.URL.Query()
 
 	codeParam := q.Get("code")
@@ -135,17 +128,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete nonce cookie!
-	nonceCookie = &http.Cookie{
-		Name:     "sh_auth_nonce",
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Unix(0, 0),
-		MaxAge:   -1,
-		HttpOnly: false,
-		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
-	}
-	http.SetCookie(w, nonceCookie)
+	cookie.ExpireCookie(w, h.cfg.Cookie, "sh_auth_nonce")
 
 	// At this point, nonce has matched, proceed with remaining authentication services
 	session, err := h.authService.AuthenticateWithOAuth(r.Context(), codeParam, state.Provider, ipAddress, userAgent)
@@ -164,19 +147,8 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	cookie := &http.Cookie{
-		Name:     "sh_session_id",
-		Value:    session.ID.String(),
-		Domain:   h.cfg.Cookie.Domain,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   h.cfg.Cookie.Secure,
-		SameSite: http.SameSiteLaxMode,
-		Expires:  session.ExpiresAt,
-	}
-
 	redirectPath := ensureLeadingSlash(state.Redirect)
 
-	http.SetCookie(w, cookie)
+	cookie.SetSessionCookie(w, session.ID, session.ExpiresAt, h.cfg.Cookie)
 	http.Redirect(w, r, h.cfg.ClientUrl+redirectPath, http.StatusSeeOther)
 }

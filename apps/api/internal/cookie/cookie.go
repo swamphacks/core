@@ -34,3 +34,15 @@ func ClearSessionCookie(w http.ResponseWriter, cfg config.CookieConfig) {
 		MaxAge:   -1,
 	})
 }
+
+func ExpireCookie(w http.ResponseWriter, cfg config.CookieConfig, name string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    "",
+		Domain:   cfg.Domain,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+	})
+}
