@@ -11,7 +11,7 @@
     "test-cover": "vitest run --coverage",
     "preview": "vite preview",
     "prepare": "cd ../.. && husky ./apps/web/.husky",
-    "format": "prettier --write . && git add --all",
+    "format": "prettier --write ./src && git add --all",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
