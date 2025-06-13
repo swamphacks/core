@@ -3,12 +3,14 @@ package handlers
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"net"
 	"net/http"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/cookie"
 	"github.com/swamphacks/core/apps/api/internal/services"
 )
 
@@ -27,20 +29,35 @@ func NewAuthHandler(authService *services.AuthService, cfg *config.Config, logge
 }
 
 func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
-	// If no userId here, throw
 	user, err := h.authService.GetMe(r.Context())
 	if err != nil {
-		http.Error(w, "not found", http.StatusUnauthorized)
+		res.SendError(w, http.StatusNotFound, res.NewError("no_user", "Your profile could not be loaded."))
 		return
 	}
 
+	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(user)
-	if err != nil {
-		http.Error(w, "something went wrong retrieving user", http.StatusInternalServerError)
+	if err = json.NewEncoder(w).Encode(user); err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went seriously wrong."))
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	err := h.authService.Logout(r.Context())
+	if err != nil && errors.Is(err, services.ErrFetchSessionContextFailed) {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("no_auth", "You are not authorized."))
+		return
+	} else if err != nil && errors.Is(err, services.ErrInvalidateSessionFailed) {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("logout_err", "Failed to logout of your session"))
+		return
+	} else if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went seriously wrong."))
+		return
+	}
+
+	// Invalidate cookie
+	cookie.ClearSessionCookie(w, h.cfg.Cookie)
 }
 
 // OAuth Callbacks
@@ -50,17 +67,31 @@ type OAuthState struct {
 	Redirect string `json:"redirect"`
 }
 
-func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
-	log.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("[HIT]")
+func ensureLeadingSlash(s string) string {
+	if len(s) == 0 || s[0] != '/' {
+		return "/" + s
+	}
+	return s
+}
 
+func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
 	codeParam := q.Get("code")
 	stateParam := q.Get("state")
 
 	// User Agent + IpAddress for session
-	userAgent := r.Header.Get("User-Agent")
-	ipAddress := r.RemoteAddr
+	var ipAddress *string
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err == nil && ip != "" {
+		ipAddress = &ip
+	}
+
+	var userAgent *string
+	ua := r.Header.Get("User-Agent")
+	if ua != "" {
+		userAgent = &ua
+	}
 
 	// Empty parameters
 	if codeParam == "" || stateParam == "" {
@@ -96,6 +127,9 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Delete nonce cookie!
+	cookie.ExpireCookie(w, h.cfg.Cookie, "sh_auth_nonce")
+
 	// At this point, nonce has matched, proceed with remaining authentication services
 	session, err := h.authService.AuthenticateWithOAuth(r.Context(), codeParam, state.Provider, ipAddress, userAgent)
 	if err != nil {
@@ -103,23 +137,18 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		case services.ErrProviderUnsupported:
 			res.SendError(w, http.StatusNotImplemented, res.NewError("provider_error", "This provider is not supported... are you sure you're supposed to be here?"))
 			return
+		case services.ErrAuthenticationFailed:
+			res.SendError(w, http.StatusNotImplemented, res.NewError("auth_err", "Failed to authenticate the user."))
+			return
 		default:
+			h.logger.Err(err).Msg("Something unexpected happened.")
 			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went horribly wrong!"))
 			return
 		}
 	}
 
-	cookie := &http.Cookie{
-		Name:     "sh_session_id",
-		Value:    session.ID.String(),
-		Domain:   h.cfg.Cookie.Domain,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   h.cfg.Cookie.Secure, // Only for dev
-		SameSite: http.SameSiteLaxMode,
-		Expires:  session.ExpiresAt,
-	}
+	redirectPath := ensureLeadingSlash(state.Redirect)
 
-	http.SetCookie(w, cookie)
-	http.Redirect(w, r, "http://localhost:3000"+state.Redirect, http.StatusSeeOther)
+	cookie.SetSessionCookie(w, session.ID, session.ExpiresAt, h.cfg.Cookie)
+	http.Redirect(w, r, h.cfg.ClientUrl+redirectPath, http.StatusSeeOther)
 }

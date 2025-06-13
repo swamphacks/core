@@ -143,6 +143,17 @@ func (q *Queries) GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]
 	return items, nil
 }
 
+const invalidateSessionByID = `-- name: InvalidateSessionByID :exec
+UPDATE auth.sessions
+SET expires_at = NOW()
+WHERE id = $1
+`
+
+func (q *Queries) InvalidateSessionByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, invalidateSessionByID, id)
+	return err
+}
+
 const touchSession = `-- name: TouchSession :exec
 UPDATE auth.sessions
 SET expires_at = $2, last_used_at = NOW()

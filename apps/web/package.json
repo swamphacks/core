@@ -11,7 +11,7 @@
     "test-cover": "vitest run --coverage",
     "preview": "vite preview",
     "prepare": "cd ../.. && husky ./apps/web/.husky",
-    "format": "prettier --write . && git add --all",
+    "format": "prettier --write ./src && git add --all",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -31,6 +31,7 @@
     "axios": "^1.9.0",
     "clsx": "^2.1.1",
     "js-cookie": "^3.0.5",
+    "ky": "^1.8.1",
     "react": "^19.1.0",
     "react-aria-components": "^1.8.0",
     "react-dom": "^19.1.0",

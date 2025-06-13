@@ -1,4 +1,4 @@
-FROM node:22.15.0-slim AS base
+FROM node:22.16.0-slim AS base
 
 # Set working directory
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN npm install -g pnpm
 COPY pnpm-lock.yaml package.json ./
 
 # Install dependencies using pnpm
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the project files
 COPY . .

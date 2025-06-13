@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/swamphacks/core/apps/api/internal/config"
@@ -28,12 +27,13 @@ type DiscordUser struct {
 	Email         string `json:"email"`
 }
 
+// Note: expiresIn is in seconds
 type DiscordExchangeResponse struct {
-	AccessToken  string        `json:"access_token"`
-	RefreshToken string        `json:"refresh_token"`
-	TokenType    string        `json:"token_type"`
-	ExpiresIn    time.Duration `json:"expires_in"`
-	Scope        string        `json:"scope"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+	Scope        string `json:"scope"`
 }
 
 func ExchangeDiscordCode(ctx context.Context, client *http.Client, oauthCfg *config.OAuthConfig, code string) (*DiscordExchangeResponse, error) {

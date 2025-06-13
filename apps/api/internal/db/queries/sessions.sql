@@ -32,3 +32,8 @@ LIMIT 1;
 UPDATE auth.sessions
 SET expires_at = $2, last_used_at = NOW()
 WHERE id = $1;
+
+-- name: InvalidateSessionByID :exec
+UPDATE auth.sessions
+SET expires_at = NOW()
+WHERE id = $1;

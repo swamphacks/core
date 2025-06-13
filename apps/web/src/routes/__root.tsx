@@ -1,9 +1,8 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { ThemeSwitch } from "@/components/ThemeProvider";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
-interface RouterContext {
-  user: undefined; // Fill this in with your user type
-}
+interface RouterContext {}
 
 const IS_DEV = import.meta.env.DEV;
 

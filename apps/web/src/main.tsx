@@ -11,9 +11,6 @@ import { ThemeProvider } from "./components/ThemeProvider";
 
 const router = createRouter({
   routeTree,
-  context: {
-    user: undefined, // Fill this in with your user type
-  },
 });
 
 declare module "@tanstack/react-router" {

@@ -1,28 +1,28 @@
-import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
+import { authClient } from "@/lib/authClient";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_protected")({
-  beforeLoad: async ({ context }) => {
-    const user = await context.auth.promise;
+export const Route = createFileRoute("/_protected/layout")({
+  beforeLoad: async () => {
+    const { user, error } = await authClient.getUser();
 
-    // const user = {
-    //   role: "admin",
-    // };
+    if (error) {
+      console.error("Auth error in beforeLoad:", error);
+      throw error;
+    }
+
+    // If no user, redirect to login
     if (!user) {
+      console.log("No user found, redirecting to login.");
       throw redirect({
         to: "/",
-        search: {
-          redirect: location.href,
-        },
+        search: { redirectTo: "/layout" },
       });
     }
 
-    // If authenticated successfully, returns the user object to make it available to RouteComponent's context
-    return {
-      user,
-    };
+    // Return user data for use in the route loader or component
+    return { user };
   },
   pendingMs: 5000,
-  // TODO: update loading component to an animated Icon
   pendingComponent: () => <p>Loading...</p>,
   component: RouteComponent,
 });
