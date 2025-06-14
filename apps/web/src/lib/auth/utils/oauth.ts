@@ -1,4 +1,8 @@
-import type { BaseOAuthParams, OAuthProvider, OAuthState } from "./types";
+import type {
+  BaseOAuthParams,
+  OAuthProvider,
+  OAuthState,
+} from "../types/types";
 
 export const createOAuthRequestParams = (
   provider: OAuthProvider,

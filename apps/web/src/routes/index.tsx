@@ -1,14 +1,14 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Login } from "@/features/Auth/components/Login";
 import { z } from "zod";
-import { authClient } from "@/lib/authClient";
+import { auth } from "@/lib/authClient";
 
 export const Route = createFileRoute("/")({
   validateSearch: z.object({
     redirectTo: z.string().optional().catch(""),
   }),
   beforeLoad: async () => {
-    const { user, error } = await authClient.getUser();
+    const { user, error } = await auth.getUser();
     if (error) throw error;
 
     console.log("Loaded user in beforeLoad:", user);

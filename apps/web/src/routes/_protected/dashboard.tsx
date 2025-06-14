@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/Button";
-import { authClient } from "@/lib/authClient";
+import { auth } from "@/lib/authClient";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/dashboard")({
   component: RouteComponent,
   beforeLoad: async () => {
-    const { user, error } = await authClient.getUser();
+    const { user, error } = await auth.getUser();
 
     if (error) {
       console.error("Auth error in beforeLoad:", error);
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 function RouteComponent() {
   const logout = async () => {
     try {
-      await authClient.logOut();
+      await auth.logOut();
     } catch (error) {
       console.error("Error during logout:", error);
     }

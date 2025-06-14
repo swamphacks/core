@@ -1,9 +1,9 @@
-import { authClient } from "@/lib/authClient";
+import { auth } from "@/lib/authClient";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/layout")({
   beforeLoad: async () => {
-    const { user, error } = await authClient.getUser();
+    const { user, error } = await auth.getUser();
 
     if (error) {
       console.error("Auth error in beforeLoad:", error);
