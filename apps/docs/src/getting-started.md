@@ -58,17 +58,17 @@ Now that you have all the main projects set up, you can use docker and docker co
 We can use `docker compose` to quickly start up both our API and Web projects as well as local databases and caches.
 In the root of the monorepo, run the following in your terminal:  
 ``` bash title="Terminal/Shell"
-docker compose -f docker-compose.dev.yml
+docker compose up
 ```
 ### **Docker Compose with Rebuilding**
 Sometimes we need to rebuild the docker environment and container in order to apply changes. This is more of a rare instance but in case you do need to ensure everything is rebuilt, run docker with the `--build` flag.  
 ``` bash title="Terminal/Shell"
-docker compose -f docker-compose.dev.yml --build
+docker compose up --build
 ```
 ### **Docker Compose for API Development**
 For all our backend developers out there, most of the time you don't need to spin up every application in order to use and test the backend. In cases where you only want to run the API without the web, specify `api` in the command.  
 ``` bash title="Terminal/Shell"
-docker compose -f docker-compose.dev.yml api
+docker compose up api
 ```
 
 !!! info "Database and Cache"
