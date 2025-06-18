@@ -23,10 +23,14 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="swamphacks-ui-theme">
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <InnerApp />
       </QueryClientProvider>
     </ThemeProvider>
   );
+}
+
+function InnerApp() {
+  return <RouterProvider router={router} />;
 }
 
 createRoot(document.getElementById("root")!).render(
