@@ -48,5 +48,10 @@ EXECUTE FUNCTION update_modified_column();
 
 -- +goose Down
 -- +goose StatementBegin
-SELECT 'down SQL query';
+
+DROP TRIGGER IF EXISTS set_updated_at_events ON events;
+DROP TABLE IF EXISTS event_roles;
+DROP TYPE IF EXISTS event_role_type;
+DROP TABLE IF EXISTS events;
+
 -- +goose StatementEnd
