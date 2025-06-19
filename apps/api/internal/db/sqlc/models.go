@@ -54,6 +54,50 @@ func (ns NullAuthUserRole) Value() (driver.Value, error) {
 	return string(ns.AuthUserRole), nil
 }
 
+type EventRoleType string
+
+const (
+	EventRoleTypeAdmin     EventRoleType = "admin"
+	EventRoleTypeStaff     EventRoleType = "staff"
+	EventRoleTypeAttendee  EventRoleType = "attendee"
+	EventRoleTypeApplicant EventRoleType = "applicant"
+)
+
+func (e *EventRoleType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EventRoleType(s)
+	case string:
+		*e = EventRoleType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EventRoleType: %T", src)
+	}
+	return nil
+}
+
+type NullEventRoleType struct {
+	EventRoleType EventRoleType `json:"event_role_type"`
+	Valid         bool          `json:"valid"` // Valid is true if EventRoleType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEventRoleType) Scan(value interface{}) error {
+	if value == nil {
+		ns.EventRoleType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EventRoleType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEventRoleType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EventRoleType), nil
+}
+
 type AuthAccount struct {
 	ID                    uuid.UUID  `json:"id"`
 	UserID                uuid.UUID  `json:"user_id"`
@@ -91,4 +135,30 @@ type AuthUser struct {
 	CreatedAt     time.Time    `json:"created_at"`
 	UpdatedAt     time.Time    `json:"updated_at"`
 	Role          AuthUserRole `json:"role"`
+}
+
+type Event struct {
+	ID               uuid.UUID  `json:"id"`
+	Name             string     `json:"name"`
+	Description      *string    `json:"description"`
+	Location         *string    `json:"location"`
+	LocationUrl      *string    `json:"location_url"`
+	MaxAttendees     *int32     `json:"max_attendees"`
+	ApplicationOpen  time.Time  `json:"application_open"`
+	ApplicationClose time.Time  `json:"application_close"`
+	RsvpDeadline     *time.Time `json:"rsvp_deadline"`
+	DecisionRelease  *time.Time `json:"decision_release"`
+	StartTime        time.Time  `json:"start_time"`
+	EndTime          time.Time  `json:"end_time"`
+	WebsiteUrl       *string    `json:"website_url"`
+	IsPublished      *bool      `json:"is_published"`
+	CreatedAt        *time.Time `json:"created_at"`
+	UpdatedAt        *time.Time `json:"updated_at"`
+}
+
+type EventRole struct {
+	UserID     uuid.UUID     `json:"user_id"`
+	EventID    uuid.UUID     `json:"event_id"`
+	Role       EventRoleType `json:"role"`
+	AssignedAt *time.Time    `json:"assigned_at"`
 }
