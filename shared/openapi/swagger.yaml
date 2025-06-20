@@ -6,9 +6,9 @@ info:
   version: '1.0'
   description: SwampHacks is University of Florida's flagship hackathon. This is the API interface for SwampHacks's server and resources.
   contact:
-    name: Alexander Wang
-    url: 'https://github.com/AlexanderWangY'
-    email: alexanderwang@ufl.edu
+    name: SwampHacks Tech
+    url: 'https://github.com/swamphacks'
+    email: tech@swamphacks.com
   termsOfService: 'https://app.swamphacks.com/terms'
   license:
     name: APACHE LICENSE 2.0
@@ -21,11 +21,9 @@ servers:
   - url: 'https://api.swamphacks.com'
     description: Production
 paths:
-  /v1/auth/callback:
+  /auth/callback:
     post:
-      summary: authentication callback
-      tags:
-        - authentication
+      summary: OAuth2 Auth Callback
       responses:
         '200':
           description: 'OK: User is logged in successfully. For when the redirect field is empty.'
@@ -116,35 +114,34 @@ paths:
           in: cookie
           name: sh_auth_nonce
           description: The nonce for comparing against the callback state decoded to prevent CSRF attacks.
-  /v1/auth/me:
-    get:
-      summary: authenticated user
       tags:
-        - authentication
+        - Authentication
+    parameters: []
+  /auth/me:
+    get:
+      summary: Get Current User
       responses:
         '200':
           description: 'OK: Current user data returned'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/UserContext'
               examples:
                 Normal user:
                   value:
                     id: 497f6eca-6276-4993-bfeb-53cbbbba6f08
                     name: John Apple
-                    email: user@example.com
-                    email_verified: true
+                    onboarded: false
                     image: 'https://example.com/cat.jpeg'
                     role: user
                 Admin user:
                   value:
                     id: 497f6eca-6276-4993-bfeb-53cbbbba6f08
                     name: Mark Scout
-                    email: user@lumoncorp.com
-                    email_verified: true
+                    onboarded: true
                     image: 'http://lumoncorp.com/marks_pfp.jpeg'
-                    role: admin
+                    role: superuser
         '401':
           $ref: '#/components/responses/Unauthenticated'
         5XX:
@@ -156,10 +153,9 @@ paths:
               examples:
                 Example 1:
                   value:
-                    code: A003
-                    error: auth_error
-                    message: Something went wrong with the authentication resource
-      operationId: get-v1-auth-me
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: get-auth-me
       x-stoplight:
         id: oruu4ylz0rtu8
       description: Get the currently authenticated user's information.
@@ -171,52 +167,9 @@ paths:
           in: cookie
           name: sh_session
           description: The authenticated session token/id
-  /v1/auth/session:
-    get:
-      summary: authenticated session
       tags:
-        - authentication
-      responses:
-        '200':
-          description: 'OK: Returns current user''s session'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Session'
-              examples:
-                Sample Session:
-                  value:
-                    id: 497f6eca-6276-4993-bfeb-53cbbbba6f08
-                    user_id: a169451c-8525-4352-b8ca-070dd449a1a5
-                    expires_at: '2019-08-24T14:15:22Z'
-                    ip_address: 127.0.0.1
-                    user_agent: Mozilla/5.0 (Windows NT 10.0) Chrome/114.0.5735.199
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        5XX:
-          description: 'Server Error: Something went terribly wrong on our end.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                Unauthenticated:
-                  value:
-                    code: A003
-                    error: auth_error
-                    message: Something went wrong with the authentication resource
-      operationId: get-v1-auth-session
-      x-stoplight:
-        id: 0x3dlw4bsrfgc
-      description: Retrieves current authenticated user's session information
-      security:
-        - sh_session: []
-      parameters:
-        - schema:
-            type: string
-          in: cookie
-          name: sh_session
-          description: The authenticated session token/id
+        - Authentication
+    parameters: []
 components:
   schemas:
     ErrorResponse:
@@ -224,11 +177,13 @@ components:
       x-stoplight:
         id: dqn6jntknlmx1
       type: object
+      x-examples:
+        Example 1:
+          code: A001
+          error: invalid_op
+          message: That was an invalid operation. Please try something else.
+      description: 'This model is returned on server errors, it returns an error code (lookup code definitions in documentation), an error key, and a message.'
       properties:
-        code:
-          type: string
-          x-stoplight:
-            id: rokhi9z518d42
         error:
           type: string
           x-stoplight:
@@ -237,19 +192,14 @@ components:
           type: string
           x-stoplight:
             id: avnmp3mkbsdvj
-      x-examples:
-        Example 1:
-          code: A001
-          error: invalid_op
-          message: That was an invalid operation. Please try something else.
-      description: 'This model is returned on server errors, it returns an error code (lookup code definitions in documentation), an error key, and a message.'
-    User:
-      title: User
+    UserContext:
+      title: UserContext
       x-stoplight:
         id: whmmi4ofk7mzg
       type: object
+      description: This is the model used when returning from GetMe. Used often in middleware!
       properties:
-        id:
+        userId:
           type: string
           x-stoplight:
             id: dutrkqcbamq9i
@@ -258,15 +208,10 @@ components:
           type: string
           x-stoplight:
             id: cxqkrp9hrxeot
-        email:
-          type: string
-          x-stoplight:
-            id: hij8zc4tnmx42
-          format: email
-        email_verified:
+        onboarded:
           type: boolean
           x-stoplight:
-            id: mreztycs4cpkw
+            id: jwsqc4yskzoax
         image:
           type: string
           x-stoplight:
@@ -274,15 +219,16 @@ components:
           format: uri
           nullable: true
         role:
-          $ref: '#/components/schemas/Role'
-    Role:
-      title: Role
+          $ref: '#/components/schemas/PlatformRole'
+    PlatformRole:
+      title: PlatformRole
       x-stoplight:
         id: 9700f7uzvtgay
       type: string
       enum:
         - user
-        - admin
+        - superuser
+      description: A user's role on the platform. Either base permissions or elevated superuser perms.
     Session:
       title: Session
       x-stoplight:
@@ -315,9 +261,9 @@ components:
             id: nwik1r68jxwyt
           nullable: true
   securitySchemes:
-    sh_session:
+    sh_session_id:
       type: http
-      scheme: basic
+      scheme: oauth
   responses:
     Unauthenticated:
       description: 'Unauthenticated: Requester is not currently authenticated.'
@@ -328,8 +274,7 @@ components:
           examples:
             Unauthenticated:
               value:
-                code: A001
-                error: unauth
+                error: no_auth
                 message: Not authenticated
       headers: {}
     Unauthorized:
@@ -344,9 +289,8 @@ components:
                 code: A002
                 error: forbidden
                 message: You don't have access to this resource
+    Bad-Request:
+      description: ''
 security:
   - {}
-  - sh_session: []
-tags:
-  - name: authentication
-    description: Features used to authenticate or provide authenticated data
+  - sh_session_id: []
