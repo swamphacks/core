@@ -10,12 +10,11 @@ import { createOAuthRequestParams } from "../utils/oauth";
  * @returns A function that initiates OAuth sign-in for the specified provider ID and optional return URL.
  *
  * @throws {Error} Throws if the provider ID is not found in the config.
- * @throws {Error} Throws if the optional `returnTo` URL is invalid.
  */
 export function _oauthSignIn<T extends AuthConfig>(config: T) {
   type ProviderId = T["providers"][number]["id"];
 
-  return (providerId: ProviderId, returnTo?: string) => {
+  return async (providerId: ProviderId, redirect?: string) => {
     const provider = config.providers.find(
       (provider) => provider.id === providerId,
     );
@@ -24,14 +23,7 @@ export function _oauthSignIn<T extends AuthConfig>(config: T) {
       throw new Error(`OAuth provider "${providerId}" not found.`);
     }
 
-    // Validate returnTo url
-    if (returnTo) {
-      try {
-        new URL(returnTo);
-      } catch {
-        throw new Error(`returnTo URL "${returnTo}" is invalid.`);
-      }
-    }
+    await config.hooks.beforeLogin?.();
 
     const url = new URL(provider.authorization.url);
 
@@ -39,7 +31,7 @@ export function _oauthSignIn<T extends AuthConfig>(config: T) {
     const state: OAuthState = {
       nonce: crypto.randomUUID(),
       provider: providerId,
-      redirectUri: returnTo, // Ask about this
+      redirect,
     };
 
     Cookies.set("sh_auth_nonce", state.nonce, {

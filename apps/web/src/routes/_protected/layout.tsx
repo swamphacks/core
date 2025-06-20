@@ -1,28 +1,35 @@
-import { auth } from "@/lib/authClient";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_protected/layout")({
-  beforeLoad: async () => {
-    const { user, error } = await auth.getUser();
+// This layout component performs authentication checks before the user can access protected pages
+export const Route = createFileRoute("/_protected")({
+  beforeLoad: async ({ context }) => {
+    const { user, error } = await context.user.promise;
 
-    if (error) {
-      console.error("Auth error in beforeLoad:", error);
-      throw error;
-    }
-
-    // If no user, redirect to login
-    if (!user) {
-      console.log("No user found, redirecting to login.");
+    // Unauthenticated, return to login page
+    if (!user && !error) {
+      console.log("User is not authenticated, redirecting to login.");
       throw redirect({
         to: "/",
-        search: { redirectTo: "/layout" },
+        search: { redirect: location.pathname },
+      });
+    }
+
+    if (error) {
+      // TODO: Display a friendly error to the user?
+      console.error("Auth error in beforeLoad in layout.tsx:", error);
+      console.log(
+        "authentication error occurred while accessing protected page, redirecting to login.",
+      );
+      console.log({ redirect: location.pathname });
+      throw redirect({
+        to: "/",
       });
     }
 
     // Return user data for use in the route loader or component
     return { user };
   },
-  pendingMs: 5000,
+  pendingMs: 1000,
   pendingComponent: () => <p>Loading...</p>,
   component: RouteComponent,
 });
