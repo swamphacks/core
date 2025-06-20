@@ -20,10 +20,20 @@ export type OAuthProvider = {
 export type OAuthState = {
   nonce: string;
   provider: string;
-  redirectUri?: string;
+  redirect?: string;
 };
+
+type AsyncFunc = () => Promise<void>;
+
+export type AuthHooks = Partial<{
+  beforeLogin: AsyncFunc;
+  afterLogin: AsyncFunc; // this is probably not useful
+  beforeLogout: AsyncFunc;
+  afterLogout: AsyncFunc;
+}>;
 
 export type AuthConfig = {
   providers: OAuthProvider[];
   redirectUri: string;
+  hooks: AuthHooks;
 };
