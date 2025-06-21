@@ -101,7 +101,7 @@ func (m *AuthMiddleware) RequirePlatformRole(role sqlc.AuthUserRole) func(http.H
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// get user from context
-			userCtx, ok := r.Context().Value(UserContextKey).(UserContext)
+			userCtx, ok := r.Context().Value(UserContextKey).(*UserContext)
 			if !ok {
 				m.logger.Warn().Msg("No user context found.")
 				response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized."))
