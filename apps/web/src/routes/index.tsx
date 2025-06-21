@@ -1,15 +1,13 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Login } from "@/features/Auth/components/Login";
 import { z } from "zod";
-import { auth } from "@/lib/authClient";
 
 export const Route = createFileRoute("/")({
   validateSearch: z.object({
-    redirectTo: z.string().optional().catch(""),
+    redirect: z.string().optional().catch(""),
   }),
-  beforeLoad: async () => {
-    const { user, error } = await auth.getUser();
-    if (error) throw error;
+  beforeLoad: async ({ context }) => {
+    const { user } = await context.userQuery.promise;
 
     console.log("Loaded user in beforeLoad:", user);
 
@@ -19,9 +17,10 @@ export const Route = createFileRoute("/")({
         to: "/dashboard",
       });
     }
-
-    return { user };
   },
+  pendingMs: 50,
+  // TODO: Use skeleton components to display a loading state
+  pendingComponent: () => <p>Loading...</p>,
   component: Index,
 });
 

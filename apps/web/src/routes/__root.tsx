@@ -1,8 +1,10 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { ThemeSwitch } from "@/components/ThemeProvider";
+import type { auth } from "@/lib/authClient";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
-interface RouterContext {}
+interface RouterContext {
+  userQuery: ReturnType<typeof auth.useUser>;
+}
 
 const IS_DEV = import.meta.env.DEV;
 

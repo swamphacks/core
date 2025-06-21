@@ -1,6 +1,6 @@
-import { useUser } from "./hooks/useUser";
+import { _useUser } from "./hooks/useUser";
 import { _oauthSignIn } from "./services/oauth";
-import { _getUser, _internalLogOut } from "./services/session";
+import { _getUser, _logout } from "./services/user";
 import type { AuthConfig } from "./types";
 
 // The entry point to the auth library
@@ -11,9 +11,8 @@ export default function Auth<const T extends AuthConfig>(config: T) {
     },
 
     // Generic functions
-    logOut: _internalLogOut,
+    logOut: _logout(config),
     getUser: _getUser,
-    useUser,
-    getSession: () => {}, // This needs backend implementation to finish
+    useUser: _useUser,
   };
 }

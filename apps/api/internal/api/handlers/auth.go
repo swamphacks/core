@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
@@ -72,6 +73,11 @@ func ensureLeadingSlash(s string) string {
 		return "/" + s
 	}
 	return s
+}
+
+func isURL(s string) bool {
+	u, err := url.Parse(s)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
 func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
@@ -145,6 +151,13 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went horribly wrong!"))
 			return
 		}
+	}
+
+	// Redirect path must be a relative path like /dashboard or /settings, not a URL
+	if isURL(state.Redirect) {
+		// TODO: We should redirect to the login page and display an error message instead of calling SendError here, same for the other places
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_redirect", "The redirect path is invalid."))
+		return
 	}
 
 	redirectPath := ensureLeadingSlash(state.Redirect)

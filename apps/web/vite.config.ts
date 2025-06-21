@@ -12,8 +12,7 @@ export default defineConfig({
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
-      verboseFileRoutes: true,
-      routesDirectory: "src/routes",
+      routeToken: "layout",
     }),
     react(),
     tailwindcss(),
@@ -27,5 +26,8 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  esbuild: {
+    drop: ["console", "debugger"],
   },
 });

@@ -12,7 +12,7 @@ const Logo = ({ src }: { src: string }) => {
 const Login = () => {
   const { theme } = useTheme();
   const search = useSearch({ from: "/" });
-  const redirectTo = search.redirectTo;
+  const redirect = search.redirect;
 
   return (
     <div className="flex flex-col items-center bg-surface rounded-md px-3 pt-6 shadow-md text-text-main">
@@ -29,7 +29,7 @@ const Login = () => {
       </p>
       <Button
         className="items-center gap-2 w-[80%] my-4"
-        onClick={() => auth.oauth.signIn("discord", redirectTo)}
+        onClick={() => auth.oauth.signIn("discord", redirect)}
       >
         <span>
           <DiscordIcon />

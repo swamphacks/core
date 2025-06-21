@@ -8,9 +8,13 @@ import "./index.css";
 import { routeTree } from "./routeTree.gen";
 import { queryClient } from "./lib/query";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { auth } from "./lib/authClient";
 
 const router = createRouter({
   routeTree,
+  context: {
+    userQuery: undefined!,
+  },
 });
 
 declare module "@tanstack/react-router" {
@@ -30,7 +34,16 @@ function App() {
 }
 
 function InnerApp() {
-  return <RouterProvider router={router} />;
+  const userQuery = auth.useUser();
+
+  return (
+    <RouterProvider
+      router={router}
+      context={{
+        userQuery,
+      }}
+    />
+  );
 }
 
 createRoot(document.getElementById("root")!).render(
