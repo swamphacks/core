@@ -3,7 +3,7 @@ import type { auth } from "@/lib/authClient";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
 interface RouterContext {
-  user: ReturnType<typeof auth.useUser>;
+  userQuery: ReturnType<typeof auth.useUser>;
 }
 
 const IS_DEV = import.meta.env.DEV;

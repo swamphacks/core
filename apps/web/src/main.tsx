@@ -13,7 +13,7 @@ import { auth } from "./lib/authClient";
 const router = createRouter({
   routeTree,
   context: {
-    user: undefined!,
+    userQuery: undefined!,
   },
 });
 
@@ -34,13 +34,13 @@ function App() {
 }
 
 function InnerApp() {
-  const user = auth.useUser();
+  const userQuery = auth.useUser();
 
   return (
     <RouterProvider
       router={router}
       context={{
-        user,
+        userQuery,
       }}
     />
   );

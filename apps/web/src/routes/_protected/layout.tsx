@@ -3,7 +3,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 // This layout component performs authentication checks before the user can access protected pages
 export const Route = createFileRoute("/_protected")({
   beforeLoad: async ({ context }) => {
-    const { user, error } = await context.user.promise;
+    const { user, error } = await context.userQuery.promise;
 
     // Unauthenticated, return to login page
     if (!user && !error) {

@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({
     redirect: z.string().optional().catch(""),
   }),
   beforeLoad: async ({ context }) => {
-    const { user } = await context.user.promise;
+    const { user } = await context.userQuery.promise;
 
     console.log("Loaded user in beforeLoad:", user);
 
