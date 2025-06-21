@@ -51,14 +51,8 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: stable
-      - name: Download Go Modules
-        run: go mod download
       - name: Go tidy
         run: go mod tidy
-      - name: Check dependencies
-        run: |
-          go env
-          go list -m all
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
