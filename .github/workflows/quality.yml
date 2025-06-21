@@ -51,10 +51,12 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: stable
+      - name: Go tidy
+        run: go mod tidy
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.1
+          version: v2.1.6
           working-directory: apps/api
 
   discord-bot-checks:
