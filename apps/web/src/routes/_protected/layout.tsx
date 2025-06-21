@@ -20,7 +20,6 @@ export const Route = createFileRoute("/_protected")({
       console.log(
         "authentication error occurred while accessing protected page, redirecting to login.",
       );
-      console.log({ redirect: location.pathname });
       throw redirect({
         to: "/",
       });

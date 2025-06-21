@@ -10,6 +10,7 @@ function RouteComponent() {
   const logout = async () => {
     try {
       await auth.logOut();
+      window.location.href = "/";
     } catch (error) {
       console.error("Error during logout:", error);
     }
