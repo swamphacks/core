@@ -58,6 +58,7 @@ jobs:
         with:
           version: v2.1
           working-directory: apps/api
+          args: run ./...
 
   discord-bot-checks:
     name: Discord bot Lint & Format
