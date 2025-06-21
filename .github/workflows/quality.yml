@@ -53,6 +53,8 @@ jobs:
           go-version: stable
       - name: Download Go Modules
         run: go mod download
+      - name: Go tidy
+        run: go mod tidy
       - name: Check dependencies
         run: |
           go env
