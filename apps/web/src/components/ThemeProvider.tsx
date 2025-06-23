@@ -74,7 +74,7 @@ export function ThemeProvider({
   );
 }
 
-export const DEVThemeSwitch = () => {
+export const DevThemeSwitch = () => {
   const { theme, setTheme } = useTheme();
 
   return (
