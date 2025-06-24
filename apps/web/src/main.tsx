@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
@@ -25,7 +24,7 @@ declare module "@tanstack/react-router" {
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="swamphacks-ui-theme">
+    <ThemeProvider defaultTheme="system">
       <QueryClientProvider client={queryClient}>
         <InnerApp />
       </QueryClientProvider>

@@ -1,4 +1,4 @@
-import { ThemeSwitch } from "@/components/ThemeProvider";
+import { DevThemeSwitch } from "@/components/ThemeProvider";
 import type { auth } from "@/lib/authClient";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
@@ -14,7 +14,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       <Outlet />
       {IS_DEV && (
         <div className="fixed inline-flex w-fit z-[999] bottom-3 left-3 text-white">
-          <ThemeSwitch />
+          <DevThemeSwitch />
         </div>
       )}
     </>
