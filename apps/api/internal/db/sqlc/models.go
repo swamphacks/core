@@ -12,6 +12,51 @@ import (
 	"github.com/google/uuid"
 )
 
+type ApplicationStatus string
+
+const (
+	ApplicationStatusOpen       ApplicationStatus = "open"
+	ApplicationStatusSubmitted  ApplicationStatus = "submitted"
+	ApplicationStatusAccepted   ApplicationStatus = "accepted"
+	ApplicationStatusRejected   ApplicationStatus = "rejected"
+	ApplicationStatusWaitlisted ApplicationStatus = "waitlisted"
+)
+
+func (e *ApplicationStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ApplicationStatus(s)
+	case string:
+		*e = ApplicationStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ApplicationStatus: %T", src)
+	}
+	return nil
+}
+
+type NullApplicationStatus struct {
+	ApplicationStatus ApplicationStatus `json:"application_status"`
+	Valid             bool              `json:"valid"` // Valid is true if ApplicationStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullApplicationStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ApplicationStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ApplicationStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullApplicationStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ApplicationStatus), nil
+}
+
 type AuthUserRole string
 
 const (
@@ -96,6 +141,17 @@ func (ns NullEventRoleType) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.EventRoleType), nil
+}
+
+type Application struct {
+	UserID      uuid.UUID             `json:"user_id"`
+	EventID     uuid.UUID             `json:"event_id"`
+	Status      NullApplicationStatus `json:"status"`
+	Application []byte                `json:"application"`
+	ResumeUrl   *string               `json:"resume_url"`
+	OpenedAt    *time.Time            `json:"opened_at"`
+	SubmittedAt *time.Time            `json:"submitted_at"`
+	ClosedAt    *time.Time            `json:"closed_at"`
 }
 
 type AuthAccount struct {
