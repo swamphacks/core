@@ -15,6 +15,30 @@
   --button-outline: oklch(0.6187 0.2067 259.23 / 25%);
   --button-outline-hover: oklch(0.5465 0.2455 262.87 / 25%);
   --button-outline-disabled: oklch(0.8071 0.10065 250.4462 / 25%);
+
+  --badge-bg-default: var(--color-neutral-200);
+  --badge-bg-rejected: var(--color-red-200);
+  --badge-bg-attending: var(--color-blue-200);
+  --badge-bg-accepted: var(--color-green-200);
+  --badge-bg-waitlisted: var(--color-violet-200);
+  --badge-bg-underReview: var(--color-orange-200);
+  --badge-bg-notApplied: var(--color-neutral-300);
+  --badge-bg-staff: var(--color-sky-200);
+  --badge-bg-admin: var(--color-fuchsia-200);
+  --badge-bg-notGoing: var(--color-red-200);
+  --badge-bg-completed: var(--color-indigo-200);
+
+  --badge-text-default: var(--color-neutral-600);
+  --badge-text-attending: var(--color-blue-600);
+  --badge-text-rejected: var(--color-red-600);
+  --badge-text-accepted: var(--color-green-600);
+  --badge-text-waitlisted: var(--color-violet-600);
+  --badge-text-underReview: var(--color-orange-600);
+  --badge-text-notApplied: var(--color-neutral-600);
+  --badge-text-staff: var(--color-sky-600);
+  --badge-text-admin: var(--color-fuchsia-600);
+  --badge-text-notGoing: var(--color-red-600);
+  --badge-text-completed: var(--color-indigo-600);
 }
 
 .dark {
@@ -34,6 +58,30 @@
   --button-outline: oklch(0.6187 0.2067 259.23 / 25%);
   --button-outline-hover: oklch(0.5465 0.2455 262.87 / 25%);
   --button-outline-disabled: oklch(0.8071 0.10065 250.4462 / 25%);
+
+  --badge-bg-default: var(--color-neutral-200);
+  --badge-bg-rejected: var(--color-red-200);
+  --badge-bg-attending: var(--color-blue-200);
+  --badge-bg-accepted: var(--color-green-200);
+  --badge-bg-waitlisted: var(--color-violet-200);
+  --badge-bg-underReview: var(--color-orange-200);
+  --badge-bg-notApplied: var(--color-neutral-300);
+  --badge-bg-staff: var(--color-sky-200);
+  --badge-bg-admin: var(--color-fuchsia-200);
+  --badge-bg-notGoing: var(--color-red-200);
+  --badge-bg-completed: var(--color-indigo-200);
+
+  --badge-text-default: var(--color-neutral-600);
+  --badge-text-attending: var(--color-blue-600);
+  --badge-text-rejected: var(--color-red-600);
+  --badge-text-accepted: var(--color-green-600);
+  --badge-text-waitlisted: var(--color-violet-600);
+  --badge-text-underReview: var(--color-orange-600);
+  --badge-text-notApplied: var(--color-neutral-600);
+  --badge-text-staff: var(--color-sky-600);
+  --badge-text-admin: var(--color-fuchsia-600);
+  --badge-text-notGoing: var(--color-red-600);
+  --badge-text-completed: var(--color-indigo-600);
 }
 
 @theme inline {
@@ -51,6 +99,30 @@
   --color-button-outline: var(--button-outline);
   --color-button-outline-hover: var(--button-outline-hover);
   --color-button-outline-disabled: var(--button-outline-disabled);
+
+  --color-badge-bg-default: var(--badge-bg-default);
+  --color-badge-bg-rejected: var(--badge-bg-rejected);
+  --color-badge-bg-attending: var(--badge-bg-attending);
+  --color-badge-bg-accepted: var(--badge-bg-accepted);
+  --color-badge-bg-waitlisted: var(--badge-bg-waitlisted);
+  --color-badge-bg-underReview: var(--badge-bg-underReview);
+  --color-badge-bg-notApplied: var(--badge-bg-notApplied);
+  --color-badge-bg-staff: var(--badge-bg-staff);
+  --color-badge-bg-admin: var(--badge-bg-admin);
+  --color-badge-bg-notGoing: var(--badge-bg-notGoing);
+  --color-badge-bg-completed: var(--badge-bg-completed);
+
+  --color-badge-text-default: var(--badge-text-default);
+  --color-badge-text-attending: var(--badge-text-attending);
+  --color-badge-text-rejected: var(--badge-text-rejected);
+  --color-badge-text-accepted: var(--badge-text-accepted);
+  --color-badge-text-waitlisted: var(--badge-text-waitlisted);
+  --color-badge-text-underReview: var(--badge-text-underReview);
+  --color-badge-text-notApplied: var(--badge-text-notApplie);
+  --color-badge-text-staff: var(--badge-text-staff);
+  --color-badge-text-admin: var(--badge-text-admin);
+  --color-badge-text-notGoing: var(--badge-text-notGoing);
+  --color-badge-text-completed: var(--badge-text-completed);
 
   --font-figtree: "Figtree", sans-serif;
 }

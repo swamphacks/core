@@ -6,7 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   envPrefix: "VITE",
   plugins: [
     tanstackRouter({
@@ -28,6 +28,6 @@ export default defineConfig({
     },
   },
   esbuild: {
-    drop: ["console", "debugger"],
+    drop: mode === "production" ? ["console", "debugger"] : [],
   },
-});
+}));
