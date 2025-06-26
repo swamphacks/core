@@ -60,28 +60,28 @@
   --button-outline-disabled: oklch(0.8071 0.10065 250.4462 / 25%);
 
   --badge-bg-default: var(--color-neutral-200);
-  --badge-bg-rejected: var(--color-red-200);
-  --badge-bg-attending: var(--color-blue-200);
-  --badge-bg-accepted: var(--color-green-200);
-  --badge-bg-waitlisted: var(--color-violet-200);
-  --badge-bg-underReview: var(--color-orange-200);
-  --badge-bg-notApplied: var(--color-neutral-300);
-  --badge-bg-staff: var(--color-sky-200);
-  --badge-bg-admin: var(--color-fuchsia-200);
-  --badge-bg-notGoing: var(--color-red-200);
-  --badge-bg-completed: var(--color-indigo-200);
+  --badge-bg-rejected: oklch(0.3378 0.0595 20.68);
+  --badge-bg-attending: oklch(0.3078 0.0681 265.53);
+  --badge-bg-accepted: oklch(0.3701 0.0671 153.92);
+  --badge-bg-waitlisted: oklch(0.3838 0.082 292.43);
+  --badge-bg-underReview: oklch(0.3668 0.0531 65.94);
+  --badge-bg-notApplied: oklch(0.3715 0 0);
+  --badge-bg-staff: oklch(0.3339 0.0442 235.27);
+  --badge-bg-admin: oklch(0.3526 0.0681 318.27);
+  --badge-bg-notGoing: oklch(0.3378 0.0595 20.68);
+  --badge-bg-completed: var(--color-slate-700);
 
   --badge-text-default: var(--color-neutral-600);
-  --badge-text-attending: var(--color-blue-600);
-  --badge-text-rejected: var(--color-red-600);
-  --badge-text-accepted: var(--color-green-600);
-  --badge-text-waitlisted: var(--color-violet-600);
-  --badge-text-underReview: var(--color-orange-600);
-  --badge-text-notApplied: var(--color-neutral-600);
-  --badge-text-staff: var(--color-sky-600);
-  --badge-text-admin: var(--color-fuchsia-600);
-  --badge-text-notGoing: var(--color-red-600);
-  --badge-text-completed: var(--color-indigo-600);
+  --badge-text-attending: var(--color-blue-300);
+  --badge-text-rejected: var(--color-red-400);
+  --badge-text-accepted: var(--color-green-300);
+  --badge-text-waitlisted: oklch(0.9244 0.041 296.28);
+  --badge-text-underReview: var(--color-orange-300);
+  --badge-text-notApplied: var(--color-stone-300);
+  --badge-text-staff: var(--color-sky-200);
+  --badge-text-admin: var(--color-fuchsia-400);
+  --badge-text-notGoing: var(--color-red-400);
+  --badge-text-completed: var(--color-slate-300);
 }
 
 @theme inline {
