@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { forwardRef } from "react";
 import { tv, type VariantProps } from "tailwind-variants";
 
@@ -11,6 +12,7 @@ export const badge = tv({
       sm: "px-2 py-1 text-xs",
       md: "px-2.5 py-1.5 text-sm",
     },
+    // TODO: Border radius?
   },
 
   defaultVariants: {

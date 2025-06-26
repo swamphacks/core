@@ -5,31 +5,28 @@ import applicationStatus from "../applicationStatus";
 type ApplicationStatusTypes = keyof typeof applicationStatus;
 
 /*
-  This is how we go from this object
-
-  {
-    rejected: {
-      className: "bg-badge-bg-rejected text-badge-text-rejected",
-      text: "Rejected",
-      icon: null,
-    },
-  }
-  
-  to this
-
-  {
-    rejected: "bg-badge-bg-rejected text-badge-text-rejected",
-  }
-
-  which we can use as tailwind variants.
-*/
+ * Transforms the `applicationStatus` object into a flattened variant mapping
+ * where each status key maps to its corresponding className.
+ *
+ * For example, it converts:
+ *
+ * {
+ *    rejected: { className: "bg-badge-bg-rejected text-badge-text-rejected", ... },
+ * }
+ *
+ * to:
+ *
+ * {
+ *    rejected: "bg-badge-bg-rejected text-badge-text-rejected",
+ * }
+ */
 const applicationStatusVariants = Object.fromEntries(
   Object.entries(applicationStatus).map(([key, value]) => [
     key,
     value.className,
   ]),
 ) as {
-  [K in ApplicationStatusTypes]: string;
+  [K in ApplicationStatusTypes]: (typeof applicationStatus)[K]["className"];
 };
 
 const eventBadge = tv({
@@ -47,6 +44,7 @@ interface EventBadgeProps extends Omit<BadgeProps, "type"> {
 const EventBadge = ({ status: statusProp, size }: EventBadgeProps) => {
   const eventBadgeClassname = eventBadge({ status: statusProp, size });
   const status = applicationStatus[statusProp];
+  const BadgeIcon = status?.icon;
 
   if (!status) {
     console.error(
@@ -57,7 +55,7 @@ const EventBadge = ({ status: statusProp, size }: EventBadgeProps) => {
 
   return (
     <Badge className={eventBadgeClassname}>
-      {statusProp && status.icon?.()}
+      {BadgeIcon && <BadgeIcon />}
       {status.text}
     </Badge>
   );
