@@ -4,9 +4,10 @@ import react from "@vitejs/plugin-react";
 import tanstackRouter from "@tanstack/router-plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import Icons from "unplugin-icons/vite";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   envPrefix: "VITE",
   plugins: [
     tanstackRouter({
@@ -16,6 +17,10 @@ export default defineConfig({
     }),
     react(),
     tailwindcss(),
+    Icons({
+      compiler: "jsx",
+      jsx: "react",
+    }),
   ],
   test: {
     environment: "jsdom",
@@ -28,6 +33,6 @@ export default defineConfig({
     },
   },
   esbuild: {
-    drop: ["console", "debugger"],
+    drop: mode === "production" ? ["console", "debugger"] : [],
   },
-});
+}));
