@@ -1,26 +1,30 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { EventBadge } from "../EventBadge";
-import applicationStatus from "../../applicationStatus";
+import { EventBadge, eventBadge } from "../EventBadge";
+
+const entries = [];
+
+for (let i = 0; i < eventBadge.variantKeys.length; i++) {
+  const key = eventBadge.variantKeys[i];
+
+  if (key === "type") continue;
+
+  entries.push([
+    key,
+    {
+      control: {
+        type: "select",
+      },
+      options: Object.keys(eventBadge.variants[key]),
+    },
+  ]);
+}
+const argTypes = Object.fromEntries(entries);
 
 const meta = {
   component: EventBadge,
   title: "UI/Event Badge",
   tags: ["autodocs"],
-  argTypes: {
-    status: {
-      control: {
-        type: "select",
-      },
-      options: Object.keys(applicationStatus),
-    },
-    size: {
-      control: {
-        type: "select",
-      },
-      // Maybe we can figure out a way to extract the sizes from tailwind variants?
-      options: ["sm", "md"],
-    },
-  },
+  argTypes,
 } satisfies Meta<typeof EventBadge>;
 
 export default meta;

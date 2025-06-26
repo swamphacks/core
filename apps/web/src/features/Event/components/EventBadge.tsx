@@ -29,7 +29,7 @@ const applicationStatusVariants = Object.fromEntries(
   [K in ApplicationStatusTypes]: (typeof applicationStatus)[K]["className"];
 };
 
-const eventBadge = tv({
+export const eventBadge = tv({
   extend: badge,
   variants: {
     type: {}, // override the `type` variant in the Badge component
@@ -41,8 +41,8 @@ interface EventBadgeProps extends Omit<BadgeProps, "type"> {
   status: ApplicationStatusTypes;
 }
 
-const EventBadge = ({ status: statusProp, size }: EventBadgeProps) => {
-  const eventBadgeClassname = eventBadge({ status: statusProp, size });
+const EventBadge = ({ status: statusProp, size, border }: EventBadgeProps) => {
+  const eventBadgeClassname = eventBadge({ status: statusProp, size, border });
   const status = applicationStatus[statusProp];
   const BadgeIcon = status?.icon;
 
