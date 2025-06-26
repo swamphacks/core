@@ -55,8 +55,14 @@ const EventBadge = ({ status: statusProp, size }: EventBadgeProps) => {
 
   return (
     <Badge className={eventBadgeClassname}>
-      {BadgeIcon && <BadgeIcon />}
-      {status.text}
+      {BadgeIcon && <BadgeIcon width="1.2em" height="1.2em" />}
+      <span
+        style={{
+          marginTop: "0.5px",
+        }}
+      >
+        {status.text}
+      </span>
     </Badge>
   );
 };

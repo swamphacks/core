@@ -34,7 +34,7 @@
   --badge-text-accepted: var(--color-green-600);
   --badge-text-waitlisted: var(--color-violet-600);
   --badge-text-underReview: var(--color-orange-600);
-  --badge-text-notApplied: var(--color-neutral-600);
+  --badge-text-notApplied: var(--color-stone-600);
   --badge-text-staff: var(--color-sky-600);
   --badge-text-admin: var(--color-fuchsia-600);
   --badge-text-notGoing: var(--color-red-600);
@@ -118,7 +118,7 @@
   --color-badge-text-accepted: var(--badge-text-accepted);
   --color-badge-text-waitlisted: var(--badge-text-waitlisted);
   --color-badge-text-underReview: var(--badge-text-underReview);
-  --color-badge-text-notApplied: var(--badge-text-notApplie);
+  --color-badge-text-notApplied: var(--badge-text-notApplied);
   --color-badge-text-staff: var(--badge-text-staff);
   --color-badge-text-admin: var(--badge-text-admin);
   --color-badge-text-notGoing: var(--badge-text-notGoing);
