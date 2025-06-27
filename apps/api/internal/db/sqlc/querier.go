@@ -8,24 +8,31 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
+	AddEmail(ctx context.Context, arg AddEmailParams) (Email, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (AuthAccount, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (AuthSession, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (AuthUser, error)
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) error
+	DeleteEmailByID(ctx context.Context, id uuid.UUID) error
 	DeleteExpiredSession(ctx context.Context) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error)
 	GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
+	GetEmailByID(ctx context.Context, id uuid.UUID) (Email, error)
+	GetEmailsByEvent(ctx context.Context, eventID pgtype.UUID) ([]Email, error)
+	GetEmailsByUser(ctx context.Context, userID pgtype.UUID) ([]Email, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (AuthSession, error)
 	GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthSession, error)
 	GetUserByEmail(ctx context.Context, email *string) (AuthUser, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, error)
 	InvalidateSessionByID(ctx context.Context, id uuid.UUID) error
 	TouchSession(ctx context.Context, arg TouchSessionParams) error
+	UpdateEmailAddress(ctx context.Context, arg UpdateEmailAddressParams) (Email, error)
 	UpdateSessionExpiration(ctx context.Context, arg UpdateSessionExpirationParams) error
 	UpdateTokens(ctx context.Context, arg UpdateTokensParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
