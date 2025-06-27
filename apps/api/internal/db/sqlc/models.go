@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type AuthUserRole string
@@ -135,6 +136,15 @@ type AuthUser struct {
 	CreatedAt     time.Time    `json:"created_at"`
 	UpdatedAt     time.Time    `json:"updated_at"`
 	Role          AuthUserRole `json:"role"`
+}
+
+type Email struct {
+	ID        uuid.UUID   `json:"id"`
+	EventID   pgtype.UUID `json:"event_id"`
+	UserID    pgtype.UUID `json:"user_id"`
+	Email     string      `json:"email"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
 }
 
 type Event struct {
