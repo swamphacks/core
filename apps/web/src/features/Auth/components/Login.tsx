@@ -1,6 +1,6 @@
-import { DiscordIcon } from "@/components/icons/Discord";
 import { Button } from "@/components/ui/Button";
 import { useTheme } from "@/components/ThemeProvider";
+import IcBaselineDiscord from "~icons/ic/baseline-discord";
 
 import { useSearch } from "@tanstack/react-router";
 import { auth } from "@/lib/authClient";
@@ -32,7 +32,7 @@ const Login = () => {
         onClick={() => auth.oauth.signIn("discord", redirect)}
       >
         <span>
-          <DiscordIcon />
+          <IcBaselineDiscord width="1.4em" height="1.4em" />
         </span>
         Log in with Discord
       </Button>
