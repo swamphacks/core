@@ -6,6 +6,7 @@
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "types": ["unplugin-icons/types/react"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
