@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import app_commands, Interaction, Embed, Colour
 from typing import Literal
-from components.open_support_button import OpenSupportButton
+from components.ticket_view import TicketView
 from utils.checks import is_mod_slash
 
 class Support(commands.Cog):
@@ -63,7 +63,7 @@ class Support(commands.Cog):
         embed.set_footer(text="Powered by SwampHacksXI")
         await interaction.response.defer(ephemeral=True)
         await interaction.delete_original_response()
-        await interaction.channel.send(embed=embed, view=OpenSupportButton())
+        await interaction.channel.send(embed=embed, view=TicketView())
 
         
 

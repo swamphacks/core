@@ -1,0 +1,1 @@
+claimed_tickets = {} # {voice_channel_id: user_id or support_thread_id: user_id}

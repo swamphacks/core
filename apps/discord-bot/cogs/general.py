@@ -3,6 +3,7 @@ from discord import app_commands
 import discord
 from typing import Literal
 from utils.checks import is_mod_slash
+from utils.mentor_functions import set_all_mentors_available
 
 
 class General(commands.Cog):
@@ -20,6 +21,10 @@ class General(commands.Cog):
             bot: Discord bot instance
         """
         self.bot: commands.Bot = bot
+    
+    def get_role(self, guild: discord.Guild, role_name: str) -> discord.Role:
+        """Helper to get a role by name from a guild."""
+        return discord.utils.get(guild.roles, name=role_name)
     
     @commands.command()
     async def test(self, ctx: commands.Context) -> None:
@@ -70,6 +75,25 @@ class General(commands.Cog):
             await thread.delete()
         
         await interaction.response.send_message("All threads have been deleted.", ephemeral=True)
+        
+    @app_commands.command(name="delete_all_vcs", description="Delete all voice channels in a specified category")
+    @is_mod_slash()
+    async def delete_all_vcs(self, interaction: discord.Interaction, category: discord.CategoryChannel) -> None:
+        """Delete all voice channels in a specified category
+        
+        Args:
+            interaction: The interaction that triggered this command
+            category: The category from which to delete all voice channels
+        """
+        guild = interaction.guild
+        if category not in guild.categories:
+            await interaction.response.send_message("Error: Could not find the specified category.", ephemeral=True)
+            return
+        
+        for channel in category.voice_channels:
+            await channel.delete()
+        
+        await interaction.response.send_message("All voice channels in the specified category have been deleted.", ephemeral=True)
     
     @app_commands.command(
         name="role",
@@ -159,8 +183,18 @@ class General(commands.Cog):
                 "Invalid action. Please use 'assign' or 'remove'.",
                 ephemeral=True
             )
-
-
+    
+    @is_mod_slash()
+    @app_commands.command(name="set_available_mentors", description="Set available mentors in the server")
+    async def set_all_mentors_available(self, interaction: discord.Interaction) -> None:
+        """Command should be executed intially to set all mentors to available"""
+        mod_role = self.get_role(interaction.guild, "Moderator")
+        if not mod_role:
+            await interaction.response.send_message("Error: Could not find the Moderator role.", ephemeral=True)
+            return
+        await set_all_mentors_available(mod_role)
+        await interaction.response.send_message("All mentors are now available.", ephemeral=True)
+        
 async def setup(bot: commands.Bot) -> None:
     """Add the General cog to the bot
     
