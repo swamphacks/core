@@ -14,7 +14,7 @@
     "format": "prettier --write ./src && git add --all",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "generate:openapi": "openapi-typescript ../../shared/openapi/swagger.yaml -o ./src/lib/openapi/schema.d.ts"
+    "generate:openapi": "openapi-typescript ../../shared/openapi/core-api.yaml -o ./src/lib/openapi/schema.d.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
