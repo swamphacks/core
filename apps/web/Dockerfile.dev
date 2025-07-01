@@ -11,7 +11,7 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN npm install -g pnpm
 
 # Copy package files
-COPY pnpm-lock.yaml package.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies using pnpm
 RUN pnpm install --frozen-lockfile

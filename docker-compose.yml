@@ -15,11 +15,10 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile.dev
-    ports:
-      - "5173:5173"
     volumes:
       - ./apps/web:/app
-      - /app/node_modules
+    ports:
+      - "5173:5173"
     environment:
       - NODE_ENV=development
     depends_on:
