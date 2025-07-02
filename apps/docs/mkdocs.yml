@@ -18,6 +18,7 @@ theme:
     - content.action.edit
 plugins:
   - search
+  - swagger-ui-tag
 copyright: >
   Copyright &copy; 2025 SwampHacks
 
