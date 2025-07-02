@@ -1,4 +1,4 @@
-include .env.local
+include .env.dev
 
 migrate-up:
 	@goose -dir ./internal/db/migrations postgres ${DATABASE_URL_MIGRATIONS} up
