@@ -5,7 +5,7 @@ Summarize changes, try to be specific.
 
 ## Linked Jira Ticket
 <!--
-Link Jira ticket here. [TECH 000](https://swamphacks.atlassian.net/)
+Link Jira ticket here. [TECH-000](https://swamphacks.atlassian.net/browse/TECH-000)
 -->
 
 ## Type of Change
