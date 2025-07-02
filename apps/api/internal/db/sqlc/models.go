@@ -15,11 +15,12 @@ import (
 type ApplicationStatus string
 
 const (
-	ApplicationStatusOpen       ApplicationStatus = "open"
-	ApplicationStatusSubmitted  ApplicationStatus = "submitted"
-	ApplicationStatusAccepted   ApplicationStatus = "accepted"
-	ApplicationStatusRejected   ApplicationStatus = "rejected"
-	ApplicationStatusWaitlisted ApplicationStatus = "waitlisted"
+	ApplicationStatusOpen        ApplicationStatus = "open"
+	ApplicationStatusSubmitted   ApplicationStatus = "submitted"
+	ApplicationStatusUnderReview ApplicationStatus = "under_review"
+	ApplicationStatusAccepted    ApplicationStatus = "accepted"
+	ApplicationStatusRejected    ApplicationStatus = "rejected"
+	ApplicationStatusWaitlisted  ApplicationStatus = "waitlisted"
 )
 
 func (e *ApplicationStatus) Scan(src interface{}) error {
@@ -149,9 +150,8 @@ type Application struct {
 	Status      NullApplicationStatus `json:"status"`
 	Application []byte                `json:"application"`
 	ResumeUrl   *string               `json:"resume_url"`
-	OpenedAt    *time.Time            `json:"opened_at"`
-	SubmittedAt *time.Time            `json:"submitted_at"`
-	ClosedAt    *time.Time            `json:"closed_at"`
+	CreatedAt   *time.Time            `json:"created_at"`
+	UpdatedAt   *time.Time            `json:"updated_at"`
 }
 
 type AuthAccount struct {
