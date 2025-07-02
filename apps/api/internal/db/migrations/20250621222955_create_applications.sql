@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 
-CREATE TYPE application_status AS ENUM ('open', 'submitted', 'accepted', 'rejected', 'waitlisted');
+CREATE TYPE application_status AS ENUM ('open', 'submitted', 'under_review', accepted', 'rejected', 'waitlisted');
 
 CREATE TABLE applications (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -9,10 +9,8 @@ CREATE TABLE applications (
     status application_status DEFAULT 'open',
     application JSONB,
     resume_url TEXT,
-    opened_at TIMESTAMPTZ DEFAULT NOW(),
-    submitted_at TIMESTAMPTZ,
-    closed_at TIMESTAMPTZ,
-    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ,
 
     PRIMARY KEY (user_id, event_id)
 );
