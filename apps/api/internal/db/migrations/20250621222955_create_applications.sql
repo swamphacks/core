@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 
-CREATE TYPE application_status AS ENUM ('open', 'submitted', 'under_review', accepted', 'rejected', 'waitlisted');
+CREATE TYPE application_status AS ENUM ('open', 'submitted', 'under_review', 'accepted', 'rejected', 'waitlisted');
 
 CREATE TABLE applications (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
