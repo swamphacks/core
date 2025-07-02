@@ -18,7 +18,6 @@ theme:
     - content.action.edit
 plugins:
   - search
-  - swagger-ui-tag
 copyright: >
   Copyright &copy; 2025 SwampHacks
 
@@ -50,7 +49,7 @@ nav:
   - API:
       - Overview: api/index.md
       - Installation: api/installation.md
-      - Reference: api/reference.md
+      - OpenAPI: 'https://core.apidocumentation.com/guide/swamphacks-core-api'
   - Discord Bot:
       - Overview: discord-bot/index.md
       - Installation: discord-bot/installation.md
