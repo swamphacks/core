@@ -1,0 +1,41 @@
+import { tv } from "tailwind-variants";
+import applicationStatus from "../applicationStatus";
+import { Button, button, type ButtonProps } from "@/components/ui/Button";
+import { cn } from "@/utils/cn";
+
+type ApplicationStatusTypes = keyof typeof applicationStatus;
+
+const applicationStatusVariants = Object.fromEntries(
+  Object.entries(applicationStatus).map(([key, value]) => [
+    key,
+    value.button.className,
+  ]),
+) as {
+  [K in ApplicationStatusTypes]: (typeof applicationStatus)[K]["button"]["className"];
+};
+
+export const eventButton = tv({
+  extend: button,
+  variants: {
+    color: {},
+    status: applicationStatusVariants,
+  },
+});
+
+interface EventButtonProps extends ButtonProps {
+  status: ApplicationStatusTypes;
+}
+
+const EventButton = ({ status: statusProp }: EventButtonProps) => {
+  const eventButtonClassName = eventButton({
+    status: statusProp,
+  });
+
+  return (
+    <Button className={cn(eventButtonClassName, "font-semibold")}>
+      {applicationStatus[statusProp].button.text}
+    </Button>
+  );
+};
+
+export { EventButton };
