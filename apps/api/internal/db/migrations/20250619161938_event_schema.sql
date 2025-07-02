@@ -13,7 +13,6 @@ CREATE TABLE events (
     application_close TIMESTAMPTZ NOT NULL,
     rsvp_deadline TIMESTAMPTZ,
     decision_release TIMESTAMPTZ,
-    
 
     -- Event phase
     start_time TIMESTAMPTZ NOT NULL,
