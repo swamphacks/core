@@ -43,23 +43,43 @@
 
   /* EVENT CARD BUTTONS */
   --eventBtn-bg-notApplied: var(--color-cyan-700);
+  --eventBtn-bg-notApplied-hover: var(--color-cyan-800);
   --eventBtn-bg-underReview: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
+  --eventBtn-bg-underReview-hover: color-mix(
+    in oklab,
+    var(--color-cyan-700) 15%,
+    transparent
+  );
   --eventBtn-bg-accepted-attending: var(--color-green-600);
+  --eventBtn-bg-accepted-attending-hover: var(--color-green-700);
   --eventBtn-bg-accepted-notGoing: var(--color-neutral-200);
+  --eventBtn-bg-accepted-notGoing-hover: var(--color-neutral-300);
   --eventBtn-bg-rejected: var(--color-neutral-200);
+  --eventBtn-bg-rejected-hover: var(--color-neutral-300);
   --eventBtn-bg-attending: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
+  --eventBtn-bg-attending-hover: color-mix(
+    in oklab,
+    var(--color-cyan-700) 30%,
+    transparent
+  );
   --eventBtn-bg-waitlisted: var(--color-violet-200);
+  --eventBtn-bg-waitlisted-hover: var(--color-violet-300);
   --eventBtn-bg-staff: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
+    transparent
+  );
+  --eventBtn-bg-staff-hover: color-mix(
+    in oklab,
+    var(--color-cyan-700) 30%,
     transparent
   );
   --eventBtn-bg-admin: color-mix(
@@ -67,8 +87,15 @@
     var(--color-cyan-700) 25%,
     transparent
   );
+  --eventBtn-bg-admin-hover: color-mix(
+    in oklab,
+    var(--color-cyan-700) 30%,
+    transparent
+  );
   --eventBtn-bg-notGoing: var(--color-neutral-200);
+  --eventBtn-bg-notGoing-hover: var(--color-neutral-300);
   --eventBtn-bg-completed: var(--color-neutral-200);
+  --eventBtn-bg-completed-hover: var(--color-neutral-300);
 
   --eventBtn-text-notApplied: var(--color-neutral-50);
   --eventBtn-text-underReview: var(--color-cyan-900);
@@ -128,15 +155,27 @@
 
   /* EVENT CARD BUTTONS */
   --eventBtn-bg-notApplied: var(--color-cyan-800);
+  --eventBtn-bg-notApplied-hover: var(--color-cyan-900);
   --eventBtn-bg-underReview: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
+  --eventBtn-bg-underReview-hover: color-mix(
+    in oklab,
+    var(--color-cyan-700) 30%,
+    transparent
+  );
   --eventBtn-bg-accepted-attending: var(--color-green-700);
+  --eventBtn-bg-accepted-attending-hover: var(--color-green-800);
   --eventBtn-bg-accepted-notGoing: color-mix(
     in oklab,
     var(--color-neutral-200) 25%,
+    transparent
+  );
+  --eventBtn-bg-accepted-notGoing-hover: color-mix(
+    in oklab,
+    var(--color-neutral-200) 30%,
     transparent
   );
   --eventBtn-bg-rejected: color-mix(
@@ -144,15 +183,31 @@
     var(--color-neutral-200) 25%,
     transparent
   );
+  --eventBtn-bg-rejected-hover: color-mix(
+    in oklab,
+    var(--color-neutral-200) 30%,
+    transparent
+  );
   --eventBtn-bg-attending: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
+  --eventBtn-bg-attending-hover: color-mix(
+    in oklab,
+    var(--color-cyan-700) 30%,
+    transparent
+  );
   --eventBtn-bg-waitlisted: #453a6b;
+  --eventBtn-bg-waitlisted-hover: #413569;
   --eventBtn-bg-staff: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
+    transparent
+  );
+  --eventBtn-bg-staff-hover: color-mix(
+    in oklab,
+    var(--color-cyan-700) 30%,
     transparent
   );
   --eventBtn-bg-admin: color-mix(
@@ -160,14 +215,29 @@
     var(--color-cyan-700) 25%,
     transparent
   );
+  --eventBtn-bg-admin-hover: color-mix(
+    in oklab,
+    var(--color-cyan-700) 30%,
+    transparent
+  );
   --eventBtn-bg-notGoing: color-mix(
     in oklab,
     var(--color-neutral-200) 25%,
     transparent
   );
+  --eventBtn-bg-notGoing-hover: color-mix(
+    in oklab,
+    var(--color-neutral-200) 30%,
+    transparent
+  );
   --eventBtn-bg-completed: color-mix(
     in oklab,
     var(--color-neutral-200) 25%,
+    transparent
+  );
+  --eventBtn-bg-completed-hover: color-mix(
+    in oklab,
+    var(--color-neutral-200) 30%,
     transparent
   );
 
@@ -225,16 +295,31 @@
   --color-badge-text-completed: var(--badge-text-completed);
 
   --color-eventBtn-bg-notApplied: var(--eventBtn-bg-notApplied);
+  --color-eventBtn-bg-notApplied-hover: var(--eventBtn-bg-notApplied-hover);
   --color-eventBtn-bg-underReview: var(--eventBtn-bg-underReview);
+  --color-eventBtn-bg-underReview-hover: var(--eventBtn-bg-underReview-hover);
   --color-eventBtn-bg-accepted-attending: var(--eventBtn-bg-accepted-attending);
+  --color-eventBtn-bg-accepted-attending-hover: var(
+    --eventBtn-bg-accepted-attending-hover
+  );
   --color-eventBtn-bg-accepted-notGoing: var(--eventBtn-bg-accepted-notGoing);
+  --color-eventBtn-bg-accepted-notGoing-hover: var(
+    --eventBtn-bg-accepted-notGoing-hover
+  );
   --color-eventBtn-bg-rejected: var(--eventBtn-bg-rejected);
+  --color-eventBtn-bg-rejected-hover: var(--eventBtn-bg-rejected-hover);
   --color-eventBtn-bg-attending: var(--eventBtn-bg-attending);
+  --color-eventBtn-bg-attending-hover: var(--eventBtn-bg-attending-hover);
   --color-eventBtn-bg-waitlisted: var(--eventBtn-bg-waitlisted);
+  --color-eventBtn-bg-waitlisted-hover: var(--eventBtn-bg-waitlisted-hover);
   --color-eventBtn-bg-staff: var(--eventBtn-bg-staff);
+  --color-eventBtn-bg-staff-hover: var(--eventBtn-bg-staff-hover);
   --color-eventBtn-bg-admin: var(--eventBtn-bg-admin);
+  --color-eventBtn-bg-admin-hover: var(--eventBtn-bg-admin-hover);
   --color-eventBtn-bg-notGoing: var(--eventBtn-bg-notGoing);
+  --color-eventBtn-bg-notGoing-hover: var(--eventBtn-bg-notGoing-hover);
   --color-eventBtn-bg-completed: var(--eventBtn-bg-completed);
+  --color-eventBtn-bg-completed-hover: var(--eventBtn-bg-completed-hover);
 
   --color-eventBtn-text-notApplied: var(--eventBtn-text-notApplied);
   --color-eventBtn-text-underReview: var(--eventBtn-text-underReview);

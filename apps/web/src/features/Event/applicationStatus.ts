@@ -32,7 +32,8 @@ const applicationStatus = defineStatus({
     text: "Rejected",
     icon: TablerBan,
     button: {
-      className: "bg-eventBtn-bg-rejected text-eventBtn-text-rejected",
+      className:
+        "bg-eventBtn-bg-rejected text-eventBtn-text-rejected hover:bg-eventBtn-bg-rejected-hover",
       text: "Learn more",
     },
   },
@@ -41,7 +42,8 @@ const applicationStatus = defineStatus({
     text: "Attending",
     icon: TablerUserCheck,
     button: {
-      className: "bg-eventBtn-bg-attending text-eventBtn-text-attending",
+      className:
+        "bg-eventBtn-bg-attending text-eventBtn-text-attending hover:bg-eventBtn-bg-attending-hover",
       text: "Dashboard",
     },
   },
@@ -51,7 +53,7 @@ const applicationStatus = defineStatus({
     icon: TablerConfetti,
     button: {
       className:
-        "bg-eventBtn-bg-accepted-attending text-eventBtn-text-accepted-attending",
+        "bg-eventBtn-bg-accepted-attending text-eventBtn-text-accepted-attending hover:bg-eventBtn-bg-accepted-attending-hover",
       text: "I'm Attending",
     },
   },
@@ -60,7 +62,8 @@ const applicationStatus = defineStatus({
     text: "Waitlisted",
     icon: TablerClockPause,
     button: {
-      className: "bg-eventBtn-bg-waitlisted text-eventBtn-text-waitlisted",
+      className:
+        "bg-eventBtn-bg-waitlisted text-eventBtn-text-waitlisted hover:bg-eventBtn-bg-waitlisted-hover",
       text: "What's Next?",
     },
   },
@@ -69,7 +72,8 @@ const applicationStatus = defineStatus({
     text: "Under Review",
     icon: TablerHourglassFilled,
     button: {
-      className: "bg-eventBtn-bg-underReview text-eventBtn-text-underReview",
+      className:
+        "bg-eventBtn-bg-underReview text-eventBtn-text-underReview hover:bg-eventBtn-bg-underReview-hover",
       text: "Dashboard",
     },
   },
@@ -78,7 +82,8 @@ const applicationStatus = defineStatus({
     text: "Not Applied",
     icon: TablerPointFilled,
     button: {
-      className: "bg-eventBtn-bg-notApplied text-eventBtn-text-notApplied",
+      className:
+        "bg-eventBtn-bg-notApplied text-eventBtn-text-notApplied hover:bg-eventBtn-bg-notApplied-hover",
       text: "Apply Now",
     },
   },
@@ -87,7 +92,8 @@ const applicationStatus = defineStatus({
     text: "Staff",
     icon: TablerId,
     button: {
-      className: "bg-eventBtn-bg-staff text-eventBtn-text-staff",
+      className:
+        "bg-eventBtn-bg-staff text-eventBtn-text-staff hover:bg-eventBtn-bg-staff-hover",
       text: "Dashboard",
     },
   },
@@ -96,7 +102,8 @@ const applicationStatus = defineStatus({
     text: "Admin",
     icon: TablerSettings2,
     button: {
-      className: "bg-eventBtn-bg-admin text-eventBtn-text-admin",
+      className:
+        "bg-eventBtn-bg-admin text-eventBtn-text-admin hover:bg-eventBtn-bg-admin-hover",
       text: "Dashboard",
     },
   },
@@ -105,7 +112,8 @@ const applicationStatus = defineStatus({
     text: "Not Going",
     icon: TablerBan,
     button: {
-      className: "bg-eventBtn-bg-notGoing text-eventBtn-text-notGoing",
+      className:
+        "bg-eventBtn-bg-notGoing text-eventBtn-text-notGoing hover:bg-eventBtn-bg-notGoing-hover",
       text: "Help Us Improve",
     },
   },
@@ -114,7 +122,8 @@ const applicationStatus = defineStatus({
     text: "Completed",
     icon: TablerCalendarCheck,
     button: {
-      className: "bg-eventBtn-bg-completed text-eventBtn-text-completed",
+      className:
+        "bg-eventBtn-bg-completed text-eventBtn-text-completed hover:bg-eventBtn-bg-completed-hover",
       text: "Event Summary",
     },
   },
