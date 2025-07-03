@@ -26,9 +26,10 @@ interface EventButtonProps extends ButtonProps {
   status: ApplicationStatusTypes;
 }
 
-const EventButton = ({ status: statusProp }: EventButtonProps) => {
+const EventButton = ({ status: statusProp, className }: EventButtonProps) => {
   const eventButtonClassName = eventButton({
     status: statusProp,
+    className,
   });
 
   return (
