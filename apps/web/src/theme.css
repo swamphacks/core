@@ -338,4 +338,5 @@
   --color-eventBtn-text-completed: var(--eventBtn-text-completed);
 
   --font-figtree: "Figtree", sans-serif;
+  --font-eventCard-title: "Roboto Mono", monospace;
 }
