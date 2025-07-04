@@ -7,11 +7,13 @@ import (
 )
 
 type Handlers struct {
-	Auth *AuthHandler
+	Auth        *AuthHandler
+	MailingList *MailingListHandler
 }
 
-func NewHandlers(authService *services.AuthService, cfg *config.Config, logger zerolog.Logger) *Handlers {
+func NewHandlers(authService *services.AuthService, mailingListService *services.MailingListService, cfg *config.Config, logger zerolog.Logger) *Handlers {
 	return &Handlers{
-		Auth: NewAuthHandler(authService, cfg, logger),
+		Auth:        NewAuthHandler(authService, cfg, logger),
+		MailingList: NewMailingListHandler(mailingListService, cfg, logger),
 	}
 }

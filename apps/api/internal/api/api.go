@@ -85,6 +85,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 					return
 				}
 			})
+
+			r.Get("/mailing-list", api.Handlers.MailingList.GetEmailsByEvent)
 		})
 
 		r.Group(func(r chi.Router) {
