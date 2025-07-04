@@ -9,24 +9,31 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addEmail = `-- name: AddEmail :one
-INSERT INTO emails (event_id, user_id, email)
-VALUES ($1, $2, $3)
+INSERT INTO mailing_list_emails (
+    event_id,
+    user_id,
+    email
+) VALUES (
+    $1, $2, $3
+)
 RETURNING id, event_id, user_id, email, created_at, updated_at
 `
 
 type AddEmailParams struct {
-	EventID pgtype.UUID `json:"event_id"`
-	UserID  pgtype.UUID `json:"user_id"`
-	Email   string      `json:"email"`
+	EventID uuid.UUID `json:"event_id"`
+	UserID  uuid.UUID `json:"user_id"`
+	Email   string    `json:"email"`
 }
 
-func (q *Queries) AddEmail(ctx context.Context, arg AddEmailParams) (Email, error) {
+// Adds a new email to the mailing list for a specific user and event.
+// The unique constraint on (event_id, user_id) will prevent duplicates.
+// Returns the newly created email record.
+func (q *Queries) AddEmail(ctx context.Context, arg AddEmailParams) (MailingListEmail, error) {
 	row := q.db.QueryRow(ctx, addEmail, arg.EventID, arg.UserID, arg.Email)
-	var i Email
+	var i MailingListEmail
 	err := row.Scan(
 		&i.ID,
 		&i.EventID,
@@ -39,23 +46,52 @@ func (q *Queries) AddEmail(ctx context.Context, arg AddEmailParams) (Email, erro
 }
 
 const deleteEmailByID = `-- name: DeleteEmailByID :exec
-DELETE FROM emails
+DELETE FROM mailing_list_emails
 WHERE id = $1
 `
 
+// Deletes an email from the mailing list by its unique primary key ID.
+// Use this when the client has fetched a list of emails and knows the specific ID to delete.
+// :exec specifies that this query does not return any rows.
 func (q *Queries) DeleteEmailByID(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteEmailByID, id)
 	return err
 }
 
-const getEmailByID = `-- name: GetEmailByID :one
-SELECT id, event_id, user_id, email, created_at, updated_at FROM emails
-WHERE id = $1
+const deleteEmailByUserAndEvent = `-- name: DeleteEmailByUserAndEvent :exec
+DELETE FROM mailing_list_emails
+WHERE event_id = $1 AND user_id = $2
 `
 
-func (q *Queries) GetEmailByID(ctx context.Context, id uuid.UUID) (Email, error) {
-	row := q.db.QueryRow(ctx, getEmailByID, id)
-	var i Email
+type DeleteEmailByUserAndEventParams struct {
+	EventID uuid.UUID `json:"event_id"`
+	UserID  uuid.UUID `json:"user_id"`
+}
+
+// Deletes an email from the mailing list using the logical composite key (user_id and event_id).
+// This is often more practical for APIs, as the client is more likely to know these two IDs.
+// For example, an API endpoint could be: DELETE /events/{event_id}/subscribers/{user_id}
+func (q *Queries) DeleteEmailByUserAndEvent(ctx context.Context, arg DeleteEmailByUserAndEventParams) error {
+	_, err := q.db.Exec(ctx, deleteEmailByUserAndEvent, arg.EventID, arg.UserID)
+	return err
+}
+
+const getEmailByUserAndEvent = `-- name: GetEmailByUserAndEvent :one
+SELECT id, event_id, user_id, email, created_at, updated_at FROM mailing_list_emails
+WHERE event_id = $1 AND user_id = $2
+LIMIT 1
+`
+
+type GetEmailByUserAndEventParams struct {
+	EventID uuid.UUID `json:"event_id"`
+	UserID  uuid.UUID `json:"user_id"`
+}
+
+// Retrieves a single, specific email record for a user within an event.
+// Useful for checking if a user is already subscribed before attempting an insert.
+func (q *Queries) GetEmailByUserAndEvent(ctx context.Context, arg GetEmailByUserAndEventParams) (MailingListEmail, error) {
+	row := q.db.QueryRow(ctx, getEmailByUserAndEvent, arg.EventID, arg.UserID)
+	var i MailingListEmail
 	err := row.Scan(
 		&i.ID,
 		&i.EventID,
@@ -68,20 +104,22 @@ func (q *Queries) GetEmailByID(ctx context.Context, id uuid.UUID) (Email, error)
 }
 
 const getEmailsByEvent = `-- name: GetEmailsByEvent :many
-SELECT id, event_id, user_id, email, created_at, updated_at FROM emails
+SELECT id, event_id, user_id, email, created_at, updated_at FROM mailing_list_emails
 WHERE event_id = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) GetEmailsByEvent(ctx context.Context, eventID pgtype.UUID) ([]Email, error) {
+// Retrieves all email records associated with a specific event_id.
+// Results are ordered by creation date.
+func (q *Queries) GetEmailsByEvent(ctx context.Context, eventID uuid.UUID) ([]MailingListEmail, error) {
 	rows, err := q.db.Query(ctx, getEmailsByEvent, eventID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Email{}
+	items := []MailingListEmail{}
 	for rows.Next() {
-		var i Email
+		var i MailingListEmail
 		if err := rows.Scan(
 			&i.ID,
 			&i.EventID,
@@ -101,20 +139,22 @@ func (q *Queries) GetEmailsByEvent(ctx context.Context, eventID pgtype.UUID) ([]
 }
 
 const getEmailsByUser = `-- name: GetEmailsByUser :many
-SELECT id, event_id, user_id, email, created_at, updated_at FROM emails
+SELECT id, event_id, user_id, email, created_at, updated_at FROM mailing_list_emails
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) GetEmailsByUser(ctx context.Context, userID pgtype.UUID) ([]Email, error) {
+// Retrieves all email records associated with a specific user_id.
+// This would show all the event mailing lists a single user has joined.
+func (q *Queries) GetEmailsByUser(ctx context.Context, userID uuid.UUID) ([]MailingListEmail, error) {
 	rows, err := q.db.Query(ctx, getEmailsByUser, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Email{}
+	items := []MailingListEmail{}
 	for rows.Next() {
-		var i Email
+		var i MailingListEmail
 		if err := rows.Scan(
 			&i.ID,
 			&i.EventID,
@@ -133,21 +173,25 @@ func (q *Queries) GetEmailsByUser(ctx context.Context, userID pgtype.UUID) ([]Em
 	return items, nil
 }
 
-const updateEmailAddress = `-- name: UpdateEmailAddress :one
-UPDATE emails
-SET email = $2, updated_at = now()
+const updateEmailByID = `-- name: UpdateEmailByID :one
+UPDATE mailing_list_emails
+SET email = $2
 WHERE id = $1
 RETURNING id, event_id, user_id, email, created_at, updated_at
 `
 
-type UpdateEmailAddressParams struct {
+type UpdateEmailByIDParams struct {
 	ID    uuid.UUID `json:"id"`
 	Email string    `json:"email"`
 }
 
-func (q *Queries) UpdateEmailAddress(ctx context.Context, arg UpdateEmailAddressParams) (Email, error) {
-	row := q.db.QueryRow(ctx, updateEmailAddress, arg.ID, arg.Email)
-	var i Email
+// Updates the email address for a specific mailing list entry by its unique ID.
+// The 'updated_at' field will be automatically updated by the database trigger.
+// This is useful when you have the specific record ID, e.g., from a list view.
+// Returns the updated email record.
+func (q *Queries) UpdateEmailByID(ctx context.Context, arg UpdateEmailByIDParams) (MailingListEmail, error) {
+	row := q.db.QueryRow(ctx, updateEmailByID, arg.ID, arg.Email)
+	var i MailingListEmail
 	err := row.Scan(
 		&i.ID,
 		&i.EventID,

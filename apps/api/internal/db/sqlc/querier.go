@@ -8,31 +8,50 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
-	AddEmail(ctx context.Context, arg AddEmailParams) (Email, error)
+	// Adds a new email to the mailing list for a specific user and event.
+	// The unique constraint on (event_id, user_id) will prevent duplicates.
+	// Returns the newly created email record.
+	AddEmail(ctx context.Context, arg AddEmailParams) (MailingListEmail, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (AuthAccount, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (AuthSession, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (AuthUser, error)
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) error
+	// Deletes an email from the mailing list by its unique primary key ID.
+	// Use this when the client has fetched a list of emails and knows the specific ID to delete.
+	// :exec specifies that this query does not return any rows.
 	DeleteEmailByID(ctx context.Context, id uuid.UUID) error
+	// Deletes an email from the mailing list using the logical composite key (user_id and event_id).
+	// This is often more practical for APIs, as the client is more likely to know these two IDs.
+	// For example, an API endpoint could be: DELETE /events/{event_id}/subscribers/{user_id}
+	DeleteEmailByUserAndEvent(ctx context.Context, arg DeleteEmailByUserAndEventParams) error
 	DeleteExpiredSession(ctx context.Context) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error)
 	GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
-	GetEmailByID(ctx context.Context, id uuid.UUID) (Email, error)
-	GetEmailsByEvent(ctx context.Context, eventID pgtype.UUID) ([]Email, error)
-	GetEmailsByUser(ctx context.Context, userID pgtype.UUID) ([]Email, error)
+	// Retrieves a single, specific email record for a user within an event.
+	// Useful for checking if a user is already subscribed before attempting an insert.
+	GetEmailByUserAndEvent(ctx context.Context, arg GetEmailByUserAndEventParams) (MailingListEmail, error)
+	// Retrieves all email records associated with a specific event_id.
+	// Results are ordered by creation date.
+	GetEmailsByEvent(ctx context.Context, eventID uuid.UUID) ([]MailingListEmail, error)
+	// Retrieves all email records associated with a specific user_id.
+	// This would show all the event mailing lists a single user has joined.
+	GetEmailsByUser(ctx context.Context, userID uuid.UUID) ([]MailingListEmail, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (AuthSession, error)
 	GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthSession, error)
 	GetUserByEmail(ctx context.Context, email *string) (AuthUser, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, error)
 	InvalidateSessionByID(ctx context.Context, id uuid.UUID) error
 	TouchSession(ctx context.Context, arg TouchSessionParams) error
-	UpdateEmailAddress(ctx context.Context, arg UpdateEmailAddressParams) (Email, error)
+	// Updates the email address for a specific mailing list entry by its unique ID.
+	// The 'updated_at' field will be automatically updated by the database trigger.
+	// This is useful when you have the specific record ID, e.g., from a list view.
+	// Returns the updated email record.
+	UpdateEmailByID(ctx context.Context, arg UpdateEmailByIDParams) (MailingListEmail, error)
 	UpdateSessionExpiration(ctx context.Context, arg UpdateSessionExpirationParams) error
 	UpdateTokens(ctx context.Context, arg UpdateTokensParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error

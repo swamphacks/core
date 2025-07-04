@@ -45,12 +45,14 @@ func main() {
 	userRepo := repository.NewUserRepository(database)
 	accountRepo := repository.NewAccountRespository(database)
 	sessionRepo := repository.NewSessionRepository(database)
+	mailingListRepo := repository.NewMailingListRepository(database)
 
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
+	mailingService := services.NewMailingListService(mailingListRepo, logger)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, cfg, logger)
+	apiHandlers := handlers.NewHandlers(authService, mailingService, cfg, logger)
 
 	api := api.NewAPI(&logger, apiHandlers, mw)
 
