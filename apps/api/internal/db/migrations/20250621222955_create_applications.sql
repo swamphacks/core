@@ -7,7 +7,7 @@ CREATE TABLE applications (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     event_id UUID REFERENCES events(id) ON DELETE CASCADE,
     status application_status DEFAULT 'started',
-    application JSONB,
+    application JSONB NOT NULL DEFAULT '{}'::JSONB,
     resume_url TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     saved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -15,6 +15,9 @@ CREATE TABLE applications (
 
     PRIMARY KEY (user_id, event_id)
 );
+
+CREATE INDEX idx_applications_status ON applications(status);
+CREATE INDEX idx_applications_event_id ON applications(event_id);
 
 -- Create trigger to update application updates
 CREATE TRIGGER set_updated_at_applications
@@ -27,7 +30,8 @@ EXECUTE FUNCTION update_modified_column();
 -- +goose Down
 -- +goose StatementBegin
 
-DROP TRIGGER IF EXISTS set_updated_at_applications;
+
+DROP TRIGGER IF EXISTS set_updated_at_applications ON applications;
 DROP TABLE IF EXISTS applications;
 DROP TYPE IF EXISTS application_status;
 
