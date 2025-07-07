@@ -1,6 +1,4 @@
 openapi: 3.0.0
-x-stoplight:
-  id: nutabra7kvljn
 info:
   title: SwampHacks Core
   version: '1.0'
@@ -94,8 +92,6 @@ paths:
                     error: oauth_gateway
                     message: 'Failed to retrieve OAuth profile from {{provider}}'
       operationId: post-v1-auth-callback
-      x-stoplight:
-        id: ct784ewqj8k3i
       description: This route is used for OAuth authentication methods to verify and login/create an account.
       security: []
       parameters:
@@ -103,20 +99,22 @@ paths:
             type: string
           in: query
           name: code
+          required: true
           description: The OAuth code passed back from the provider. Part of the PKCE flow.
         - schema:
             type: string
           in: query
           name: state
+          required: true
           description: 'The state containing a base64 encoded version of the nonce, provider, and redirect url.'
         - schema:
             type: string
           in: cookie
           name: sh_auth_nonce
+          required: true
           description: The nonce for comparing against the callback state decoded to prevent CSRF attacks.
       tags:
         - Authentication
-    parameters: []
   /auth/me:
     get:
       summary: Get Current User
@@ -130,14 +128,14 @@ paths:
               examples:
                 Normal user:
                   value:
-                    id: 497f6eca-6276-4993-bfeb-53cbbbba6f08
+                    userId: 497f6eca-6276-4993-bfeb-53cbbbba6f08
                     name: John Apple
                     onboarded: false
                     image: 'https://example.com/cat.jpeg'
                     role: user
                 Admin user:
                   value:
-                    id: 497f6eca-6276-4993-bfeb-53cbbbba6f08
+                    userId: 497f6eca-6276-4993-bfeb-53cbbbba6f08
                     name: Mark Scout
                     onboarded: true
                     image: 'http://lumoncorp.com/marks_pfp.jpeg'
@@ -156,8 +154,6 @@ paths:
                     error: internal_err
                     message: Something went wrong on our end.
       operationId: get-auth-me
-      x-stoplight:
-        id: oruu4ylz0rtu8
       description: Get the currently authenticated user's information.
       security:
         - sh_session: []
@@ -169,61 +165,45 @@ paths:
           description: The authenticated session token/id
       tags:
         - Authentication
-    parameters: []
 components:
   schemas:
     ErrorResponse:
       title: ErrorResponse
-      x-stoplight:
-        id: dqn6jntknlmx1
       type: object
-      x-examples:
-        Example 1:
-          code: A001
-          error: invalid_op
-          message: That was an invalid operation. Please try something else.
       description: 'This model is returned on server errors, it returns an error code (lookup code definitions in documentation), an error key, and a message.'
+      required:
+        - error
+        - message
       properties:
         error:
           type: string
-          x-stoplight:
-            id: 2ukqzp5a2tmaf
         message:
           type: string
-          x-stoplight:
-            id: avnmp3mkbsdvj
     UserContext:
       title: UserContext
-      x-stoplight:
-        id: whmmi4ofk7mzg
       type: object
       description: This is the model used when returning from GetMe. Used often in middleware!
+      required:
+        - userId
+        - name
+        - onboarded
+        - role
       properties:
         userId:
           type: string
-          x-stoplight:
-            id: dutrkqcbamq9i
           format: uuid
         name:
           type: string
-          x-stoplight:
-            id: cxqkrp9hrxeot
         onboarded:
           type: boolean
-          x-stoplight:
-            id: jwsqc4yskzoax
         image:
           type: string
-          x-stoplight:
-            id: pahswvz0rf655
           format: uri
           nullable: true
         role:
           $ref: '#/components/schemas/PlatformRole'
     PlatformRole:
       title: PlatformRole
-      x-stoplight:
-        id: 9700f7uzvtgay
       type: string
       enum:
         - user
@@ -231,34 +211,26 @@ components:
       description: A user's role on the platform. Either base permissions or elevated superuser perms.
     Session:
       title: Session
-      x-stoplight:
-        id: 1ojcr8cwkebdk
       type: object
+      required:
+        - id
+        - user_id
+        - expires_at
       properties:
         id:
           type: string
-          x-stoplight:
-            id: vvmu11dsmwp2m
           format: uuid
         user_id:
           type: string
-          x-stoplight:
-            id: udxze31ht0b6g
           format: uuid
         expires_at:
           type: string
-          x-stoplight:
-            id: txciknpnhjrcu
           format: date-time
         ip_address:
           type: string
-          x-stoplight:
-            id: rg0dyly1hs7lm
           nullable: true
         user_agent:
           type: string
-          x-stoplight:
-            id: nwik1r68jxwyt
           nullable: true
   securitySchemes:
     sh_session_id:

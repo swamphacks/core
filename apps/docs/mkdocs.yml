@@ -49,7 +49,7 @@ nav:
   - API:
       - Overview: api/index.md
       - Installation: api/installation.md
-      - Reference: api/reference.md
+      - OpenAPI: 'https://core.apidocumentation.com/guide/swamphacks-core-api'
   - Discord Bot:
       - Overview: discord-bot/index.md
       - Installation: discord-bot/installation.md
