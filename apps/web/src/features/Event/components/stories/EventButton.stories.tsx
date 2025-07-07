@@ -1,32 +1,32 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { EventBadge, eventBadge } from "../EventBadge";
+import { EventButton, eventButton } from "../EventButton";
 
 /**
  * Generates the Storybook `argTypes` configuration dynamically based on
- * the available variants in `eventBadge`.
+ * the available variants in `eventButton`.
  *
- * Filter out the `type` variant since it is not relevant for the storybook options.
+ * Filter out the `color` variant since it is not relevant for the storybook options.
  */
 const argTypes = Object.fromEntries(
-  eventBadge.variantKeys
-    .filter((key) => key !== "type")
+  eventButton.variantKeys
+    .filter((key) => key !== "color")
     .map((key) => [
       key,
       {
         control: {
           type: "select",
         },
-        options: Object.keys(eventBadge.variants[key]),
+        options: Object.keys(eventButton.variants[key]),
       },
     ]),
 );
 
 const meta = {
-  component: EventBadge,
-  title: "UI/Event Badge",
+  component: EventButton,
+  title: "UI/Event Button",
   tags: ["autodocs"],
   argTypes,
-} satisfies Meta<typeof EventBadge>;
+} satisfies Meta<typeof EventButton>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -34,69 +34,59 @@ type Story = StoryObj<typeof meta>;
 export const Rejected: Story = {
   args: {
     status: "rejected",
-    size: "sm",
   },
 };
 
 export const Attending: Story = {
   args: {
     status: "attending",
-    size: "sm",
   },
 };
 
 export const Accepted: Story = {
   args: {
     status: "accepted",
-    size: "sm",
   },
 };
 
 export const Waitlisted: Story = {
   args: {
     status: "waitlisted",
-    size: "sm",
   },
 };
 
 export const UnderReview: Story = {
   args: {
     status: "underReview",
-    size: "sm",
   },
 };
 
 export const NotApplied: Story = {
   args: {
     status: "notApplied",
-    size: "sm",
   },
 };
 
 export const Staff: Story = {
   args: {
     status: "staff",
-    size: "sm",
   },
 };
 
 export const Admin: Story = {
   args: {
     status: "admin",
-    size: "sm",
   },
 };
 
 export const NotGoing: Story = {
   args: {
     status: "notGoing",
-    size: "sm",
   },
 };
 
 export const Completed: Story = {
   args: {
     status: "completed",
-    size: "sm",
   },
 };
