@@ -1,24 +1,25 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { EventButton, eventButton } from "../EventButton";
 
-const entries = [];
-
-for (let i = 0; i < eventButton.variantKeys.length; i++) {
-  const key = eventButton.variantKeys[i];
-
-  if (key === "color") continue;
-
-  entries.push([
-    key,
-    {
-      control: {
-        type: "select",
+/**
+ * Generates the Storybook `argTypes` configuration dynamically based on
+ * the available variants in `eventButton`.
+ *
+ * Filter out the `color` variant since it is not relevant for the storybook options.
+ */
+const argTypes = Object.fromEntries(
+  eventButton.variantKeys
+    .filter((key) => key !== "color")
+    .map((key) => [
+      key,
+      {
+        control: {
+          type: "select",
+        },
+        options: Object.keys(eventButton.variants[key]),
       },
-      options: Object.keys(eventButton.variants[key]),
-    },
-  ]);
-}
-const argTypes = Object.fromEntries(entries);
+    ]),
+);
 
 const meta = {
   component: EventButton,

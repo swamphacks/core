@@ -1,24 +1,25 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { EventBadge, eventBadge } from "../EventBadge";
 
-const entries = [];
-
-for (let i = 0; i < eventBadge.variantKeys.length; i++) {
-  const key = eventBadge.variantKeys[i];
-
-  if (key === "type") continue;
-
-  entries.push([
-    key,
-    {
-      control: {
-        type: "select",
+/**
+ * Generates the Storybook `argTypes` configuration dynamically based on
+ * the available variants in `eventBadge`.
+ *
+ * Filter out the `type` variant since it is not relevant for the storybook options.
+ */
+const argTypes = Object.fromEntries(
+  eventBadge.variantKeys
+    .filter((key) => key !== "type")
+    .map((key) => [
+      key,
+      {
+        control: {
+          type: "select",
+        },
+        options: Object.keys(eventBadge.variants[key]),
       },
-      options: Object.keys(eventBadge.variants[key]),
-    },
-  ]);
-}
-const argTypes = Object.fromEntries(entries);
+    ]),
+);
 
 const meta = {
   component: EventBadge,
