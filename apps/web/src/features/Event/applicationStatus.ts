@@ -33,7 +33,7 @@ const applicationStatus = defineStatus({
     icon: TablerBan,
     button: {
       className:
-        "bg-eventBtn-bg-rejected text-eventBtn-text-rejected hover:bg-eventBtn-bg-rejected-hover",
+        "bg-event-button-bg-rejected text-event-button-text-rejected hover:bg-event-button-bg-rejected-hover",
       text: "Learn more",
     },
   },
@@ -43,7 +43,7 @@ const applicationStatus = defineStatus({
     icon: TablerUserCheck,
     button: {
       className:
-        "bg-eventBtn-bg-attending text-eventBtn-text-attending hover:bg-eventBtn-bg-attending-hover",
+        "bg-event-button-bg-attending text-event-button-text-attending hover:bg-event-button-bg-attending-hover",
       text: "Dashboard",
     },
   },
@@ -53,7 +53,7 @@ const applicationStatus = defineStatus({
     icon: TablerConfetti,
     button: {
       className:
-        "bg-eventBtn-bg-accepted-attending text-eventBtn-text-accepted-attending hover:bg-eventBtn-bg-accepted-attending-hover",
+        "bg-event-button-bg-accepted-attending text-event-button-text-accepted-attending hover:bg-event-button-bg-accepted-attending-hover",
       text: "I'm Attending",
     },
   },
@@ -63,27 +63,27 @@ const applicationStatus = defineStatus({
     icon: TablerClockPause,
     button: {
       className:
-        "bg-eventBtn-bg-waitlisted text-eventBtn-text-waitlisted hover:bg-eventBtn-bg-waitlisted-hover",
+        "bg-event-button-bg-waitlisted text-event-button-text-waitlisted hover:bg-event-button-bg-waitlisted-hover",
       text: "What's Next?",
     },
   },
   underReview: {
-    className: "bg-badge-bg-underReview text-badge-text-underReview",
+    className: "bg-badge-bg-under-review text-badge-text-under-review",
     text: "Under Review",
     icon: TablerHourglassFilled,
     button: {
       className:
-        "bg-eventBtn-bg-underReview text-eventBtn-text-underReview hover:bg-eventBtn-bg-underReview-hover",
+        "bg-event-button-bg-under-review text-event-button-text-under-review hover:bg-event-button-bg-under-review-hover",
       text: "Dashboard",
     },
   },
   notApplied: {
-    className: "bg-badge-bg-notApplied text-badge-text-notApplied",
+    className: "bg-badge-bg-not-applied text-badge-text-not-applied",
     text: "Not Applied",
     icon: TablerPointFilled,
     button: {
       className:
-        "bg-eventBtn-bg-notApplied text-eventBtn-text-notApplied hover:bg-eventBtn-bg-notApplied-hover",
+        "bg-event-button-bg-not-applied text-event-button-text-not-applied hover:bg-event-button-bg-not-applied-hover",
       text: "Apply Now",
     },
   },
@@ -93,7 +93,7 @@ const applicationStatus = defineStatus({
     icon: TablerId,
     button: {
       className:
-        "bg-eventBtn-bg-staff text-eventBtn-text-staff hover:bg-eventBtn-bg-staff-hover",
+        "bg-event-button-bg-staff text-event-button-text-staff hover:bg-event-button-bg-staff-hover",
       text: "Dashboard",
     },
   },
@@ -103,17 +103,17 @@ const applicationStatus = defineStatus({
     icon: TablerSettings2,
     button: {
       className:
-        "bg-eventBtn-bg-admin text-eventBtn-text-admin hover:bg-eventBtn-bg-admin-hover",
+        "bg-event-button-bg-admin text-event-button-text-admin hover:bg-event-button-bg-admin-hover",
       text: "Dashboard",
     },
   },
   notGoing: {
-    className: "bg-badge-bg-notGoing text-badge-text-notGoing",
+    className: "bg-badge-bg-not-going text-badge-text-not-going",
     text: "Not Going",
     icon: TablerBan,
     button: {
       className:
-        "bg-eventBtn-bg-notGoing text-eventBtn-text-notGoing hover:bg-eventBtn-bg-notGoing-hover",
+        "bg-event-button-bg-not-going text-event-button-text-not-going hover:bg-event-button-bg-not-going-hover",
       text: "Help Us Improve",
     },
   },
@@ -123,7 +123,7 @@ const applicationStatus = defineStatus({
     icon: TablerCalendarCheck,
     button: {
       className:
-        "bg-eventBtn-bg-completed text-eventBtn-text-completed hover:bg-eventBtn-bg-completed-hover",
+        "bg-event-button-bg-completed text-event-button-text-completed hover:bg-event-button-bg-completed-hover",
       text: "Event Summary",
     },
   },

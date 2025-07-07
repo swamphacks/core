@@ -22,11 +22,11 @@
   --badge-bg-attending: var(--color-blue-200);
   --badge-bg-accepted: var(--color-green-200);
   --badge-bg-waitlisted: var(--color-violet-200);
-  --badge-bg-underReview: var(--color-orange-200);
-  --badge-bg-notApplied: var(--color-neutral-300);
+  --badge-bg-under-review: var(--color-orange-200);
+  --badge-bg-not-applied: var(--color-neutral-300);
   --badge-bg-staff: var(--color-sky-200);
   --badge-bg-admin: var(--color-fuchsia-200);
-  --badge-bg-notGoing: var(--color-red-200);
+  --badge-bg-not-going: var(--color-red-200);
   --badge-bg-completed: var(--color-indigo-200);
 
   --badge-text-default: var(--color-neutral-600);
@@ -34,80 +34,80 @@
   --badge-text-rejected: var(--color-red-600);
   --badge-text-accepted: var(--color-green-600);
   --badge-text-waitlisted: var(--color-violet-600);
-  --badge-text-underReview: var(--color-orange-600);
-  --badge-text-notApplied: var(--color-stone-600);
+  --badge-text-under-review: var(--color-orange-600);
+  --badge-text-not-applied: var(--color-stone-600);
   --badge-text-staff: var(--color-sky-600);
   --badge-text-admin: var(--color-fuchsia-600);
-  --badge-text-notGoing: var(--color-red-600);
+  --badge-text-not-going: var(--color-red-600);
   --badge-text-completed: var(--color-indigo-600);
 
   /* EVENT CARD BUTTONS */
-  --eventBtn-bg-notApplied: var(--color-cyan-700);
-  --eventBtn-bg-notApplied-hover: var(--color-cyan-800);
-  --eventBtn-bg-underReview: color-mix(
+  --event-button-bg-not-applied: var(--color-cyan-700);
+  --event-button-bg-not-applied-hover: var(--color-cyan-800);
+  --event-button-bg-under-review: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
-  --eventBtn-bg-underReview-hover: color-mix(
+  --event-button-bg-under-review-hover: color-mix(
     in oklab,
     var(--color-cyan-700) 15%,
     transparent
   );
-  --eventBtn-bg-accepted-attending: var(--color-green-600);
-  --eventBtn-bg-accepted-attending-hover: var(--color-green-700);
-  --eventBtn-bg-accepted-notGoing: var(--color-neutral-200);
-  --eventBtn-bg-accepted-notGoing-hover: var(--color-neutral-300);
-  --eventBtn-bg-rejected: var(--color-neutral-200);
-  --eventBtn-bg-rejected-hover: var(--color-neutral-300);
-  --eventBtn-bg-attending: color-mix(
+  --event-button-bg-accepted-attending: var(--color-green-600);
+  --event-button-bg-accepted-attending-hover: var(--color-green-700);
+  --event-button-bg-accepted-not-going: var(--color-neutral-200);
+  --event-button-bg-accepted-not-going-hover: var(--color-neutral-300);
+  --event-button-bg-rejected: var(--color-neutral-200);
+  --event-button-bg-rejected-hover: var(--color-neutral-300);
+  --event-button-bg-attending: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
-  --eventBtn-bg-attending-hover: color-mix(
+  --event-button-bg-attending-hover: color-mix(
     in oklab,
     var(--color-cyan-700) 30%,
     transparent
   );
-  --eventBtn-bg-waitlisted: var(--color-violet-200);
-  --eventBtn-bg-waitlisted-hover: var(--color-violet-300);
-  --eventBtn-bg-staff: color-mix(
+  --event-button-bg-waitlisted: var(--color-violet-200);
+  --event-button-bg-waitlisted-hover: var(--color-violet-300);
+  --event-button-bg-staff: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
-  --eventBtn-bg-staff-hover: color-mix(
+  --event-button-bg-staff-hover: color-mix(
     in oklab,
     var(--color-cyan-700) 30%,
     transparent
   );
-  --eventBtn-bg-admin: color-mix(
+  --event-button-bg-admin: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
-  --eventBtn-bg-admin-hover: color-mix(
+  --event-button-bg-admin-hover: color-mix(
     in oklab,
     var(--color-cyan-700) 30%,
     transparent
   );
-  --eventBtn-bg-notGoing: var(--color-neutral-200);
-  --eventBtn-bg-notGoing-hover: var(--color-neutral-300);
-  --eventBtn-bg-completed: var(--color-neutral-200);
-  --eventBtn-bg-completed-hover: var(--color-neutral-300);
+  --event-button-bg-not-going: var(--color-neutral-200);
+  --event-button-bg-not-going-hover: var(--color-neutral-300);
+  --event-button-bg-completed: var(--color-neutral-200);
+  --event-button-bg-completed-hover: var(--color-neutral-300);
 
-  --eventBtn-text-notApplied: var(--color-neutral-50);
-  --eventBtn-text-underReview: var(--color-cyan-900);
-  --eventBtn-text-accepted-attending: var(--color-neutral-50);
-  --eventBtn-text-accepted-notGoing: var(--color-zinc-900);
-  --eventBtn-text-rejected: var(--color-zinc-900);
-  --eventBtn-text-attending: var(--color-cyan-900);
-  --eventBtn-text-waitlisted: var(--color-violet-600);
-  --eventBtn-text-staff: var(--color-cyan-900);
-  --eventBtn-text-admin: var(--color-cyan-900);
-  --eventBtn-text-notGoing: var(--color-zinc-900);
-  --eventBtn-text-completed: var(--color-zinc-900);
+  --event-button-text-not-applied: var(--color-neutral-50);
+  --event-button-text-under-review: var(--color-cyan-900);
+  --event-button-text-accepted-attending: var(--color-neutral-50);
+  --event-button-text-accepted-not-going: var(--color-zinc-900);
+  --event-button-text-rejected: var(--color-zinc-900);
+  --event-button-text-attending: var(--color-cyan-900);
+  --event-button-text-waitlisted: var(--color-violet-600);
+  --event-button-text-staff: var(--color-cyan-900);
+  --event-button-text-admin: var(--color-cyan-900);
+  --event-button-text-not-going: var(--color-zinc-900);
+  --event-button-text-completed: var(--color-zinc-900);
 }
 
 .dark {
@@ -134,11 +134,11 @@
   --badge-bg-attending: oklch(0.3078 0.0681 265.53);
   --badge-bg-accepted: oklch(0.3701 0.0671 153.92);
   --badge-bg-waitlisted: oklch(0.3838 0.082 292.43);
-  --badge-bg-underReview: oklch(0.3668 0.0531 65.94);
-  --badge-bg-notApplied: oklch(0.3715 0 0);
+  --badge-bg-under-review: oklch(0.3668 0.0531 65.94);
+  --badge-bg-not-applied: oklch(0.3715 0 0);
   --badge-bg-staff: oklch(0.3339 0.0442 235.27);
   --badge-bg-admin: oklch(0.3526 0.0681 318.27);
-  --badge-bg-notGoing: oklch(0.3378 0.0595 20.68);
+  --badge-bg-not-going: oklch(0.3378 0.0595 20.68);
   --badge-bg-completed: var(--color-slate-700);
 
   --badge-text-default: var(--color-neutral-600);
@@ -146,112 +146,112 @@
   --badge-text-rejected: var(--color-red-400);
   --badge-text-accepted: var(--color-green-300);
   --badge-text-waitlisted: oklch(0.9244 0.041 296.28);
-  --badge-text-underReview: var(--color-orange-300);
-  --badge-text-notApplied: var(--color-stone-300);
+  --badge-text-under-review: var(--color-orange-300);
+  --badge-text-not-applied: var(--color-stone-300);
   --badge-text-staff: var(--color-sky-200);
   --badge-text-admin: var(--color-fuchsia-400);
-  --badge-text-notGoing: var(--color-red-400);
+  --badge-text-not-going: var(--color-red-400);
   --badge-text-completed: var(--color-slate-300);
 
   /* EVENT CARD BUTTONS */
-  --eventBtn-bg-notApplied: var(--color-cyan-800);
-  --eventBtn-bg-notApplied-hover: var(--color-cyan-900);
-  --eventBtn-bg-underReview: color-mix(
+  --event-button-bg-not-applied: var(--color-cyan-800);
+  --event-button-bg-not-applied-hover: var(--color-cyan-900);
+  --event-button-bg-under-review: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
-  --eventBtn-bg-underReview-hover: color-mix(
+  --event-button-bg-under-review-hover: color-mix(
     in oklab,
     var(--color-cyan-700) 30%,
     transparent
   );
-  --eventBtn-bg-accepted-attending: var(--color-green-700);
-  --eventBtn-bg-accepted-attending-hover: var(--color-green-800);
-  --eventBtn-bg-accepted-notGoing: color-mix(
+  --event-button-bg-accepted-attending: var(--color-green-700);
+  --event-button-bg-accepted-attending-hover: var(--color-green-800);
+  --event-button-bg-accepted-not-going: color-mix(
     in oklab,
     var(--color-neutral-200) 25%,
     transparent
   );
-  --eventBtn-bg-accepted-notGoing-hover: color-mix(
+  --event-button-bg-accepted-not-going-hover: color-mix(
     in oklab,
     var(--color-neutral-200) 30%,
     transparent
   );
-  --eventBtn-bg-rejected: color-mix(
+  --event-button-bg-rejected: color-mix(
     in oklab,
     var(--color-neutral-200) 25%,
     transparent
   );
-  --eventBtn-bg-rejected-hover: color-mix(
+  --event-button-bg-rejected-hover: color-mix(
     in oklab,
     var(--color-neutral-200) 30%,
     transparent
   );
-  --eventBtn-bg-attending: color-mix(
+  --event-button-bg-attending: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
-  --eventBtn-bg-attending-hover: color-mix(
+  --event-button-bg-attending-hover: color-mix(
     in oklab,
     var(--color-cyan-700) 30%,
     transparent
   );
-  --eventBtn-bg-waitlisted: #453a6b;
-  --eventBtn-bg-waitlisted-hover: #413569;
-  --eventBtn-bg-staff: color-mix(
+  --event-button-bg-waitlisted: #453a6b;
+  --event-button-bg-waitlisted-hover: #413569;
+  --event-button-bg-staff: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
-  --eventBtn-bg-staff-hover: color-mix(
+  --event-button-bg-staff-hover: color-mix(
     in oklab,
     var(--color-cyan-700) 30%,
     transparent
   );
-  --eventBtn-bg-admin: color-mix(
+  --event-button-bg-admin: color-mix(
     in oklab,
     var(--color-cyan-700) 25%,
     transparent
   );
-  --eventBtn-bg-admin-hover: color-mix(
+  --event-button-bg-admin-hover: color-mix(
     in oklab,
     var(--color-cyan-700) 30%,
     transparent
   );
-  --eventBtn-bg-notGoing: color-mix(
+  --event-button-bg-not-going: color-mix(
     in oklab,
     var(--color-neutral-200) 25%,
     transparent
   );
-  --eventBtn-bg-notGoing-hover: color-mix(
+  --event-button-bg-not-going-hover: color-mix(
     in oklab,
     var(--color-neutral-200) 30%,
     transparent
   );
-  --eventBtn-bg-completed: color-mix(
+  --event-button-bg-completed: color-mix(
     in oklab,
     var(--color-neutral-200) 25%,
     transparent
   );
-  --eventBtn-bg-completed-hover: color-mix(
+  --event-button-bg-completed-hover: color-mix(
     in oklab,
     var(--color-neutral-200) 30%,
     transparent
   );
 
-  --eventBtn-text-notApplied: var(--color-neutral-50);
-  --eventBtn-text-underReview: var(--color-cyan-500);
-  --eventBtn-text-accepted-attending: var(--color-neutral-50);
-  --eventBtn-text-accepted-notGoing: var(--color-neutral-50);
-  --eventBtn-text-rejected: var(--color-neutral-50);
-  --eventBtn-text-attending: var(--color-cyan-500);
-  --eventBtn-text-waitlisted: var(--color-neutral-50);
-  --eventBtn-text-staff: var(--color-cyan-500);
-  --eventBtn-text-admin: var(--color-cyan-500);
-  --eventBtn-text-notGoing: var(--color-neutral-50);
-  --eventBtn-text-completed: var(--color-neutral-50);
+  --event-button-text-not-applied: var(--color-neutral-50);
+  --event-button-text-under-review: var(--color-cyan-500);
+  --event-button-text-accepted-attending: var(--color-neutral-50);
+  --event-button-text-accepted-not-going: var(--color-neutral-50);
+  --event-button-text-rejected: var(--color-neutral-50);
+  --event-button-text-attending: var(--color-cyan-500);
+  --event-button-text-waitlisted: var(--color-neutral-50);
+  --event-button-text-staff: var(--color-cyan-500);
+  --event-button-text-admin: var(--color-cyan-500);
+  --event-button-text-not-going: var(--color-neutral-50);
+  --event-button-text-completed: var(--color-neutral-50);
 }
 
 @theme inline {
@@ -275,11 +275,11 @@
   --color-badge-bg-attending: var(--badge-bg-attending);
   --color-badge-bg-accepted: var(--badge-bg-accepted);
   --color-badge-bg-waitlisted: var(--badge-bg-waitlisted);
-  --color-badge-bg-underReview: var(--badge-bg-underReview);
-  --color-badge-bg-notApplied: var(--badge-bg-notApplied);
+  --color-badge-bg-under-review: var(--badge-bg-under-review);
+  --color-badge-bg-not-applied: var(--badge-bg-not-applied);
   --color-badge-bg-staff: var(--badge-bg-staff);
   --color-badge-bg-admin: var(--badge-bg-admin);
-  --color-badge-bg-notGoing: var(--badge-bg-notGoing);
+  --color-badge-bg-not-going: var(--badge-bg-not-going);
   --color-badge-bg-completed: var(--badge-bg-completed);
 
   --color-badge-text-default: var(--badge-text-default);
@@ -287,55 +287,71 @@
   --color-badge-text-rejected: var(--badge-text-rejected);
   --color-badge-text-accepted: var(--badge-text-accepted);
   --color-badge-text-waitlisted: var(--badge-text-waitlisted);
-  --color-badge-text-underReview: var(--badge-text-underReview);
-  --color-badge-text-notApplied: var(--badge-text-notApplied);
+  --color-badge-text-under-review: var(--badge-text-under-review);
+  --color-badge-text-not-applied: var(--badge-text-not-applied);
   --color-badge-text-staff: var(--badge-text-staff);
   --color-badge-text-admin: var(--badge-text-admin);
-  --color-badge-text-notGoing: var(--badge-text-notGoing);
+  --color-badge-text-not-going: var(--badge-text-not-going);
   --color-badge-text-completed: var(--badge-text-completed);
 
-  --color-eventBtn-bg-notApplied: var(--eventBtn-bg-notApplied);
-  --color-eventBtn-bg-notApplied-hover: var(--eventBtn-bg-notApplied-hover);
-  --color-eventBtn-bg-underReview: var(--eventBtn-bg-underReview);
-  --color-eventBtn-bg-underReview-hover: var(--eventBtn-bg-underReview-hover);
-  --color-eventBtn-bg-accepted-attending: var(--eventBtn-bg-accepted-attending);
-  --color-eventBtn-bg-accepted-attending-hover: var(
-    --eventBtn-bg-accepted-attending-hover
+  --color-event-button-bg-not-applied: var(--event-button-bg-not-applied);
+  --color-event-button-bg-not-applied-hover: var(
+    --event-button-bg-not-applied-hover
   );
-  --color-eventBtn-bg-accepted-notGoing: var(--eventBtn-bg-accepted-notGoing);
-  --color-eventBtn-bg-accepted-notGoing-hover: var(
-    --eventBtn-bg-accepted-notGoing-hover
+  --color-event-button-bg-under-review: var(--event-button-bg-under-review);
+  --color-event-button-bg-under-review-hover: var(
+    --event-button-bg-under-review-hover
   );
-  --color-eventBtn-bg-rejected: var(--eventBtn-bg-rejected);
-  --color-eventBtn-bg-rejected-hover: var(--eventBtn-bg-rejected-hover);
-  --color-eventBtn-bg-attending: var(--eventBtn-bg-attending);
-  --color-eventBtn-bg-attending-hover: var(--eventBtn-bg-attending-hover);
-  --color-eventBtn-bg-waitlisted: var(--eventBtn-bg-waitlisted);
-  --color-eventBtn-bg-waitlisted-hover: var(--eventBtn-bg-waitlisted-hover);
-  --color-eventBtn-bg-staff: var(--eventBtn-bg-staff);
-  --color-eventBtn-bg-staff-hover: var(--eventBtn-bg-staff-hover);
-  --color-eventBtn-bg-admin: var(--eventBtn-bg-admin);
-  --color-eventBtn-bg-admin-hover: var(--eventBtn-bg-admin-hover);
-  --color-eventBtn-bg-notGoing: var(--eventBtn-bg-notGoing);
-  --color-eventBtn-bg-notGoing-hover: var(--eventBtn-bg-notGoing-hover);
-  --color-eventBtn-bg-completed: var(--eventBtn-bg-completed);
-  --color-eventBtn-bg-completed-hover: var(--eventBtn-bg-completed-hover);
+  --color-event-button-bg-accepted-attending: var(
+    --event-button-bg-accepted-attending
+  );
+  --color-event-button-bg-accepted-attending-hover: var(
+    --event-button-bg-accepted-attending-hover
+  );
+  --color-event-button-bg-accepted-not-going: var(
+    --event-button-bg-accepted-not-going
+  );
+  --color-event-button-bg-accepted-not-going-hover: var(
+    --event-button-bg-accepted-not-going-hover
+  );
+  --color-event-button-bg-rejected: var(--event-button-bg-rejected);
+  --color-event-button-bg-rejected-hover: var(--event-button-bg-rejected-hover);
+  --color-event-button-bg-attending: var(--event-button-bg-attending);
+  --color-event-button-bg-attending-hover: var(
+    --event-button-bg-attending-hover
+  );
+  --color-event-button-bg-waitlisted: var(--event-button-bg-waitlisted);
+  --color-event-button-bg-waitlisted-hover: var(
+    --event-button-bg-waitlisted-hover
+  );
+  --color-event-button-bg-staff: var(--event-button-bg-staff);
+  --color-event-button-bg-staff-hover: var(--event-button-bg-staff-hover);
+  --color-event-button-bg-admin: var(--event-button-bg-admin);
+  --color-event-button-bg-admin-hover: var(--event-button-bg-admin-hover);
+  --color-event-button-bg-not-going: var(--event-button-bg-not-going);
+  --color-event-button-bg-not-going-hover: var(
+    --event-button-bg-not-going-hover
+  );
+  --color-event-button-bg-completed: var(--event-button-bg-completed);
+  --color-event-button-bg-completed-hover: var(
+    --event-button-bg-completed-hover
+  );
 
-  --color-eventBtn-text-notApplied: var(--eventBtn-text-notApplied);
-  --color-eventBtn-text-underReview: var(--eventBtn-text-underReview);
-  --color-eventBtn-text-accepted-attending: var(
-    --eventBtn-text-accepted-attending
+  --color-event-button-text-not-applied: var(--event-button-text-not-applied);
+  --color-event-button-text-under-review: var(--event-button-text-under-review);
+  --color-event-button-text-accepted-attending: var(
+    --event-button-text-accepted-attending
   );
-  --color-eventBtn-text-accepted-notGoing: var(
-    --eventBtn-text-accepted-notGoing
+  --color-event-button-text-accepted-not-going: var(
+    --event-button-text-accepted-not-going
   );
-  --color-eventBtn-text-rejected: var(--eventBtn-text-rejected);
-  --color-eventBtn-text-attending: var(--eventBtn-text-attending);
-  --color-eventBtn-text-waitlisted: var(--eventBtn-text-waitlisted);
-  --color-eventBtn-text-staff: var(--eventBtn-text-staff);
-  --color-eventBtn-text-admin: var(--eventBtn-text-admin);
-  --color-eventBtn-text-notGoing: var(--eventBtn-text-notGoing);
-  --color-eventBtn-text-completed: var(--eventBtn-text-completed);
+  --color-event-button-text-rejected: var(--event-button-text-rejected);
+  --color-event-button-text-attending: var(--event-button-text-attending);
+  --color-event-button-text-waitlisted: var(--event-button-text-waitlisted);
+  --color-event-button-text-staff: var(--event-button-text-staff);
+  --color-event-button-text-admin: var(--event-button-text-admin);
+  --color-event-button-text-not-going: var(--event-button-text-not-going);
+  --color-event-button-text-completed: var(--event-button-text-completed);
 
   --font-figtree: "Figtree", sans-serif;
 }
