@@ -156,18 +156,17 @@ type Event struct {
 	UpdatedAt        *time.Time `json:"updated_at"`
 }
 
+type EventInterestSubmission struct {
+	ID        uuid.UUID `json:"id"`
+	EventID   uuid.UUID `json:"event_id"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	Source    *string   `json:"source"`
+}
+
 type EventRole struct {
 	UserID     uuid.UUID     `json:"user_id"`
 	EventID    uuid.UUID     `json:"event_id"`
 	Role       EventRoleType `json:"role"`
 	AssignedAt *time.Time    `json:"assigned_at"`
-}
-
-type MailingListEmail struct {
-	ID        uuid.UUID `json:"id"`
-	EventID   uuid.UUID `json:"event_id"`
-	UserID    uuid.UUID `json:"user_id"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
 }

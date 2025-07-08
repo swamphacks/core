@@ -44,58 +44,49 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		MaxAge:           300,
 	}))
 
+	// Health check
 	api.Router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		api.Logger.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("Received ping.")
-
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Content-Length", "6") // "pong!\n" is 6 bytes
-
-		if _, err := w.Write([]byte("pong!\n")); err != nil {
-			return
-		}
-
+		w.Write([]byte("pong!\n"))
 	})
 
+	// Auth routes
 	api.Router.Route("/auth", func(r chi.Router) {
 		r.Get("/callback", api.Handlers.Auth.OAuthCallback)
 
 		r.Group(func(r chi.Router) {
 			r.Use(mw.Auth.RequireAuth)
-
 			r.Get("/me", api.Handlers.Auth.GetMe)
-
 			r.Post("/logout", api.Handlers.Auth.Logout)
 		})
 	})
 
-	// Just for testing role perms right now
+	// Event routes
+	api.Router.Route("/event", func(r chi.Router) {
+		r.Post("/{eventId}/interest", api.Handlers.EventInterest.AddEmailToEvent)
+	})
+
+	// Protected test routes
 	api.Router.Route("/protected", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
+
 		r.Get("/basic", func(w http.ResponseWriter, r *http.Request) {
-			if _, err := w.Write([]byte("Welcome, arbitrarily roled user that I don't know the role of yet!!\n")); err != nil {
-				return
-			}
+			w.Write([]byte("Welcome, arbitrarily roled user!\n"))
 		})
 
 		r.Group(func(r chi.Router) {
 			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleUser))
-
 			r.Get("/user", func(w http.ResponseWriter, r *http.Request) {
-				if _, err := w.Write([]byte("Welcome, user!\n")); err != nil {
-					return
-				}
+				w.Write([]byte("Welcome, user!\n"))
 			})
-
-			r.Get("/mailing-list", api.Handlers.MailingList.GetEmailsByEvent)
 		})
 
 		r.Group(func(r chi.Router) {
 			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleSuperuser))
-
 			r.Get("/superuser", func(w http.ResponseWriter, r *http.Request) {
-				if _, err := w.Write([]byte("Welcome, superuser!\n")); err != nil {
-					return
-				}
+				w.Write([]byte("Welcome, superuser!\n"))
 			})
 		})
 	})
