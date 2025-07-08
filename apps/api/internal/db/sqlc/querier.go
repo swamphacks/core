@@ -11,6 +11,10 @@ import (
 )
 
 type Querier interface {
+	// Adds a new email to the mailing list for a specific user and event.
+	// The unique constraint on (event_id, user_id) will prevent duplicates.
+	// Returns the newly created email record.
+	AddEmail(ctx context.Context, arg AddEmailParams) (EventInterestSubmission, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (AuthAccount, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (AuthSession, error)

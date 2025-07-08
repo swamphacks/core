@@ -7,11 +7,13 @@ import (
 )
 
 type Handlers struct {
-	Auth *AuthHandler
+	Auth          *AuthHandler
+	EventInterest *EventInterestHandler
 }
 
-func NewHandlers(authService *services.AuthService, cfg *config.Config, logger zerolog.Logger) *Handlers {
+func NewHandlers(authService *services.AuthService, eventInterestService *services.EventInterestService, cfg *config.Config, logger zerolog.Logger) *Handlers {
 	return &Handlers{
-		Auth: NewAuthHandler(authService, cfg, logger),
+		Auth:          NewAuthHandler(authService, cfg, logger),
+		EventInterest: NewEventInterestHandler(eventInterestService, cfg, logger),
 	}
 }

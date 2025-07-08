@@ -28,3 +28,19 @@ func SendError(w http.ResponseWriter, status int, errorResponse ErrorResponse) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
 }
+
+// Send marshals any successful payload struct to JSON, sets the status code,
+// and writes the response.
+func Send(w http.ResponseWriter, status int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(status)
+
+	if payload != nil {
+		if err := json.NewEncoder(w).Encode(payload); err != nil {
+			// If encoding fails, log the error and fall back to a plain text error.
+			// This is crucial because the header has already been written.
+			log.Err(err).Str("function", "Send").Msg("Failed to encode and send JSON success object")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	}
+}
