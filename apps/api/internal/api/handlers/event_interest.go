@@ -57,19 +57,16 @@ func (h *EventInterestHandler) AddEmailToEvent(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Call service to add email to event interest
 	_, err = h.eventInterestService.CreateInterestSubmission(r.Context(), eventId, req.Email, req.Source)
 	if err != nil {
-		// Handle duplicate error or other service errors
-		if err == services.ErrEmailConflict {
+		switch err {
+		case services.ErrEmailConflict:
 			res.SendError(w, http.StatusConflict, res.NewError("duplicate_email", "Email is already registered for this event"))
-			return
-		} else if err == services.ErrFailedToCreateSubmission {
+		case services.ErrFailedToCreateSubmission:
 			res.SendError(w, http.StatusInternalServerError, res.NewError("submission_error", "Failed to create event interest submission"))
-			return
+		default:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
 		}
-		// generic server error
-		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
 		return
 	}
 
