@@ -195,6 +195,36 @@ class General(commands.Cog):
         await set_all_mentors_available(mod_role)
         await interaction.response.send_message("All mentors are now available.", ephemeral=True)
         
+        
+    @app_commands.command(name="add_to_thread", description="Add a user to the support thread")
+    @app_commands.describe(user="The user to add to the thread")
+    async def add_to_thread(self, interaction: discord.Interaction, user: discord.Member) -> None:
+        """Add a user to the support thread
+        
+        Args:
+            interaction: The interaction that triggered this command
+            user: The user to add to the thread
+        """
+        
+        # first ensure command is being executed in a thread
+        if not isinstance(interaction.channel, (discord.Thread,)):
+            await interaction.response.send_message(
+                "This command can only be used in a support thread.", ephemeral=True
+            )
+            return
+        # next ensure the thread is in the support channel specifically (check if the thread's parent exists as well)
+        if not interaction.channel.parent or interaction.channel.parent.name != "support":
+            await interaction.response.send_message("This command can only be used in the support channel thread.", ephemeral=True)
+            return
+        
+        try:
+            await interaction.channel.add_user(user)
+            await interaction.response.send_message(f"{user.mention} has been added to the thread.", ephemeral=True)
+        except discord.Forbidden:
+            await interaction.response.send_message("I don't have permission to add users to this thread.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+        
 async def setup(bot: commands.Bot) -> None:
     """Add the General cog to the bot
     

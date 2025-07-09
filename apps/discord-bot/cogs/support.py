@@ -3,6 +3,7 @@ from discord import app_commands, Interaction, Embed, Colour
 from typing import Literal
 from components.ticket_view import TicketView
 from utils.checks import is_mod_slash
+import discord
 
 class Support(commands.Cog):
     """
@@ -53,8 +54,16 @@ class Support(commands.Cog):
             "orange": Colour.orange()
         }
         
+        mod_role = discord.utils.get(interaction.guild.roles, name="Moderator")
+        if not mod_role:
+            await interaction.response.send_message(
+                "The 'Moderator' role does not exist. Please create it before using this command.",
+                ephemeral=True
+            )
+            return
         
-
+        mentors = mod_role.members
+        
         embed = Embed(
             title=title,
             description=description,
@@ -63,7 +72,7 @@ class Support(commands.Cog):
         embed.set_footer(text="Powered by SwampHacksXI")
         await interaction.response.defer(ephemeral=True)
         await interaction.delete_original_response()
-        await interaction.channel.send(embed=embed, view=TicketView())
+        await interaction.channel.send(embed=embed, view=TicketView(mentors))
 
         
 

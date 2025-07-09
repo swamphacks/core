@@ -7,7 +7,7 @@ from utils.get_next_support_vc_name import get_next_support_vc_name
 from components.support_vc_buttons import SupportVCButtons
 from utils.mentor_functions import get_available_mentors
 from components.support_vc_buttons import SupportVCButtons
-from components.mentor_ping_state import pinged_mentors
+from components.mentor_ping_state import last_pinged_mentor_index
 import random
 
 class ThreadSupportModal(Modal, title="Support Inquiry"):
@@ -49,6 +49,7 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
             The method will send error messages if required channels or roles are not found.
             Staff members are notified with a soft ping (hidden mention) in the reports channel.
         """
+        global last_pinged_mentor_index
         reports_channel = discord.utils.get(interaction.guild.channels, name="reports")
         support_channel = discord.utils.get(interaction.guild.channels, name="support")
         thread_author = interaction.user
@@ -75,31 +76,20 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
             
         # get available mentors
         available_mentors = get_available_mentors(mod_role)
-        while selected_mentor not in pinged_mentors:
-            # if all have been pinged reset the set
-            if not available_mentors:
-                pinged_mentors.clear()
-                available_mentors = get_available_mentors(mod_role)
-            selected_mentor = random.choice(available_mentors) if available_mentors else None
+        if not available_mentors:
+            await interaction.response.send_message(
+                "Error: No available mentors at this time. Please try again later.",
+                ephemeral=True
+            )
+            return
         
-        
-        
-        # not_yet_pinged = [mentor for mentor in available_mentors]
-        
-        # # if all have been pinged reset the set
-        # if not not_yet_pinged:
-        #     pinged_mentors.clear()
-        #     not_yet_pinged = available_mentors
-        # print(pinged_mentors)
-        
-        # if not_yet_pinged:
-        #     selected_mentor = random.choice(not_yet_pinged)
-        #     pinged_mentors.add(selected_mentor.id)
-        #     action_text = f"{selected_mentor.mention} Please join the thread to assist the hacker."
-        # else:
-        #     selected_mentor = None
-        #     action_text = "No mentors available at this time."
-
+        # implement round-robin pinging of mentors
+        if last_pinged_mentor_index >= len(available_mentors):
+            last_pinged_mentor_index = 0
+        selected_mentor = available_mentors[last_pinged_mentor_index]
+        last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
+        action_text = f"{selected_mentor.mention} Please join the thread to assist the user."
+        print("last_pinged_mentor_index:", last_pinged_mentor_index)
         
         # create the thread with the next available name and add the initialuser to the thread
         thread_name = get_next_thread_name(support_channel)
@@ -164,15 +154,6 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         super().__init__()
         self.title_input = TextInput(label="Title", max_length=100)
         self.description_input = TextInput(label="Describe your issue", style=TextStyle.paragraph)
-        # add a dropdown to select vc or thread support
-        # self.add_item(discord.ui.Select(
-        #     placeholder="Select support type",
-        #     options=[
-        #         discord.SelectOption(label="Voice Channel", value="vc"),
-        #         discord.SelectOption(label="Thread", value="thread")
-        #     ]
-        # ))
-        # FIX! NOT WORKING YET
         self.add_item(self.title_input)
         self.add_item(self.description_input)
 
@@ -193,6 +174,7 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             The method will send error messages if required channels or roles are not found.
             Staff members are notified with a soft ping (hidden mention) in the reports channel.
         """
+        global last_pinged_mentor_index
         reports_channel = discord.utils.get(interaction.guild.channels, name="reports")
         mod_role = discord.utils.get(interaction.guild.roles, name="Moderator")
         category = discord.utils.get(interaction.guild.categories, name="Support-VCs")
@@ -251,24 +233,19 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
 
         # # get available mentors
         available_mentors = get_available_mentors(mod_role)
+        if not available_mentors:
+            await interaction.response.send_message(
+                "Error: No available mentors at this time. Please try again later.",
+                ephemeral=True
+            )
+            return
+        if last_pinged_mentor_index >= len(available_mentors):
+            last_pinged_mentor_index = 0
+        selected_mentor = available_mentors[last_pinged_mentor_index]
+        last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
+        action_text = f"{selected_mentor.mention} Please join the thread to assist the user."
+        print("last_pinged_mentor_index:", last_pinged_mentor_index)
         
-        not_yet_pinged = [mentor for mentor in available_mentors]
-        
-        # if all have been pinged reset the set
-        if not not_yet_pinged:
-            pinged_mentors.clear()
-        
-        if not_yet_pinged:
-            selected_mentor = random.choice(not_yet_pinged)
-            pinged_mentors.add(selected_mentor)
-        else:
-            selected_mentor = None
-
-        if selected_mentor:
-            action_text = f"{selected_mentor.mention} Please join the thread to assist the hacker."
-        else:
-            action_text = "No mentors available at this time."
-
         # create embed for reports channel
         reports_embed = discord.Embed(
             title=f"⭐ New Voice Channel Request",
