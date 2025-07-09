@@ -1,3 +1,4 @@
+import { NavLink } from "@/components/AppShell/NavLink";
 import { Button } from "@/components/ui/Button";
 import { auth } from "@/lib/authClient";
 import { createFileRoute } from "@tanstack/react-router";
@@ -23,6 +24,8 @@ function RouteComponent() {
       <Button onClick={logout} color="danger">
         Logout
       </Button>
+
+      <NavLink href="https://google.com" label="Hello" active />
     </div>
   );
 }
