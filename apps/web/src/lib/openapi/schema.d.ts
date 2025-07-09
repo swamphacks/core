@@ -44,6 +44,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/event/{eventId}/interest": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Make an interest submission for an event (email list) */
+    post: operations["post-event-interest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -215,6 +232,65 @@ export interface operations {
         };
       };
       401: components["responses"]["Unauthenticated"];
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "post-event-interest": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /**
+           * Format: email
+           * @example johndoe@ufl.edu
+           */
+          email: string;
+          /** @example SHX Frontpage */
+          source?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK: Interest email created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad request/Malformed request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Duplicate email found in DB */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
       /** @description Server Error: Something went terribly wrong on our end. */
       "5XX": {
         headers: {
