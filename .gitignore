@@ -6,6 +6,7 @@ build/
 
 # Environment
 .env
+.env.dev
 .env.development
 .env.*.local
 *.env.local
@@ -38,3 +39,5 @@ go.sum
 
 # Anything Python related
 venv
+
+**/.pnpm-store/

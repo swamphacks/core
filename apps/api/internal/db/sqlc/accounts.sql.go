@@ -7,9 +7,9 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createAccount = `-- name: CreateAccount :one
@@ -26,16 +26,16 @@ RETURNING id, user_id, provider_id, account_id, hashed_password, access_token, r
 `
 
 type CreateAccountParams struct {
-	UserID                uuid.UUID          `json:"user_id"`
-	ProviderID            string             `json:"provider_id"`
-	AccountID             string             `json:"account_id"`
-	HashedPassword        *string            `json:"hashed_password"`
-	AccessToken           *string            `json:"access_token"`
-	RefreshToken          *string            `json:"refresh_token"`
-	IDToken               *string            `json:"id_token"`
-	AccessTokenExpiresAt  pgtype.Timestamptz `json:"access_token_expires_at"`
-	RefreshTokenExpiresAt pgtype.Timestamptz `json:"refresh_token_expires_at"`
-	Scope                 *string            `json:"scope"`
+	UserID                uuid.UUID  `json:"user_id"`
+	ProviderID            string     `json:"provider_id"`
+	AccountID             string     `json:"account_id"`
+	HashedPassword        *string    `json:"hashed_password"`
+	AccessToken           *string    `json:"access_token"`
+	RefreshToken          *string    `json:"refresh_token"`
+	IDToken               *string    `json:"id_token"`
+	AccessTokenExpiresAt  *time.Time `json:"access_token_expires_at"`
+	RefreshTokenExpiresAt *time.Time `json:"refresh_token_expires_at"`
+	Scope                 *string    `json:"scope"`
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (AuthAccount, error) {
@@ -85,18 +85,18 @@ func (q *Queries) DeleteAccount(ctx context.Context, arg DeleteAccountParams) er
 	return err
 }
 
-const getAccountByProvider = `-- name: GetAccountByProvider :one
+const getByProviderAndAccountID = `-- name: GetByProviderAndAccountID :one
 SELECT id, user_id, provider_id, account_id, hashed_password, access_token, refresh_token, id_token, access_token_expires_at, refresh_token_expires_at, scope, created_at, updated_at FROM auth.accounts
 WHERE provider_id = $1 AND account_id = $2
 `
 
-type GetAccountByProviderParams struct {
+type GetByProviderAndAccountIDParams struct {
 	ProviderID string `json:"provider_id"`
 	AccountID  string `json:"account_id"`
 }
 
-func (q *Queries) GetAccountByProvider(ctx context.Context, arg GetAccountByProviderParams) (AuthAccount, error) {
-	row := q.db.QueryRow(ctx, getAccountByProvider, arg.ProviderID, arg.AccountID)
+func (q *Queries) GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error) {
+	row := q.db.QueryRow(ctx, getByProviderAndAccountID, arg.ProviderID, arg.AccountID)
 	var i AuthAccount
 	err := row.Scan(
 		&i.ID,
@@ -116,13 +116,13 @@ func (q *Queries) GetAccountByProvider(ctx context.Context, arg GetAccountByProv
 	return i, err
 }
 
-const getAccountsByUserID = `-- name: GetAccountsByUserID :many
+const getByUserID = `-- name: GetByUserID :many
 SELECT id, user_id, provider_id, account_id, hashed_password, access_token, refresh_token, id_token, access_token_expires_at, refresh_token_expires_at, scope, created_at, updated_at FROM auth.accounts
 WHERE user_id = $1
 `
 
-func (q *Queries) GetAccountsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error) {
-	rows, err := q.db.Query(ctx, getAccountsByUserID, userID)
+func (q *Queries) GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error) {
+	rows, err := q.db.Query(ctx, getByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -167,14 +167,14 @@ WHERE provider_id = $1 AND account_id = $2
 `
 
 type UpdateTokensParams struct {
-	ProviderID            string             `json:"provider_id"`
-	AccountID             string             `json:"account_id"`
-	AccessToken           *string            `json:"access_token"`
-	RefreshToken          *string            `json:"refresh_token"`
-	IDToken               *string            `json:"id_token"`
-	AccessTokenExpiresAt  pgtype.Timestamptz `json:"access_token_expires_at"`
-	RefreshTokenExpiresAt pgtype.Timestamptz `json:"refresh_token_expires_at"`
-	Scope                 *string            `json:"scope"`
+	ProviderID            string     `json:"provider_id"`
+	AccountID             string     `json:"account_id"`
+	AccessToken           *string    `json:"access_token"`
+	RefreshToken          *string    `json:"refresh_token"`
+	IDToken               *string    `json:"id_token"`
+	AccessTokenExpiresAt  *time.Time `json:"access_token_expires_at"`
+	RefreshTokenExpiresAt *time.Time `json:"refresh_token_expires_at"`
+	Scope                 *string    `json:"scope"`
 }
 
 func (q *Queries) UpdateTokens(ctx context.Context, arg UpdateTokensParams) error {

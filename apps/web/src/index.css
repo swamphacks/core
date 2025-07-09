@@ -1,2 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap");
 @import "tailwindcss";
 @plugin "tailwindcss-react-aria-components";
+@import "./theme.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html,
+body,
+#root {
+  height: 100%;
+  font-family: "Figtree", sans-serif;
+  background-color: var(--color-background);
+}
+
+.dark {
+  color: var(--text-main);
+}
+
+/* https://stackoverflow.com/questions/68400074/how-to-apply-transition-effects-when-switching-from-light-mode-to-dark-in-tailwi */
+body.enable-theme-transition * {
+  @apply transition-colors duration-500;
+}

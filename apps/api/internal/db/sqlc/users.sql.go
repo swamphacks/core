@@ -14,12 +14,12 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO auth.users (name, email, image)
 VALUES ($1, $2, $3)
-RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at
+RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, role
 `
 
 type CreateUserParams struct {
 	Name  string  `json:"name"`
-	Email string  `json:"email"`
+	Email *string `json:"email"`
 	Image *string `json:"image"`
 }
 
@@ -35,6 +35,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AuthUse
 		&i.Image,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Role,
 	)
 	return i, err
 }
@@ -50,11 +51,11 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role FROM auth.users
 WHERE email = $1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (AuthUser, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email *string) (AuthUser, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
 	var i AuthUser
 	err := row.Scan(
@@ -66,12 +67,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (AuthUser, e
 		&i.Image,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Role,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role FROM auth.users
 WHERE id = $1
 `
 
@@ -87,6 +89,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, erro
 		&i.Image,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Role,
 	)
 	return i, err
 }
@@ -108,7 +111,7 @@ type UpdateUserParams struct {
 	NameDoUpdate          bool      `json:"name_do_update"`
 	Name                  string    `json:"name"`
 	EmailDoUpdate         bool      `json:"email_do_update"`
-	Email                 string    `json:"email"`
+	Email                 *string   `json:"email"`
 	EmailVerifiedDoUpdate bool      `json:"email_verified_do_update"`
 	EmailVerified         bool      `json:"email_verified"`
 	OnboardedDoUpdate     bool      `json:"onboarded_do_update"`

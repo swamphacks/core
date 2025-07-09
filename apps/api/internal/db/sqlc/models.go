@@ -5,44 +5,226 @@
 package sqlc
 
 import (
+	"database/sql/driver"
+	"fmt"
+	"time"
+
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type ApplicationStatus string
+
+const (
+	ApplicationStatusStarted     ApplicationStatus = "started"
+	ApplicationStatusSubmitted   ApplicationStatus = "submitted"
+	ApplicationStatusUnderReview ApplicationStatus = "under_review"
+	ApplicationStatusAccepted    ApplicationStatus = "accepted"
+	ApplicationStatusRejected    ApplicationStatus = "rejected"
+	ApplicationStatusWaitlisted  ApplicationStatus = "waitlisted"
+	ApplicationStatusWithdrawn   ApplicationStatus = "withdrawn"
+)
+
+func (e *ApplicationStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ApplicationStatus(s)
+	case string:
+		*e = ApplicationStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ApplicationStatus: %T", src)
+	}
+	return nil
+}
+
+type NullApplicationStatus struct {
+	ApplicationStatus ApplicationStatus `json:"application_status"`
+	Valid             bool              `json:"valid"` // Valid is true if ApplicationStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullApplicationStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ApplicationStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ApplicationStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullApplicationStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ApplicationStatus), nil
+}
+
+type AuthUserRole string
+
+const (
+	AuthUserRoleUser      AuthUserRole = "user"
+	AuthUserRoleSuperuser AuthUserRole = "superuser"
+)
+
+func (e *AuthUserRole) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AuthUserRole(s)
+	case string:
+		*e = AuthUserRole(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AuthUserRole: %T", src)
+	}
+	return nil
+}
+
+type NullAuthUserRole struct {
+	AuthUserRole AuthUserRole `json:"auth_user_role"`
+	Valid        bool         `json:"valid"` // Valid is true if AuthUserRole is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAuthUserRole) Scan(value interface{}) error {
+	if value == nil {
+		ns.AuthUserRole, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AuthUserRole.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAuthUserRole) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AuthUserRole), nil
+}
+
+type EventRoleType string
+
+const (
+	EventRoleTypeAdmin     EventRoleType = "admin"
+	EventRoleTypeStaff     EventRoleType = "staff"
+	EventRoleTypeAttendee  EventRoleType = "attendee"
+	EventRoleTypeApplicant EventRoleType = "applicant"
+)
+
+func (e *EventRoleType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EventRoleType(s)
+	case string:
+		*e = EventRoleType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EventRoleType: %T", src)
+	}
+	return nil
+}
+
+type NullEventRoleType struct {
+	EventRoleType EventRoleType `json:"event_role_type"`
+	Valid         bool          `json:"valid"` // Valid is true if EventRoleType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEventRoleType) Scan(value interface{}) error {
+	if value == nil {
+		ns.EventRoleType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EventRoleType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEventRoleType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EventRoleType), nil
+}
+
+type Application struct {
+	UserID      uuid.UUID             `json:"user_id"`
+	EventID     uuid.UUID             `json:"event_id"`
+	Status      NullApplicationStatus `json:"status"`
+	Application []byte                `json:"application"`
+	ResumeUrl   *string               `json:"resume_url"`
+	CreatedAt   time.Time             `json:"created_at"`
+	SavedAt     time.Time             `json:"saved_at"`
+	UpdatedAt   time.Time             `json:"updated_at"`
+}
+
 type AuthAccount struct {
-	ID                    uuid.UUID          `json:"id"`
-	UserID                uuid.UUID          `json:"user_id"`
-	ProviderID            string             `json:"provider_id"`
-	AccountID             string             `json:"account_id"`
-	HashedPassword        *string            `json:"hashed_password"`
-	AccessToken           *string            `json:"access_token"`
-	RefreshToken          *string            `json:"refresh_token"`
-	IDToken               *string            `json:"id_token"`
-	AccessTokenExpiresAt  pgtype.Timestamptz `json:"access_token_expires_at"`
-	RefreshTokenExpiresAt pgtype.Timestamptz `json:"refresh_token_expires_at"`
-	Scope                 *string            `json:"scope"`
-	CreatedAt             pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt             pgtype.Timestamptz `json:"updated_at"`
+	ID                    uuid.UUID  `json:"id"`
+	UserID                uuid.UUID  `json:"user_id"`
+	ProviderID            string     `json:"provider_id"`
+	AccountID             string     `json:"account_id"`
+	HashedPassword        *string    `json:"hashed_password"`
+	AccessToken           *string    `json:"access_token"`
+	RefreshToken          *string    `json:"refresh_token"`
+	IDToken               *string    `json:"id_token"`
+	AccessTokenExpiresAt  *time.Time `json:"access_token_expires_at"`
+	RefreshTokenExpiresAt *time.Time `json:"refresh_token_expires_at"`
+	Scope                 *string    `json:"scope"`
+	CreatedAt             time.Time  `json:"created_at"`
+	UpdatedAt             time.Time  `json:"updated_at"`
 }
 
 type AuthSession struct {
-	ID        uuid.UUID          `json:"id"`
-	UserID    uuid.UUID          `json:"user_id"`
-	Token     string             `json:"token"`
-	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
-	IpAddress *string            `json:"ip_address"`
-	UserAgent *string            `json:"user_agent"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID         uuid.UUID `json:"id"`
+	UserID     uuid.UUID `json:"user_id"`
+	ExpiresAt  time.Time `json:"expires_at"`
+	IpAddress  *string   `json:"ip_address"`
+	UserAgent  *string   `json:"user_agent"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	LastUsedAt time.Time `json:"last_used_at"`
 }
 
 type AuthUser struct {
-	ID            uuid.UUID          `json:"id"`
-	Name          string             `json:"name"`
-	Email         string             `json:"email"`
-	EmailVerified bool               `json:"email_verified"`
-	Onboarded     bool               `json:"onboarded"`
-	Image         *string            `json:"image"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	ID            uuid.UUID    `json:"id"`
+	Name          string       `json:"name"`
+	Email         *string      `json:"email"`
+	EmailVerified bool         `json:"email_verified"`
+	Onboarded     bool         `json:"onboarded"`
+	Image         *string      `json:"image"`
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
+	Role          AuthUserRole `json:"role"`
+}
+
+type Event struct {
+	ID               uuid.UUID  `json:"id"`
+	Name             string     `json:"name"`
+	Description      *string    `json:"description"`
+	Location         *string    `json:"location"`
+	LocationUrl      *string    `json:"location_url"`
+	MaxAttendees     *int32     `json:"max_attendees"`
+	ApplicationOpen  time.Time  `json:"application_open"`
+	ApplicationClose time.Time  `json:"application_close"`
+	RsvpDeadline     *time.Time `json:"rsvp_deadline"`
+	DecisionRelease  *time.Time `json:"decision_release"`
+	StartTime        time.Time  `json:"start_time"`
+	EndTime          time.Time  `json:"end_time"`
+	WebsiteUrl       *string    `json:"website_url"`
+	IsPublished      *bool      `json:"is_published"`
+	CreatedAt        *time.Time `json:"created_at"`
+	UpdatedAt        *time.Time `json:"updated_at"`
+}
+
+type EventInterestSubmission struct {
+	ID        uuid.UUID `json:"id"`
+	EventID   uuid.UUID `json:"event_id"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	Source    *string   `json:"source"`
+}
+
+type EventRole struct {
+	UserID     uuid.UUID     `json:"user_id"`
+	EventID    uuid.UUID     `json:"event_id"`
+	Role       EventRoleType `json:"role"`
+	AssignedAt *time.Time    `json:"assigned_at"`
 }

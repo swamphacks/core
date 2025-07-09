@@ -4,10 +4,10 @@
 
 Before you begin, make sure you have:
 
-* **Python 3.8+** installed and on your PATH
-* **Git** (optional if you clone the repo)
+- **Python 3.8+** installed and on your PATH
+- **Git** (optional if you clone the repo)
 
-*All commands assume you are in the `core/apps/discord-bot/` directory.*
+_All commands assume you are in the `core/apps/discord-bot/` directory._
 
 ## 1. Create a Virtual Environment
 
@@ -31,7 +31,7 @@ source .venv/bin/activate
 .\.venv\Scripts\Activate.ps1
 ```
 
-*(Your prompt should now be prefixed with `(.venv)`.)*
+_(Your prompt should now be prefixed with `(.venv)`.)_
 
 ## 3. Install Dependencies
 
@@ -74,4 +74,3 @@ Bot: SwampHackr is ready to go!
 > # or
 > .\.venv\Scripts\Activate.ps1  # (Windows)
 > ```
-

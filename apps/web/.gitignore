@@ -26,3 +26,4 @@ dist-ssr
 .env
 routeTree.gen.ts
 *storybook.log
+.tanstack
