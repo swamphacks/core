@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { NavLink } from "./NavLink";
 import TablerLayoutCollage from "~icons/tabler/layout-collage";
-import TablerChevronRight from "~icons/tabler/chevron-right";
 
 const meta = {
   component: NavLink,
@@ -28,8 +27,9 @@ const meta = {
     href: "https://core.apidocumentation.com",
     label: "Dashboard",
     active: true,
-    leftSection: <TablerLayoutCollage strokeWidth={0} className="w-5 h-5" />,
-    rightSection: <TablerChevronRight className="w-5 h-5" />,
+    leftSection: (
+      <TablerLayoutCollage strokeWidth={0} className="w-4 aspect-square" />
+    ),
   },
 } satisfies Meta<typeof NavLink>;
 
