@@ -19,5 +19,5 @@ body,
 
 /* https://stackoverflow.com/questions/68400074/how-to-apply-transition-effects-when-switching-from-light-mode-to-dark-in-tailwi */
 body.enable-theme-transition {
-  @apply transition-colors duration-500;
+  @apply transition-colors duration-300;
 }

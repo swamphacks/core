@@ -1,11 +1,32 @@
+/* This is bugged out brother */
 import type { Meta, StoryObj } from "@storybook/react";
-import { NavLink } from "./NavLink";
 import TablerLayoutCollage from "~icons/tabler/layout-collage";
+import { NavLink } from "../NavLink";
+import {
+  createRootRouteWithContext,
+  createRouter,
+  RouterProvider,
+} from "@tanstack/react-router";
+import type { ReactNode } from "react";
+
+// Define a dummy root component that wraps Story
+function withTanstackRouter(StoryComponent: () => ReactNode) {
+  const RootRoute = createRootRouteWithContext()({
+    component: StoryComponent,
+  });
+
+  const router = createRouter({
+    routeTree: RootRoute,
+  });
+
+  return <RouterProvider router={router} />;
+}
 
 const meta = {
   component: NavLink,
   title: "AppShell/NavLink",
   tags: ["autodocs"],
+  decorators: [(Story) => withTanstackRouter(Story)],
   argTypes: {
     href: {
       control: { type: "text" },
@@ -40,5 +61,24 @@ export const Default: Story = {
   args: {
     label: "Dashboard",
     href: "https://core.apidocumentation.com",
+  },
+};
+
+export const Expandable: Story = {
+  args: {
+    label: "Mother",
+    children: (
+      <>
+        <NavLink label="Child 1" />
+        <NavLink label="Child 2" />
+      </>
+    ),
+  },
+};
+
+export const WithDescription: Story = {
+  args: {
+    label: "Resume Review",
+    description: "67/67 (100%) resumes reviewed.",
   },
 };

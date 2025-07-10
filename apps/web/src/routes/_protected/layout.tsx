@@ -47,19 +47,16 @@ function RouteComponent() {
 
   return (
     <div className="flex h-screen w-screen flex-col">
-      {/* Top bar */}
       <header className="h-14 w-full bg-gray-800 text-white flex items-center px-4 shadow">
         <h1 className="text-lg font-semibold">SwampHacks</h1>
       </header>
 
       <div className="flex flex-1">
-        {/* Sidebar */}
-        <aside className="w-64 p-4">
-          {/* Replace with your nav links */}
+        <aside className="w-64 px-2 py-4 border-r-1 border-neutral-300 dark:border-neutral-800">
           <nav className="flex flex-col gap-2">
             <NavLink
               label="Dashboard"
-              href="/_protected/dashboard"
+              href="/dashboard"
               leftSection={
                 <TablerLayoutCollage className="w-4 aspect-square" />
               }
@@ -69,24 +66,24 @@ function RouteComponent() {
             <NavLink
               label="Resources"
               href="/_protected/resources"
+              initialExpanded={pathname.startsWith("/resources")}
               leftSection={<TablerBooks className="w-4 aspect-square" />}
-              active={pathname.startsWith("/resources")}
             >
               <NavLink
                 label="Programming"
-                href="/_protected/resources/programming"
+                href="/resources/programming"
                 active={pathname.startsWith("/resources/programming")}
               />
               <NavLink
                 label="Sponsors"
-                href="/_protected/resources/sponsors"
+                href="/resources/sponsors"
                 active={pathname.startsWith("/resources/sponsors")}
               />
             </NavLink>
 
             <NavLink
               label="Community"
-              href="/_protected/community"
+              href="/community"
               leftSection={<TablerSocial className="w-4 aspect-square" />}
               active={pathname.startsWith("/community")}
             />

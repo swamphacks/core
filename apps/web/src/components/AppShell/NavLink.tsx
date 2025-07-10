@@ -1,24 +1,26 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import TablerChevronRight from "~icons/tabler/chevron-right";
-import { Link } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { useToggleState } from "react-stately";
 import { cn } from "@/utils/cn";
+import { Button as RAC_Button } from "react-aria-components";
+import { Link } from "@tanstack/react-router";
 
 const navLink = tv({
-  base: "px-3 py-2.5 rounded-sm text-sm flex flex-row items-center justify-between w-auto cursor-pointer transition-none",
+  base: "px-3 py-2.5 rounded-sm text-sm flex flex-row items-center justify-between w-full cursor-pointer transition-none select-none",
   variants: {
     active: {
       true: "bg-navlink-bg-active text-navlink-text-active font-medium",
       false:
-        "bg-navlink-bg-inactive text-navlink-text-inactive font-normal hover:bg-neutral-200 dark:hover:bg-neutral-800",
+        "bg-navlink-bg-inactive text-navlink-text-inactive font-normal hover:scale-101",
     },
   },
 });
 
 interface NavLinkProps {
   href?: string;
-  label?: string;
+  label: string;
+  description?: string;
   leftSection?: ReactNode;
   rightSection?: ReactNode;
   active?: boolean;
@@ -28,6 +30,7 @@ interface NavLinkProps {
 const NavLink = ({
   href,
   label,
+  description,
   leftSection,
   rightSection,
   active = false,
@@ -37,25 +40,24 @@ const NavLink = ({
   const isExpandable = !!children;
 
   const toggleState = useToggleState({ defaultSelected: initialExpanded });
-
-  const toggle = () => {
-    console.log("Toggling nav link");
-    console.log("Current state:", toggleState.isSelected);
-    toggleState.toggle();
-    console.log("New state:", toggleState.isSelected);
-  };
+  const toggle = toggleState.toggle;
 
   return (
     <div>
       {isExpandable ? (
-        <Link className={navLink({ active })} onPress={toggle}>
-          <div className="flex flex-row gap-2 items-center select-none">
+        <RAC_Button className={navLink({ active })} onPress={toggle}>
+          <div className="flex flex-row gap-2 items-center">
             {leftSection && (
               <span className="flex items-center justify-center">
                 {leftSection}
               </span>
             )}
-            <span>{label}</span>
+            <div className="flex flex-col gap-0.5">
+              <span>{label}</span>
+              {description && (
+                <span className="text-xs text-neutral-500">{description}</span>
+              )}
+            </div>
           </div>
 
           <span
@@ -66,16 +68,21 @@ const NavLink = ({
           >
             <TablerChevronRight className="w-4 aspect-square" />
           </span>
-        </Link>
+        </RAC_Button>
       ) : (
-        <Link className={navLink({ active })} href={href}>
+        <Link className={navLink({ active })} to={href}>
           <div className="flex flex-row gap-2 items-center">
             {leftSection && (
               <span className="flex items-center justify-center">
                 {leftSection}
               </span>
             )}
-            <span>{label}</span>
+            <div className="flex flex-col gap-0.5">
+              <span>{label}</span>
+              {description && (
+                <span className="text-xs text-neutral-500">{description}</span>
+              )}
+            </div>
           </div>
           {rightSection && (
             <span className="flex items-center justify-center">
