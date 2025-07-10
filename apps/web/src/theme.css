@@ -11,12 +11,10 @@
   /* NAVBAR */
   --navlink-bg-inactive: transparent;
   --navlink-bg-active: var(--color-neutral-300);
-  --navlink-nested-bg-inactive: transparent;
-  --navlink-nested-bg-active: var(--color-neutral-200);
 
   /* NAVBAR TEXT */
   --navlink-text: var(--text-main);
-  --navlink-secondary-text: var(--text-secondary);
+  --navlink-secondary-text: var(--color-neutral-500);
 
   /* BUTTONS */
   --button-primary: var(--color-blue-500);
@@ -133,12 +131,10 @@
   /* NAVBAR */
   --navlink-bg-inactive: transparent;
   --navlink-bg-active: var(--surface);
-  --navlink-nested-bg-inactive: transparent;
-  --navlink-nested-bg-active: oklch(0.3715 0 0);
 
   /* NAVBAR TEXT */
   --navlink-text: var(--text-main);
-  --navlink-secondary-text: var(--text-secondary);
+  --navlink-secondary-text: var(--color-neutral-500);
 
   /* BUTTONS */
   --button-primary: var(--color-blue-500);
@@ -285,8 +281,6 @@
 
   --color-navlink-bg-inactive: var(--navlink-bg-inactive);
   --color-navlink-bg-active: var(--navlink-bg-active);
-  --color-navlink-nested-bg-inactive: var(--navlink-nested-bg-inactive);
-  --color-navlink-nested-bg-active: var(--navlink-nested-bg-active);
   --color-navlink-text: var(--navlink-text);
   --color-navlink-secondary-text: var(--navlink-secondary-text);
 

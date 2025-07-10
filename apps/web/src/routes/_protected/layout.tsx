@@ -56,6 +56,7 @@ function RouteComponent() {
           <nav className="flex flex-col gap-2">
             <NavLink
               label="Dashboard"
+              description="Hello everyone"
               href="/dashboard"
               leftSection={
                 <TablerLayoutCollage className="w-4 aspect-square" />

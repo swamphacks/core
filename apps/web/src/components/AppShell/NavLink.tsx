@@ -7,12 +7,11 @@ import { Button as RAC_Button } from "react-aria-components";
 import { Link } from "@tanstack/react-router";
 
 const navLink = tv({
-  base: "px-3 py-2.5 rounded-sm text-sm flex flex-row items-center justify-between w-full cursor-pointer transition-none select-none",
+  base: "px-3 py-2.5 rounded-sm text-sm flex flex-row items-center justify-between w-full cursor-pointer transition-none select-none text-navlink-text",
   variants: {
     active: {
-      true: "bg-navlink-bg-active text-navlink-text-active font-medium",
-      false:
-        "bg-navlink-bg-inactive text-navlink-text-inactive font-normal hover:scale-101",
+      true: "bg-navlink-bg-active font-medium",
+      false: "bg-navlink-bg-inactive font-normal hover:scale-101",
     },
   },
 });
@@ -55,7 +54,9 @@ const NavLink = ({
             <div className="flex flex-col gap-0.5">
               <span>{label}</span>
               {description && (
-                <span className="text-xs text-neutral-500">{description}</span>
+                <span className="text-xs text-navlink-secondary-text">
+                  {description}
+                </span>
               )}
             </div>
           </div>
@@ -80,7 +81,9 @@ const NavLink = ({
             <div className="flex flex-col gap-0.5">
               <span>{label}</span>
               {description && (
-                <span className="text-xs text-neutral-500">{description}</span>
+                <span className="text-xs text-navlink-secondary-text">
+                  {description}
+                </span>
               )}
             </div>
           </div>
