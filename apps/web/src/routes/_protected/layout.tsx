@@ -1,4 +1,13 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { NavLink } from "@/components/AppShell/NavLink";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useLocation,
+} from "@tanstack/react-router";
+import TablerLayoutCollage from "~icons/tabler/layout-collage";
+import TablerBooks from "~icons/tabler/books";
+import TablerSocial from "~icons/tabler/social";
 
 // This layout component performs authentication checks before the user can access protected pages
 export const Route = createFileRoute("/_protected")({
@@ -34,5 +43,59 @@ export const Route = createFileRoute("/_protected")({
 });
 
 function RouteComponent() {
-  return <Outlet />;
+  const pathname = useLocation({ select: (loc) => loc.pathname });
+
+  return (
+    <div className="flex h-screen w-screen flex-col">
+      <header className="h-14 w-full bg-gray-800 text-white flex items-center px-4 shadow">
+        <h1 className="text-lg font-semibold">SwampHacks</h1>
+      </header>
+
+      <div className="flex flex-1">
+        <aside className="w-64 px-2 py-4 border-r-1 border-neutral-300 dark:border-neutral-800">
+          <nav className="flex flex-col gap-2">
+            <NavLink
+              label="Dashboard"
+              description="Hello everyone"
+              href="/dashboard"
+              leftSection={
+                <TablerLayoutCollage className="w-4 aspect-square" />
+              }
+              active={pathname.startsWith("/dashboard")}
+            />
+
+            <NavLink
+              label="Resources"
+              href="/_protected/resources"
+              initialExpanded={pathname.startsWith("/resources")}
+              leftSection={<TablerBooks className="w-4 aspect-square" />}
+            >
+              <NavLink
+                label="Programming"
+                href="/resources/programming"
+                active={pathname.startsWith("/resources/programming")}
+              />
+              <NavLink
+                label="Sponsors"
+                href="/resources/sponsors"
+                active={pathname.startsWith("/resources/sponsors")}
+              />
+            </NavLink>
+
+            <NavLink
+              label="Community"
+              href="/community"
+              leftSection={<TablerSocial className="w-4 aspect-square" />}
+              active={pathname.startsWith("/community")}
+            />
+          </nav>
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1 p-6 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
 }
