@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/google/uuid"
@@ -109,7 +110,7 @@ func (s *AuthService) authenticateWithDiscord(ctx context.Context, code string, 
 	return s.createSessionForExistingUser(ctx, account.UserID, ipAddress, userAgent)
 }
 
-func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oauth.DiscordUser, oauthResp *oauth.DiscordExchangeResponse, ipAddress, userAgent *string) (*sqlc.AuthSession, error) {
+func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oauth.DiscordUserWithAvatarURL, oauthResp *oauth.DiscordExchangeResponse, ipAddress, userAgent *string) (*sqlc.AuthSession, error) {
 	var session *sqlc.AuthSession
 
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
@@ -117,10 +118,17 @@ func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oaut
 		txAccountRepo := s.accountRepo.NewTx(tx)
 		txSessionRepo := s.sessionRepo.NewTx(tx)
 
+		// Default avatar if no discord avatar
+		avatar := userInfo.AvatarURL
+		if avatar == nil {
+			custom := fmt.Sprintf("https://api.dicebear.com/9.x/initials/png?seed=%s", url.QueryEscape(userInfo.Username))
+			avatar = &custom
+		}
+
 		user, err := txUserRepo.Create(ctx, sqlc.CreateUserParams{
 			Name:  userInfo.Username,
 			Email: &userInfo.Email,
-			Image: &userInfo.Avatar,
+			Image: avatar,
 		})
 		if err != nil {
 			return err
