@@ -121,7 +121,7 @@ func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oaut
 		// Default avatar if no discord avatar
 		avatar := userInfo.AvatarURL
 		if avatar == nil {
-			custom := fmt.Sprintf("https://api.dicebear.com/9.x/initials/svg?seed=%s", url.QueryEscape(userInfo.Username))
+			custom := fmt.Sprintf("https://api.dicebear.com/9.x/initials/png?seed=%s", url.QueryEscape(userInfo.Username))
 			avatar = &custom
 		}
 
