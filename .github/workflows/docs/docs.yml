@@ -1,10 +1,14 @@
-name: ci 
+name: docs
 on:
   push:
     branches:
       - master 
+    paths:
+      - 'apps/docs/**'     # Only trigger if docs files changed
+
 permissions:
   contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

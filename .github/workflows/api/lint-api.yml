@@ -1,0 +1,27 @@
+name: API Lint
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'apps/api/**'
+
+jobs:
+  api-lint:
+    name: API Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Go tidy
+        run: go mod tidy
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1.6
+          working-directory: apps/api
