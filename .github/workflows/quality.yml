@@ -5,13 +5,35 @@ on:
     branches: [master]
 
 jobs:
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      api: ${{ steps.filter.outputs.api }}
+      discord: ${{ steps.filter.outputs.discord }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+            api:
+              - 'apps/api/**'
+            discord:
+              - 'apps/discord-bot/**'
+
   web-checks:
+    needs: filter
+    if: needs.filter.outputs.web == 'true'
     name: Web Lint & Format
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/web
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,7 +44,6 @@ jobs:
           version: 10
           run_install: false
 
-      
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
@@ -41,6 +62,8 @@ jobs:
 
 
   api-lint:
+    needs: filter
+    if: needs.filter.outputs.api == 'true'
     name: API Lint
     runs-on: ubuntu-latest
     defaults:
@@ -60,6 +83,8 @@ jobs:
           working-directory: apps/api
 
   discord-bot-checks:
+    needs: filter
+    if: needs.filter.outputs.discord == 'true'
     name: Discord bot Lint & Format
     runs-on: ubuntu-latest
     steps:
