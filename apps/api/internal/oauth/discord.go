@@ -20,11 +20,16 @@ var (
 )
 
 type DiscordUser struct {
-	ID            string `json:"id"`
-	Username      string `json:"username"`
-	Avatar        string `json:"avatar"`
-	Discriminator string `json:"discriminator"`
-	Email         string `json:"email"`
+	ID            string  `json:"id"`
+	Username      string  `json:"username"`
+	Avatar        *string `json:"avatar"`
+	Discriminator string  `json:"discriminator"`
+	Email         string  `json:"email"`
+}
+
+type DiscordUserWithAvatarURL struct {
+	DiscordUser
+	AvatarURL *string
 }
 
 // Note: expiresIn is in seconds
@@ -71,7 +76,7 @@ func ExchangeDiscordCode(ctx context.Context, client *http.Client, oauthCfg *con
 
 }
 
-func GetDiscordUserInfo(ctx context.Context, client *http.Client, accessToken string) (*DiscordUser, error) {
+func GetDiscordUserInfo(ctx context.Context, client *http.Client, accessToken string) (*DiscordUserWithAvatarURL, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://discord.com/api/users/@me", nil)
 	if err != nil {
 		return nil, err
@@ -96,7 +101,33 @@ func GetDiscordUserInfo(ctx context.Context, client *http.Client, accessToken st
 		return nil, err
 	}
 
-	return &user, nil
+	// Parse real avatar URL or make nil
+	userWithAvatar := DiscordUserWithAvatarURL{
+		DiscordUser: user,
+		AvatarURL:   user.AvatarURL(),
+	}
+
+	return &userWithAvatar, nil
+}
+
+func (u *DiscordUser) AvatarURL() *string {
+	// Only proceed if Avatar is non-nil *and* not the empty string
+	if u.Avatar != nil && *u.Avatar != "" {
+		hash := *u.Avatar
+
+		ext := "png"
+		if strings.HasPrefix(hash, "a_") {
+			ext = "gif"
+		}
+
+		url := fmt.Sprintf(
+			"https://cdn.discordapp.com/avatars/%s/%s.%s",
+			u.ID, hash, ext,
+		)
+		return &url
+	}
+
+	return nil
 }
 
 // TODO: Refactor more cleanly
