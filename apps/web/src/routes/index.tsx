@@ -12,9 +12,9 @@ export const Route = createFileRoute("/")({
     console.log("Loaded user in beforeLoad:", user);
 
     if (user) {
-      console.log("User is already authenticated, redirecting to dashboard.");
+      console.log("User is already authenticated, redirecting to portal.");
       throw redirect({
-        to: "/dashboard",
+        to: "/portal",
       });
     }
   },

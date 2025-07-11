@@ -61,10 +61,10 @@ function RouteComponent() {
 
       <AppShell.Navbar>
         <NavLink
-          label="Dashboard"
-          href="/dashboard"
+          label="Events Portal"
+          href="/portal"
           leftSection={<TablerLayoutCollage className="w-5 aspect-square" />}
-          active={pathname.startsWith("/dashboard")}
+          active={pathname.startsWith("/portal")}
         />
 
         <NavLink
