@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { auth } from "@/lib/authClient";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_protected/dashboard")({
+export const Route = createFileRoute("/_protected/portal")({
   component: RouteComponent,
 });
 
@@ -18,8 +18,7 @@ function RouteComponent() {
 
   return (
     <div>
-      {/* {data.user.role === "admin" ? <Dashboard /> : <HackerDashboard />} */}
-      <p>Dashboard</p>
+      <p>Event Portal</p>
       <Button onClick={logout} color="danger">
         Logout
       </Button>
