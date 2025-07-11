@@ -1,16 +1,12 @@
 -- name: CreateEvent :one
 INSERT INTO events (
-    id, name, description,
-    location, location_url, max_attendees,
-    application_open, application_close, rsvp_deadline, decision_release,
+    name,
+    application_open, application_close,
     start_time, end_time,
-    website_url 
 ) VALUES (
-    $1, $2, $3,
-    $4, $5, $6,
-    $7, $8, $9, $10,
-    $11, $12,
-    $13
+    $1,
+    $2, $3,
+    $4, $5
 )
 RETURNING *;
 
