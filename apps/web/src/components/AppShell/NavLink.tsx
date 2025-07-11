@@ -5,9 +5,10 @@ import { useToggleState } from "react-stately";
 import { cn } from "@/utils/cn";
 import { Button as RAC_Button } from "react-aria-components";
 import { Link } from "@tanstack/react-router";
+import { useAppShell } from "./AppShellContext";
 
 const navLink = tv({
-  base: "px-3 py-2.5 rounded-sm text-sm flex flex-row items-center justify-between w-full cursor-pointer transition-none select-none text-navlink-text",
+  base: "px-3 py-2.5 rounded-sm text-md flex flex-row items-center justify-between w-full cursor-pointer transition-none select-none text-navlink-text",
   variants: {
     active: {
       true: "bg-navlink-bg-active font-medium",
@@ -24,6 +25,7 @@ interface NavLinkProps {
   rightSection?: ReactNode;
   active?: boolean;
   initialExpanded?: boolean;
+  closeNavbarOnClick?: boolean;
 }
 
 const NavLink = ({
@@ -34,12 +36,16 @@ const NavLink = ({
   rightSection,
   active = false,
   initialExpanded = false,
+  closeNavbarOnClick = true,
   children,
 }: PropsWithChildren<NavLinkProps>) => {
   const isExpandable = !!children;
 
   const toggleState = useToggleState({ defaultSelected: initialExpanded });
   const toggle = toggleState.toggle;
+
+  // Handle mobile navigation state in tangent with the AppShell context
+  const { setMobileNavOpen } = useAppShell();
 
   return (
     <div>
@@ -71,7 +77,11 @@ const NavLink = ({
           </span>
         </RAC_Button>
       ) : (
-        <Link className={navLink({ active })} to={href}>
+        <Link
+          className={navLink({ active })}
+          to={href}
+          onClick={() => (closeNavbarOnClick ? setMobileNavOpen(false) : null)}
+        >
           <div className="flex flex-row gap-2 items-center">
             {leftSection && (
               <span className="flex items-center justify-center">
