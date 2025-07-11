@@ -1,0 +1,15 @@
+name: Discord Bot Lint
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'apps/discord-bot/**'
+
+jobs:
+  discord-bot-checks:
+    name: Discord Bot Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder for Discord bot lint + format
+        run: echo "Discord bot linting and formatting will be implemented here"
