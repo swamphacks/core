@@ -14,52 +14,32 @@ import (
 
 const createEvent = `-- name: CreateEvent :one
 INSERT INTO events (
-    id, name, description,
-    location, location_url, max_attendees,
-    application_open, application_close, rsvp_deadline, decision_release,
-    start_time, end_time,
-    website_url 
+    name,
+    application_open, application_close,
+    start_time, end_time
 ) VALUES (
-    $1, $2, $3,
-    $4, $5, $6,
-    $7, $8, $9, $10,
-    $11, $12,
-    $13
+    $1,
+    $2, $3,
+    $4, $5
 )
 RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at
 `
 
 type CreateEventParams struct {
-	ID               uuid.UUID  `json:"id"`
-	Name             string     `json:"name"`
-	Description      *string    `json:"description"`
-	Location         *string    `json:"location"`
-	LocationUrl      *string    `json:"location_url"`
-	MaxAttendees     *int32     `json:"max_attendees"`
-	ApplicationOpen  time.Time  `json:"application_open"`
-	ApplicationClose time.Time  `json:"application_close"`
-	RsvpDeadline     *time.Time `json:"rsvp_deadline"`
-	DecisionRelease  *time.Time `json:"decision_release"`
-	StartTime        time.Time  `json:"start_time"`
-	EndTime          time.Time  `json:"end_time"`
-	WebsiteUrl       *string    `json:"website_url"`
+	Name             string    `json:"name"`
+	ApplicationOpen  time.Time `json:"application_open"`
+	ApplicationClose time.Time `json:"application_close"`
+	StartTime        time.Time `json:"start_time"`
+	EndTime          time.Time `json:"end_time"`
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
 	row := q.db.QueryRow(ctx, createEvent,
-		arg.ID,
 		arg.Name,
-		arg.Description,
-		arg.Location,
-		arg.LocationUrl,
-		arg.MaxAttendees,
 		arg.ApplicationOpen,
 		arg.ApplicationClose,
-		arg.RsvpDeadline,
-		arg.DecisionRelease,
 		arg.StartTime,
 		arg.EndTime,
-		arg.WebsiteUrl,
 	)
 	var i Event
 	err := row.Scan(
