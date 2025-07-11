@@ -25,12 +25,8 @@ class CloseTicketButton(Button):
         claimed_tickets.pop(self.voice_channel.id, None)
         # print(claimed_tickets)
         try:
-            
             await self.voice_channel.delete()
-            await interaction.response.send_message(
-                f"Voice Channel: {self.voice_channel.name} has been closed and deleted.",
-                ephemeral=True
-            )
+            await interaction.response.send_message(f"Voice channel: {self.voice_channel.mention} has been deleted.", ephemeral=True)
             await set_available_mentor(interaction.user, True)
             await set_busy_mentor(interaction.user, False)
             

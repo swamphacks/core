@@ -8,7 +8,6 @@ from components.support_vc_buttons import SupportVCButtons
 from utils.mentor_functions import get_available_mentors
 from components.support_vc_buttons import SupportVCButtons
 from components.mentor_ping_state import last_pinged_mentor_index
-import random
 
 class ThreadSupportModal(Modal, title="Support Inquiry"):
     """
@@ -28,7 +27,7 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         """
         super().__init__()
         self.title_input = TextInput(label="Title", max_length=100)
-        self.description_input = TextInput(label="Describe your issue", style=TextStyle.paragraph)
+        self.description_input = TextInput(label="Describe your issue", style=TextStyle.paragraph, max_length=1000)
         self.add_item(self.title_input)
         self.add_item(self.description_input)
 
@@ -71,8 +70,9 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         
         # truncate description in case it's too long
         description = self.description_input.value
-        if len(description) > 1000:
-            description = description[:1000] + "..."
+        shortened_description = ""
+        if len(description) > 200:
+            shortened_description = description[:200] + "..."
             
         # get available mentors
         available_mentors = get_available_mentors(mod_role)
@@ -109,15 +109,15 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         # send initial message as embed in thread with inquiry details
         thread_embed = discord.Embed(
             title=f"Request: {self.title_input.value}",
-            description=f"Description: {self.description_input.value}\n\n✅ Thank you for your request, we will be with you shortly!",
+            description=f"Description: {description}\n\n✅ Thank you for your request, we will be with you shortly!",
             color=discord.Color.green(),
         )
         await thread.send(embed=thread_embed)
         
         # create embed for reports channel
         reports_embed = discord.Embed(
-            title=f"⭐ New Thread Request: {self.title_input.value}",
-            description=f"Issue: {self.description_input.value}\n\nActions: {action_text}",
+            title=f"💬 New Thread Request: {self.title_input.value}",
+            description=f"Issue: {shortened_description}\n\nActions: {action_text}",
             color=discord.Color.blue(),
         )
         reports_embed.add_field(name="Opened by", value=f"{thread_author.mention}\n", inline=True)
@@ -153,7 +153,7 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         """
         super().__init__()
         self.title_input = TextInput(label="Title", max_length=100)
-        self.description_input = TextInput(label="Describe your issue", style=TextStyle.paragraph)
+        self.description_input = TextInput(label="Describe your issue", style=TextStyle.paragraph, max_length=1000)
         self.add_item(self.title_input)
         self.add_item(self.description_input)
 
@@ -194,9 +194,11 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             await interaction.response.send_message("Category 'Support-VCs' not found.", ephemeral=True)
             return
         
+         # truncate description in case it's too long
         description = self.description_input.value
-        if len(description) > 1000:
-            description = description[:1000] + "..."
+        shortened_description = ""
+        if len(description) > 200:
+            shortened_description = description[:200] + "..."
         
         
         # give permissions to the moderator role and the user who clicked the button
@@ -216,11 +218,17 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             reason="Support VC created for mentor and inquirer",
             overwrites=overwrites
         )
+        
+        text_channel_embed = discord.Embed(
+            title=f"Request: {self.title_input.value}",
+            description=f"Description: {description}\n\n✅ Thank you for your request, we will be with you shortly!",
+            color=discord.Color.green(),
+        )
 
         # Try to send a message in the voice channel's chat (if available)
         text_channel = interaction.guild.get_channel(voice_channel.id)
         if text_channel:
-            await text_channel.send(f"{vc_author.mention} Your support voice channel is ready! A mentor will join you soon.")
+            await text_channel.send(embed=text_channel_embed)
         else:
             print("Voice channel does not have an associated text channel.")
             return
@@ -243,15 +251,15 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             last_pinged_mentor_index = 0
         selected_mentor = available_mentors[last_pinged_mentor_index]
         last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
-        action_text = f"{selected_mentor.mention} Please join the thread to assist the user."
+        action_text = f"{selected_mentor.mention} Please join the vc to assist the user."
         print("last_pinged_mentor_index:", last_pinged_mentor_index)
         
         # create embed for reports channel
         reports_embed = discord.Embed(
-            title=f"⭐ New Voice Channel Request",
-            description=f"Issue: {self.description_input.value}\n\nActions: {action_text}",
+            title=f"🎤 New Voice Channel Request: {self.title_input.value}",
+            description=f"Issue: {shortened_description}\n\nActions: {action_text}",
             timestamp=discord.utils.utcnow(),
-            color=discord.Color.blue()
+            color=discord.Color.purple()
         )
         reports_embed.add_field(name="Opened by", value=f"{vc_author.mention}\n", inline=True)
 

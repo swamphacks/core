@@ -27,6 +27,11 @@ class TicketSelect(Select):
         if self.values[0] == "thread":
             try:
                 await interaction.response.send_modal(ThreadSupportModal())
+                
+                # reset selection when clicked
+                if interaction.message:
+                    from components.ticket_view import TicketView
+                    await interaction.message.edit(view=TicketView())
             except Exception as e:
                 await interaction.response.send_message(
                     "Sorry, there was an error opening the support modal. Please try again later.",
@@ -36,6 +41,11 @@ class TicketSelect(Select):
         elif self.values[0] == "vc":
             try:
                 await interaction.response.send_modal(VCSupportModal())
+                
+                # reset selection when clicked
+                if interaction.message:
+                    from components.ticket_view import TicketView
+                    await interaction.message.edit(view=TicketView())
             except Exception as e:
                 await interaction.response.send_message(
                     "Sorry, there was an error opening the support modal. Please try again later.",

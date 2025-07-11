@@ -60,7 +60,7 @@ class General(commands.Cog):
     
     @app_commands.command(name="delete_all_threads", description="Delete all threads in a specified channel")
     @is_mod_slash()
-    async def delete_all_threads(self, interaction: discord.Interaction, channel: discord.TextChannel) -> None:
+    async def delete_all_threads(self, interaction: discord.Interaction, channel: discord.TextChannel, delete_archived: bool = False) -> None:
         """Delete all threads in a specified channel
         
         Args:
@@ -72,9 +72,20 @@ class General(commands.Cog):
             return
         
         for thread in channel.threads:
+            # this only iterates over active threads so archived threads will not be deleted
             await thread.delete()
         
-        await interaction.response.send_message("All threads have been deleted.", ephemeral=True)
+        if delete_archived:
+            # delete archived public or private threads
+            async for thread in channel.archived_threads(private=False):
+                await thread.delete()
+            async for thread in channel.archived_threads(private=True):
+                await thread.delete()
+
+        await interaction.response.send_message(
+            f"All threads in {channel.mention} {'including archived ones ' if delete_archived else ''}have been deleted.",
+            ephemeral=True
+        )
         
     @app_commands.command(name="delete_all_vcs", description="Delete all voice channels in a specified category")
     @is_mod_slash()

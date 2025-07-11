@@ -30,18 +30,19 @@ class CloseThreadButton(Button):
         if not reports_channel:
             await interaction.response.send_message("❌ Reports channel not found.", ephemeral=True)
             return
-            
-        # closed_embed = discord.Embed(
-        #     title=f"Support Thread **#{self.thread.name}** Closed",
-        #     color=discord.Color.red()
-        # )
-        # closed_embed.add_field(name="Thread Opened by", value=f"{interaction.user.mention}", inline=True)
-        # closed_embed.add_field(name="Thread Closed by", value=f"{interaction.user.mention}", inline=True)
-        # closed_embed.add_field(name="Thread Opened at", value=f"{self.thread.created_at.strftime('%Y-%m-%d %I:%M:%S %p')}", inline=True)
         
         try:
-            await self.thread.delete()
-            await interaction.response.send_message(f"Thread: {self.thread.name} has been closed and deleted.", ephemeral=True)
+            prefix = "archived-"
+            title = ""
+            if interaction.message.embeds:
+                title = interaction.message.embeds[0].title
+                trimmed_title = title[22:100 - len(prefix)]
+                title = trimmed_title
+            else:
+                title = self.thread.name
+            new_name = f"archived-{title}"
+            await self.thread.edit(name=new_name,archived=True, locked=True)
+            await interaction.response.send_message(f"Thread: {self.thread.mention} has been archived and locked.", ephemeral=True)
             # Set mentor status
             await set_available_mentor(interaction.user, True)
             await set_busy_mentor(interaction.user, False)
@@ -60,9 +61,17 @@ class CloseThreadButton(Button):
                 item.disabled = True
             # copy the original embed and update its description
             embed = message.embeds[0] if message.embeds else None
+            
+            # trim description
+            description = self.description_input.value
+            shortened_description = ""
+            if len(description) > 200:
+                shortened_description = description[:200] + "..."
+            else:
+                shortened_description = description
             if embed:
                 new_embed = embed.copy()
-                new_embed.description = f"Issue: {self.description_input.value}\n\nActions: {interaction.user.mention} closed {self.thread.name}."
+                new_embed.description = f"Issue: {shortened_description}\n\nActions: {interaction.user.mention} closed {self.thread.name}."
                 new_embed.color = discord.Color.red()
                 await message.edit(embed=new_embed, view=new_view)
             else:
@@ -73,7 +82,7 @@ class CloseThreadButton(Button):
                 ephemeral=True
             )
         except Exception as e:
-            await interaction.response.send_message(f"Failed to delete the support thread. Error: {e}", ephemeral=True)
+            await interaction.response.send_message(f"Failed to archive the support thread. Error: {e}", ephemeral=True)
 
 class ClaimThreadButton(Button):
     def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput):
