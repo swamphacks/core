@@ -8,6 +8,7 @@ import {
 import TablerLayoutCollage from "~icons/tabler/layout-collage";
 import TablerBooks from "~icons/tabler/books";
 import TablerSocial from "~icons/tabler/social";
+import { AppShell } from "@/components/AppShell/AppShell";
 
 // This layout component performs authentication checks before the user can access protected pages
 export const Route = createFileRoute("/_protected")({
@@ -46,56 +47,108 @@ function RouteComponent() {
   const pathname = useLocation({ select: (loc) => loc.pathname });
 
   return (
-    <div className="flex h-screen w-screen flex-col">
-      <header className="h-14 w-full bg-gray-800 text-white flex items-center px-4 shadow">
-        <h1 className="text-lg font-semibold">SwampHacks</h1>
-      </header>
+    <AppShell>
+      <AppShell.Header>
+        <div className="w-full px-4 flex flex-row justify-between h-full items-center">
+          <h1 className=" text-2xl font-bold">SwampHacks</h1>
 
-      <div className="flex flex-1">
-        <aside className="w-64 px-2 py-4 border-r-1 border-neutral-300 dark:border-neutral-800">
-          <nav className="flex flex-col gap-2">
-            <NavLink
-              label="Dashboard"
-              description="Hello everyone"
-              href="/dashboard"
-              leftSection={
-                <TablerLayoutCollage className="w-4 aspect-square" />
-              }
-              active={pathname.startsWith("/dashboard")}
-            />
+          <img
+            src="https://i.pinimg.com/736x/8b/d2/f6/8bd2f653f38322972e404925ab67294a.jpg"
+            className="h-5/8 aspect-square rounded-full"
+          />
+        </div>
+      </AppShell.Header>
 
-            <NavLink
-              label="Resources"
-              href="/_protected/resources"
-              initialExpanded={pathname.startsWith("/resources")}
-              leftSection={<TablerBooks className="w-4 aspect-square" />}
-            >
-              <NavLink
-                label="Programming"
-                href="/resources/programming"
-                active={pathname.startsWith("/resources/programming")}
-              />
-              <NavLink
-                label="Sponsors"
-                href="/resources/sponsors"
-                active={pathname.startsWith("/resources/sponsors")}
-              />
-            </NavLink>
+      <AppShell.Navbar>
+        <NavLink
+          label="Dashboard"
+          href="/dashboard"
+          leftSection={<TablerLayoutCollage className="w-5 aspect-square" />}
+          active={pathname.startsWith("/dashboard")}
+        />
 
-            <NavLink
-              label="Community"
-              href="/community"
-              leftSection={<TablerSocial className="w-4 aspect-square" />}
-              active={pathname.startsWith("/community")}
-            />
-          </nav>
-        </aside>
+        <NavLink
+          label="Resources"
+          href="/_protected/resources"
+          initialExpanded={pathname.startsWith("/resources")}
+          leftSection={<TablerBooks className="w-5 aspect-square" />}
+        >
+          <NavLink
+            label="Programming"
+            href="/resources/programming"
+            active={pathname.startsWith("/resources/programming")}
+          />
+          <NavLink
+            label="Sponsors"
+            href="/resources/sponsors"
+            active={pathname.startsWith("/resources/sponsors")}
+          />
+        </NavLink>
 
-        {/* Main content */}
-        <main className="flex-1 p-6 overflow-y-auto">
-          <Outlet />
-        </main>
-      </div>
-    </div>
+        <NavLink
+          label="Community"
+          href="/community"
+          leftSection={<TablerSocial className="w-5 aspect-square" />}
+          active={pathname.startsWith("/community")}
+        />
+      </AppShell.Navbar>
+
+      <AppShell.Main>
+        <Outlet />
+      </AppShell.Main>
+    </AppShell>
   );
+
+  // return (
+  //   <div className="flex h-screen w-screen flex-col">
+  //     <header className="h-14 w-full bg-gray-800 text-white flex items-center px-4 shadow">
+  //       <h1 className="text-lg font-semibold">SwampHacks</h1>
+  //     </header>
+
+  //     <div className="flex flex-1">
+  //       <aside className="w-64 px-2 py-4 border-r-1 border-neutral-300 dark:border-neutral-800">
+  //         <nav className="flex flex-col gap-2">
+  //           <NavLink
+  //             label="Dashboard"
+  //             href="/dashboard"
+  //             leftSection={
+  //               <TablerLayoutCollage className="w-5 aspect-square" />
+  //             }
+  //             active={pathname.startsWith("/dashboard")}
+  //           />
+
+  //           <NavLink
+  //             label="Resources"
+  //             href="/_protected/resources"
+  //             initialExpanded={pathname.startsWith("/resources")}
+  //             leftSection={<TablerBooks className="w-5 aspect-square" />}
+  //           >
+  //             <NavLink
+  //               label="Programming"
+  //               href="/resources/programming"
+  //               active={pathname.startsWith("/resources/programming")}
+  //             />
+  //             <NavLink
+  //               label="Sponsors"
+  //               href="/resources/sponsors"
+  //               active={pathname.startsWith("/resources/sponsors")}
+  //             />
+  //           </NavLink>
+
+  //           <NavLink
+  //             label="Community"
+  //             href="/community"
+  //             leftSection={<TablerSocial className="w-5 aspect-square" />}
+  //             active={pathname.startsWith("/community")}
+  //           />
+  //         </nav>
+  //       </aside>
+
+  //       {/* Main content */}
+  //       <main className="flex-1 p-6 overflow-y-auto">
+  //         <Outlet />
+  //       </main>
+  //     </div>
+  //   </div>
+  // );
 }
