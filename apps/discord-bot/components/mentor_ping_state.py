@@ -1,0 +1,1 @@
+last_pinged_mentor_index = 0
