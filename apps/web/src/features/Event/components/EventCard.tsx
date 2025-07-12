@@ -3,7 +3,7 @@ import TablerLocation from "~icons/tabler/location";
 import TablerInfoCircle from "~icons/tabler/info-circle";
 import { EventBadge } from "./EventBadge";
 import { EventButton } from "./EventButton";
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-aria-components";
 
 import imageFile from "./placeholder.jpg";
 import type applicationStatus from "../applicationStatus";
@@ -60,10 +60,7 @@ const EventCard = ({
           <div className="flex flex-col items-center gap-1">
             <TablerInfoCircle />
             <Link
-              to="/events/$eventId"
-              params={{
-                eventId,
-              }}
+              href={`/events/${eventId}`}
               className="underline text-text-link"
             >
               Event Details
