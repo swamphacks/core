@@ -4,6 +4,7 @@ import discord
 from typing import Literal
 from utils.checks import is_mod_slash
 from utils.mentor_functions import set_all_mentors_available
+from utils.get_next_support_vc_name import get_next_support_vc_name
 
 
 class General(commands.Cog):
@@ -243,7 +244,63 @@ class General(commands.Cog):
             await interaction.response.send_message("I don't have permission to add users to this thread.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+            
+    @app_commands.command(name="create_vc", description="Creates a voice channel for support")
+    @is_mod_slash()
+    async def create_vc(self, interaction: discord.Interaction) -> None:
+        """Create a voice channel for support
+
+        Args:
+            interaction: The interaction that triggered this command
+            user: The user to grant access to
+        """
+        mod_role = discord.utils.get(interaction.guild.roles, name="Moderator")
+        category = discord.utils.get(interaction.guild.categories, name="Support-VCs")
+        vc_author = interaction.user
+        if not category:
+            await interaction.response.send_message(
+                "Error: Could not find the Support-VCs category.",
+                ephemeral=True
+            )
+            return
         
+        
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False, connect=False),
+            mod_role: discord.PermissionOverwrite(view_channel=True, connect=True),
+            vc_author: discord.PermissionOverwrite(view_channel=True, connect=True),
+        }
+        vc_name = get_next_support_vc_name(category)
+        # Create the voice channel and get the channel object
+        voice_channel = await interaction.guild.create_voice_channel(
+            name=vc_name,
+            category=category,
+            user_limit=4,
+            reason="Support VC created for mentor and inquirer",
+            overwrites=overwrites
+        )
+        
+        text_channel_embed = discord.Embed(
+            title=f"Voice channel created: {vc_name}",
+            description=f"Here is the voice channel you requested.",
+            color=discord.Color.green(),
+        )
+        
+        # Try to send a message in the voice channel's chat (if available)
+        text_channel = interaction.guild.get_channel(voice_channel.id)
+        if text_channel:
+            await text_channel.send(content=f"{vc_author.mention}")
+            await text_channel.send(embed=text_channel_embed)
+        else:
+            print("Voice channel does not have an associated text channel.")
+            return
+
+        # ping the user who created the thread
+        await interaction.response.send_message(
+            f"Voice channel created: {voice_channel.mention}",
+            ephemeral=True
+        )
+
     @app_commands.command(name="grant_vc_access", description="Grant a user access to a voice channel")
     @app_commands.describe(user="Grant a user access to a voice channel")
     @is_mod_slash()

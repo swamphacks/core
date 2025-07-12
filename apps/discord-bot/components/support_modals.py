@@ -112,6 +112,7 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
             description=f"Description: {description}\n\n✅ Thank you for your request, we will be with you shortly!",
             color=discord.Color.green(),
         )
+        await thread.send(content=f"{thread_author.mention}")
         await thread.send(embed=thread_embed)
         
         # create embed for reports channel
