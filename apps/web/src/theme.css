@@ -7,6 +7,7 @@
   /* TEXT */
   --text-main: var(--color-zinc-900);
   --text-secondary: var(--color-zinc-600);
+  --text-link: var(--color-blue-500);
 
   /* NAVBAR */
   --navlink-bg-inactive: transparent;
@@ -127,6 +128,7 @@
   /* TEXT */
   --text-main: var(--color-zinc-100);
   --text-secondary: var(--color-zinc-400);
+  --text-link: var(--color-blue-500);
 
   /* NAVBAR */
   --navlink-bg-inactive: transparent;
@@ -278,6 +280,7 @@
 
   --color-text-main: var(--text-main);
   --color-text-secondary: var(--text-secondary);
+  --color-text-link: var(--text-link);
 
   --color-navlink-bg-inactive: var(--navlink-bg-inactive);
   --color-navlink-bg-active: var(--navlink-bg-active);

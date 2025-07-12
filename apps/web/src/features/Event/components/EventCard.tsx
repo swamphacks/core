@@ -3,6 +3,7 @@ import TablerLocation from "~icons/tabler/location";
 import TablerInfoCircle from "~icons/tabler/info-circle";
 import { EventBadge } from "./EventBadge";
 import { EventButton } from "./EventButton";
+import { Link } from "@tanstack/react-router";
 
 import imageFile from "./placeholder.jpg";
 import type applicationStatus from "../applicationStatus";
@@ -10,6 +11,7 @@ import { Separator } from "@/components/ui/Seperator";
 import { Card } from "@/components/ui/Card";
 
 interface EventCardProps {
+  eventId: string;
   status: keyof typeof applicationStatus;
   title: string;
   description: string;
@@ -18,6 +20,7 @@ interface EventCardProps {
 }
 
 const EventCard = ({
+  eventId,
   status,
   title,
   description,
@@ -56,12 +59,30 @@ const EventCard = ({
           <Separator />
           <div className="flex flex-col items-center gap-1">
             <TablerInfoCircle />
-            {/* TODO: what does this Event Details button do? Display a model or go to new page? */}
-            <p>Event Details</p>
+            <Link
+              to="/events/$eventId"
+              params={{
+                eventId,
+              }}
+              className="underline text-text-link"
+            >
+              Event Details
+            </Link>
           </div>
         </div>
 
-        <EventButton className="w-full mt-4" status={status} />
+        {status === "accepted" ? (
+          <div className="flex gap-2">
+            <EventButton className="w-full mt-4" status={status} />
+            <EventButton
+              className="w-full mt-4"
+              status="notGoing"
+              text="Not Going"
+            />
+          </div>
+        ) : (
+          <EventButton className="w-full mt-4" status={status} />
+        )}
       </div>
     </Card>
   );

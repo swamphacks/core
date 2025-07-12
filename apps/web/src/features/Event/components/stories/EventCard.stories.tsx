@@ -21,6 +21,7 @@ type Story = StoryObj<typeof meta>;
 
 export const EventCard: Story = {
   args: {
+    eventId: "test id",
     status: "rejected",
     title: "SwampHacks XI",
     description: "UF’s flagship hackathon celebrates its 11th iteration.",
