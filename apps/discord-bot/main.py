@@ -6,6 +6,7 @@ import os
 import pathlib
 import asyncio
 from typing import Optional
+from discord.app_commands import CheckFailure, AppCommandError
 
 
 # Set up logging configuration
@@ -16,7 +17,8 @@ handler: logging.FileHandler = logging.FileHandler(
     mode='w'
 )
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
+    #level=logging.DEBUG,
     handlers=[handler],
 )
 
@@ -33,7 +35,30 @@ intents.members = True
 # Initialize bot with command prefix and intents
 bot: commands.Bot = commands.Bot(command_prefix='!', intents=intents)
 
-# for testing purposes
+
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: AppCommandError) -> None:
+    """
+    Error handler for app slash commands such as invalid permissions or unexpected errors
+
+    Args:
+        interaction (discord.Interaction): _description_
+        error (AppCommandError): _description_
+
+    Raises:
+        error: Error based on CheckFailure (invalid permissions) or unexpected errors
+    """
+    if isinstance(error, CheckFailure):
+        await interaction.response.send_message(
+            "🚫 You do not have permission to use this command.",
+            ephemeral=True
+        )
+    else:
+        await interaction.response.send_message(
+            "⚠️ An unexpected error occurred. Please contact an admin.",
+            ephemeral=True
+        )
+        raise error
 
 
 @bot.event
