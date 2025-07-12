@@ -228,6 +228,7 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         # Try to send a message in the voice channel's chat (if available)
         text_channel = interaction.guild.get_channel(voice_channel.id)
         if text_channel:
+            await text_channel.send(content=f"{vc_author.mention}")
             await text_channel.send(embed=text_channel_embed)
         else:
             print("Voice channel does not have an associated text channel.")

@@ -228,11 +228,56 @@ class General(commands.Cog):
             await interaction.response.send_message("This command can only be used in the support channel thread.", ephemeral=True)
             return
         
+        # check if user is already in the thread
+        try:
+            await interaction.channel.fetch_member(user.id)
+            await interaction.response.send_message(f"{user.mention} is already in this thread.", ephemeral=True)
+            return
+        except discord.NotFound:
+            pass
+        
         try:
             await interaction.channel.add_user(user)
             await interaction.response.send_message(f"{user.mention} has been added to the thread.", ephemeral=True)
         except discord.Forbidden:
             await interaction.response.send_message("I don't have permission to add users to this thread.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+        
+    @app_commands.command(name="grant_vc_access", description="Grant a user access to a voice channel")
+    @app_commands.describe(user="Grant a user access to a voice channel")
+    @is_mod_slash()
+    async def grant_vc_access(self, interaction: discord.Interaction, user: discord.Member) -> None:
+        """Grant a user access to a voice channel
+        
+        Args:
+            interaction: The interaction that triggered this command
+            user: The user to grant access to
+        """
+        # TODO: We may want to allow this comamnd to be used in any channel since only mods can use it, but then we need to add a parameter to specify the voice channel
+        # first ensure command is being executed in a voice channel
+        if not isinstance(interaction.channel, discord.VoiceChannel):
+            await interaction.response.send_message(
+                "This command can only be used in a voice channel.", ephemeral=True
+            )
+            return
+        # next ensure the channel is in the support category specifically
+        if not interaction.channel.category or interaction.channel.category.name != "Support-VCs":
+            await interaction.response.send_message('This command can only be used in the "Support-VCs" category.', ephemeral=True)
+            return
+        
+        # check if user already has access to the voice channel
+        overwrites = interaction.channel.overwrites_for(user)
+        if overwrites.connect is True:
+            await interaction.response.send_message(f"{user.mention} already has access to this voice channel.", ephemeral=True)
+            return
+        
+        # try to grant access to the voice channel
+        try:
+            await interaction.channel.set_permissions(user, connect=True, view_channel=True)
+            await interaction.channel.send(f"{user.mention} has been granted access to this voice channel.")
+        except discord.Forbidden:
+            await interaction.response.send_message("I don't have permission to grant access to this voice channel.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
         
