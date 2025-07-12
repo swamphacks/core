@@ -1,3 +1,5 @@
 .env
 /core/apps/discord-bot/.venv*
 *.log
+__pycache__/
+.venv/
