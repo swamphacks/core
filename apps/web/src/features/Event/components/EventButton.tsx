@@ -25,9 +25,14 @@ export const eventButton = tv({
 
 interface EventButtonProps extends ButtonProps {
   status: ApplicationStatusTypes;
+  text?: string;
 }
 
-const EventButton = ({ status: statusProp, className }: EventButtonProps) => {
+const EventButton = ({
+  status: statusProp,
+  className,
+  text,
+}: EventButtonProps) => {
   const eventButtonClassName = eventButton({
     status: statusProp,
     className,
@@ -35,7 +40,7 @@ const EventButton = ({ status: statusProp, className }: EventButtonProps) => {
 
   return (
     <Button className={cn(eventButtonClassName, "font-semibold")}>
-      {applicationStatus[statusProp].button.text}
+      {text || applicationStatus[statusProp].button.text}
     </Button>
   );
 };
