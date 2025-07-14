@@ -9,7 +9,7 @@ export const badge = tv({
       default: "bg-badge-bg-default text-badge-text-default",
     },
     size: {
-      sm: "px-2 py-1 text-xs",
+      sm: "px-2.5 py-1 text-xs",
       md: "px-2.5 py-1.5 text-sm",
     },
     border: {
@@ -17,13 +17,14 @@ export const badge = tv({
       md: "rounded-md",
       lg: "rounded-lg",
       xl: "rounded-xl",
+      full: "rounded-full",
     },
   },
 
   defaultVariants: {
     size: "sm",
     type: "default",
-    border: "xl",
+    border: "full",
   },
 });
 
