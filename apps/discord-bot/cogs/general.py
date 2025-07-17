@@ -264,7 +264,6 @@ class General(commands.Cog):
             )
             return
         
-        
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False, connect=False),
             mod_role: discord.PermissionOverwrite(view_channel=True, connect=True),
