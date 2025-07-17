@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - 'apps/api/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
