@@ -9,7 +9,7 @@ import { EventButton, eventButton } from "../EventButton";
  */
 const argTypes = Object.fromEntries(
   eventButton.variantKeys
-    .filter((key) => key !== "color")
+    .filter((key) => key !== "variant")
     .map((key) => [
       key,
       {
