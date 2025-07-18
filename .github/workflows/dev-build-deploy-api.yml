@@ -88,5 +88,5 @@ jobs:
             git reset --hard origin/dev
             git pull
             infisical export --env=dev --format=dotenv --path="/api" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.dev.api
-            docker compose -f docker-compose.dev.yml pull api
-            docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate api
+            docker compose -f docker-compose.dev.yml pull dev-api
+            docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate dev-api
