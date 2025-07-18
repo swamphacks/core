@@ -59,9 +59,7 @@ jobs:
 
       - name: Install Goose
         run: |
-          curl -L https://github.com/pressly/goose/releases/latest/download/goose_linux_amd64 --output goose
-          chmod +x goose
-          sudo mv goose /usr/local/bin/goose
+          curl -fsSL https://raw.githubusercontent.com/pressly/goose/master/install.sh | sh
 
       - name: Run migrations
         run: |
