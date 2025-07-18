@@ -46,13 +46,15 @@ func main() {
 	accountRepo := repository.NewAccountRespository(database)
 	sessionRepo := repository.NewSessionRepository(database)
 	eventInterestRepo := repository.NewEventInterestRepository(database)
+	eventRepo := repository.NewEventRespository(database)
 
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
+	eventService := services.NewEventService(eventRepo, logger)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, eventInterestService, cfg, logger)
+	apiHandlers := handlers.NewHandlers(authService, eventInterestService, eventService, cfg, logger)
 
 	api := api.NewAPI(&logger, apiHandlers, mw)
 
