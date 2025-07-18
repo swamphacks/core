@@ -231,6 +231,81 @@ paths:
       operationId: post-event-interest
       tags:
         - Event
+  /event:
+    post:
+      summary: Create a new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - applicationOpen
+                - applicationClose
+                - startTime
+                - endTime
+              properties:
+                name:
+                  type: string
+                  example: "Open Software Club's Workshop"
+                applicationOpen:
+                  type: string
+                  format: date-time
+                  example: 2025-08-01T08:00:00Z
+                applicationClose:
+                  type: string
+                  format: date-time
+                  example: 2025-12-01T023:59:00Z
+                timeStart:
+                  type: string
+                  format: date-time
+                  example: 2026-02-10T17:00:00Z
+                timeEnd:
+                  type: string
+                  format: date-time
+                  example: 2026-02-12T08:00:00Z
+      responses:
+        '201':
+          description: 'OK: Event created'
+        '400':
+          description: 'Bad request/Malformed request'
+          content:
+            application/json:
+              schema: '#/components/schemas/ErrorResponse'
+            examples:
+              Example 1:
+                value:
+                  error: invalid_request
+                  message: Could not parse request body
+        '409':
+          description: 'endTime is before startTime or applicationClose is before applicationOpen'
+          content:
+            schema:
+               $ref: '#/components/schemas/ErrorResponse'
+            examples:
+              Example 1:
+                value:
+                  error: time_conflict
+                  message: endTime is before startTime or applicationClose is before applicationOpen
+        5XX:
+        description: 'Server Error: Something went terribly wrong on our end.'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+            examples:
+              Example 1:
+                value:
+                  error: internal_err
+                  message: Something went wrong on our end.
+    operationId: post-event
+    tags:
+      - Event
+  # /event/{eventId}:
+  # /event/{eventId}/patch:
+  # /event/{eventId}/delete:
 components:
   schemas:
     ErrorResponse:
