@@ -98,6 +98,9 @@ const MultiSelect = ({
     }
   };
 
+const DropdownIndicator = (
+  props: DropdownIndicatorProps<(typeof options)[0], true>,
+) => {
   return (
     <div className="flex flex-col gap-1 flex-1 font-figtree">
       <label
