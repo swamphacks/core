@@ -10,7 +10,7 @@ body,
 #root {
   height: 100%;
   font-family: "Figtree", sans-serif;
-  /* background-color: var(--color-background); */
+  background-color: var(--color-background);
 }
 
 .dark {
@@ -18,6 +18,6 @@ body,
 }
 
 /* https://stackoverflow.com/questions/68400074/how-to-apply-transition-effects-when-switching-from-light-mode-to-dark-in-tailwi */
-body.enable-theme-transition {
-  @apply transition-colors duration-300;
-}
+/* #root {
+  @apply transition-bg duration-300;
+} */

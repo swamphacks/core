@@ -46,6 +46,7 @@ const TextField = ({
         props.className,
         "flex flex-col gap-1",
       )}
+      isRequired={isRequired}
     >
       {label && <Label isRequired={isRequired}>{label}</Label>}
       <Input className={inputStyles} placeholder={placeholder} icon={icon} />

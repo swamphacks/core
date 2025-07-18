@@ -50,7 +50,7 @@ export function ComboBox<T extends object>({
       )}
     >
       <Label isRequired={props.isRequired}>{label}</Label>
-      <FieldGroup className="bg-surface">
+      <FieldGroup className="border-1 rounded-sm bg-surface overflow-hidden items-center">
         <Input placeholder={placeholder} />
         <Button
           variant="icon"

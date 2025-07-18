@@ -15,6 +15,10 @@ import { composeTailwindRenderProps } from "@/components/ui/utils";
 
 type ListBoxProps<T> = Omit<AriaListBoxProps<T>, "layout" | "orientation">;
 
+export const listBoxStyles = tv({
+  base: "outline-0 p-1 border border-input-border rounded-sm",
+});
+
 export function ListBox<T extends object>({
   children,
   ...props
@@ -22,10 +26,7 @@ export function ListBox<T extends object>({
   return (
     <AriaListBox
       {...props}
-      className={composeTailwindRenderProps(
-        props.className,
-        "outline-0 p-1 border border-input-border rounded-sm",
-      )}
+      className={composeTailwindRenderProps(props.className, listBoxStyles())}
     >
       {children}
     </AriaListBox>

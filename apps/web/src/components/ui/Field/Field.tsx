@@ -33,7 +33,7 @@ export const fieldBorderStyles = tv({
 });
 
 export const fieldGroupStyles = tv({
-  base: "group flex items-center h-9 bg-surfaceforced-colors:bg-[Field] border-1 rounded-sm overflow-hidden",
+  base: "group flex items-start bg-surfaceforced-colors:bg-[Field]",
   variants: fieldBorderStyles.variants,
 });
 
@@ -45,7 +45,7 @@ export function Label({
     <RACLabel
       {...props}
       className={cn(
-        "flex items-center gap-1 text-sm text-text-secondary font-medium cursor-default w-fit",
+        "flex items-center gap-1 text-text-secondary font-medium cursor-default w-fit",
         props.className,
       )}
     >
@@ -94,7 +94,7 @@ export const Input = forwardRef(
     ref: React.ForwardedRef<HTMLInputElement>,
   ) => {
     const inputClassName =
-      "py-1.5 flex-1 min-w-0 outline-0 bg-surface text-sm text-text-main disabled:text-input-text-disabled";
+      "h-9 py-1.5 w-full min-w-0 outline-0 bg-surface text-base text-text-main disabled:text-input-text-disabled";
 
     if (!Icon) {
       return (
@@ -110,8 +110,8 @@ export const Input = forwardRef(
     }
 
     return (
-      <div className={"flex items-center gap-1 bg-surface relative"}>
-        <div className="ml-2 text-text-secondary absolute pointer-events-none">
+      <div className="flex items-center gap-1 bg-surface relative">
+        <div className="ml-2 text-text-secondary absolute pointer-events-none opacity-85">
           <Icon />
         </div>
 

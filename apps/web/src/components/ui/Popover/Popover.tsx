@@ -14,7 +14,7 @@ export interface PopoverProps extends Omit<AriaPopoverProps, "children"> {
   children: React.ReactNode;
 }
 
-const styles = tv({
+export const styles = tv({
   base: "bg-white dark:bg-zinc-900/70 dark:backdrop-blur-2xl dark:backdrop-saturate-200 forced-colors:bg-[Canvas] shadow-sm rounded-sm bg-clip-padding border border-black/10 dark:border-white/[15%] text-slate-700 dark:text-zinc-300",
   variants: {
     isEntering: {

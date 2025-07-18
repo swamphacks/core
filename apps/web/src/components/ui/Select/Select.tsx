@@ -19,15 +19,19 @@ import { Popover } from "@/components/ui/Popover";
 import { composeTailwindRenderProps } from "@/components/ui/utils";
 import TablerChevronDown from "~icons/tabler/chevron-down";
 
-const styles = tv({
-  base: "flex items-center text-start gap-4 w-full cursor-default border border-black/10 dark:border-white/10 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] dark:shadow-none rounded-sm pl-3 pr-2 py-2 min-w-[150px] transition bg-gray-50 dark:bg-zinc-700",
+export const styles = tv({
+  base: "h-9.5 flex items-center text-start gap-4 w-full cursor-default border border-border rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-surface",
   variants: {
     isDisabled: {
       false:
-        "text-text-main hover:bg-gray-100 pressed:bg-gray-200 dark:hover:bg-zinc-600 dark:pressed:bg-zinc-500 group-invalid:border-red-600 forced-colors:group-invalid:border-[Mark]",
+        "text-text-main hover:bg-gray-100 dark:hover:bg-neutral-700 group-invalid:border-red-600 forced-colors:group-invalid:border-[Mark]",
       true: "text-gray-200 dark:text-zinc-600 forced-colors:text-[GrayText] dark:bg-zinc-800 dark:border-white/5 forced-colors:border-[GrayText]",
     },
   },
+});
+
+export const listBoxContainerStyles = tv({
+  base: "outline-hidden p-1 max-h-[inherit] overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]",
 });
 
 export interface SelectProps<T extends object>
@@ -52,12 +56,12 @@ export function Select<T extends object>({
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        "group flex flex-col gap-1",
+        "group flex flex-col gap-1 font-figtree",
       )}
     >
       {label && <Label>{label}</Label>}
       <Button className={styles}>
-        <SelectValue className="flex-1 text-sm placeholder-shown:italic" />
+        <SelectValue className="flex-1 placeholder-shown:text-[#89898A]" />
         <TablerChevronDown
           aria-hidden
           className="w-4 h-4 text-gray-600 dark:text-zinc-400 forced-colors:text-[ButtonText] group-disabled:text-gray-200 dark:group-disabled:text-zinc-600 forced-colors:group-disabled:text-[GrayText]"
@@ -66,10 +70,7 @@ export function Select<T extends object>({
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
       <Popover className="min-w-(--trigger-width)">
-        <ListBox
-          items={items}
-          className="outline-hidden p-1 max-h-[inherit] overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]"
-        >
+        <ListBox items={items} className={listBoxContainerStyles()}>
           {children}
         </ListBox>
       </Popover>
