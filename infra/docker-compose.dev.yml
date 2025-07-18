@@ -1,5 +1,5 @@
 services:
-  api:
+  dev-api:
     image: ghcr.io/swamphacks/core-api:dev
     ports:
       - "8081:8080"
