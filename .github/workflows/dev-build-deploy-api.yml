@@ -65,11 +65,7 @@ jobs:
           goose -dir ./apps/api/internal/db/migrations postgres "${{ secrets.DEV_DB_URL }}" up
 
   deploy:
-<<<<<<< HEAD
     name: Deploy to Development Server
-=======
-    name: Deploy to Production Server
->>>>>>> 75a7700 (feat: dev deployment (#65))
     runs-on: ubuntu-latest
     needs: [build-and-push, run-migrations]
 
@@ -87,7 +83,6 @@ jobs:
           proxy_port: ${{ secrets.SSH_PORT_JUMP }}
           script: |
             cd /home/admin/core/infra
-<<<<<<< HEAD
             git fetch
             git checkout dev
             git reset --hard origin/dev
@@ -95,9 +90,3 @@ jobs:
             infisical export --env=dev --format=dotenv --path="/api" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.dev.api
             docker compose -f docker-compose.dev.yml pull dev-api
             docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate dev-api
-=======
-            git pull
-            infisical export --env=dev --format=dotenv --path="/api" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.dev.api
-            docker compose -f docker-compose.dev.yml pull api
-            docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate api
->>>>>>> 75a7700 (feat: dev deployment (#65))
