@@ -84,9 +84,9 @@ jobs:
           proxy_username: ${{ secrets.SSH_USERNAME_JUMP }}
           proxy_key: ${{ secrets.SSH_KEY_JUMP }}
           proxy_port: ${{ secrets.SSH_PORT_JUMP }}
-        script: |
-          cd /home/admin/core/infra
-          git pull
-          infisical export --env=prod --format=dotenv --path="/api" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.api
-          docker compose pull api
-          docker compose up -d --no-deps --force-recreate api
+          script: |
+            cd /home/admin/core/infra
+            git pull
+            infisical export --env=prod --format=dotenv --path="/api" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.api
+            docker compose pull api
+            docker compose up -d --no-deps --force-recreate api
