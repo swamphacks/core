@@ -85,6 +85,9 @@ jobs:
           proxy_port: ${{ secrets.SSH_PORT_JUMP }}
           script: |
             cd /home/admin/core/infra
+            git fetch
+            git checkout master
+            git reset --hard origin/master
             git pull
             infisical export --env=prod --format=dotenv --path="/api" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.api
             docker compose pull api
