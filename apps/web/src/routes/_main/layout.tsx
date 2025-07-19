@@ -4,15 +4,17 @@ import {
   Outlet,
   redirect,
   useLocation,
+  useRouter,
 } from "@tanstack/react-router";
 import TablerLayoutCollage from "~icons/tabler/layout-collage";
 import TablerBooks from "~icons/tabler/books";
 import TablerSocial from "~icons/tabler/social";
 import { AppShell } from "@/components/AppShell/AppShell";
+import { Link } from "react-aria-components";
 
 // This layout component performs authentication checks before the user can access protected pages
-export const Route = createFileRoute("/_protected")({
-  beforeLoad: async ({ context }) => {
+export const Route = createFileRoute("/_main")({
+  beforeLoad: async ({ context, location }) => {
     const { user, error } = await context.userQuery.promise;
 
     // Unauthenticated, return to login page
@@ -44,7 +46,9 @@ export const Route = createFileRoute("/_protected")({
 });
 
 function RouteComponent() {
+  const { user } = Route.useRouteContext();
   const pathname = useLocation({ select: (loc) => loc.pathname });
+  const router = useRouter();
 
   return (
     <AppShell>
@@ -52,10 +56,20 @@ function RouteComponent() {
         <div className="w-full px-4 flex flex-row justify-between h-full items-center">
           <h1 className=" text-2xl font-bold">SwampHacks</h1>
 
-          <img
-            src="https://i.pinimg.com/736x/8b/d2/f6/8bd2f653f38322972e404925ab67294a.jpg"
-            className="h-5/8 aspect-square rounded-full"
-          />
+          <div className="flex items-center h-full flex-row gap-6">
+            {user?.role === "superuser" && (
+              <Link
+                onClick={() => router.navigate({ to: "/admin" })}
+                className="text-sm text-blue-500 select-none cursor-pointer hover:underline"
+              >
+                To Admin Portal
+              </Link>
+            )}
+            <img
+              src="https://i.pinimg.com/736x/8b/d2/f6/8bd2f653f38322972e404925ab67294a.jpg"
+              className="h-5/8 aspect-square rounded-full"
+            />
+          </div>
         </div>
       </AppShell.Header>
 
