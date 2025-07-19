@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 )
@@ -15,17 +14,6 @@ type EventRepository struct {
 func NewEventRespository(db *db.DB) *EventRepository {
 	return &EventRepository{
 		db: db,
-	}
-}
-
-func (r *EventRepository) NewTx(tx pgx.Tx) *EventRepository {
-	txDB := &db.DB{
-		Pool:  r.db.Pool,
-		Query: sqlc.New(tx),
-	}
-
-	return &EventRepository{
-		db: txDB,
 	}
 }
 
