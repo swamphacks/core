@@ -65,6 +65,16 @@ export function Description(props: TextProps) {
   );
 }
 
+export function ErrorList({ errors }: { errors: string[] }) {
+  return (
+    <ul className="list-disc ml-5">
+      {errors.map((error, i) => (
+        <li key={i}>{error}</li>
+      ))}
+    </ul>
+  );
+}
+
 export function FieldError(props: FieldErrorProps) {
   return (
     <RACFieldError
@@ -73,7 +83,17 @@ export function FieldError(props: FieldErrorProps) {
         props.className,
         "text-sm text-input-text-error forced-colors:text-[Mark]",
       )}
-    />
+    >
+      {props.children
+        ? props.children
+        : ({ validationErrors }) => {
+            return validationErrors.length === 1 ? (
+              validationErrors[0]
+            ) : (
+              <ErrorList errors={validationErrors} />
+            );
+          }}
+    </RACFieldError>
   );
 }
 

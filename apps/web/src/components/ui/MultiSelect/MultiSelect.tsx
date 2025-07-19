@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/Tag";
 import TablerX from "~icons/tabler/x";
 import { useId, useRef, useState, type CSSProperties } from "react";
-import { fieldBorderStyles } from "@/components/ui/Field";
+import { ErrorList, fieldBorderStyles } from "@/components/ui/Field";
 
 const DropdownIndicator = (props: DropdownIndicatorProps) => {
   return (
@@ -67,6 +67,11 @@ interface MultiSelectProps {
   label: string;
   options: Option[];
   isRequired?: boolean;
+  onChange?: (data: Option[]) => void;
+
+  // Not sure if its better to do this https://react-spectrum.adobe.com/react-aria/Form.html#custom-children
+  // accepting errors props should work for now.
+  errors?: string[];
 }
 
 export const MULTISELECT_NAME_PREFIX = "multiselect-";
@@ -76,11 +81,21 @@ const MultiSelect = ({
   label,
   name,
   options,
+  onChange,
+  errors,
   ...props
 }: MultiSelectProps) => {
   const id = useId();
   const hiddenSelectRef = useRef<HTMLSelectElement | null>(null);
   const [isInvalid, setIsInvalid] = useState(false);
+
+  const renderErrors = () => {
+    if (isInvalid) return <p>Please select an item in the list.</p>;
+
+    if (errors && errors.length > 0) {
+      return <ErrorList errors={errors} />;
+    }
+  };
 
   return (
     <div className="flex flex-col gap-1 flex-1 font-figtree">
@@ -95,7 +110,13 @@ const MultiSelect = ({
         classNames={{
           placeholder: () => "text-[#89898A]",
           control: (state) =>
-            cn(selectStyles(state), "h-full", fieldBorderStyles({ isInvalid })),
+            cn(
+              selectStyles(state),
+              "h-full",
+              fieldBorderStyles({
+                isInvalid: isInvalid || (errors && errors.length > 0),
+              }),
+            ),
           menu: () => cn(PopoverStyles(), "mt-2"),
           menuList: (state) => listBoxContainerStyles(state),
           option: (state) => dropdownItemStyles(state),
@@ -115,6 +136,8 @@ const MultiSelect = ({
           if (isInvalid && data.length > 0) {
             setIsInvalid(false);
           }
+
+          onChange?.(data as Option[]);
         }}
         styles={{
           control: (baseStyles) => ({
@@ -125,11 +148,9 @@ const MultiSelect = ({
         {...props}
       />
 
-      {isInvalid && (
-        <p className="text-sm text-input-text-error forced-colors:text-[Mark]">
-          Please select an item in the list.
-        </p>
-      )}
+      <div className="text-sm text-input-text-error forced-colors:text-[Mark]">
+        {renderErrors()}
+      </div>
 
       {/* This is a dummy select element used for form submissions. Its values are updated based on the actual Select component above. */}
       <select
