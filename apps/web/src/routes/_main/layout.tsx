@@ -46,6 +46,7 @@ export const Route = createFileRoute("/_main")({
 });
 
 function RouteComponent() {
+  const { user } = Route.useRouteContext();
   const pathname = useLocation({ select: (loc) => loc.pathname });
   const router = useRouter();
 
@@ -56,12 +57,14 @@ function RouteComponent() {
           <h1 className=" text-2xl font-bold">SwampHacks</h1>
 
           <div className="flex items-center h-full flex-row gap-6">
-            <Link
-              onClick={() => router.navigate({ to: "/admin" })}
-              className="text-sm text-blue-500 select-none cursor-pointer hover:underline"
-            >
-              To Admin Portal
-            </Link>
+            {user?.role === "superuser" && (
+              <Link
+                onClick={() => router.navigate({ to: "/admin" })}
+                className="text-sm text-blue-500 select-none cursor-pointer hover:underline"
+              >
+                To Admin Portal
+              </Link>
+            )}
             <img
               src="https://i.pinimg.com/736x/8b/d2/f6/8bd2f653f38322972e404925ab67294a.jpg"
               className="h-5/8 aspect-square rounded-full"
