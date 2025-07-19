@@ -42,9 +42,41 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: create checks for correct application open/close times and start/end times
+	// Check for empty params
+	if req.Name == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "'name' must be given"))
+		return
+	}
+	if req.ApplicationOpen.IsZero() {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "'application_open' must be given"))
+		return
+	}
+	if req.ApplicationClose.IsZero() {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "'application_close' must be given"))
+		return
+	}
+	if req.StartTime.IsZero() {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "'start_time' must be given"))
+		return
+	}
+	if req.EndTime.IsZero() {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "'end_time' must be given"))
+		return
+	}
 
-	// event, err = h.eventService.CreateEvent(r.Context(), req.Name, req.ApplicationOpen, req.ApplicationClose, req.StartTime, req.EndTime)
+	// Time checks
+	// Open/Close and Start/End blocks are allowed to overlap, as an event could have an open application while it is ongoing, so a comparison between the two is omitted.
+	if !req.ApplicationClose.After(req.ApplicationOpen) || req.ApplicationClose.Equal(req.ApplicationOpen) {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "'application_open' must be before 'application_close'"))
+	}
+	if !req.EndTime.After(req.StartTime) || req.EndTime.Equal(req.StartTime) {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "'start_time' must be before 'end_time'"))
+	}
+	// Make sure event and application periods don't take place before today.
+	if req.ApplicationOpen.Before(time.Now()) || req.ApplicationClose.Before(time.Now()) || req.StartTime.Before(time.Now()) || req.EndTime.Before(time.Now()) {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "Event times and application times must not take place before today"))
+	}
+
 	_, err := h.eventService.CreateEvent(r.Context(), req.Name, req.ApplicationOpen, req.ApplicationClose, req.StartTime, req.EndTime)
 	if err != nil {
 		switch err {
