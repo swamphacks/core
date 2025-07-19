@@ -72,9 +72,8 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	if !req.EndTime.After(req.StartTime) || req.EndTime.Equal(req.StartTime) {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "'start_time' must be before 'end_time'"))
 	}
-	// Make sure event and application periods don't take place before today.
 	if req.ApplicationOpen.Before(time.Now()) || req.ApplicationClose.Before(time.Now()) || req.StartTime.Before(time.Now()) || req.EndTime.Before(time.Now()) {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "Event times and application times must not take place before today"))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "Event and application periods must not take place before the current time"))
 	}
 
 	_, err := h.eventService.CreateEvent(r.Context(), req.Name, req.ApplicationOpen, req.ApplicationClose, req.StartTime, req.EndTime)
