@@ -18,7 +18,7 @@ const applicationStatusVariants = Object.fromEntries(
 export const eventButton = tv({
   extend: button,
   variants: {
-    color: {},
+    variant: {},
     status: applicationStatusVariants,
   },
 });
@@ -35,11 +35,15 @@ const EventButton = ({
 }: EventButtonProps) => {
   const eventButtonClassName = eventButton({
     status: statusProp,
+    variant: "skeleton",
     className,
   });
 
   return (
-    <Button className={cn(eventButtonClassName, "font-semibold")}>
+    <Button
+      variant="skeleton"
+      className={cn(eventButtonClassName, "font-semibold")}
+    >
       {text || applicationStatus[statusProp].button.text}
     </Button>
   );

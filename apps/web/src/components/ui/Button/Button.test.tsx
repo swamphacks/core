@@ -5,7 +5,7 @@ import { Button } from ".";
 
 describe("Button component", () => {
   it("renders with correct text", () => {
-    render(<Button color="primary">Click Me!</Button>);
+    render(<Button variant="primary">Click Me!</Button>);
     const button = screen.getByText(/Click Me!/i);
     expect(button).toBeInTheDocument();
   });

@@ -18,12 +18,22 @@
   --navlink-secondary-text: var(--color-neutral-500);
 
   /* BUTTONS */
-  --button-primary: var(--color-blue-500);
+  --button-primary: var(--color-blue-600);
   --button-primary-hover: var(--color-blue-700);
+  --button-primary-pressed: var(--color-blue-800);
   --button-primary-disabled: var(--color-blue-300);
+  --button-secondary: var(--color-gray-200);
+  --button-secondary-hover: var(--color-gray-300);
+  --button-secondary-pressed: var(--color-gray-300);
+  --button-secondary-disabled: var(--color-gray-300);
   --button-outline: oklch(0.6187 0.2067 259.23 / 25%);
   --button-outline-hover: oklch(0.5465 0.2455 262.87 / 25%);
+  --button-outline-pressed: oklch(0.5465 0.2455 262.87 / 25%);
   --button-outline-disabled: oklch(0.8071 0.10065 250.4462 / 25%);
+  --button-danger: var(--color-red-600);
+  --button-danger-hover: var(--color-red-700);
+  --button-danger-pressed: var(--color-red-800);
+  --button-danger-disabled: var(--color-red-800);
 
   /* BADGES */
   --badge-bg-default: var(--color-neutral-200);
@@ -117,6 +127,14 @@
   --event-button-text-admin: var(--color-cyan-900);
   --event-button-text-not-going: var(--color-zinc-900);
   --event-button-text-completed: var(--color-zinc-900);
+
+  /* INPUTS */
+  --input-border: var(--color-border);
+  --input-border-focused: var(--color-zinc-500);
+  --input-border-invalid: var(--color-red-600);
+  --input-border-disabled: var(--color-gray-200);
+  --input-text-error: var(--color-red-600);
+  --input-text-disabled: var(--color-gray-500);
 }
 
 .dark {
@@ -141,10 +159,20 @@
   /* BUTTONS */
   --button-primary: var(--color-blue-500);
   --button-primary-hover: var(--color-blue-700);
+  --button-primary-pressed: var(--color-blue-800);
   --button-primary-disabled: var(--color-blue-300);
+  --button-secondary: var(--color-blue-500);
+  --button-secondary-hover: var(--color-blue-700);
+  --button-secondary-pressed: var(--color-blue-800);
+  --button-secondary-disabled: var(--color-blue-300);
   --button-outline: oklch(0.6187 0.2067 259.23 / 25%);
   --button-outline-hover: oklch(0.5465 0.2455 262.87 / 25%);
+  --button-outline-pressed: oklch(0.5465 0.2455 262.87 / 25%);
   --button-outline-disabled: oklch(0.8071 0.10065 250.4462 / 25%);
+  --button-danger: var(--color-red-600);
+  --button-danger-hover: var(--color-red-700);
+  --button-danger-pressed: var(--color-red-800);
+  --button-danger-disabled: var(--color-red-800);
 
   /* BADGES */
   --badge-bg-default: var(--color-neutral-200);
@@ -270,9 +298,19 @@
   --event-button-text-admin: var(--color-cyan-500);
   --event-button-text-not-going: var(--color-neutral-50);
   --event-button-text-completed: var(--color-neutral-50);
+
+  /* INPUTS */
+  --input-border: var(--color-border);
+  --input-border-focused: var(--color-zinc-700);
+  --input-border-invalid: var(--color-red-600);
+  --input-border-disabled: var(--color-zin-700);
+  --input-text-error: var(--color-red-600);
+  --input-text-disabled: var(--color-zinc-600);
 }
 
 @theme inline {
+  --font-figtree: "Figtree", sans-serif;
+
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-border: var(--border);
@@ -289,10 +327,20 @@
 
   --color-button-primary: var(--button-primary);
   --color-button-primary-hover: var(--button-primary-hover);
+  --color-button-primary-pressed: var(--button-primary-pressed);
   --color-button-primary-disabled: var(--button-primary-disabled);
+  --color-button-secondary: var(--button-secondary);
+  --color-button-secondary-hover: var(--button-secondary-hover);
+  --color-button-secondary-pressed: var(--button-secondary-pressed);
+  --color-button-secondary-disabled: var(--button-secondary-disabled);
   --color-button-outline: var(--button-outline);
   --color-button-outline-hover: var(--button-outline-hover);
+  --color-button-outline-pressed: var(--button-outline-pressed);
   --color-button-outline-disabled: var(--button-outline-disabled);
+  --color-button-danger: var(--button-danger);
+  --color-button-danger-hover: var(--button-danger-hover);
+  --color-button-danger-pressed: var(--button-danger-pressed);
+  --color-button-danger-disabled: var(--button-danger-disabled);
 
   --color-badge-bg-default: var(--badge-bg-default);
   --color-badge-bg-rejected: var(--badge-bg-rejected);
@@ -377,5 +425,10 @@
   --color-event-button-text-not-going: var(--event-button-text-not-going);
   --color-event-button-text-completed: var(--event-button-text-completed);
 
-  --font-figtree: "Figtree", sans-serif;
+  --color-input-border: var(--input-border);
+  --color-input-border-focused: var(--input-border-focused);
+  --color-input-border-invalid: var(--input-border-invalid);
+  --color-input-border-disabled: var(--input-border-disabled);
+  --color-input-text-error: var(--input-text-error);
+  --color-input-text-disabled: var(--input-text-disabled);
 }
