@@ -10,6 +10,7 @@ export default function MultiSelectField(props: MultiSelectProps) {
   return (
     <MultiSelect
       onChange={(data) => field.setValue(data.map((item) => item.value))}
+      errors={field.getMeta().errors.map((error) => error.message)}
       {...props}
     />
   );

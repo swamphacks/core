@@ -61,7 +61,7 @@ interface Option {
   label: string;
 }
 
-interface MultiSelectProps {
+export interface MultiSelectProps {
   // Name must be unique and is required for form submissions
   name: string;
   label: string;
@@ -152,7 +152,9 @@ const MultiSelect = ({
         {renderErrors()}
       </div>
 
-      {/* This is a dummy select element used for form submissions. Its values are updated based on the actual Select component above. */}
+      {/* This is a dummy select element used for form submissions. Its values are updated based on the actual Select component above.
+          It doesn't do anything since we are using Tanstack Form, but i'll leave it here just in case it comes in handy in the future.
+      */}
       <select
         tabIndex={-1}
         autoComplete="off"
