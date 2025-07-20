@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
@@ -34,7 +36,6 @@ type CreateEventRequest struct {
 }
 
 func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
-
 	// Parse JSON body
 	var req CreateEventRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -87,4 +88,49 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+type GetEventResponse struct {
+	ID               uuid.UUID  `json:"id"`
+	Name             string     `json:"name"`
+	Description      *string    `json:"description"`
+	Location         *string    `json:"location"`
+	LocationUrl      *string    `json:"location_url"`
+	MaxAttendees     *int32     `json:"max_attendees"`
+	ApplicationOpen  time.Time  `json:"application_open"`
+	ApplicationClose time.Time  `json:"application_close"`
+	RsvpDeadline     *time.Time `json:"rsvp_deadline"`
+	DecisionRelease  *time.Time `json:"decision_release"`
+	StartTime        time.Time  `json:"start_time"`
+	EndTime          time.Time  `json:"end_time"`
+	WebsiteUrl       *string    `json:"website_url"`
+	IsPublished      *bool      `json:"is_published"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
+}
+
+func (h *EventHandler) GetEventByID(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+	event, err := h.eventService.GetEventByID(r.Context(), eventId)
+
+	if err != nil {
+		switch err {
+		default:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		}
+	}
+
+	eventJson := GetEventResponse{ID: event.ID} // Compiler fills in the other parameters
+
+	res.Send(w, http.StatusOK, eventJson)
+	w.WriteHeader(http.StatusOK)
 }

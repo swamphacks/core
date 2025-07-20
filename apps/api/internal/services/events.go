@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
@@ -12,6 +13,7 @@ import (
 
 var (
 	ErrFailedToCreateEvent = errors.New("failed to create event")
+	ErrFailedToGetEvent    = errors.New("failed to get event")
 )
 
 type EventService struct {
@@ -39,6 +41,16 @@ func (s *EventService) CreateEvent(ctx context.Context, name string, application
 	if err != nil {
 		s.logger.Err(err).Msg("An unkown error was caught!")
 		return nil, ErrFailedToCreateEvent
+	}
+
+	return result, nil
+}
+
+func (s *EventService) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Event, error) {
+	result, err := s.eventRepo.GetEventByID(ctx, id)
+	if err != nil {
+		s.logger.Err(err).Msg("An unkown error was caught!")
+		return nil, ErrFailedToGetEvent
 	}
 
 	return result, nil

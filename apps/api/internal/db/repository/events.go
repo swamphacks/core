@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 )
@@ -19,5 +20,10 @@ func NewEventRespository(db *db.DB) *EventRepository {
 
 func (r *EventRepository) CreateEvent(ctx context.Context, params sqlc.CreateEventParams) (*sqlc.Event, error) {
 	event, err := r.db.Query.CreateEvent(ctx, params)
+	return &event, err
+}
+
+func (r *EventRepository) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Event, error) {
+	event, err := r.db.Query.GetEventByID(ctx, id)
 	return &event, err
 }
