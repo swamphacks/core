@@ -245,6 +245,7 @@ class General(commands.Cog):
             await interaction.response.send_message("I don't have permission to add users to this thread.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+<<<<<<< HEAD
             
     @app_commands.command(name="create_vc", description="Creates a voice channel for support")
     @is_mod_slash()
@@ -301,6 +302,9 @@ class General(commands.Cog):
             ephemeral=True
         )
 
+=======
+        
+>>>>>>> origin/dev
     @app_commands.command(name="grant_vc_access", description="Grant a user access to a voice channel")
     @app_commands.describe(user="Grant a user access to a voice channel")
     @is_mod_slash()
@@ -337,6 +341,7 @@ class General(commands.Cog):
             await interaction.response.send_message("I don't have permission to grant access to this voice channel.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+<<<<<<< HEAD
             
     @app_commands.command(name="ask", description="Ask LLM a question")
     @app_commands.describe(prompt="Your question for LLM")
@@ -345,6 +350,8 @@ class General(commands.Cog):
         await interaction.response.defer(thinking=True)
         answer = llm_response(prompt)
         await interaction.followup.send(answer, ephemeral=True)
+=======
+>>>>>>> origin/dev
         
 async def setup(bot: commands.Bot) -> None:
     """Add the General cog to the bot

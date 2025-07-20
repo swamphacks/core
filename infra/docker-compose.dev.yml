@@ -1,0 +1,8 @@
+services:
+  dev-api:
+    image: ghcr.io/swamphacks/core-api:dev
+    ports:
+      - "8081:8080"
+    restart: always
+    env_file:
+      - ./secrets/.env.dev.api

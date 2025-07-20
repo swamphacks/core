@@ -165,6 +165,72 @@ paths:
           description: The authenticated session token/id
       tags:
         - Authentication
+  /event/{eventId}/interest:
+    post:
+      summary: Make an interest submission for an event (email list)
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: johndoe@ufl.edu
+                source:
+                  type: string
+                  example: "SHX Frontpage"
+      responses:
+        '201':
+          description: 'OK: Interest email created'
+        '400':
+          description: 'Bad request/Malformed request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: missing_email
+                    message: Email is required
+        '409':
+          description: 'Duplicate email found in DB'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: duplicate_email
+                    message: Email is already registered for this event
+                
+        5XX:
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: post-event-interest
+      tags:
+        - Event
 components:
   schemas:
     ErrorResponse:
