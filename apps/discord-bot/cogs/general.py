@@ -5,6 +5,7 @@ from typing import Literal
 from utils.checks import is_mod_slash
 from utils.mentor_functions import set_all_mentors_available
 from utils.get_next_support_vc_name import get_next_support_vc_name
+from chatbot.llm import llm_response
 
 
 class General(commands.Cog):
@@ -336,6 +337,14 @@ class General(commands.Cog):
             await interaction.response.send_message("I don't have permission to grant access to this voice channel.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+            
+    @app_commands.command(name="ask", description="Ask LLM a question")
+    @app_commands.describe(prompt="Your question for LLM")
+    async def ask(self, interaction: discord.Interaction, prompt: str):
+        """Ask LLM a question and get a response."""
+        await interaction.response.defer(thinking=True)
+        answer = llm_response(prompt)
+        await interaction.followup.send(answer, ephemeral=True)
         
 async def setup(bot: commands.Bot) -> None:
     """Add the General cog to the bot
