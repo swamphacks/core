@@ -2,75 +2,44 @@
 
 ## Prerequisites
 
-Before you begin, make sure you have:
+Before you begin, ensure you have the following installed:
 
-- **Python 3.8+** installed and on your PATH
-- **Git** (optional if you clone the repo)
+- **uv** by Astral.sh  
+  Install from the official page: [https://github.com/astral-sh/uv](https://github.com/astral-sh/uv)
+- **Python 3.12 or higher**  
+  Download from: [https://www.python.org/downloads/](https://www.python.org/downloads/)
 
-_All commands assume you are in the `core/apps/discord-bot/` directory._
+- **Git**  
+  Download from: [https://git-scm.com/downloads](https://git-scm.com/downloads)
 
-## 1. Create a Virtual Environment
+---
 
-```bash
-python -m venv .venv
-```
+## Setup & Run the Bot
 
-Make sure to select the path to the interpreter usually located in .venv/bin/pythonX
+### 1. Configure Environment Variables
 
-## 2. Activate the Environment
+Create a `.env` file in the `discord-bot` directory with your credentials (or follow `.env.example`):
 
-### macOS / Linux
-
-```bash
-source .venv/bin/activate
-```
-
-### Windows (PowerShell)
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-_(Your prompt should now be prefixed with `(.venv)`.)_
-
-## 3. Install Dependencies
-
-```bash
-# Upgrade pip
-python -m pip install --upgrade pip
-
-# Install runtime dependencies
-pip install -r requirements.txt
-```
-
-## 4. Configure Environment Variables
-
-Create a file named `.env` in this directory with the following content:
-
-```
+```env
 DISCORD_TOKEN=YOUR_DISCORD_BOT_TOKEN_HERE
-```
-
-## 5. Run the Bot
-
-With the venv active, start your bot:
-
-```bash
-python main.py
-```
-
-You should see something like:
-
-```
-Bot: SwampHackr is ready to go!
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
 ```
 
 ---
 
-> If you ever switch to a fresh terminal session, re-activate the venv before running any commands:
->
-> ```bash
-> source .venv/bin/activate  # (macOS/Linux)
-> # or
-> .\.venv\Scripts\Activate.ps1  # (Windows)
-> ```
+### 2. Create virtual environment (venv) and run the bot
+
+Make sure you are inside the `core/apps/discord-bot` directory, then run:
+
+```bash
+# This commands creates a venv automatically and runs main.py
+uv run main.py
+```
+
+You should see a confirmation message like:
+
+```
+Bot: HackrBot#3118 is ready to go.
+```
+
+---
