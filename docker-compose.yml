@@ -17,7 +17,6 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./apps/web:/app
-      - web_node_modules:/app/node_modules
     ports:
       - "5173:5173"
     environment:
@@ -47,6 +46,5 @@ services:
 
 volumes:
   postgres_data:
-  web_node_modules:
     
     
