@@ -22,7 +22,7 @@ INSERT INTO events (
     $2, $3,
     $4, $5
 )
-RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at
 `
 
 type CreateEventParams struct {
@@ -57,6 +57,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.EndTime,
 		&i.WebsiteUrl,
 		&i.IsPublished,
+		&i.SavedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -74,7 +75,7 @@ func (q *Queries) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 }
 
 const getEventByID = `-- name: GetEventByID :one
-SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at FROM events
+SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at FROM events
 WHERE id = $1
 `
 
@@ -96,6 +97,7 @@ func (q *Queries) GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 		&i.EndTime,
 		&i.WebsiteUrl,
 		&i.IsPublished,
+		&i.SavedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -103,7 +105,7 @@ func (q *Queries) GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 }
 
 const getEventByLocation = `-- name: GetEventByLocation :many
-SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at FROM events
+SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at FROM events
 WHERE location = $1
 `
 
@@ -131,6 +133,7 @@ func (q *Queries) GetEventByLocation(ctx context.Context, location *string) ([]E
 			&i.EndTime,
 			&i.WebsiteUrl,
 			&i.IsPublished,
+			&i.SavedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -159,9 +162,10 @@ SET
     start_time = coalesce($10, start_time),
     end_time = coalesce($11, end_time),
     website_url = coalesce($12, website_url),
-    is_published = coalesce($13, is_published)
+    is_published = coalesce($13, is_published),
+    saved_at = coalesce($14, is_published)
 WHERE
-    id = $14::uuid
+    id = $15::uuid
 `
 
 type UpdateEventByIdParams struct {
@@ -178,6 +182,7 @@ type UpdateEventByIdParams struct {
 	EndTime          *time.Time `json:"end_time"`
 	WebsiteUrl       *string    `json:"website_url"`
 	IsPublished      *bool      `json:"is_published"`
+	SavedAt          *time.Time `json:"saved_at"`
 	ID               uuid.UUID  `json:"id"`
 }
 
@@ -196,6 +201,7 @@ func (q *Queries) UpdateEventById(ctx context.Context, arg UpdateEventByIdParams
 		arg.EndTime,
 		arg.WebsiteUrl,
 		arg.IsPublished,
+		arg.SavedAt,
 		arg.ID,
 	)
 	return err
