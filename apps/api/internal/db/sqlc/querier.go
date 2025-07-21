@@ -30,7 +30,6 @@ type Querier interface {
 	GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
 	GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
-	GetEventByLocation(ctx context.Context, location *string) ([]Event, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (AuthSession, error)
 	GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthSession, error)
 	GetUserByEmail(ctx context.Context, email *string) (AuthUser, error)
@@ -38,7 +37,7 @@ type Querier interface {
 	InvalidateSessionByID(ctx context.Context, id uuid.UUID) error
 	TouchSession(ctx context.Context, arg TouchSessionParams) error
 	UpdateApplication(ctx context.Context, arg UpdateApplicationParams) error
-	UpdateEvent(ctx context.Context, arg UpdateEventParams) error
+	UpdateEventById(ctx context.Context, arg UpdateEventByIdParams) error
 	UpdateSessionExpiration(ctx context.Context, arg UpdateSessionExpirationParams) error
 	UpdateTokens(ctx context.Context, arg UpdateTokensParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
