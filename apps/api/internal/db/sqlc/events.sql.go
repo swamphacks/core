@@ -22,7 +22,7 @@ INSERT INTO events (
     $2, $3,
     $4, $5
 )
-RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at
 `
 
 type CreateEventParams struct {
@@ -57,6 +57,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.EndTime,
 		&i.WebsiteUrl,
 		&i.IsPublished,
+		&i.SavedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -74,7 +75,7 @@ func (q *Queries) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 }
 
 const getEventByID = `-- name: GetEventByID :one
-SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at FROM events
+SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at FROM events
 WHERE id = $1
 `
 
@@ -96,6 +97,7 @@ func (q *Queries) GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 		&i.EndTime,
 		&i.WebsiteUrl,
 		&i.IsPublished,
+		&i.SavedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

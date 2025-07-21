@@ -29,7 +29,8 @@ SET
     start_time = coalesce(sqlc.narg('start_time'), start_time),
     end_time = coalesce(sqlc.narg('end_time'), end_time),
     website_url = coalesce(sqlc.narg('website_url'), website_url),
-    is_published = coalesce(sqlc.narg('is_published'), is_published)
+    is_published = coalesce(sqlc.narg('is_published'), is_published),
+    saved_at = coalesce(sqlc.narg('saved_at'), is_published)
 WHERE
     id = @id::uuid;
     
