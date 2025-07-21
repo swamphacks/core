@@ -119,9 +119,10 @@ SET
     start_time = coalesce($10, start_time),
     end_time = coalesce($11, end_time),
     website_url = coalesce($12, website_url),
-    is_published = coalesce($13, is_published)
+    is_published = coalesce($13, is_published),
+    saved_at = coalesce($14, is_published)
 WHERE
-    id = $14::uuid
+    id = $15::uuid
 `
 
 type UpdateEventByIdParams struct {
@@ -138,6 +139,7 @@ type UpdateEventByIdParams struct {
 	EndTime          *time.Time `json:"end_time"`
 	WebsiteUrl       *string    `json:"website_url"`
 	IsPublished      *bool      `json:"is_published"`
+	SavedAt          *time.Time `json:"saved_at"`
 	ID               uuid.UUID  `json:"id"`
 }
 
@@ -156,6 +158,7 @@ func (q *Queries) UpdateEventById(ctx context.Context, arg UpdateEventByIdParams
 		arg.EndTime,
 		arg.WebsiteUrl,
 		arg.IsPublished,
+		arg.SavedAt,
 		arg.ID,
 	)
 	return err
