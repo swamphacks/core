@@ -210,6 +210,7 @@ type Event struct {
 	EndTime          time.Time  `json:"end_time"`
 	WebsiteUrl       *string    `json:"website_url"`
 	IsPublished      *bool      `json:"is_published"`
+	SavedAt          *time.Time `json:"saved_at"`
 	CreatedAt        *time.Time `json:"created_at"`
 	UpdatedAt        *time.Time `json:"updated_at"`
 }
