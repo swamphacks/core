@@ -34,6 +34,6 @@ SET
 WHERE
     id = @id::uuid;
     
--- name: DeleteEvent :exec
+-- name: DeleteEventById :exec
 DELETE FROM events
 WHERE id = $1;

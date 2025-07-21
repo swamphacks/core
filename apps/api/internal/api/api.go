@@ -72,6 +72,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		r.Post("/{eventId}/interest", api.Handlers.EventInterest.AddEmailToEvent)
 		r.Get("/{eventId}", api.Handlers.Event.GetEventByID)
 		r.Patch("/{eventId}", api.Handlers.Event.UpdateEventById)
+		r.Delete("/{eventId}", api.Handlers.Event.DeleteEventById)
 	})
 
 	// Protected test routes

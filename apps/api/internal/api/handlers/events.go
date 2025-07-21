@@ -171,3 +171,30 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent) // We return a 204 for http PATCH requests since nothing is being returned, and we would like to indicate success.
 }
+
+func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+	err = h.eventService.DeleteEventById(r.Context(), eventId)
+
+	// TODO: throw error on trying to delete a non-existant event
+
+	if err != nil {
+		switch err {
+		case services.ErrFailedToDeleteEvent:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("patch_error", "Failed to delete event"))
+		default:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		}
+	}
+
+	w.WriteHeader(http.StatusNoContent) // We return a 204 for http DELETE requests since nothing is being returned, and we would like to indicate success.
+}

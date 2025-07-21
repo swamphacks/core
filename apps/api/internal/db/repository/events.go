@@ -32,3 +32,8 @@ func (r *EventRepository) UpdateEventById(ctx context.Context, params sqlc.Updat
 	err := r.db.Query.UpdateEventById(ctx, params)
 	return err
 }
+
+func (r *EventRepository) DeleteEventById(ctx context.Context, id uuid.UUID) error {
+	err := r.db.Query.DeleteEventById(ctx, id)
+	return err
+}
