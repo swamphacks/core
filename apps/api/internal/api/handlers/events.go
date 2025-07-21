@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/services"
 )
 
@@ -90,25 +91,6 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-type GetEventResponse struct {
-	ID               uuid.UUID  `json:"id"`
-	Name             string     `json:"name"`
-	Description      *string    `json:"description"`
-	Location         *string    `json:"location"`
-	LocationUrl      *string    `json:"location_url"`
-	MaxAttendees     *int32     `json:"max_attendees"`
-	ApplicationOpen  time.Time  `json:"application_open"`
-	ApplicationClose time.Time  `json:"application_close"`
-	RsvpDeadline     *time.Time `json:"rsvp_deadline"`
-	DecisionRelease  *time.Time `json:"decision_release"`
-	StartTime        time.Time  `json:"start_time"`
-	EndTime          time.Time  `json:"end_time"`
-	WebsiteUrl       *string    `json:"website_url"`
-	IsPublished      *bool      `json:"is_published"`
-	CreatedAt        time.Time  `json:"created_at"`
-	UpdatedAt        time.Time  `json:"updated_at"`
-}
-
 func (h *EventHandler) GetEventByID(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -129,8 +111,63 @@ func (h *EventHandler) GetEventByID(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	eventJson := GetEventResponse{ID: event.ID} // Compiler fills in the other parameters
+	eventJson := sqlc.Event{
+		ID:               event.ID,
+		Name:             event.Name,
+		Description:      event.Description,
+		Location:         event.Location,
+		LocationUrl:      event.LocationUrl,
+		MaxAttendees:     event.MaxAttendees,
+		ApplicationOpen:  event.ApplicationOpen,
+		ApplicationClose: event.ApplicationClose,
+		RsvpDeadline:     event.RsvpDeadline,
+		DecisionRelease:  event.DecisionRelease,
+		StartTime:        event.StartTime,
+		EndTime:          event.EndTime,
+		WebsiteUrl:       event.WebsiteUrl,
+		IsPublished:      event.IsPublished,
+		CreatedAt:        event.CreatedAt,
+		UpdatedAt:        event.UpdatedAt,
+	}
 
 	res.Send(w, http.StatusOK, eventJson)
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	var req sqlc.UpdateEventByIdParams
+	// Because sqlc.UpdateEventById() must take in parameters through a sqlc.UpdateEventByIdParams struct, we must inject the eventId from the URL parameters into the struct.
+	// This will override an eventId that is added by the request body, if they mistakenly try to add one there. But if a client fails to add it as a URL parameter, they will get an error anyways.
+	req.ID = eventId
+
+	// TODO: add check for non-existing params
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Could not parse request body"))
+		return
+	}
+
+	err = h.eventService.UpdateEventById(r.Context(), req)
+
+	if err != nil {
+		switch err {
+		case services.ErrFailedToUpdateEvent:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("patch_error", "Failed to update event"))
+		default:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		}
+	}
+
+	w.WriteHeader(http.StatusNoContent) // We return a 204 for http PATCH requests since nothing is being returned, and we would like to indicate success.
 }

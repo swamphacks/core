@@ -27,3 +27,8 @@ func (r *EventRepository) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc
 	event, err := r.db.Query.GetEventByID(ctx, id)
 	return &event, err
 }
+
+func (r *EventRepository) UpdateEventById(ctx context.Context, params sqlc.UpdateEventByIdParams) error {
+	err := r.db.Query.UpdateEventById(ctx, params)
+	return err
+}

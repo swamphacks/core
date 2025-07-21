@@ -14,6 +14,7 @@ import (
 var (
 	ErrFailedToCreateEvent = errors.New("failed to create event")
 	ErrFailedToGetEvent    = errors.New("failed to get event")
+	ErrFailedToUpdateEvent = errors.New("failed to update event")
 )
 
 type EventService struct {
@@ -54,4 +55,14 @@ func (s *EventService) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Ev
 	}
 
 	return result, nil
+}
+
+func (s *EventService) UpdateEventById(ctx context.Context, params sqlc.UpdateEventByIdParams) error {
+	err := s.eventRepo.UpdateEventById(ctx, params)
+	if err != nil {
+		s.logger.Err(err).Msg("An unkown error was caught!")
+		return ErrFailedToUpdateEvent
+	}
+
+	return nil
 }
