@@ -50,7 +50,6 @@ nav:
       - Overview: api/index.md
       - Installation: api/installation.md
       - OpenAPI: 'https://core.apidocumentation.com/guide/swamphacks-core-api'
-      - Database testing: 'api/db_testing.md'
   - Discord Bot:
       - Overview: discord-bot/index.md
       - Installation: discord-bot/installation.md
