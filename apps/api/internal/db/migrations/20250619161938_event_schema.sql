@@ -13,7 +13,6 @@ CREATE TABLE events (
     application_close TIMESTAMPTZ NOT NULL,
     rsvp_deadline TIMESTAMPTZ,
     decision_release TIMESTAMPTZ,
-    
 
     -- Event phase
     start_time TIMESTAMPTZ NOT NULL,
@@ -22,6 +21,7 @@ CREATE TABLE events (
     -- Metadata
     website_url TEXT,
     is_published BOOLEAN DEFAULT FALSE,
+    saved_at TIMESTAMPTZ DEFAULT NOW(),
 
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
