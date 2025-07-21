@@ -104,49 +104,6 @@ func (q *Queries) GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 	return i, err
 }
 
-const getEventByLocation = `-- name: GetEventByLocation :many
-SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at FROM events
-WHERE location = $1
-`
-
-func (q *Queries) GetEventByLocation(ctx context.Context, location *string) ([]Event, error) {
-	rows, err := q.db.Query(ctx, getEventByLocation, location)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Event{}
-	for rows.Next() {
-		var i Event
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.Location,
-			&i.LocationUrl,
-			&i.MaxAttendees,
-			&i.ApplicationOpen,
-			&i.ApplicationClose,
-			&i.RsvpDeadline,
-			&i.DecisionRelease,
-			&i.StartTime,
-			&i.EndTime,
-			&i.WebsiteUrl,
-			&i.IsPublished,
-			&i.SavedAt,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const updateEventById = `-- name: UpdateEventById :exec
 UPDATE events
 SET

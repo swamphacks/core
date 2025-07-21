@@ -14,10 +14,6 @@ RETURNING *;
 SELECT * FROM events
 WHERE id = $1;
 
--- name: GetEventByLocation :many
-SELECT * FROM events
-WHERE location = $1;
-
 -- name: UpdateEventById :exec
 UPDATE events
 SET
