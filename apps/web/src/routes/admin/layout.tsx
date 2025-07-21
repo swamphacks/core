@@ -12,10 +12,10 @@ import TablerCalendarSearch from "~icons/tabler/calendar-search";
 import TablerUsers from "~icons/tabler/users";
 import TablerListDetails from "~icons/tabler/list-details";
 import TablerSettings2 from "~icons/tabler/settings-2";
-import { Button } from "@/components/ui/Button";
+import { Link } from "react-aria-components";
 
 export const Route = createFileRoute("/admin")({
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async ({ context, location }) => {
     const { user, error } = await context.userQuery.promise;
 
     if (!user && !user) {
@@ -63,13 +63,13 @@ function RouteComponent() {
         <div className="w-full px-4 flex flex-row justify-between h-full items-center">
           <h1 className=" text-2xl font-bold">Admin Portal</h1>
 
-          <div className="h-full flex items-center gap-4">
-            <Button
-              color="danger"
-              onPress={() => router.navigate({ to: "/portal" })}
+          <div className="flex items-center h-full flex-row gap-6">
+            <Link
+              onClick={() => router.navigate({ to: "/portal" })}
+              className="text-sm text-blue-500 select-none cursor-pointer hover:underline"
             >
-              Back
-            </Button>
+              Back to User Portal
+            </Link>
             <img
               src="https://i.pinimg.com/736x/8b/d2/f6/8bd2f653f38322972e404925ab67294a.jpg"
               className="h-5/8 aspect-square rounded-full"

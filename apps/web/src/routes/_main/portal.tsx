@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { auth } from "@/lib/authClient";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_protected/portal")({
+export const Route = createFileRoute("/_main/portal")({
   component: RouteComponent,
 });
 
