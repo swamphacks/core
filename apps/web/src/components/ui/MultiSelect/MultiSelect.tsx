@@ -19,6 +19,7 @@ import {
 import TablerX from "~icons/tabler/x";
 import { useId, useRef, useState, type CSSProperties } from "react";
 import { ErrorList, fieldBorderStyles } from "@/components/ui/Field";
+import TablerAsterisk from "~icons/tabler/asterisk";
 
 const DropdownIndicator = (props: DropdownIndicatorProps) => {
   return (
@@ -99,10 +100,17 @@ const MultiSelect = ({
 
   return (
     <div className="flex flex-col gap-1 flex-1 font-figtree">
-      <label htmlFor={id}>{label}</label>
+      <label
+        className="flex items-center gap-1 text-text-secondary font-medium cursor-default w-fit"
+        htmlFor={id}
+      >
+        {label}
+        {isRequired && <TablerAsterisk className="text-[8px] text-red-500" />}
+      </label>
 
       <Select
         inputId={id}
+        menuPlacement="auto"
         unstyled
         isMulti
         options={options}

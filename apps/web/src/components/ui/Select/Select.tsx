@@ -20,7 +20,7 @@ import { composeTailwindRenderProps } from "@/components/ui/utils";
 import TablerChevronDown from "~icons/tabler/chevron-down";
 
 export const styles = tv({
-  base: "h-9.5 flex items-center text-start gap-4 w-full cursor-default border border-border rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-surface",
+  base: "h-9.5 flex items-center text-start gap-4 w-full cursor-default border border-input-border rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-surface",
   variants: {
     isDisabled: {
       false:
@@ -59,7 +59,7 @@ export function Select<T extends object>({
         "group flex flex-col gap-1 font-figtree",
       )}
     >
-      {label && <Label>{label}</Label>}
+      {label && <Label isRequired={props.isRequired}>{label}</Label>}
       <Button className={styles}>
         <SelectValue className="flex-1 placeholder-shown:text-[#89898A]" />
         <TablerChevronDown

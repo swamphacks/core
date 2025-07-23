@@ -33,7 +33,7 @@ export const fieldBorderStyles = tv({
 });
 
 export const fieldGroupStyles = tv({
-  base: "group flex items-start bg-surfaceforced-colors:bg-[Field]",
+  base: "group flex items-start bg-surface forced-colors:bg-[Field]",
   variants: fieldBorderStyles.variants,
 });
 

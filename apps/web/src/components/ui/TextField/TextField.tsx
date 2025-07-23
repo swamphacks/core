@@ -12,8 +12,9 @@ import {
   fieldBorderStyles,
 } from "@/components/ui/Field";
 import { composeTailwindRenderProps, type Icon } from "@/components/ui/utils";
+import { TextArea } from "react-aria-components";
 
-const inputStyles = tv({
+export const inputStyles = tv({
   base: "outline-0 border-1 rounded-sm",
   variants: {
     isFocused: fieldBorderStyles.variants.isFocusWithin,
@@ -28,6 +29,7 @@ export interface TextFieldProps extends RAC_TextFieldProps {
   description?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
   icon?: Icon;
+  textarea?: boolean;
 }
 
 const TextField = ({
@@ -37,6 +39,7 @@ const TextField = ({
   errorMessage,
   isRequired,
   icon,
+  textarea,
   ...props
 }: TextFieldProps) => {
   return (
@@ -49,7 +52,14 @@ const TextField = ({
       isRequired={isRequired}
     >
       {label && <Label isRequired={isRequired}>{label}</Label>}
-      <Input className={inputStyles} placeholder={placeholder} icon={icon} />
+      {textarea ? (
+        <TextArea
+          className={composeTailwindRenderProps(inputStyles, "px-2 py-1.5")}
+          placeholder={placeholder}
+        />
+      ) : (
+        <Input className={inputStyles} placeholder={placeholder} icon={icon} />
+      )}
 
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
