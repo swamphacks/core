@@ -23,7 +23,7 @@ const argTypes = Object.fromEntries(
 
 const meta = {
   component: EventButton,
-  title: "UI/Event Button",
+  title: "Event/Event Button",
   tags: ["autodocs"],
   argTypes,
 } satisfies Meta<typeof EventButton>;
