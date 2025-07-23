@@ -17,7 +17,7 @@ import TablerChevronLeft from "~icons/tabler/chevron-left";
 import TablerChevronRight from "~icons/tabler/chevron-right";
 
 const cellStyles = tv({
-  base: "w-9 h-9 m-px text-sm cursor-default rounded-full flex items-center justify-center forced-color-adjust-none",
+  base: "size-7 m-px text-sm cursor-default rounded-full flex items-center justify-center forced-color-adjust-none",
   variants: {
     isSelected: {
       false:
@@ -69,7 +69,7 @@ export function CalendarHeader() {
           <TablerChevronLeft aria-hidden />
         )}
       </Button>
-      <Heading className="flex-1 font-semibold text-xl text-center mx-2 text-zinc-900 dark:text-zinc-200" />
+      <Heading className="flex-1 font-semibold text-md text-center text-zinc-900 dark:text-zinc-200" />
       <Button variant="icon" slot="next">
         {direction === "rtl" ? (
           <TablerChevronLeft aria-hidden />

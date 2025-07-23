@@ -6,7 +6,7 @@ export function Dialog(props: DialogProps) {
     <RACDialog
       {...props}
       className={cn(
-        "outline outline-0 p-6 [[data-placement]>&]:p-4 max-h-[inherit] overflow-auto relative",
+        "outline-0 [[data-placement]>&]:p-2 max-h-[inherit] overflow-auto relative",
         props.className,
       )}
     />
