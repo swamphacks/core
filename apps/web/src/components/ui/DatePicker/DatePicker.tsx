@@ -54,7 +54,7 @@ export function DatePicker<T extends DateValue>({
       </FieldGroup>
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
-      <Popover>
+      <Popover placement="bottom right">
         <Dialog>
           <Calendar />
         </Dialog>
