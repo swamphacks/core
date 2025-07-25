@@ -25,6 +25,17 @@ services:
     depends_on:
       - api
 
+  asynqmon:
+    image: hibiken/asynqmon:latest
+    platform: linux/amd64
+    ports:
+      - "6767:6767"
+    environment:
+      - REDIS_ADDR=redis:6379
+      - PORT=6767
+    depends_on:
+      - redis
+
   postgres:
     image: postgres:17.4
     container_name: postgres
