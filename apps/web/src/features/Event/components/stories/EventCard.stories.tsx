@@ -4,7 +4,7 @@ import applicationStatus from "../../applicationStatus";
 
 const meta = {
   component: EventCardComp,
-  title: "UI/Event Card",
+  title: "Event/Event Card",
   tags: ["autodocs"],
   argTypes: {
     status: {
