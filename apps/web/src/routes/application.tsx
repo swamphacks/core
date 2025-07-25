@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ApplicationForm } from "@/features/Application/components/ApplicationForm";
+import { build } from "@/features/FormBuilder/build";
+import data from "@/features/FormBuilder/stories/applicationFormExample.json";
 
 export const Route = createFileRoute("/application")({
   component: RouteComponent,
@@ -9,11 +10,14 @@ function RouteComponent() {
   return (
     <div className="w-full h-screen bg-surface">
       <div className="w-full bg-surface transition-[background]">
-        <ApplicationForm
-          title="SwampHacks XI Application"
-          description="SwampHacks is the University of Florida’s largest annual hackathon. A 36-hour tech event where students from across the country come together to build projects, learn new skills, and connect with fellow innovators."
-        />
+        <ApplicationForm />
       </div>
     </div>
   );
 }
+
+export const ApplicationForm = () => {
+  const Form = build(data);
+
+  return <Form />;
+};
