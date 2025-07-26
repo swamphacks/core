@@ -25,7 +25,7 @@ export function Radio(props: RadioProps) {
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        "flex relative gap-2 items-center group text-text-main disabled:text-gray-300  dark:disabled:text-zinc-600 forced-colors:disabled:text-[GrayText] transition",
+        "flex relative gap-2 items-center group text-text-main text-sm disabled:text-gray-300  dark:disabled:text-zinc-600 forced-colors:disabled:text-[GrayText] transition",
       )}
     >
       {(renderProps) => (
