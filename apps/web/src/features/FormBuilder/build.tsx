@@ -253,7 +253,7 @@ export function build(formObject: FormObject): () => ReactNode {
         if (item.type === "section") {
           return (
             <div key={item.label}>
-              <p className="text-lg font-medium">{item.label}</p>
+              <p className="text-xl font-medium">{item.label}</p>
               <div className="mt-3 space-y-4">
                 {buildFormContent(item.content)}
               </div>
@@ -282,7 +282,7 @@ export function build(formObject: FormObject): () => ReactNode {
           <p className="text-text-secondary">{data.metadata.description}</p>
         </div>
         <Form
-          className="space-y-3 mt-5"
+          className="mt-5"
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -290,7 +290,7 @@ export function build(formObject: FormObject): () => ReactNode {
           }}
           validationErrors={formErrors}
         >
-          {formContent}
+          <div className="space-y-6">{formContent}</div>
           <form.AppForm>
             <form.SubmitButton label="Submit" />
           </form.AppForm>
