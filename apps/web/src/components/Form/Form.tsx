@@ -14,10 +14,7 @@ export function Form(props: FormProps) {
         </div>
       }
     >
-      <RACForm
-        {...props}
-        className={cn("flex flex-col gap-4", props.className)}
-      />
+      <RACForm {...props} className={cn("", props.className)} />
     </Suspense>
   );
 }
