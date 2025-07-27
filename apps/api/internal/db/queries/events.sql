@@ -1,4 +1,5 @@
 -- name: CreateEvent :one
+-- TODO: allow optional parameters
 INSERT INTO events (
     name,
     application_open, application_close,
@@ -7,7 +8,7 @@ INSERT INTO events (
     $1,
     $2, $3,
     $4, $5
-)
+) 
 RETURNING *;
 
 -- name: GetEventByID :one
@@ -35,5 +36,6 @@ WHERE
     id = @id::uuid;
     
 -- name: DeleteEventById :exec
+-- TODO: return error when 0 rows are deleted
 DELETE FROM events
 WHERE id = $1;

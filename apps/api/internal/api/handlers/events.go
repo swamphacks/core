@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -28,42 +31,39 @@ func NewEventHandler(eventService *services.EventService, cfg *config.Config, lo
 	}
 }
 
-type CreateEventRequest struct {
-	Name             string    `json:"name"`
-	ApplicationOpen  time.Time `json:"application_open"`
-	ApplicationClose time.Time `json:"application_close"`
-	StartTime        time.Time `json:"start_time"`
-	EndTime          time.Time `json:"end_time"`
+// TODO: allow optional statements in event creation query
+
+type CreateEventFields struct {
+	Name             string    `json:"name" tag:"required"`
+	ApplicationOpen  time.Time `json:"application_open" tag:"required"`
+	ApplicationClose time.Time `json:"application_close" tag:"required"`
+	StartTime        time.Time `json:"start_time" tag:"required"`
+	EndTime          time.Time `json:"end_time" tag:"required"`
 }
 
 func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
+
 	// Parse JSON body
-	var req CreateEventRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Could not parse request body"))
+	var req CreateEventFields
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
+	// This will also throw an error for empty values for fields which correspond to types that cannot convert an empty string to a zero value (e.g. time.Time)
+	if err := decoder.Decode(&req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Invalid request body"))
 		return
 	}
 
-	// Check for empty params
-	if req.Name == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "'name' must be given"))
-		return
-	}
-	if req.ApplicationOpen.IsZero() {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "'application_open' must be given"))
-		return
-	}
-	if req.ApplicationClose.IsZero() {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "'application_close' must be given"))
-		return
-	}
-	if req.StartTime.IsZero() {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "'start_time' must be given"))
-		return
-	}
-	if req.EndTime.IsZero() {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "'end_time' must be given"))
-		return
+	// == Validation ==
+	// While encoding/json can accept omitempty and omitzero tags, there is no tag for denoting that a field is required.
+	// This returns error when field with a "required" tag is set to a zero value or is missing (e.g. empty string).
+	fields := reflect.ValueOf(&req).Elem()
+	fmt.Printf("%v\n", fields.NumField())
+	for i := 0; i < fields.NumField(); i++ {
+		tags := fields.Type().Field(i).Tag.Get("tag")
+		if strings.Contains(tags, "required") && fields.Field(i).IsZero() {
+			res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", fmt.Sprintf("Empty or missing field: %v", fields.Type().Field(i).Tag.Get("json"))))
+			return
+		}
 	}
 
 	// Time checks
@@ -151,10 +151,10 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 	// This will override an eventId that is added by the request body, if they mistakenly try to add one there. But if a client fails to add it as a URL parameter, they will get an error anyways.
 	req.ID = eventId
 
-	// TODO: add check for non-existing params
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Could not parse request body"))
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
+	if err := decoder.Decode(&req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Invalid request body"))
 		return
 	}
 
@@ -186,11 +186,12 @@ func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 	err = h.eventService.DeleteEventById(r.Context(), eventId)
 
 	// TODO: throw error on trying to delete a non-existant event
+	fmt.Printf("%v\n", err)
 
 	if err != nil {
 		switch err {
 		case services.ErrFailedToDeleteEvent:
-			res.SendError(w, http.StatusInternalServerError, res.NewError("patch_error", "Failed to delete event"))
+			res.SendError(w, http.StatusInternalServerError, res.NewError("delete_error", "Failed to delete event"))
 		default:
 			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
 		}

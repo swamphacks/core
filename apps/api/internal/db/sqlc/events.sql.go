@@ -21,7 +21,7 @@ INSERT INTO events (
     $1,
     $2, $3,
     $4, $5
-)
+) 
 RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at
 `
 
@@ -33,6 +33,7 @@ type CreateEventParams struct {
 	EndTime          time.Time `json:"end_time"`
 }
 
+// TODO: allow optional parameters
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
 	row := q.db.QueryRow(ctx, createEvent,
 		arg.Name,
@@ -69,6 +70,7 @@ DELETE FROM events
 WHERE id = $1
 `
 
+// TODO: return error when 0 rows are deleted
 func (q *Queries) DeleteEventById(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteEventById, id)
 	return err
