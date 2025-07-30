@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/swamphacks/core/apps/api/internal/config"
@@ -28,6 +29,11 @@ func main() {
 			Queues: map[string]int{
 				"email": 10,
 			},
+			TaskCheckInterval:        60 * time.Second,
+			DelayedTaskCheckInterval: 2 * time.Minute,
+			HealthCheckInterval:      2 * time.Minute,
+			JanitorInterval:          time.Hour,
+			JanitorBatchSize:         100,
 		},
 	)
 
