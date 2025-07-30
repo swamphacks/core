@@ -25,9 +25,9 @@ func main() {
 	srv := asynq.NewServer(
 		redisOpt,
 		asynq.Config{
-			Concurrency: 10,
+			Concurrency: 1,
 			Queues: map[string]int{
-				"email": 10,
+				"email": 1,
 			},
 			TaskCheckInterval:        60 * time.Second,
 			DelayedTaskCheckInterval: 2 * time.Minute,
