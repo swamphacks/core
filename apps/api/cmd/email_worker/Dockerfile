@@ -18,7 +18,7 @@ CMD ["air"]
 # Production
 FROM base as prod
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o email_worker ./
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o email_worker ./cmd/email_worker
 
 RUN apk --no-cache add ca-certificates
 
