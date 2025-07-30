@@ -2,11 +2,11 @@ FROM golang:1.24-alpine AS base
 
 WORKDIR /app
 
-COPY ../../go.mod ../../go.sum ./
+COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY ../../ ./
+COPY . .
 
 # Dev 
 FROM base AS dev
