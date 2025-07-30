@@ -1,12 +1,12 @@
-name: Deploy API to Development
+name: Deploy Email Worker to Production
 
 on:
   push:
     branches:
-      - dev
+      - main
     paths:
       - 'apps/api/**'
-      - 'infra/docker-compose.dev.yml'
+      - 'infra/docker-compose.yml'
   workflow_dispatch:
 
 permissions:
@@ -39,8 +39,10 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
+            --target prod \
             --push \
-            -t ghcr.io/${{ github.repository_owner }}/core-api:dev \
+            -f ./apps/api/cmd/email_worker/Dockerfile \
+            -t ghcr.io/${{ github.repository_owner }}/core-email-worker:latest \
             ./apps/api
 
   run-migrations:
@@ -61,7 +63,7 @@ jobs:
           goose -dir ./apps/api/internal/db/migrations postgres "${{ secrets.DEV_DB_URL }}" up
 
   deploy:
-    name: Deploy to Development Server
+    name: Deploy to Production Server
     runs-on: ubuntu-latest
     needs: [build-and-push, run-migrations]
 
@@ -80,9 +82,9 @@ jobs:
           script: |
             cd /home/admin/core/infra
             git fetch
-            git checkout dev
-            git reset --hard origin/dev
+            git checkout main
+            git reset --hard origin/main
             git pull
-            infisical export --env=dev --format=dotenv --path="/api" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.dev.api
-            docker compose -f docker-compose.dev.yml pull dev-api
-            docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate dev-api
+            infisical export --env=prod --format=dotenv --path="/api" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.api
+            docker compose pull email-worker
+            docker compose up -d --no-deps --force-recreate email-worker
