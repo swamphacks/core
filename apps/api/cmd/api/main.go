@@ -40,9 +40,11 @@ func main() {
 	}
 
 	// Create asynq client
-	taskQueueClient := asynq.NewClient(asynq.RedisClientOpt{
-		Addr: cfg.RedisURL,
-	})
+	redisOpt, err := asynq.ParseRedisURI(cfg.RedisURL)
+	if err != nil {
+		logger.Fatal().Msg("Failed to parse REDIS_URL")
+	}
+	taskQueueClient := asynq.NewClient(redisOpt)
 
 	// Create new middleware injectable
 	mw := middleware.NewMiddleware(database, logger, cfg)

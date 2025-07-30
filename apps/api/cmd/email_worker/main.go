@@ -16,8 +16,13 @@ func main() {
 	logger := logger.New()
 	cfg := config.Load()
 
+	redisOpt, err := asynq.ParseRedisURI(cfg.RedisURL)
+	if err != nil {
+		logger.Fatal().Msg("Failed to parse REDIS_URL")
+	}
+
 	srv := asynq.NewServer(
-		asynq.RedisClientOpt{Addr: cfg.RedisURL},
+		redisOpt,
 		asynq.Config{
 			Concurrency: 10,
 			Queues: map[string]int{
