@@ -1,6 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap");
 @import "tailwindcss";
 @plugin "tailwindcss-react-aria-components";
+@plugin "tailwindcss-animate";
+
 @import "./theme.css";
 
 @custom-variant dark (&:where(.dark, .dark *));

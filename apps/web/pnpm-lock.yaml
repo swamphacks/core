@@ -180,6 +180,9 @@ importers:
       storybook:
         specifier: ^8.6.12
         version: 8.6.14(prettier@3.5.3)
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@4.1.11)
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -3879,6 +3882,11 @@ packages:
     engines: {node: '>=16.x', pnpm: '>=7.x'}
     peerDependencies:
       tailwindcss: '*'
+
+  tailwindcss-animate@1.0.7:
+    resolution: {integrity: sha512-bl6mpH3T7I3UFxuvDEXLxy/VuFxBk5bbzplh7tXI68mwMokNYd1t9qPBHlnyTwfa4JGC4zP516I1hYYtQ/vspA==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || insiders'
 
   tailwindcss-react-aria-components@2.0.0:
     resolution: {integrity: sha512-l8YdpXX//qx0Mz2bW3YKLjboTQxR3zLrFhlHniAIn+mTwVM1yvT0Jp7Pn3eFrqi+qtOMmcJzXaF2rsKezSr0SQ==}
@@ -8692,6 +8700,10 @@ snapshots:
   tailwind-variants@1.0.0(tailwindcss@4.1.11):
     dependencies:
       tailwind-merge: 3.0.2
+      tailwindcss: 4.1.11
+
+  tailwindcss-animate@1.0.7(tailwindcss@4.1.11):
+    dependencies:
       tailwindcss: 4.1.11
 
   tailwindcss-react-aria-components@2.0.0(tailwindcss@4.1.11):
