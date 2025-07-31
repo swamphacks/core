@@ -6,3 +6,9 @@ services:
     restart: always
     env_file:
       - ./secrets/.env.dev.api
+
+  dev-email-worker:
+    image: ghcr.io/swamphacks/core-email-worker:dev
+    restart: always
+    env_file:
+      - ./secrets/.env.dev.api

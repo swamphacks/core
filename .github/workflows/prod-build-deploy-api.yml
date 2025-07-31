@@ -13,10 +13,6 @@ permissions:
   contents: read
   packages: write
 
-concurrency:
-  group: production-deploy
-  cancel-in-progress: true
-
 jobs:
   build-and-push:
     name: Build and Push Docker Image to GHCR
