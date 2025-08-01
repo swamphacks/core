@@ -4,14 +4,13 @@ import { Heading, DialogTrigger } from "react-aria-components";
 import { Button } from "../../components/ui/Button";
 import { AddEventModal } from "@/features/Admin/EventManager/components/AddEventModal";
 import { useAdminEvents } from "@/features/Admin/EventManager/hooks/useAdminEvents";
-import { useState } from "react";
+import { EventDetailsCard } from "@/features/Admin/EventManager/components/EventDetailsCard";
 
 export const Route = createFileRoute("/admin/events-management")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const [isAddModalOpen, setAddModalOpen] = useState<boolean>(false);
   const { data } = useAdminEvents();
 
   return (
@@ -20,15 +19,18 @@ function RouteComponent() {
         <header className="flex justify-between items-center mb-6">
           <Heading className="text-text-main text-2xl">Event Manager</Heading>
 
-          <DialogTrigger isOpen={isAddModalOpen} onOpenChange={setAddModalOpen}>
+          <DialogTrigger>
             <Button variant="primary">Create New Event</Button>
 
-            <AddEventModal onClose={() => setAddModalOpen(false)} />
+            <AddEventModal />
           </DialogTrigger>
         </header>
       </div>
 
-      {data && data.map((val) => <div key={val.id}>{val.name}</div>)}
+      <div className="flex flex-row flex-wrap gap-6">
+        {data &&
+          data.map((val) => <EventDetailsCard key={val.id} event={val} />)}
+      </div>
     </div>
   );
 

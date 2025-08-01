@@ -73,7 +73,7 @@ export const mockEvents: Event[] = [
   },
 ];
 
-export const adminEventsQueryKey = ["admin", "events"];
+export const adminEventsQueryKey = ["admin", "events"] as const;
 
 export async function fetchEvents(): Promise<Event[]> {
   // Fetch events here

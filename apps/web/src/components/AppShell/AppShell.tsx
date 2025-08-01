@@ -51,7 +51,7 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
         setMobileNavOpen: setSelected,
       }}
     >
-      <div className="flex h-screen w-screen flex-col relative">
+      <div className="flex h-screen w-screen flex-col relative overflow-hidden">
         {/* Topbar */}
         {header && (
           <header className="h-16 w-full flex items-center px-4 md:px-2 border-b-1 border-neutral-300 dark:border-neutral-800">
@@ -67,7 +67,7 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
           </header>
         )}
 
-        <div className="flex flex-1">
+        <div className="flex flex-1 min-h-0">
           {/* Desktop Sidebar */}
           {navbar && (
             <aside className="w-64 px-2 py-4 border-r border-neutral-300 dark:border-neutral-800 hidden md:block">

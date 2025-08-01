@@ -1,16 +1,19 @@
 import { Button } from "@/components/ui/Button";
-import { DateRangePicker } from "@/components/ui/DateRangePicker/DateRangePicker";
-import { Modal } from "@/components/ui/Modal/Modal";
 import { TextField } from "@/components/ui/TextField";
 import { useForm, type FormValidateOrFn } from "@tanstack/react-form";
 import {
   Form,
+  OverlayTriggerStateContext,
   Text,
   type DateRange,
   type DateValue,
 } from "react-aria-components";
 import z from "zod";
 import { useCreateAdminEvent } from "../hooks/useCreateAdminEvent";
+import { useFormErrors } from "@/components/Form";
+import { Modal } from "@/components/ui/Modal";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { useContext } from "react";
 
 const calenderDateTimeSchema = z
   .custom<DateValue>()
@@ -18,14 +21,20 @@ const calenderDateTimeSchema = z
 
 const addEventSchema = z.object({
   eventName: z.string().min(1, "Event name is required"),
-  eventDateRange: z.object({
-    start: calenderDateTimeSchema,
-    end: calenderDateTimeSchema,
-  }),
-  applicationDateRange: z.object({
-    start: calenderDateTimeSchema,
-    end: calenderDateTimeSchema,
-  }),
+  eventDateRange: z.object(
+    {
+      start: calenderDateTimeSchema,
+      end: calenderDateTimeSchema,
+    },
+    "Must specify a date range.",
+  ),
+  applicationDateRange: z.object(
+    {
+      start: calenderDateTimeSchema,
+      end: calenderDateTimeSchema,
+    },
+    "Must specify a date range.",
+  ),
 });
 
 export type AddEvent = z.infer<typeof addEventSchema>;
@@ -36,11 +45,8 @@ interface AddEventFormValues {
   applicationDateRange: DateRange | null;
 }
 
-interface AddEventModalProps {
-  onClose: () => void;
-}
-
-function AddEventModal({ onClose }: AddEventModalProps) {
+function AddEventModal() {
+  const state = useContext(OverlayTriggerStateContext)!;
   const { mutateAsync } = useCreateAdminEvent();
 
   const form = useForm<
@@ -66,7 +72,7 @@ function AddEventModal({ onClose }: AddEventModalProps) {
 
       await mutateAsync(data, {
         onSuccess: () => {
-          onClose();
+          state.close();
           form.reset();
         },
       });
@@ -75,24 +81,33 @@ function AddEventModal({ onClose }: AddEventModalProps) {
       onSubmit: addEventSchema,
     },
   });
+
+  const errors = useFormErrors(form);
+
   return (
     <Modal title="Create an event" responsive="sheet" size="xl" padding="sm">
       <Form
         onSubmit={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           form.handleSubmit();
         }}
+        validationErrors={errors}
       >
         <div className="mt-4 flex flex-col gap-4">
           <form.Field name="eventName">
             {(field) => (
               <TextField
                 label="Event Name"
+                name={field.name}
                 placeholder="SwampHacks X"
-                isRequired
-                isDisabled={form.state.isSubmitting}
+                isDisabled={
+                  form.state.isSubmitting &&
+                  field.state.meta.errors.length === 0
+                }
                 value={field.state.value}
                 onChange={(value) => field.handleChange(value)}
+                validationBehavior="aria"
               />
             )}
           </form.Field>
@@ -100,14 +115,17 @@ function AddEventModal({ onClose }: AddEventModalProps) {
           <form.Field name="eventDateRange">
             {(field) => (
               <DateRangePicker
-                isRequired
+                startName={field.name}
                 label="Select event dates"
                 granularity="minute"
                 className="w-full"
-                isDisabled={form.state.isSubmitting}
+                isDisabled={
+                  form.state.isSubmitting &&
+                  field.state.meta.errors.length === 0
+                }
                 value={field.state.value}
                 onChange={(value) => field.handleChange(value)}
-                errorMessage={field.state.meta.errors[0]}
+                validationBehavior="aria"
               />
             )}
           </form.Field>
@@ -115,14 +133,17 @@ function AddEventModal({ onClose }: AddEventModalProps) {
           <form.Field name="applicationDateRange">
             {(field) => (
               <DateRangePicker
-                isRequired
+                startName={field.name}
                 label="Select application open & close"
                 granularity="minute"
                 className="w-full"
-                isDisabled={form.state.isSubmitting}
+                isDisabled={
+                  form.state.isSubmitting &&
+                  field.state.meta.errors.length === 0
+                }
                 value={field.state.value}
                 onChange={(value) => field.handleChange(value)}
-                errorMessage={field.state.meta.errors[0]}
+                validationBehavior="aria"
               />
             )}
           </form.Field>
@@ -133,10 +154,8 @@ function AddEventModal({ onClose }: AddEventModalProps) {
 
           <Button
             isPending={form.state.isSubmitting}
-            onClick={() => console.log(form.state.errorMap)}
             type="submit"
             variant="primary"
-            className="mt-0"
           >
             Create
           </Button>
