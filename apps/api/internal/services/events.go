@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -30,15 +29,7 @@ func NewEventService(eventRepo *repository.EventRepository, logger zerolog.Logge
 	}
 }
 
-func (s *EventService) CreateEvent(ctx context.Context, name string, applicationOpen time.Time, applicationClose time.Time, startTime time.Time, endTime time.Time) (*sqlc.Event, error) {
-	params := sqlc.CreateEventParams{
-		Name:             name,
-		ApplicationOpen:  applicationOpen,
-		ApplicationClose: applicationClose,
-		StartTime:        startTime,
-		EndTime:          endTime,
-	}
-
+func (s *EventService) CreateEvent(ctx context.Context, params sqlc.CreateEventParams) (*sqlc.Event, error) {
 	result, err := s.eventRepo.CreateEvent(ctx, params)
 	if err != nil {
 		s.logger.Err(err).Msg("An unkown error was caught!")

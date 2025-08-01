@@ -39,6 +39,13 @@ type CreateEventFields struct {
 	ApplicationClose time.Time `json:"application_close" tag:"required"`
 	StartTime        time.Time `json:"start_time" tag:"required"`
 	EndTime          time.Time `json:"end_time" tag:"required"`
+	Location         string    `json:"location"`
+	LocationUrl      string    `json:"location_url"`
+	MaxAttendees     int32     `json:"max_attendees"`
+	RsvpDeadline     time.Time `json:"rsvp_deadline"`
+	DecisionRelease  time.Time `json:"decision_release"`
+	WebsiteUrl       string    `json:"website_url"`
+	IsPublished      bool      `json:"is_published"`
 }
 
 func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
@@ -49,19 +56,19 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
 	// This will also throw an error for empty values for fields which correspond to types that cannot convert an empty string to a zero value (e.g. time.Time)
 	if err := decoder.Decode(&req); err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Invalid request body"))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", err.Error())) //TODO: change back
 		return
 	}
 
 	// == Validation ==
 	// While encoding/json can accept omitempty and omitzero tags, there is no tag for denoting that a field is required.
-	// This returns error when field with a "required" tag is set to a zero value or is missing (e.g. empty string).
+	// This returns error when field containing `tag"required"` is set to a zero value or is missing (e.g. empty string).
 	fields := reflect.ValueOf(&req).Elem()
 	fmt.Printf("%v\n", fields.NumField())
 	for i := 0; i < fields.NumField(); i++ {
 		tags := fields.Type().Field(i).Tag.Get("tag")
 		if strings.Contains(tags, "required") && fields.Field(i).IsZero() {
-			res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", fmt.Sprintf("Empty or missing field: %v", fields.Type().Field(i).Tag.Get("json"))))
+			res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", fmt.Sprintf("Required field is empty or missing: %v", fields.Type().Field(i).Tag.Get("json"))))
 			return
 		}
 	}
@@ -78,7 +85,25 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "Event and application periods must not take place before the current time"))
 	}
 
-	_, err := h.eventService.CreateEvent(r.Context(), req.Name, req.ApplicationOpen, req.ApplicationClose, req.StartTime, req.EndTime)
+	params := sqlc.CreateEventParams{
+		Name:             req.Name,
+		ApplicationOpen:  req.ApplicationOpen,
+		ApplicationClose: req.ApplicationClose,
+		StartTime:        req.StartTime,
+		EndTime:          req.EndTime,
+		Location:         req.Location,
+		LocationUrl:      req.LocationUrl,
+		MaxAttendees:     req.MaxAttendees,
+		RsvpDeadline:     req.RsvpDeadline,
+		DecisionRelease:  req.DecisionRelease,
+		WebsiteUrl:       req.WebsiteUrl,
+		IsPublished:      req.IsPublished,
+	}
+	// Technically default values are being set here, and in coalesce the NULL values are never being thrown because there always exists a non-null default value being passed
+
+	fmt.Printf("%v\n", params)
+
+	_, err := h.eventService.CreateEvent(r.Context(), params)
 	if err != nil {
 		switch err {
 		case services.ErrFailedToCreateEvent:

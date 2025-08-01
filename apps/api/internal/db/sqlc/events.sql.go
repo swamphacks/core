@@ -16,21 +16,44 @@ const createEvent = `-- name: CreateEvent :one
 INSERT INTO events (
     name,
     application_open, application_close,
-    start_time, end_time
+    start_time, end_time,
+    location, location_url, max_attendees,
+    rsvp_deadline, decision_release, website_url,
+    is_published 
+    -- saved_at is omitted due to having a default value (NOW) which will likely not be different if it was an optional param
 ) VALUES (
+    -- Coalesced INT params will default to 0
+    -- Coalesced TIMESTAMPZ params Will default to 0001-01-01 00:00:00+00
+    -- is_published is set to default to FALSE
+    -- In a perfect world INT and TIMESTAMPZ would be blank (NULL), but this should be okay for now
+
     $1,
     $2, $3,
-    $4, $5
+    $4, $5,
+    coalesce($6, NULL),
+    coalesce($7, NULL),
+    coalesce($8, NULL::INT),     
+    coalesce($9, NULL::TIMESTAMPTZ), 
+    coalesce($10, NULL::TIMESTAMPTZ),
+    coalesce($11, NULL),
+    coalesce($12, NULL::BOOLEAN)
 ) 
 RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at
 `
 
 type CreateEventParams struct {
-	Name             string    `json:"name"`
-	ApplicationOpen  time.Time `json:"application_open"`
-	ApplicationClose time.Time `json:"application_close"`
-	StartTime        time.Time `json:"start_time"`
-	EndTime          time.Time `json:"end_time"`
+	Name             string      `json:"name"`
+	ApplicationOpen  time.Time   `json:"application_open"`
+	ApplicationClose time.Time   `json:"application_close"`
+	StartTime        time.Time   `json:"start_time"`
+	EndTime          time.Time   `json:"end_time"`
+	Location         interface{} `json:"location"`
+	LocationUrl      interface{} `json:"location_url"`
+	MaxAttendees     interface{} `json:"max_attendees"`
+	RsvpDeadline     interface{} `json:"rsvp_deadline"`
+	DecisionRelease  interface{} `json:"decision_release"`
+	WebsiteUrl       interface{} `json:"website_url"`
+	IsPublished      interface{} `json:"is_published"`
 }
 
 // TODO: allow optional parameters
@@ -41,6 +64,13 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.ApplicationClose,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Location,
+		arg.LocationUrl,
+		arg.MaxAttendees,
+		arg.RsvpDeadline,
+		arg.DecisionRelease,
+		arg.WebsiteUrl,
+		arg.IsPublished,
 	)
 	var i Event
 	err := row.Scan(
