@@ -9,7 +9,7 @@ import { EventButton, eventButton } from "../EventButton";
  */
 const argTypes = Object.fromEntries(
   eventButton.variantKeys
-    .filter((key) => key !== "color")
+    .filter((key) => key !== "variant")
     .map((key) => [
       key,
       {
@@ -23,7 +23,7 @@ const argTypes = Object.fromEntries(
 
 const meta = {
   component: EventButton,
-  title: "UI/Event Button",
+  title: "Event/Event Button",
   tags: ["autodocs"],
   argTypes,
 } satisfies Meta<typeof EventButton>;

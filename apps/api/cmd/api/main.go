@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog/log"
 	"github.com/swamphacks/core/apps/api/internal/api"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
@@ -38,6 +39,13 @@ func main() {
 		},
 	}
 
+	// Create asynq client
+	redisOpt, err := asynq.ParseRedisURI(cfg.RedisURL)
+	if err != nil {
+		logger.Fatal().Msg("Failed to parse REDIS_URL")
+	}
+	taskQueueClient := asynq.NewClient(redisOpt)
+
 	// Create new middleware injectable
 	mw := middleware.NewMiddleware(database, logger, cfg)
 
@@ -52,9 +60,10 @@ func main() {
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
 	eventService := services.NewEventService(eventRepo, logger)
+	emailService := services.NewEmailService(taskQueueClient, logger)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, eventInterestService, eventService, cfg, logger)
+	apiHandlers := handlers.NewHandlers(authService, eventInterestService, eventService, emailService, cfg, logger)
 
 	api := api.NewAPI(&logger, apiHandlers, mw)
 

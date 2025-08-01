@@ -26,6 +26,7 @@ type AuthConfig struct {
 
 type Config struct {
 	DatabaseURL string `env:"DATABASE_URL"`
+	RedisURL    string `env:"REDIS_URL"`
 	Port        string `env:"PORT" envDefault:"8080"`
 
 	Auth      AuthConfig   `envPrefix:"AUTH_"`

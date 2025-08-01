@@ -11,6 +11,19 @@ services:
     depends_on:
       - postgres
       - redis
+
+  email_worker:
+    build:
+      dockerfile: cmd/email_worker/Dockerfile
+      context: ./apps/api
+      target: dev
+    env_file: "./apps/api/.env.dev"
+    volumes:
+      - ./apps/api:/app
+    working_dir: /app/cmd/email_worker
+    depends_on:
+      - redis
+  
   web:
     build:
       context: ./apps/web
@@ -24,6 +37,17 @@ services:
       - NODE_ENV=development
     depends_on:
       - api
+
+  asynqmon:
+    image: hibiken/asynqmon:latest
+    platform: linux/amd64
+    ports:
+      - "6767:6767"
+    environment:
+      - REDIS_ADDR=redis:6379
+      - PORT=6767
+    depends_on:
+      - redis
 
   postgres:
     image: postgres:17.4

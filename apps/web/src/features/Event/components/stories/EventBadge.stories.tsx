@@ -23,7 +23,7 @@ const argTypes = Object.fromEntries(
 
 const meta = {
   component: EventBadge,
-  title: "UI/Event Badge",
+  title: "Event/Event Badge",
   tags: ["autodocs"],
   argTypes,
 } satisfies Meta<typeof EventBadge>;
