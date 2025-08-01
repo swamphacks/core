@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 // https://ui.shadcn.com/docs/dark-mode/vite
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";

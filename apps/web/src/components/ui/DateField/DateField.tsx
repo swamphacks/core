@@ -67,7 +67,7 @@ export function DateInput(props: Omit<DateInputProps, "children">) {
         fieldGroupStyles({
           ...renderProps,
           className:
-            "block min-w-[150px] px-2 py-1.5 text-sm border-1 rounded-sm",
+            "block min-w-[150px] px-2 py-4 text-sm border-1 rounded-sm whitespace-nowrap",
         })
       }
       {...props}

@@ -114,7 +114,7 @@ export const Input = forwardRef(
     ref: React.ForwardedRef<HTMLInputElement>,
   ) => {
     const inputClassName =
-      "h-9 py-1.5 w-full min-w-0 outline-0 bg-surface text-base text-text-main disabled:text-input-text-disabled";
+      "min-h-9 py-1.5 w-full min-w-0 outline-0 bg-surface text-base text-text-main disabled:text-input-text-disabled";
 
     if (!Icon) {
       return (
@@ -122,7 +122,7 @@ export const Input = forwardRef(
           {...props}
           className={composeTailwindRenderProps(
             props.className,
-            cn(inputClassName, "px-2"),
+            cn(inputClassName, "px-2.5"),
           )}
           ref={ref}
         />
