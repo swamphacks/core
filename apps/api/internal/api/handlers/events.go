@@ -34,19 +34,22 @@ func NewEventHandler(eventService *services.EventService, cfg *config.Config, lo
 // TODO: allow optional statements in event creation query
 
 type CreateEventFields struct {
-	Name             string    `json:"name" tag:"required"`
-	ApplicationOpen  time.Time `json:"application_open" tag:"required"`
-	ApplicationClose time.Time `json:"application_close" tag:"required"`
-	StartTime        time.Time `json:"start_time" tag:"required"`
-	EndTime          time.Time `json:"end_time" tag:"required"`
-	Location         string    `json:"location"`
-	LocationUrl      string    `json:"location_url"`
-	MaxAttendees     int32     `json:"max_attendees"`
-	RsvpDeadline     time.Time `json:"rsvp_deadline"`
-	DecisionRelease  time.Time `json:"decision_release"`
-	WebsiteUrl       string    `json:"website_url"`
-	IsPublished      bool      `json:"is_published"`
+	Name             string     `json:"name" tag:"required"`
+	ApplicationOpen  time.Time  `json:"application_open" tag:"required"`
+	ApplicationClose time.Time  `json:"application_close" tag:"required"`
+	StartTime        time.Time  `json:"start_time" tag:"required"`
+	EndTime          time.Time  `json:"end_time" tag:"required"`
+	Description      *string    `json:"description"`
+	Location         *string    `json:"location"`
+	LocationUrl      *string    `json:"location_url"`
+	MaxAttendees     *int32     `json:"max_attendees"`
+	RsvpDeadline     *time.Time `json:"rsvp_deadline"`
+	DecisionRelease  *time.Time `json:"decision_release"`
+	WebsiteUrl       *string    `json:"website_url"`
+	IsPublished      *bool      `json:"is_published"`
 }
+
+// Be very careful with the types in this struct. If a type is not a pointer (pointer types allow a null value), and the field is not present in the json body, its default value will be passed to the SQL query, and be a non-null value will be put into coalese(), which will then make a NULL value impossible and instead make the default value the type's zero value in Go.
 
 func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
@@ -91,6 +94,7 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		ApplicationClose: req.ApplicationClose,
 		StartTime:        req.StartTime,
 		EndTime:          req.EndTime,
+		Description:      req.Description,
 		Location:         req.Location,
 		LocationUrl:      req.LocationUrl,
 		MaxAttendees:     req.MaxAttendees,
@@ -99,9 +103,8 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		WebsiteUrl:       req.WebsiteUrl,
 		IsPublished:      req.IsPublished,
 	}
-	// Technically default values are being set here, and in coalesce the NULL values are never being thrown because there always exists a non-null default value being passed
 
-	fmt.Printf("%v\n", params)
+	fmt.Printf("req.Description: %v\n", req.Description)
 
 	_, err := h.eventService.CreateEvent(r.Context(), params)
 	if err != nil {

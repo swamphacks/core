@@ -17,9 +17,9 @@ INSERT INTO events (
     name,
     application_open, application_close,
     start_time, end_time,
-    location, location_url, max_attendees,
-    rsvp_deadline, decision_release, website_url,
-    is_published 
+    description, location, location_url, max_attendees,
+    rsvp_deadline, decision_release, 
+    website_url, is_published 
     -- saved_at is omitted due to having a default value (NOW) which will likely not be different if it was an optional param
 ) VALUES (
     -- Coalesced INT params will default to 0
@@ -32,11 +32,12 @@ INSERT INTO events (
     $4, $5,
     coalesce($6, NULL),
     coalesce($7, NULL),
-    coalesce($8, NULL::INT),     
-    coalesce($9, NULL::TIMESTAMPTZ), 
-    coalesce($10, NULL::TIMESTAMPTZ),
-    coalesce($11, NULL),
-    coalesce($12, NULL::BOOLEAN)
+    coalesce($8, NULL),
+    coalesce($9, NULL::INT),     
+    coalesce($10, NULL::TIMESTAMPTZ), 
+    coalesce($11, NULL::TIMESTAMPTZ),
+    coalesce($12, NULL),
+    coalesce($13, NULL::BOOLEAN)
 ) 
 RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at
 `
@@ -47,6 +48,7 @@ type CreateEventParams struct {
 	ApplicationClose time.Time   `json:"application_close"`
 	StartTime        time.Time   `json:"start_time"`
 	EndTime          time.Time   `json:"end_time"`
+	Description      interface{} `json:"description"`
 	Location         interface{} `json:"location"`
 	LocationUrl      interface{} `json:"location_url"`
 	MaxAttendees     interface{} `json:"max_attendees"`
@@ -64,6 +66,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.ApplicationClose,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Description,
 		arg.Location,
 		arg.LocationUrl,
 		arg.MaxAttendees,

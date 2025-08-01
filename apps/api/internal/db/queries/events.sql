@@ -4,19 +4,15 @@ INSERT INTO events (
     name,
     application_open, application_close,
     start_time, end_time,
-    location, location_url, max_attendees,
-    rsvp_deadline, decision_release, website_url,
-    is_published 
+    description, location, location_url, max_attendees,
+    rsvp_deadline, decision_release, 
+    website_url, is_published 
     -- saved_at is omitted due to having a default value (NOW) which will likely not be different if it was an optional param
 ) VALUES (
-    -- Coalesced INT params will default to 0
-    -- Coalesced TIMESTAMPZ params Will default to 0001-01-01 00:00:00+00
-    -- is_published is set to default to FALSE
-    -- In a perfect world INT and TIMESTAMPZ would be blank (NULL), but this should be okay for now
-
     @name,
     @application_open, @application_close,
     @start_time, @end_time,
+    coalesce(sqlc.narg(description), NULL),
     coalesce(sqlc.narg(location), NULL),
     coalesce(sqlc.narg(location_url), NULL),
     coalesce(sqlc.narg(max_attendees), NULL::INT),     
