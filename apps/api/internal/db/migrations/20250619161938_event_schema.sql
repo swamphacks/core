@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE events (
-    -- IMPORTANT: Double check INSERT queries after making changes to default values here, since they must match.
+    -- IMPORTANT: Double check INSERT queries after making changes to default values here, since any optional parameters must have its default value match.
     -- FIXME: Default value for saved_at not being created after insert.
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
