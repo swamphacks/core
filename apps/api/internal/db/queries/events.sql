@@ -48,7 +48,7 @@ SET
 WHERE
     id = @id::uuid;
     
--- name: DeleteEventById :exec
--- TODO: return error when 0 rows are deleted
+-- name: DeleteEventById :execrows
+-- execrows returns affect row count on top of an error
 DELETE FROM events
 WHERE id = $1;

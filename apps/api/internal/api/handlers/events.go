@@ -56,7 +56,7 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
 	// This will also throw an error for empty values for fields which correspond to types that cannot convert an empty string to a zero value (e.g. time.Time)
 	if err := decoder.Decode(&req); err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", err.Error())) //TODO: change back
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Could not parse request body"))
 		return
 	}
 
@@ -217,6 +217,10 @@ func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case services.ErrFailedToDeleteEvent:
 			res.SendError(w, http.StatusInternalServerError, res.NewError("delete_error", "Failed to delete event"))
+		case services.ErrNoEventsDeleted:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("delete_error", "No events deleted"))
+		case services.ErrMultipleEventsDeleted:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("delete_error", "Multiple events affected by delete request while only expecting one to delete one"))
 		default:
 			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
 		}

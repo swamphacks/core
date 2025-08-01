@@ -33,7 +33,7 @@ func (r *EventRepository) UpdateEventById(ctx context.Context, params sqlc.Updat
 	return err
 }
 
-func (r *EventRepository) DeleteEventById(ctx context.Context, id uuid.UUID) error {
-	err := r.db.Query.DeleteEventById(ctx, id)
-	return err
+func (r *EventRepository) DeleteEventById(ctx context.Context, id uuid.UUID) (int64, error) {
+	affectedRows, err := r.db.Query.DeleteEventById(ctx, id)
+	return affectedRows, err
 }

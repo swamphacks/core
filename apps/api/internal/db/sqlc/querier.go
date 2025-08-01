@@ -24,7 +24,7 @@ type Querier interface {
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) error
 	DeleteApplication(ctx context.Context, arg DeleteApplicationParams) error
 	// TODO: return error when 0 rows are deleted
-	DeleteEventById(ctx context.Context, id uuid.UUID) error
+	DeleteEventById(ctx context.Context, id uuid.UUID) (int64, error)
 	DeleteExpiredSession(ctx context.Context) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error)

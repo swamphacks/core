@@ -11,10 +11,12 @@ import (
 )
 
 var (
-	ErrFailedToCreateEvent = errors.New("failed to create event")
-	ErrFailedToGetEvent    = errors.New("failed to get event")
-	ErrFailedToUpdateEvent = errors.New("failed to update event")
-	ErrFailedToDeleteEvent = errors.New("failed to delete event")
+	ErrFailedToCreateEvent   = errors.New("failed to create event")
+	ErrFailedToGetEvent      = errors.New("failed to get event")
+	ErrFailedToUpdateEvent   = errors.New("failed to update event")
+	ErrFailedToDeleteEvent   = errors.New("failed to delete event")
+	ErrNoEventsDeleted       = errors.New("no events deleted")
+	ErrMultipleEventsDeleted = errors.New("multiple events affected by delete query while only expecting one to delete one")
 )
 
 type EventService struct {
@@ -60,10 +62,18 @@ func (s *EventService) UpdateEventById(ctx context.Context, params sqlc.UpdateEv
 }
 
 func (s *EventService) DeleteEventById(ctx context.Context, id uuid.UUID) error {
-	err := s.eventRepo.DeleteEventById(ctx, id)
+	affectedRows, err := s.eventRepo.DeleteEventById(ctx, id)
 	if err != nil {
 		s.logger.Err(err).Msg("An unkown error was caught!")
 		return ErrFailedToUpdateEvent
+	}
+	if affectedRows == 0 {
+		s.logger.Err(err).Msg("Error deleting event")
+		return ErrNoEventsDeleted
+	}
+	if affectedRows > 1 {
+		s.logger.Err(err).Msg("Error deleting event")
+		return ErrMultipleEventsDeleted
 	}
 
 	return nil
