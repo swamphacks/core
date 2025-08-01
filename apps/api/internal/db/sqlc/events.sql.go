@@ -20,13 +20,9 @@ INSERT INTO events (
     description, location, location_url, max_attendees,
     rsvp_deadline, decision_release, 
     website_url, is_published 
-    -- saved_at is omitted due to having a default value (NOW) which will likely not be different if it was an optional param
+    -- saved_at is omitted due to having a default value (NOW) which will not be different if it was an optional param
 ) VALUES (
-    -- Coalesced INT params will default to 0
-    -- Coalesced TIMESTAMPZ params Will default to 0001-01-01 00:00:00+00
-    -- is_published is set to default to FALSE
-    -- In a perfect world INT and TIMESTAMPZ would be blank (NULL), but this should be okay for now
-
+    -- FIXME: The second parameter in coalesce MUST be the default value created in the schema. I have not found a more automated way to insert the default value.
     $1,
     $2, $3,
     $4, $5,
@@ -37,7 +33,7 @@ INSERT INTO events (
     coalesce($10, NULL::TIMESTAMPTZ), 
     coalesce($11, NULL::TIMESTAMPTZ),
     coalesce($12, NULL),
-    coalesce($13, NULL::BOOLEAN)
+    coalesce($13, FALSE)
 ) 
 RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at
 `

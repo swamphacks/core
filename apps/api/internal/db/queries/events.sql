@@ -7,8 +7,9 @@ INSERT INTO events (
     description, location, location_url, max_attendees,
     rsvp_deadline, decision_release, 
     website_url, is_published 
-    -- saved_at is omitted due to having a default value (NOW) which will likely not be different if it was an optional param
+    -- saved_at is omitted due to having a default value (NOW) which will not be different if it was an optional param
 ) VALUES (
+    -- FIXME: The second parameter in coalesce MUST be the default value created in the schema. I have not found a more automated way to insert the default value.
     @name,
     @application_open, @application_close,
     @start_time, @end_time,
@@ -19,7 +20,7 @@ INSERT INTO events (
     coalesce(sqlc.narg(rsvp_deadline), NULL::TIMESTAMPTZ), 
     coalesce(sqlc.narg(decision_release), NULL::TIMESTAMPTZ),
     coalesce(sqlc.narg(website_url), NULL),
-    coalesce(sqlc.narg(is_published), NULL::BOOLEAN)
+    coalesce(sqlc.narg(is_published), FALSE)
 ) 
 RETURNING *;
 

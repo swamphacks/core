@@ -31,8 +31,7 @@ func NewEventHandler(eventService *services.EventService, cfg *config.Config, lo
 	}
 }
 
-// TODO: allow optional statements in event creation query
-
+// Be very careful with the types in this struct. If a type is not a pointer (pointer types allow a null value), and the field is not present in the json body, its default value will be passed to the SQL query, and be a non-null value will be put into coalese(), which will then make a NULL value impossible and instead make the default value the type's zero value in Go.
 type CreateEventFields struct {
 	Name             string     `json:"name" tag:"required"`
 	ApplicationOpen  time.Time  `json:"application_open" tag:"required"`
@@ -48,8 +47,6 @@ type CreateEventFields struct {
 	WebsiteUrl       *string    `json:"website_url"`
 	IsPublished      *bool      `json:"is_published"`
 }
-
-// Be very careful with the types in this struct. If a type is not a pointer (pointer types allow a null value), and the field is not present in the json body, its default value will be passed to the SQL query, and be a non-null value will be put into coalese(), which will then make a NULL value impossible and instead make the default value the type's zero value in Go.
 
 func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
