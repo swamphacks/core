@@ -16,7 +16,7 @@ export const ParagraphQuestion = createQuestionItem({
   }),
 
   extractValidationSchemaFromItem: (item) => {
-    let schema = z.string();
+    let schema = z.string("Fill out this field.");
 
     const { validation } = item;
     if (!validation) return schema;

@@ -16,7 +16,9 @@ export const NumberQuestion = createQuestionItem({
   }),
 
   extractValidationSchemaFromItem: (item) => {
-    const schema = z.string().transform((val) => parseInt(val));
+    const schema = z
+      .string("Fill out this field.")
+      .transform((val) => parseInt(val));
 
     const { validation } = item;
     if (!validation) return schema;

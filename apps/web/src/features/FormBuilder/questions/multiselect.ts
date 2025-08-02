@@ -18,5 +18,6 @@ export const MultiSelectQuestion = createQuestionItem({
     ),
   }),
 
-  extractValidationSchemaFromItem: () => z.array(z.string()), // array of string value of selections
+  extractValidationSchemaFromItem: () =>
+    z.array(z.string(), "Pick an item or more from the list."), // array of string value of selections
 });

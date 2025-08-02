@@ -17,5 +17,6 @@ export const CheckboxQuestion = createQuestionItem({
     ),
   }),
 
-  extractValidationSchemaFromItem: () => z.array(z.string()), // array of values since multiple checkbox can be selected
+  extractValidationSchemaFromItem: () =>
+    z.array(z.string(), "Choose an option."), // array of values since multiple checkbox can be selected
 });

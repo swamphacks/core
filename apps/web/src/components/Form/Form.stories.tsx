@@ -39,6 +39,7 @@ export const Example = () => {
               className="flex-1"
               placeholder="Enter your email"
               isRequired={true}
+              validationBehavior="native"
             />
           )}
         />
@@ -51,6 +52,7 @@ export const Example = () => {
               name={field.name}
               className="flex-1"
               isRequired={true}
+              validationBehavior="native"
             />
           )}
         />
@@ -60,9 +62,12 @@ export const Example = () => {
           children={(field) => (
             <field.UploadField
               label="Upload"
-              // className="flex-1"
+              name="upload"
               isRequired={true}
               description="Allowed file types: .pdf, .docx"
+              maxSize={1 * 1024 * 1024} // 1 MB
+              validationBehavior="native"
+              accept="application/pdf"
             />
           )}
         />

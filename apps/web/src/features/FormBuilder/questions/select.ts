@@ -18,5 +18,5 @@ export const SelectQuestion = createQuestionItem({
     ),
   }),
 
-  extractValidationSchemaFromItem: () => z.string(), // string value of selection
+  extractValidationSchemaFromItem: () => z.string("Pick an item."), // string value of selection
 });
