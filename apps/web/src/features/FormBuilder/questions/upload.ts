@@ -29,7 +29,7 @@ export const UploadQuestion = createQuestionItem({
     let schema = z.file();
 
     const { validation } = item;
-    if (!validation) return z.array(schema);
+    if (!validation) return z.array(schema, "File(s) must be uploaded.");
 
     const { maxSize = 10 } = validation;
 

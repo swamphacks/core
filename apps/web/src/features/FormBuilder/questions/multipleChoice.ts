@@ -18,5 +18,5 @@ export const MultipleChoiceQuestion = createQuestionItem({
     ),
   }),
 
-  extractValidationSchemaFromItem: () => z.string(),
+  extractValidationSchemaFromItem: () => z.string("Choose an option."),
 });

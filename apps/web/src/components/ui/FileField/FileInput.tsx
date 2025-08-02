@@ -18,7 +18,7 @@ import TablerFile from "~icons/tabler/file";
 
 export const FileInput = (): JSX.Element => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [files, setFiles] = useState<File[]>();
+  const [files, setFiles] = useState<File[]>([]);
   const [props] = useContextProps({} as InputProps, null, InputContext);
   const customProps = useContext(CustomPropsContext);
 
@@ -31,26 +31,38 @@ export const FileInput = (): JSX.Element => {
   const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     if (props.multiple) {
       setFiles((prevFiles) => {
-        prevFiles = prevFiles ? prevFiles : [];
-
-        if (customProps?.onChange) {
-          customProps.onChange(
-            event.target.files
-              ? [...prevFiles, ...event.target.files]
-              : [...prevFiles],
-          );
+        if (!event.target.files) {
+          customProps.onChange?.([...prevFiles]);
+          return [...prevFiles];
         }
 
-        return event.target.files
-          ? [...prevFiles, ...event.target.files]
-          : undefined;
+        if (customProps.maxSize) {
+          for (const file of event.target.files) {
+            if (file.size > customProps.maxSize) {
+              return [...prevFiles];
+            }
+          }
+        }
+
+        const newFiles = [...prevFiles, ...event.target.files];
+        customProps.onChange?.(newFiles);
+        return newFiles;
       });
     } else {
-      setFiles(event.target.files ? [...event.target.files] : undefined);
-
-      if (customProps?.onChange) {
-        customProps.onChange(event.target.files ? [...event.target.files] : []);
+      if (!event.target.files) {
+        setFiles([]);
+        customProps.onChange?.([]);
+        return;
       }
+
+      const file = event.target.files[0];
+
+      if (customProps.maxSize && file.size > customProps.maxSize) {
+        return;
+      }
+
+      setFiles([file]);
+      customProps.onChange?.([file]);
     }
   }, []);
 
@@ -58,8 +70,20 @@ export const FileInput = (): JSX.Element => {
     const newFiles = files ? [...files] : [];
     newFiles.splice(fileToRemoveIdx, 1);
 
+    updateFilesForInput(newFiles);
     setFiles(newFiles);
   };
+
+  // not sure if we need this method if we set validationBehavior to "aria" inside the FileField component, but it should work for now.
+  const updateFilesForInput = (newFiles: File[]) => {
+    if (inputRef.current) {
+      const dataTransfer = new DataTransfer();
+      newFiles.forEach((file) => dataTransfer.items.add(file));
+      inputRef.current.files = dataTransfer.files;
+    }
+  };
+
+  const allowedFileTypes = props.accept?.split(",");
 
   return (
     <div>
@@ -80,27 +104,39 @@ export const FileInput = (): JSX.Element => {
               fileDropItems.map((fileDropItem) => fileDropItem.getFile()),
             );
 
-            newFiles = files
-              ? [...files, ...allUploadedFiles]
-              : [...allUploadedFiles];
+            if (customProps.maxSize) {
+              for (const file of allUploadedFiles) {
+                if (allowedFileTypes && !allowedFileTypes.includes(file.type)) {
+                  return;
+                }
 
+                if (file.size > customProps.maxSize) {
+                  return;
+                }
+              }
+            }
+
+            newFiles = [...files, ...allUploadedFiles];
             setFiles(newFiles);
           } else {
             const file = await fileDropItems[0].getFile();
+
+            if (allowedFileTypes && !allowedFileTypes.includes(file.type)) {
+              return;
+            }
+
+            if (customProps.maxSize && file.size > customProps.maxSize) {
+              return;
+            }
+
             newFiles = [file];
             setFiles(newFiles);
           }
 
-          // https://stackoverflow.com/a/76108735
-          if (inputRef.current) {
-            const dataTransfer = new DataTransfer();
-            newFiles.forEach((file) => dataTransfer.items.add(file));
-            inputRef.current.files = dataTransfer.files;
-          }
+          customProps.resetValidation();
+          updateFilesForInput(newFiles);
 
-          if (customProps?.onChange) {
-            customProps.onChange(newFiles);
-          }
+          customProps.onChange?.(newFiles);
         }}
       >
         <div className="flex flex-col gap-1 min-w-0">

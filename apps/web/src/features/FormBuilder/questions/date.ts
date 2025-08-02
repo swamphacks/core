@@ -16,7 +16,7 @@ export const DateQuestion = createQuestionItem({
   }),
 
   extractValidationSchemaFromItem: (item) => {
-    const schema = z.date();
+    const schema = z.date("Choose a date.");
 
     const { validation } = item;
     if (!validation) return schema;

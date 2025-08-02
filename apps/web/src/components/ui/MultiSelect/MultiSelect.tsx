@@ -73,6 +73,8 @@ export interface MultiSelectProps {
   // Not sure if its better to do this https://react-spectrum.adobe.com/react-aria/Form.html#custom-children
   // accepting errors props should work for now.
   errors?: string[];
+
+  validationBehavior?: "aria" | "native";
 }
 
 export const MULTISELECT_NAME_PREFIX = "multiselect-";
@@ -84,6 +86,7 @@ const MultiSelect = ({
   options,
   onChange,
   errors,
+  validationBehavior = "native",
   ...props
 }: MultiSelectProps) => {
   const id = useId();
@@ -94,6 +97,10 @@ const MultiSelect = ({
     if (isInvalid) return <p>Please select an item in the list.</p>;
 
     if (errors && errors.length > 0) {
+      if (errors.length === 1) {
+        return <p>{errors[0]}</p>;
+      }
+
       return <ErrorList errors={errors} />;
     }
   };
@@ -161,9 +168,9 @@ const MultiSelect = ({
       </div>
 
       {/* This is a dummy select element used for form submissions. Its values are updated based on the actual Select component above.
-          It doesn't do anything since we are using Tanstack Form, but i'll leave it here just in case it comes in handy in the future.
-      */}
+       */}
       <select
+        data-invalid={errors && errors.length > 0}
         tabIndex={-1}
         autoComplete="off"
         style={{
@@ -172,11 +179,15 @@ const MultiSelect = ({
           position: "absolute",
           pointerEvents: "none",
         }}
-        required={isRequired}
+        required={isRequired && validationBehavior === "native"}
         multiple
         name={`${MULTISELECT_NAME_PREFIX}${name}`}
         ref={hiddenSelectRef}
-        onInvalid={() => setIsInvalid(true)}
+        onInvalid={() => {
+          if (validationBehavior === "native") {
+            setIsInvalid(true);
+          }
+        }}
       >
         {options.map((option) => (
           <option

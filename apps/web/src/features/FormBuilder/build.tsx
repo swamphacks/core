@@ -25,6 +25,9 @@ import { useMemo, type ReactNode } from "react";
 import z from "zod";
 import { QuestionTypes } from "@/features/FormBuilder/types";
 import { ComboBoxItem } from "@/components/ui/ComboBox";
+// import { FormValidationContext } from "react-stately";
+// import { FormContext } from "react-aria-components";
+// import { useStore } from "@tanstack/react-form";
 
 const questionTypeItemMap = {
   [QuestionTypes.shortAnswer]: ShortAnswerQuestion,
@@ -113,6 +116,8 @@ export function build(formObject: FormObject): () => ReactNode {
       },
     });
 
+    // const formRef = useRef<HTMLFormElement>(null);
+
     const formErrors = useFormErrors(form);
 
     // Recursively create form field components based on field type (section, layout, or question) and question types
@@ -141,6 +146,7 @@ export function build(formObject: FormObject): () => ReactNode {
                         type="text"
                         autoComplete="off"
                         className="flex-1"
+                        // validationBehavior="aria"
                       />
                     );
                   case QuestionTypes.paragraph:
@@ -151,6 +157,7 @@ export function build(formObject: FormObject): () => ReactNode {
                         autoComplete="off"
                         className="flex-1"
                         textarea
+                        validationBehavior="aria"
                       />
                     );
                   case QuestionTypes.number:
@@ -161,6 +168,7 @@ export function build(formObject: FormObject): () => ReactNode {
                         type="number"
                         autoComplete="off"
                         className="flex-1"
+                        validationBehavior="aria"
                       />
                     );
                   case QuestionTypes.multipleChoice:
@@ -169,6 +177,7 @@ export function build(formObject: FormObject): () => ReactNode {
                         {...newItem}
                         name={field.name}
                         className="flex-1"
+                        validationBehavior="aria"
                       >
                         {item.options.map((option) => (
                           <Radio key={option.value} value={option.value}>
@@ -183,6 +192,8 @@ export function build(formObject: FormObject): () => ReactNode {
                         {...newItem}
                         name={field.name}
                         className="flex-1"
+                        validationBehavior="aria"
+                        isRequired={true}
                       >
                         {item.options.map((option) => (
                           <Checkbox key={option.value} value={option.value}>
@@ -197,6 +208,7 @@ export function build(formObject: FormObject): () => ReactNode {
                         {...newItem}
                         name={field.name}
                         className="flex-1"
+                        validationBehavior="aria"
                       >
                         {item.options.map((option) => (
                           <ComboBoxItem key={option.value} id={option.value}>
@@ -209,6 +221,7 @@ export function build(formObject: FormObject): () => ReactNode {
                         {...newItem}
                         name={field.name}
                         className="flex-1"
+                        validationBehavior="aria"
                       >
                         {item.options.map((option) => (
                           <SelectItem key={option.value} id={option.value}>
@@ -223,6 +236,7 @@ export function build(formObject: FormObject): () => ReactNode {
                         {...newItem}
                         name={field.name}
                         options={item.options}
+                        validationBehavior="aria"
                       />
                     );
                   case QuestionTypes.date:
@@ -231,6 +245,7 @@ export function build(formObject: FormObject): () => ReactNode {
                         {...newItem}
                         name={field.name}
                         className="flex-1"
+                        validationBehavior="aria"
                       />
                     );
                   case QuestionTypes.upload:
@@ -238,8 +253,8 @@ export function build(formObject: FormObject): () => ReactNode {
                       <field.UploadField
                         {...newItem}
                         name={field.name}
-                        multiple
-                        // className="flex-1"
+                        validationBehavior="aria"
+                        // description="Allowed file types: .pdf, .docx"
                       />
                     );
                   default:
@@ -275,6 +290,32 @@ export function build(formObject: FormObject): () => ReactNode {
     // Cache result so buildFormContent doesn't invoke on rerender
     const formContent = useMemo(() => buildFormContent(data.content), []);
 
+    // const errors = useStore(form.store, (state) => {
+    //   return state.errors;
+    // });
+
+    // TODO: scroll to the element that has an error. what I have below only works for certain components, doesnt work for Select or Radio fields
+    // useEffect(() => {
+    //   if (errors.length === 0) return;
+
+    //   if (!formRef.current) return;
+
+    //   const form = formRef.current;
+
+    //   for (let i = 0; i < form.elements.length; i++) {
+    //     let element = form.elements[i];
+    //     // console.log(element);
+    //     if (
+    //       element.getAttribute("data-invalid") ||
+    //       element.getAttribute("data-custom-invalid")
+    //     ) {
+    //       element.focus();
+    //       // console.log(element);
+    //       return;
+    //     }
+    //   }
+    // }, [errors]);
+
     return (
       <div className="w-full sm:max-w-180 mx-auto font-figtree pb-2 p-2">
         <div className="space-y-3 py-5 border-b-1 border-border">
@@ -289,12 +330,31 @@ export function build(formObject: FormObject): () => ReactNode {
             form.handleSubmit();
           }}
           validationErrors={formErrors}
+          validationBehavior="aria"
         >
           <div className="space-y-6">{formContent}</div>
           <form.AppForm>
             <form.SubmitButton label="Submit" />
           </form.AppForm>
         </Form>
+        {/* <form
+          className="mt-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+          ref={formRef}
+        >
+          <FormContext.Provider value={{ validationBehavior: "aria" }}>
+            <FormValidationContext.Provider value={formErrors}>
+              <div className="space-y-6">{formContent}</div>
+              <form.AppForm>
+                <form.SubmitButton label="Submit" />
+              </form.AppForm>
+            </FormValidationContext.Provider>
+          </FormContext.Provider>
+        </form> */}
       </div>
     );
   };
