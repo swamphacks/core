@@ -16,7 +16,8 @@ const ComboBoxField = lazy(() => import("./fields/ComboBoxField"));
 const MultiSelectField = lazy(() => import("./fields/MultiSelectField"));
 const RadioField = lazy(() => import("./fields/RadioField"));
 const SelectField = lazy(() => import("./fields/SelectField"));
-const DatePickerField = lazy(() => import("./fields/DatePickerField.tsx"));
+const DatePickerField = lazy(() => import("./fields/DatePickerField"));
+const UploadField = lazy(() => import("./fields/UploadField"));
 
 export const { useAppForm, withForm } = createFormHook({
   fieldComponents: {
@@ -27,6 +28,7 @@ export const { useAppForm, withForm } = createFormHook({
     RadioField,
     SelectField,
     DatePickerField,
+    UploadField,
   },
   formComponents: {
     SubmitButton,

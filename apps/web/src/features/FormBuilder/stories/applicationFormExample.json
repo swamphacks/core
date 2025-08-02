@@ -1,0 +1,278 @@
+{
+  "metadata": {
+    "title": "SwampHacks XI Application",
+    "description": "SwampHacks is the University of Florida’s largest annual hackathon. A 36-hour tech event where students from across the country come together to build projects, learn new skills, and connect with fellow innovators."
+  },
+
+  "content": [
+    {
+      "type": "section",
+      "label": "ℹ️ Personal Information",
+
+      "content": [
+        {
+          "type": "layout",
+
+          "content": [
+            {
+              "type": "question",
+              "id": "firstName",
+              "name": "firstName",
+              "questionType": "shortAnswer",
+              "label": "First Name",
+              "placeholder": "Enter your first name",
+              "required": true,
+              "validation": {
+                "maxLength": 5
+              }
+            },
+
+            {
+              "type": "question",
+              "id": "lastName",
+              "name": "lastName",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter your last name",
+              "label": "Last Name",
+              "required": true,
+              "validation": {
+                "maxLength": 5
+              }
+            }
+          ]
+        },
+        {
+          "type": "layout",
+
+          "content": [
+            {
+              "type": "question",
+              "id": "age",
+              "name": "age",
+              "questionType": "number",
+              "placeholder": "Enter your age",
+              "label": "Age",
+              "required": true,
+              "validation": {
+                "min": 0,
+                "max": 99
+              }
+            },
+
+            {
+              "type": "question",
+              "id": "phone",
+              "name": "phone",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter a phone number",
+              "label": "Phone",
+              "required": true,
+              "validation": {
+                "maxLength": 15
+              }
+            }
+          ]
+        },
+        {
+          "type": "layout",
+
+          "content": [
+            {
+              "type": "question",
+              "id": "preferredEmail",
+              "name": "preferredEmail",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter your email",
+              "label": "Preferred Email",
+              "required": true
+            },
+
+            {
+              "type": "question",
+              "id": "universityEmail",
+              "name": "universityEmail",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter your school email",
+              "label": "University Email",
+              "required": true
+            }
+          ]
+        },
+        {
+          "type": "question",
+          "id": "linkedin",
+          "name": "linkedin",
+          "questionType": "shortAnswer",
+          "placeholder": "Enter link",
+          "label": "Linkedin URL",
+          "required": true
+        },
+        {
+          "type": "question",
+          "id": "github",
+          "name": "github",
+          "questionType": "shortAnswer",
+          "placeholder": "Enter link",
+          "label": "Github URL",
+          "required": true
+        }
+      ]
+    },
+
+    {
+      "type": "section",
+      "label": "🎓 Education",
+
+      "content": [
+        {
+          "type": "layout",
+
+          "content": [
+            {
+              "type": "question",
+              "id": "school",
+              "name": "school",
+              "questionType": "select",
+              "placeholder": "Select your school",
+              "label": "School",
+              "required": true,
+              "options": [
+                { "label": "University of Florida", "value": "UF" },
+                { "label": "University of Central Florida", "value": "UCF" },
+                { "label": "Florida State University", "value": "FSU" }
+              ]
+            },
+            {
+              "type": "question",
+              "id": "level",
+              "name": "level",
+              "questionType": "select",
+              "placeholder": "Select your level",
+              "label": "Level of Study",
+              "required": true,
+              "options": [
+                { "label": "1st Year", "value": "1" },
+                { "label": "2nd Year", "value": "2" },
+                { "label": "3rd Year", "value": "3" },
+                { "label": "4th Year", "value": "4" },
+                { "label": "Graduate Student", "value": "5" }
+              ]
+            }
+          ]
+        },
+
+        {
+          "type": "layout",
+
+          "content": [
+            {
+              "type": "question",
+              "id": "year",
+              "name": "year",
+              "questionType": "select",
+              "placeholder": "Select your year",
+              "label": "Year in College",
+              "required": true,
+              "options": [
+                { "label": "1st Year", "value": "1" },
+                { "label": "2nd Year", "value": "2" },
+                { "label": "3rd Year", "value": "3" },
+                { "label": "4th Year", "value": "4" },
+                { "label": "Graduate Student", "value": "5" }
+              ]
+            },
+            {
+              "type": "question",
+              "id": "graduationDate",
+              "name": "graduationDate",
+              "questionType": "select",
+              "placeholder": "Select graduation date",
+              "label": "Graduation Date",
+              "required": true,
+              "options": [
+                { "label": "1st Year", "value": "1" },
+                { "label": "2nd Year", "value": "2" },
+                { "label": "3rd Year", "value": "3" },
+                { "label": "4th Year", "value": "4" },
+                { "label": "Graduate Student", "value": "5" }
+              ]
+            }
+          ]
+        },
+
+        {
+          "type": "question",
+          "id": "majors",
+          "name": "majors",
+          "questionType": "multiselect",
+          "placeholder": "Select your major(s)",
+          "label": "Major(s)",
+          "required": true,
+          "options": [
+            { "label": "Math", "value": "math" },
+            { "label": "Computer Science", "value": "computer science" },
+            {
+              "label": "this select should be populated programmatically",
+              "value": "3"
+            }
+          ]
+        },
+
+        {
+          "type": "question",
+          "id": "minors",
+          "name": "minors",
+          "questionType": "multiselect",
+          "placeholder": "Select your minor(s)",
+          "label": "Minor(s)",
+          "required": true,
+          "options": [
+            { "label": "Math", "value": "math" },
+            { "label": "Computer Science", "value": "computer science" },
+            {
+              "label": "this select should be populated programmatically",
+              "value": "3"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "type": "section",
+      "label": "📋 Experience & Preferences",
+
+      "content": [
+        {
+          "type": "question",
+          "id": "experience",
+          "name": "experience",
+          "questionType": "multipleChoice",
+          "label": "How many hackathons have you participated in?",
+          "required": true,
+          "options": [
+            { "label": "Swamphacks would be my first!", "value": "0" },
+            { "label": "1", "value": "1" },
+            { "label": "2", "value": "2" },
+            { "label": "3", "value": "3" },
+            { "label": "4", "value": "4" }
+          ]
+        },
+        {
+          "type": "question",
+          "id": "shirtSize",
+          "name": "shirtSize",
+          "questionType": "select",
+          "label": "T-Shirt Size",
+          "placeholder": "Select your size",
+          "required": true,
+          "options": [
+            { "label": "Small", "value": "small" },
+            { "label": "Medium", "value": "medium" },
+            { "label": "Large", "value": "large" }
+          ]
+        }
+      ]
+    }
+  ]
+}

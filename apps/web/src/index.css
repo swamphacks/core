@@ -3,6 +3,8 @@
 @plugin "tailwindcss-react-aria-components";
 @import "./theme.css";
 
+@tailwind utilities;
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 html,

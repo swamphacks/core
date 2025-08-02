@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "title": "SwampHacks XI Application",
+    "description": "SwampHacks is the University of Florida’s largest annual hackathon. A 36-hour tech event where students from across the country come together to build projects, learn new skills, and connect with fellow innovators."
+  },
+
+  "content": [
+    {
+      "type": "section",
+      "label": "ℹ️ Personal Information",
+
+      "content": [
+        {
+          "type": "layout",
+
+          "content": [
+            {
+              "type": "question",
+              "id": "firstName",
+              "name": "firstName",
+              "questionType": "shortAnswer",
+              "label": "First Name",
+              "placeholder": "Enter your first name",
+              "required": true,
+              "validation": {
+                "maxLength": 5
+              }
+            },
+
+            {
+              "type": "question",
+              "id": "lastName",
+              "name": "lastName",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter your last name",
+              "label": "Last Name",
+              "required": true,
+              "validation": {
+                "maxLength": 5
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "id": "date",
+      "name": "date",
+      "questionType": "date",
+      "label": "Pick a date",
+      "required": true
+    },
+    {
+      "type": "question",
+      "id": "upload",
+      "name": "upload",
+      "questionType": "upload",
+      "label": "Upload your resume",
+      "required": true
+    }
+  ]
+}
