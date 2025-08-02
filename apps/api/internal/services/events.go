@@ -1,0 +1,80 @@
+package services
+
+import (
+	"context"
+	"errors"
+
+	"github.com/google/uuid"
+	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/db/repository"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+)
+
+var (
+	ErrFailedToCreateEvent   = errors.New("failed to create event")
+	ErrFailedToGetEvent      = errors.New("failed to get event")
+	ErrFailedToUpdateEvent   = errors.New("failed to update event")
+	ErrFailedToDeleteEvent   = errors.New("failed to delete event")
+	ErrNoEventsDeleted       = errors.New("no events deleted")
+	ErrMultipleEventsDeleted = errors.New("multiple events affected by delete query while only expecting one to delete one")
+)
+
+type EventService struct {
+	eventRepo *repository.EventRepository
+	logger    zerolog.Logger
+}
+
+func NewEventService(eventRepo *repository.EventRepository, logger zerolog.Logger) *EventService {
+	return &EventService{
+		eventRepo: eventRepo,
+		logger:    logger.With().Str("service", "EventService").Str("component", "events").Logger(),
+	}
+}
+
+func (s *EventService) CreateEvent(ctx context.Context, params sqlc.CreateEventParams) (*sqlc.Event, error) {
+	result, err := s.eventRepo.CreateEvent(ctx, params)
+	if err != nil {
+		s.logger.Err(err).Msg("An unkown error was caught!")
+		return nil, ErrFailedToCreateEvent
+	}
+
+	return result, nil
+}
+
+func (s *EventService) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Event, error) {
+	result, err := s.eventRepo.GetEventByID(ctx, id)
+	if err != nil {
+		s.logger.Err(err).Msg("An unkown error was caught!")
+		return nil, ErrFailedToGetEvent
+	}
+
+	return result, nil
+}
+
+func (s *EventService) UpdateEventById(ctx context.Context, params sqlc.UpdateEventByIdParams) error {
+	err := s.eventRepo.UpdateEventById(ctx, params)
+	if err != nil {
+		s.logger.Err(err).Msg("An unkown error was caught!")
+		return ErrFailedToUpdateEvent
+	}
+
+	return nil
+}
+
+func (s *EventService) DeleteEventById(ctx context.Context, id uuid.UUID) error {
+	affectedRows, err := s.eventRepo.DeleteEventById(ctx, id)
+	if err != nil {
+		s.logger.Err(err).Msg("An unkown error was caught!")
+		return ErrFailedToUpdateEvent
+	}
+	if affectedRows == 0 {
+		s.logger.Err(err).Msg("Error deleting event")
+		return ErrNoEventsDeleted
+	}
+	if affectedRows > 1 {
+		s.logger.Err(err).Msg("Error deleting event")
+		return ErrMultipleEventsDeleted
+	}
+
+	return nil
+}

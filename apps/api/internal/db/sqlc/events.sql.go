@@ -16,23 +16,45 @@ const createEvent = `-- name: CreateEvent :one
 INSERT INTO events (
     name,
     application_open, application_close,
-    start_time, end_time
+    start_time, end_time,
+    description, location, location_url, max_attendees,
+    rsvp_deadline, decision_release, 
+    website_url, is_published 
+    -- saved_at is omitted due to having a default value (NOW) which will not be different if it was an optional param
 ) VALUES (
+    -- FIXME: The second parameter in coalesce MUST be the default value created in the schema. I have not found a more automated way to insert the default value.
     $1,
     $2, $3,
-    $4, $5
-)
+    $4, $5,
+    coalesce($6, NULL),
+    coalesce($7, NULL),
+    coalesce($8, NULL),
+    coalesce($9, NULL::INT),     
+    coalesce($10, NULL::TIMESTAMPTZ), 
+    coalesce($11, NULL::TIMESTAMPTZ),
+    coalesce($12, NULL),
+    coalesce($13, FALSE)
+) 
 RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at
 `
 
 type CreateEventParams struct {
-	Name             string    `json:"name"`
-	ApplicationOpen  time.Time `json:"application_open"`
-	ApplicationClose time.Time `json:"application_close"`
-	StartTime        time.Time `json:"start_time"`
-	EndTime          time.Time `json:"end_time"`
+	Name             string      `json:"name"`
+	ApplicationOpen  time.Time   `json:"application_open"`
+	ApplicationClose time.Time   `json:"application_close"`
+	StartTime        time.Time   `json:"start_time"`
+	EndTime          time.Time   `json:"end_time"`
+	Description      interface{} `json:"description"`
+	Location         interface{} `json:"location"`
+	LocationUrl      interface{} `json:"location_url"`
+	MaxAttendees     interface{} `json:"max_attendees"`
+	RsvpDeadline     interface{} `json:"rsvp_deadline"`
+	DecisionRelease  interface{} `json:"decision_release"`
+	WebsiteUrl       interface{} `json:"website_url"`
+	IsPublished      interface{} `json:"is_published"`
 }
 
+// TODO: allow optional parameters
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
 	row := q.db.QueryRow(ctx, createEvent,
 		arg.Name,
@@ -40,6 +62,14 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.ApplicationClose,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Description,
+		arg.Location,
+		arg.LocationUrl,
+		arg.MaxAttendees,
+		arg.RsvpDeadline,
+		arg.DecisionRelease,
+		arg.WebsiteUrl,
+		arg.IsPublished,
 	)
 	var i Event
 	err := row.Scan(
@@ -64,14 +94,18 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 	return i, err
 }
 
-const deleteEvent = `-- name: DeleteEvent :exec
+const deleteEventById = `-- name: DeleteEventById :execrows
 DELETE FROM events
 WHERE id = $1
 `
 
-func (q *Queries) DeleteEvent(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteEvent, id)
-	return err
+// TODO: return error when 0 rows are deleted
+func (q *Queries) DeleteEventById(ctx context.Context, id uuid.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteEventById, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getEventByID = `-- name: GetEventByID :one

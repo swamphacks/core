@@ -68,7 +68,11 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// Event routes
 	api.Router.Route("/event", func(r chi.Router) {
+		r.Post("/", api.Handlers.Event.CreateEvent)
 		r.Post("/{eventId}/interest", api.Handlers.EventInterest.AddEmailToEvent)
+		r.Get("/{eventId}", api.Handlers.Event.GetEventByID)
+		r.Patch("/{eventId}", api.Handlers.Event.UpdateEventById)
+		r.Delete("/{eventId}", api.Handlers.Event.DeleteEventById)
 	})
 
 	// Email routes

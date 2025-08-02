@@ -17,12 +17,14 @@ type Querier interface {
 	AddEmail(ctx context.Context, arg AddEmailParams) (EventInterestSubmission, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (AuthAccount, error)
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (Application, error)
+	// TODO: allow optional parameters
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (AuthSession, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (AuthUser, error)
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) error
 	DeleteApplication(ctx context.Context, arg DeleteApplicationParams) error
-	DeleteEvent(ctx context.Context, id uuid.UUID) error
+	// TODO: return error when 0 rows are deleted
+	DeleteEventById(ctx context.Context, id uuid.UUID) (int64, error)
 	DeleteExpiredSession(ctx context.Context) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error)

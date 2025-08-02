@@ -1,13 +1,27 @@
 -- name: CreateEvent :one
+-- TODO: allow optional parameters
 INSERT INTO events (
     name,
     application_open, application_close,
-    start_time, end_time
+    start_time, end_time,
+    description, location, location_url, max_attendees,
+    rsvp_deadline, decision_release, 
+    website_url, is_published 
+    -- saved_at is omitted due to having a default value (NOW) which will not be different if it was an optional param
 ) VALUES (
-    $1,
-    $2, $3,
-    $4, $5
-)
+    -- FIXME: The second parameter in coalesce MUST be the default value created in the schema. I have not found a more automated way to insert the default value.
+    @name,
+    @application_open, @application_close,
+    @start_time, @end_time,
+    coalesce(sqlc.narg(description), NULL),
+    coalesce(sqlc.narg(location), NULL),
+    coalesce(sqlc.narg(location_url), NULL),
+    coalesce(sqlc.narg(max_attendees), NULL::INT),     
+    coalesce(sqlc.narg(rsvp_deadline), NULL::TIMESTAMPTZ), 
+    coalesce(sqlc.narg(decision_release), NULL::TIMESTAMPTZ),
+    coalesce(sqlc.narg(website_url), NULL),
+    coalesce(sqlc.narg(is_published), FALSE)
+) 
 RETURNING *;
 
 -- name: GetEventByID :one
@@ -34,6 +48,7 @@ SET
 WHERE
     id = @id::uuid;
     
--- name: DeleteEvent :exec
+-- name: DeleteEventById :execrows
+-- execrows returns affect row count on top of an error
 DELETE FROM events
 WHERE id = $1;
