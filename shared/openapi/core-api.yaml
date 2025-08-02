@@ -266,6 +266,26 @@ paths:
                   type: string
                   format: date-time
                   example: 2026-02-12T08:00:00Z
+                description:
+                  type: string
+                location:
+                  type: string
+                location_url:
+                  type: string
+                max_attendees:
+                  type: integer
+                rsvp_deadline:
+                  type: string
+                  format: date-time
+                  example: 2025-08-01T08:00:00Z
+                decision_release:
+                  type: string
+                  format: date-time
+                  example: 2025-08-01T08:00:00Z
+                website_url:
+                  type: string
+                is_published:
+                  type: boolean 
       responses:
         '201':
           description: 'OK: Event created'
@@ -290,22 +310,68 @@ paths:
                   error: time_conflict
                   message: endTime is before startTime or applicationClose is before applicationOpen
         5XX:
-        description: 'Server Error: Something went terribly wrong on our end.'
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ErrorResponse'
-            examples:
-              Example 1:
-                value:
-                  error: internal_err
-                  message: Something went wrong on our end.
-    operationId: post-event
-    tags:
-      - Event
-  # /event/{eventId}:
-  # /event/{eventId}/patch:
-  # /event/{eventId}/delete:
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: post-event
+      tags:
+        - Event
+  /event/{eventId}:
+    get:
+      summary: Get an event
+      responses:
+        '201':
+          description: OK - Event recieved
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+    patch:
+      summary: Update an event
+      responses:
+        '204':
+          description: OK - Event updated (patched)
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+    delete:
+      summary: Delete an event
+      responses:
+        '204':
+          description: OK - Event deleted (patched)
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
 components:
   schemas:
     ErrorResponse:
