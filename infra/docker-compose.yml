@@ -14,3 +14,11 @@ services:
     env_file:
       - ./secrets/.env.api
 
+  redis:
+    image: redis:8.0
+    command: ["redis-server", "--appendonly", "no", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - 6379:6379
+    attach: false
+
+
