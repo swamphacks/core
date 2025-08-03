@@ -2,13 +2,23 @@ from discord.ui import View, Button
 from discord import ButtonStyle, Interaction
 import discord
 from discord.errors import NotFound
-from utils.checks import is_mod_slash
 from utils.mentor_functions import set_busy_mentor, set_available_mentor
 from components.ticket_state import claimed_tickets
 from chatbot.llm import summarize_text
 
 class SupportThreadButtons(View):
+    """
+    View for support thread buttons which is used in ThreadSupportModal to add buttons onto the embed sent to the reports channel.
+
+    """
     def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput) -> None:
+        """
+        Initializes the SupportThreadButtons view with the given thread and description input.
+
+        Args:
+            thread (discord.Thread): The support thread to which the buttons will be added.
+            description_input (discord.ui.TextInput): The text input containing the description of the issue.
+        """
         super().__init__(timeout=None)
         self.thread = thread
         self.description_input = description_input
@@ -17,7 +27,15 @@ class SupportThreadButtons(View):
 
 
 class CloseThreadButton(Button):
+    """Button to close a support thread, archive it, and lock it."""
     def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput):
+        """
+        Initializes the CloseThreadButton with the given thread and description input.
+
+        Args:
+            thread (discord.Thread): The support thread to be closed.
+            description_input (discord.ui.TextInput): The text input containing the description of the issue.
+        """
         super().__init__(label="Close Thread", style=ButtonStyle.primary, custom_id="close_thread", emoji="❌")
         self.thread = thread
         self.description_input = description_input
@@ -118,7 +136,15 @@ class CloseThreadButton(Button):
             await interaction.response.send_message(f"Failed to archive the support thread. Error: {e}", ephemeral=True)
 
 class ClaimThreadButton(Button):
+    """Button to claim a support thread and add the mentor to it."""
     def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput):
+        """
+        Initializes the ClaimThreadButton with the given thread and description input.
+
+        Args:
+            thread (discord.Thread): The support thread to be claimed.
+            description_input (discord.ui.TextInput): The text input containing the description of the issue.
+        """
         super().__init__(label="Claim Thread", style=ButtonStyle.primary, custom_id="claim_thread", emoji="📥")
         self.thread = thread
         self.description_input = description_input

@@ -2,7 +2,8 @@ import discord
 
 
 def get_next_support_vc_name(category: discord.CategoryChannel) -> str :
-    """    Generate the next available support voice channel name in a given category.
+    """    
+    Generate the next available support voice channel name in a given category.
 
     Args:
         category (discord.CategoryChannel): The category where the voice channels are located.

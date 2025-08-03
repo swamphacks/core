@@ -2,7 +2,7 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 from typing import Literal
-from utils.checks import is_mod_slash
+from utils.checks import has_bot_full_access
 from utils.mentor_functions import set_all_mentors_available
 from utils.get_next_support_vc_name import get_next_support_vc_name
 from chatbot.llm import llm_response
@@ -41,7 +41,7 @@ class General(commands.Cog):
     @app_commands.describe(
         amount="The amount of messages to delete"
     )
-    @is_mod_slash()
+    @has_bot_full_access()
     async def delete(
         self,
         interaction: discord.Interaction,
@@ -61,7 +61,7 @@ class General(commands.Cog):
         )
     
     @app_commands.command(name="delete_all_threads", description="Delete all threads in a specified channel")
-    @is_mod_slash()
+    @has_bot_full_access()
     async def delete_all_threads(self, interaction: discord.Interaction, channel: discord.TextChannel, delete_archived: bool = False) -> None:
         """Delete all threads in a specified channel
         
@@ -90,7 +90,7 @@ class General(commands.Cog):
         )
         
     @app_commands.command(name="delete_all_vcs", description="Delete all voice channels in a specified category")
-    @is_mod_slash()
+    @has_bot_full_access()
     async def delete_all_vcs(self, interaction: discord.Interaction, category: discord.CategoryChannel) -> None:
         """Delete all voice channels in a specified category
         
@@ -116,7 +116,7 @@ class General(commands.Cog):
         action="Whether to assign or remove the role",
         role="The role to assign or remove"
     )
-    @is_mod_slash()
+    @has_bot_full_access()
     async def manage_role(
         self,
         interaction: discord.Interaction,
@@ -156,7 +156,6 @@ class General(commands.Cog):
                     f"Assigned **{role.name}** to {member.mention}.",
                     ephemeral=True
                 )
-                # Send a followup message that will be deleted after 5 seconds
                 await interaction.followup.send(
                     f"{interaction.user.mention} assigned **{role.name}** role to {member.mention}.",
                     delete_after=5
@@ -180,7 +179,6 @@ class General(commands.Cog):
                     f"Removed **{role.name}** from {member.mention}.",
                     ephemeral=True
                 )
-                # Send a followup message that will be deleted after 5 seconds
                 await interaction.followup.send(
                     f"{interaction.user.mention} removed **{role.name}** role from {member.mention}.",
                     delete_after=5
@@ -196,23 +194,29 @@ class General(commands.Cog):
                 "Invalid action. Please use 'assign' or 'remove'.",
                 ephemeral=True
             )
-    
-    @is_mod_slash()
+
+    @has_bot_full_access()
     @app_commands.command(name="set_available_mentors", description="Set available mentors in the server")
     async def set_all_mentors_available(self, interaction: discord.Interaction) -> None:
-        """Command should be executed intially to set all mentors to available"""
-        mod_role = self.get_role(interaction.guild, "Moderator")
-        if not mod_role:
-            await interaction.response.send_message("Error: Could not find the Moderator role. Please create it before using this command.", ephemeral=True)
+        """
+        Set all users in the server with the "Mentor" role to "Available Mentor"
+        
+        Args:
+            interaction: The interaction that triggered this command
+        """
+        mentor_role = self.get_role(interaction.guild, "Mentor")
+        if not mentor_role:
+            await interaction.response.send_message("Error: Could not find the **Mentor** role. Please create it before using this command.", ephemeral=True)
             return
-        await set_all_mentors_available(mod_role)
+        await set_all_mentors_available(mentor_role)
         await interaction.response.send_message("All mentors are now available.", ephemeral=True)
         
         
     @app_commands.command(name="add_to_thread", description="Add a user to the support thread")
     @app_commands.describe(user="The user to add to the thread")
     async def add_to_thread(self, interaction: discord.Interaction, user: discord.Member) -> None:
-        """Add a user to the support thread
+        """
+        Add a specified user to a support thread
         
         Args:
             interaction: The interaction that triggered this command
@@ -247,20 +251,20 @@ class General(commands.Cog):
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
             
     @app_commands.command(name="create_vc", description="Creates a voice channel for support")
-    @is_mod_slash()
+    @has_bot_full_access()
     async def create_vc(self, interaction: discord.Interaction) -> None:
-        """Create a voice channel for support
+        """
+        Create a voice channel for support, requires a Support-VCs category and a Mentor role
 
         Args:
             interaction: The interaction that triggered this command
-            user: The user to grant access to
         """
-        mod_role = discord.utils.get(interaction.guild.roles, name="Moderator")
+        mentor_role = discord.utils.get(interaction.guild.roles, name="Mentor")
         category = discord.utils.get(interaction.guild.categories, name="Support-VCs")
         vc_author = interaction.user
-        if not mod_role:
+        if not mentor_role:
             await interaction.response.send_message(
-                "Error: Could not find the Moderator role. Please create it before using this command.",
+                "Error: Could not find the **Mentor** role. Please create it before using this command.",
                 ephemeral=True
             )
             return
@@ -273,7 +277,7 @@ class General(commands.Cog):
         
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False, connect=False),
-            mod_role: discord.PermissionOverwrite(view_channel=True, connect=True),
+            mentor_role: discord.PermissionOverwrite(view_channel=True, connect=True),
             vc_author: discord.PermissionOverwrite(view_channel=True, connect=True),
         }
         vc_name = get_next_support_vc_name(category)
@@ -309,9 +313,10 @@ class General(commands.Cog):
 
     @app_commands.command(name="grant_vc_access", description="Grant a user access to a voice channel")
     @app_commands.describe(user="Grant a user access to a voice channel")
-    @is_mod_slash()
+    @has_bot_full_access()
     async def grant_vc_access(self, interaction: discord.Interaction, user: discord.Member) -> None:
-        """Grant a user access to a voice channel
+        """
+        Grant a user access to a voice channel, can only be used in a voice channel under the Support-VCs category
         
         Args:
             interaction: The interaction that triggered this command

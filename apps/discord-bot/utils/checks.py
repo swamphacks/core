@@ -15,14 +15,16 @@ from typing import Callable, Coroutine, Any
 
 # config = load_config()
 
-def is_mod_slash() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
+def has_bot_full_access() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
     """
-    Check if the user has the moderator role for slash commands. The role is set in the config.json file.
+    Check if the user has one of the acceptable roles or is an administrator for slash commands.
 
     Returns:
-        bool: True if the user has the moderator role, False otherwise
+        bool: True if the user has one of the acceptable roles or is an administrator, False otherwise
     """
     async def predicate(interaction: Interaction):
+        # roles that are allowed to use all of the bot commands
+        ACCEPTABLE_ROLES = ["Moderator", "Mentor"]
         # Ensure interaction is in a channel and a user exists
         if not interaction.guild or not interaction.user:
             return False
@@ -36,9 +38,11 @@ def is_mod_slash() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
         
         # check if user has moderator privileges
         # for now it just checks if they are an admin but adjust this later
-        if perms.administrator:
+        if any(role.name in ACCEPTABLE_ROLES for role in member.roles):
+            # print(f"User {member.name} has moderator privileges.")
             return True
         else:
+            # print(f"User {member.name} does not have moderator privileges.")
             return False
        
     return app_commands.check(predicate)

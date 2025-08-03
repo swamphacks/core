@@ -30,16 +30,6 @@ Summary:
 Outstanding Questions:
 - [List any unresolved questions]
 
-Event Context:
-- SwampHacks XI runs Jan 25–26, 2025 (24-hour hackathon, in-person at UF).
-- Locations: Newell Hall & Marston Science Library.
-- Check-in is required before hacking starts (details in #announcements).
-- Projects must be:
-  - Original and built during the hackathon
-  - Submitted via a public GitHub repo with a detailed ReadMe and posted to Devpost
-- Prize tracks include: AI, Environment, Health, Education, Social Good, Beginner, and sponsor tracks (Auth0, Cloudflare, Terraform, Domain Registration, GenAI).
-- Old, class, or pre-existing projects are not allowed.
-
 Messages:
 {messages}
 """

@@ -4,6 +4,10 @@ from discord import Interaction
 from components.support_modals import ThreadSupportModal, VCSupportModal
 
 class TicketView(View):
+    """
+    View for selecting between support thread or voice channel.
+    This is used in the main support command to allow users to choose their preferred support method.
+    """
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(TicketSelect())
@@ -11,6 +15,10 @@ class TicketView(View):
         
         
 class TicketSelect(Select):
+    """
+    Select menu for choosing between support thread or voice channel.
+    This is used in the TicketView to allow users to select their preferred support method.
+    """
     def __init__(self):
         options = [
             discord.SelectOption(label="Chat in threads", value="thread", emoji="💬", description="Open a support thread"),

@@ -2,8 +2,7 @@ from discord.ext import commands
 from discord import app_commands, Interaction, Embed, Colour
 from typing import Literal
 from components.ticket_view import TicketView
-from utils.checks import is_mod_slash
-import discord
+from utils.checks import has_bot_full_access
 
 class Support(commands.Cog):
     """
@@ -29,7 +28,7 @@ class Support(commands.Cog):
         description="The description of the support panel",
         color="Choose the panel's color"
     )
-    @is_mod_slash()
+    @has_bot_full_access()
     async def supportpanel(
         self,
         interaction: Interaction,
