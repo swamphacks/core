@@ -10,7 +10,6 @@ import {
   TooltipTrigger,
 } from "react-aria-components";
 
-import TablerPencil from "~icons/tabler/pencil";
 import TablerTrash from "~icons/tabler/trash";
 import TablerLocation from "~icons/tabler/location";
 import TablerCalendarEventFilled from "~icons/tabler/calendar-event-filled";
@@ -18,7 +17,7 @@ import TablerFileExport from "~icons/tabler/file-export";
 import TablerUsers from "~icons/tabler/users";
 import TablerUserCog from "~icons/tabler/user-cog";
 import { DeleteEventDialog } from "./DeleteEventDialog";
-import { ManageEventUsersDialog } from "./ManageEventUsersDialog";
+import { ManageEventStaffDialog } from "./ManageEventStaffDialog";
 
 const prettyPrintDate = (input: string): string => {
   const date = new Date(input);
@@ -37,6 +36,7 @@ interface EventDetailsCardProps {
 
 function EventDetailsCard({ event }: EventDetailsCardProps) {
   const {
+    id,
     name,
     description,
     location,
@@ -83,19 +83,6 @@ function EventDetailsCard({ event }: EventDetailsCardProps) {
       </div>
 
       <Group className="flex flex-row gap-3 mt-4">
-        <TooltipTrigger delay={250} closeDelay={250}>
-          <Tooltip
-            offset={5}
-            className="bg-surface border-input-border border-2 flex justify-center items-center py-1 px-2 rounded-md"
-          >
-            <Text>Edit</Text>
-          </Tooltip>
-
-          <Button variant="primary">
-            <TablerPencil />
-          </Button>
-        </TooltipTrigger>
-
         <DialogTrigger>
           <TooltipTrigger delay={250} closeDelay={250}>
             <Tooltip
@@ -110,7 +97,7 @@ function EventDetailsCard({ event }: EventDetailsCardProps) {
             </Button>
           </TooltipTrigger>
 
-          <ManageEventUsersDialog />
+          <ManageEventStaffDialog eventId={id} />
         </DialogTrigger>
 
         <DialogTrigger>

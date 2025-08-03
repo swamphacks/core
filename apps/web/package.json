@@ -42,6 +42,7 @@
     "react-dom": "^19.1.0",
     "react-select": "^5.10.2",
     "react-stately": "^3.39.0",
+    "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.3.0",
     "tailwind-variants": "^1.0.0",
     "tailwindcss": "^4.1.5",

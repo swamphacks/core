@@ -8,6 +8,7 @@ import { routeTree } from "./routeTree.gen";
 import { queryClient } from "./lib/query";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { auth } from "./lib/authClient";
+import { ToastContainer } from "react-toastify";
 
 const router = createRouter({
   routeTree,
@@ -27,6 +28,7 @@ function App() {
     <ThemeProvider defaultTheme="system">
       <QueryClientProvider client={queryClient}>
         <InnerApp />
+        <ToastContainer />
       </QueryClientProvider>
     </ThemeProvider>
   );
