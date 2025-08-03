@@ -163,7 +163,7 @@ class General(commands.Cog):
                 )
             except discord.Forbidden:
                 await interaction.response.send_message(
-                    "I don't have permission to assign roles!",
+                    "I don't have permission to assign roles! Please adjust my permissions.",
                     ephemeral=True
                 )
         elif action == "remove":
@@ -187,7 +187,7 @@ class General(commands.Cog):
                 )
             except discord.Forbidden:
                 await interaction.response.send_message(
-                    "I don't have permission to remove roles!",
+                    "I don't have permission to assign roles! Please adjust my permissions.",
                     ephemeral=True
                 )
         else:
@@ -203,7 +203,7 @@ class General(commands.Cog):
         """Command should be executed intially to set all mentors to available"""
         mod_role = self.get_role(interaction.guild, "Moderator")
         if not mod_role:
-            await interaction.response.send_message("Error: Could not find the Moderator role.", ephemeral=True)
+            await interaction.response.send_message("Error: Could not find the Moderator role. Please create it before using this command.", ephemeral=True)
             return
         await set_all_mentors_available(mod_role)
         await interaction.response.send_message("All mentors are now available.", ephemeral=True)
@@ -258,9 +258,15 @@ class General(commands.Cog):
         mod_role = discord.utils.get(interaction.guild.roles, name="Moderator")
         category = discord.utils.get(interaction.guild.categories, name="Support-VCs")
         vc_author = interaction.user
+        if not mod_role:
+            await interaction.response.send_message(
+                "Error: Could not find the Moderator role. Please create it before using this command.",
+                ephemeral=True
+            )
+            return
         if not category:
             await interaction.response.send_message(
-                "Error: Could not find the Support-VCs category.",
+                "Error: Could not find the Support-VCs category. Please create it before using this command.",
                 ephemeral=True
             )
             return

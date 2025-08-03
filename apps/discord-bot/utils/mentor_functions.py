@@ -10,7 +10,6 @@ def get_available_mentors(mod_role: discord.Role) -> list[discord.Member]:
 async def set_all_mentors_available(mod_role: discord.Role) -> None:
     available_role = discord.utils.get(mentor.guild.roles, name="Available Mentor")
     if not available_role:
-        print("Error: Could not find the 'Available Mentor' role.")
         return
     for mentor in mod_role.members:
         # print(f"Checking mentor: {mentor.name}")
@@ -25,7 +24,6 @@ async def set_all_mentors_available(mod_role: discord.Role) -> None:
 async def set_busy_mentor(mentor: discord.Member, busy: bool) -> None:
     busy_role = discord.utils.get(mentor.guild.roles, name="Busy Mentor")
     if not busy_role:
-        print("Error: Could not find the 'Busy  Mentor' role.")
         return
     if busy == True:
         await mentor.add_roles(busy_role)
@@ -40,7 +38,7 @@ async def set_busy_mentor(mentor: discord.Member, busy: bool) -> None:
 async def set_available_mentor(mentor: discord.Member, available: bool) -> None:
     available_role = discord.utils.get(mentor.guild.roles, name="Available Mentor")
     if not available_role:
-        print("Error: Could not find the 'Available Mentor' role.")
+        print(f"No available mentor role found for {mentor.name}")
         return
     if available == True:
         await mentor.add_roles(available_role)

@@ -4,7 +4,7 @@ from discord import Interaction
 from components.support_modals import ThreadSupportModal, VCSupportModal
 
 class TicketView(View):
-    def __init__(self, mentors=None):
+    def __init__(self):
         super().__init__(timeout=None)
         self.add_item(TicketSelect())
         # self.add_item(MentorSelect(mentors))

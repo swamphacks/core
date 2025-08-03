@@ -54,18 +54,18 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         thread_author = interaction.user
         mod_role = discord.utils.get(interaction.guild.roles, name="Moderator")
         if not mod_role:
-            await interaction.response.send_message("Error: Could not find the moderator role. Please contact an administrator.", ephemeral=True)
+            await interaction.response.send_message("Error: Could not find the moderator role. Please create it before using this command.", ephemeral=True)
             return
         
         # check if the channels and roles exist
         if not reports_channel:
             await interaction.response.send_message(
-                "Error: Could not find the reports channel. Please contact an administrator.",
+                "Error: Could not find the reports channel. Please create it before using this command.",
                 ephemeral=True
             )
             return
         if not support_channel:
-            await interaction.response.send_message("Error: Could not find the support channel. Please contact an administrator.", ephemeral=True)
+            await interaction.response.send_message("Error: Could not find the support channel. Please create it before using this command.", ephemeral=True)
             return
         
         # truncate description in case it's too long
@@ -89,7 +89,6 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         selected_mentor = available_mentors[last_pinged_mentor_index]
         last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
         action_text = f"{selected_mentor.mention} Please join the thread to assist the user."
-        print("last_pinged_mentor_index:", last_pinged_mentor_index)
         
         # create the thread with the next available name and add the initialuser to the thread
         thread_name = get_next_thread_name(support_channel)
@@ -182,12 +181,12 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         vc_author = interaction.user
         
         if not mod_role:
-            await interaction.response.send_message("Error: Could not find the moderator role. Please contact an administrator.", ephemeral=True)
+            await interaction.response.send_message("Error: Could not find the moderator role. Please create it before using this command.", ephemeral=True)
             return
 
         if not reports_channel:
             await interaction.response.send_message(
-                "Error: Could not find the reports channel. Please contact an administrator.",
+                "Error: Could not find the reports channel. Please create it before using this command.",
                 ephemeral=True
             )
             return
@@ -254,7 +253,6 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         selected_mentor = available_mentors[last_pinged_mentor_index]
         last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
         action_text = f"{selected_mentor.mention} Please join the vc to assist the user."
-        print("last_pinged_mentor_index:", last_pinged_mentor_index)
         
         # create embed for reports channel
         reports_embed = discord.Embed(
