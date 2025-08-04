@@ -12,7 +12,7 @@ export interface ButtonProps extends RACButtonProps {
 }
 
 export const button = tv({
-  base: "inline-flex cursor-pointer items-center justify-center rounded-md font-medium focus:outline-none",
+  base: "inline-flex cursor-pointer items-center justify-center rounded-md font-medium focus:outline-none gap-2",
   variants: {
     variant: {
       skeleton: "",
@@ -29,9 +29,9 @@ export const button = tv({
     },
     size: {
       auto: "",
-      sm: "p-2 text-sm",
-      md: "p-2 text-base",
-      lg: "p-2 text-base",
+      sm: "py-2 px-4 text-sm",
+      md: "py-2 px-4 text-base",
+      lg: "py-2 px-4 text-lg",
     },
   },
 
