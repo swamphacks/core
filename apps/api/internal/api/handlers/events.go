@@ -60,9 +60,7 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// == Validation ==
-	// While encoding/json can accept omitempty and omitzero tags, there is no tag for denoting that a field is required.
-	// This returns error when field containing `tag"required"` is set to a zero value or is missing (e.g. empty string).
+	// Returns error when field containing `tag"required"` is set to a zero value or is missing.
 	fields := reflect.ValueOf(&req).Elem()
 	fmt.Printf("%v\n", fields.NumField())
 	for i := 0; i < fields.NumField(); i++ {
@@ -101,9 +99,7 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		IsPublished:      req.IsPublished,
 	}
 
-	fmt.Printf("req.Description: %v\n", req.Description)
-
-	_, err := h.eventService.CreateEvent(r.Context(), params)
+	event, err := h.eventService.CreateEvent(r.Context(), params)
 	if err != nil {
 		switch err {
 		case services.ErrFailedToCreateEvent:
@@ -113,7 +109,7 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	res.Send(w, http.StatusCreated, event)
 }
 
 func (h *EventHandler) GetEventByID(w http.ResponseWriter, r *http.Request) {
@@ -127,36 +123,18 @@ func (h *EventHandler) GetEventByID(w http.ResponseWriter, r *http.Request) {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
 		return
 	}
-	event, err := h.eventService.GetEventByID(r.Context(), eventId)
 
+	event, err := h.eventService.GetEventByID(r.Context(), eventId)
 	if err != nil {
 		switch err {
+		case services.ErrFailedToGetEvent:
+			res.SendError(w, http.StatusNotFound, res.NewError("no_event", "Event not found"))
 		default:
 			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
 		}
 	}
 
-	eventJson := sqlc.Event{
-		ID:               event.ID,
-		Name:             event.Name,
-		Description:      event.Description,
-		Location:         event.Location,
-		LocationUrl:      event.LocationUrl,
-		MaxAttendees:     event.MaxAttendees,
-		ApplicationOpen:  event.ApplicationOpen,
-		ApplicationClose: event.ApplicationClose,
-		RsvpDeadline:     event.RsvpDeadline,
-		DecisionRelease:  event.DecisionRelease,
-		StartTime:        event.StartTime,
-		EndTime:          event.EndTime,
-		WebsiteUrl:       event.WebsiteUrl,
-		IsPublished:      event.IsPublished,
-		CreatedAt:        event.CreatedAt,
-		UpdatedAt:        event.UpdatedAt,
-	}
-
-	res.Send(w, http.StatusOK, eventJson)
-	w.WriteHeader(http.StatusOK)
+	res.Send(w, http.StatusOK, event)
 }
 
 func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
@@ -172,10 +150,9 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req sqlc.UpdateEventByIdParams
-	// Because sqlc.UpdateEventById() must take in parameters through a sqlc.UpdateEventByIdParams struct, we must inject the eventId from the URL parameters into the struct.
-	// This will override an eventId that is added by the request body, if they mistakenly try to add one there. But if a client fails to add it as a URL parameter, they will get an error anyways.
 	req.ID = eventId
 
+	// TODO: Replace with go-playground/validator equivalant or move
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
 	if err := decoder.Decode(&req); err != nil {
@@ -183,7 +160,7 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.eventService.UpdateEventById(r.Context(), req)
+	event, err := h.eventService.UpdateEventById(r.Context(), req)
 
 	if err != nil {
 		switch err {
@@ -194,7 +171,7 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.WriteHeader(http.StatusNoContent) // We return a 204 for http PATCH requests since nothing is being returned, and we would like to indicate success.
+	res.Send(w, http.StatusOK, event)
 }
 
 func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
@@ -210,21 +187,14 @@ func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 	}
 	err = h.eventService.DeleteEventById(r.Context(), eventId)
 
-	// TODO: throw error on trying to delete a non-existant event
-	fmt.Printf("%v\n", err)
-
 	if err != nil {
 		switch err {
 		case services.ErrFailedToDeleteEvent:
 			res.SendError(w, http.StatusInternalServerError, res.NewError("delete_error", "Failed to delete event"))
-		case services.ErrNoEventsDeleted:
-			res.SendError(w, http.StatusInternalServerError, res.NewError("delete_error", "No events deleted"))
-		case services.ErrMultipleEventsDeleted:
-			res.SendError(w, http.StatusInternalServerError, res.NewError("delete_error", "Multiple events affected by delete request while only expecting one to delete one"))
 		default:
 			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
 		}
 	}
 
-	w.WriteHeader(http.StatusNoContent) // We return a 204 for http DELETE requests since nothing is being returned, and we would like to indicate success.
+	w.WriteHeader(http.StatusNoContent)
 }

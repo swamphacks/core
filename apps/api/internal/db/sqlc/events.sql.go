@@ -20,7 +20,6 @@ INSERT INTO events (
     description, location, location_url, max_attendees,
     rsvp_deadline, decision_release, 
     website_url, is_published 
-    -- saved_at is omitted due to having a default value (NOW) which will not be different if it was an optional param
 ) VALUES (
     -- FIXME: The second parameter in coalesce MUST be the default value created in the schema. I have not found a more automated way to insert the default value.
     $1,
@@ -35,7 +34,7 @@ INSERT INTO events (
     coalesce($12, NULL),
     coalesce($13, FALSE)
 ) 
-RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at
 `
 
 type CreateEventParams struct {
@@ -87,7 +86,6 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.EndTime,
 		&i.WebsiteUrl,
 		&i.IsPublished,
-		&i.SavedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -99,7 +97,7 @@ DELETE FROM events
 WHERE id = $1
 `
 
-// TODO: return error when 0 rows are deleted
+// execrows returns affect row count on top of an error
 func (q *Queries) DeleteEventById(ctx context.Context, id uuid.UUID) (int64, error) {
 	result, err := q.db.Exec(ctx, deleteEventById, id)
 	if err != nil {
@@ -109,7 +107,7 @@ func (q *Queries) DeleteEventById(ctx context.Context, id uuid.UUID) (int64, err
 }
 
 const getEventByID = `-- name: GetEventByID :one
-SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, saved_at, created_at, updated_at FROM events
+SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at FROM events
 WHERE id = $1
 `
 
@@ -131,7 +129,6 @@ func (q *Queries) GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 		&i.EndTime,
 		&i.WebsiteUrl,
 		&i.IsPublished,
-		&i.SavedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -153,10 +150,10 @@ SET
     start_time = coalesce($10, start_time),
     end_time = coalesce($11, end_time),
     website_url = coalesce($12, website_url),
-    is_published = coalesce($13, is_published),
-    saved_at = coalesce($14, is_published)
+    is_published = coalesce($13, is_published)
 WHERE
-    id = $15::uuid
+    id = $14::uuid
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at
 `
 
 type UpdateEventByIdParams struct {
@@ -173,7 +170,6 @@ type UpdateEventByIdParams struct {
 	EndTime          *time.Time `json:"end_time"`
 	WebsiteUrl       *string    `json:"website_url"`
 	IsPublished      *bool      `json:"is_published"`
-	SavedAt          *time.Time `json:"saved_at"`
 	ID               uuid.UUID  `json:"id"`
 }
 
@@ -192,7 +188,6 @@ func (q *Queries) UpdateEventById(ctx context.Context, arg UpdateEventByIdParams
 		arg.EndTime,
 		arg.WebsiteUrl,
 		arg.IsPublished,
-		arg.SavedAt,
 		arg.ID,
 	)
 	return err

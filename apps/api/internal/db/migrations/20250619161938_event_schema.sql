@@ -2,7 +2,6 @@
 -- +goose StatementBegin
 CREATE TABLE events (
     -- IMPORTANT: Double check INSERT queries after making changes to default values here, since any optional parameters must have its default value match.
-    -- FIXME: Default value for saved_at not being created after insert.
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     description TEXT,
@@ -23,7 +22,6 @@ CREATE TABLE events (
     -- Metadata
     website_url TEXT,
     is_published BOOLEAN DEFAULT FALSE,
-    saved_at TIMESTAMPTZ DEFAULT NOW(),
 
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

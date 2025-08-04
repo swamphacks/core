@@ -11,12 +11,10 @@ import (
 )
 
 var (
-	ErrFailedToCreateEvent   = errors.New("failed to create event")
-	ErrFailedToGetEvent      = errors.New("failed to get event")
-	ErrFailedToUpdateEvent   = errors.New("failed to update event")
-	ErrFailedToDeleteEvent   = errors.New("failed to delete event")
-	ErrNoEventsDeleted       = errors.New("no events deleted")
-	ErrMultipleEventsDeleted = errors.New("multiple events affected by delete query while only expecting one to delete one")
+	ErrFailedToCreateEvent = errors.New("failed to create event")
+	ErrFailedToGetEvent    = errors.New("failed to get event")
+	ErrFailedToUpdateEvent = errors.New("failed to update event")
+	ErrFailedToDeleteEvent = errors.New("failed to delete event")
 )
 
 type EventService struct {
@@ -32,49 +30,67 @@ func NewEventService(eventRepo *repository.EventRepository, logger zerolog.Logge
 }
 
 func (s *EventService) CreateEvent(ctx context.Context, params sqlc.CreateEventParams) (*sqlc.Event, error) {
-	result, err := s.eventRepo.CreateEvent(ctx, params)
+	event, err := s.eventRepo.CreateEvent(ctx, params)
 	if err != nil {
-		s.logger.Err(err).Msg("An unkown error was caught!")
+		switch err {
+		case repository.ErrEventNotFound:
+			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
+		default:
+			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
+		}
 		return nil, ErrFailedToCreateEvent
 	}
 
-	return result, nil
+	return event, nil
 }
 
 func (s *EventService) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Event, error) {
-	result, err := s.eventRepo.GetEventByID(ctx, id)
+	event, err := s.eventRepo.GetEventByID(ctx, id)
 	if err != nil {
-		s.logger.Err(err).Msg("An unkown error was caught!")
+		switch err {
+		case repository.ErrEventNotFound:
+			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
+		default:
+			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
+		}
 		return nil, ErrFailedToGetEvent
 	}
 
-	return result, nil
+	return event, nil
 }
 
-func (s *EventService) UpdateEventById(ctx context.Context, params sqlc.UpdateEventByIdParams) error {
+func (s *EventService) UpdateEventById(ctx context.Context, params sqlc.UpdateEventByIdParams) (*sqlc.Event, error) {
 	err := s.eventRepo.UpdateEventById(ctx, params)
 	if err != nil {
-		s.logger.Err(err).Msg("An unkown error was caught!")
-		return ErrFailedToUpdateEvent
+		switch err {
+		case repository.ErrEventNotFound:
+			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
+		default:
+			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
+		}
+		return nil, ErrFailedToUpdateEvent
 	}
 
-	return nil
+	event, err := s.eventRepo.GetEventByID(ctx, params.ID)
+
+	return event, err
 }
 
 func (s *EventService) DeleteEventById(ctx context.Context, id uuid.UUID) error {
-	affectedRows, err := s.eventRepo.DeleteEventById(ctx, id)
+	err := s.eventRepo.DeleteEventById(ctx, id)
 	if err != nil {
-		s.logger.Err(err).Msg("An unkown error was caught!")
-		return ErrFailedToUpdateEvent
-	}
-	if affectedRows == 0 {
-		s.logger.Err(err).Msg("Error deleting event")
-		return ErrNoEventsDeleted
-	}
-	if affectedRows > 1 {
-		s.logger.Err(err).Msg("Error deleting event")
-		return ErrMultipleEventsDeleted
+		switch err {
+		case repository.ErrEventNotFound:
+			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
+		case repository.ErrNoEventsDeleted:
+			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
+		case repository.ErrMultipleEventsDeleted:
+			s.logger.Err(err).Msg(repository.ErrMultipleEventsDeleted.Error())
+		default:
+			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
+		}
+		return ErrFailedToDeleteEvent
 	}
 
-	return nil
+	return err
 }

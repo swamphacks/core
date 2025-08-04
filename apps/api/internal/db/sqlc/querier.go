@@ -23,7 +23,7 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (AuthUser, error)
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) error
 	DeleteApplication(ctx context.Context, arg DeleteApplicationParams) error
-	// TODO: return error when 0 rows are deleted
+	// execrows returns affect row count on top of an error
 	DeleteEventById(ctx context.Context, id uuid.UUID) (int64, error)
 	DeleteExpiredSession(ctx context.Context) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
