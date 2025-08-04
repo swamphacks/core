@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { useTheme } from "@/components/ThemeProvider";
 import IcBaselineDiscord from "~icons/ic/baseline-discord";
 
-import { useSearch } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
 import { auth } from "@/lib/authClient";
 
 const Logo = ({ src }: { src: string }) => {
@@ -37,7 +37,15 @@ const Login = () => {
         Log in with Discord
       </Button>
       <p className="w-[75%] text-xs text-center mb-5 text-text-secondary">
-        By logging in, you agree to our Terms of Service and Privacy Policy.
+        By logging in, you agree to our{" "}
+        <Link to="/terms" className="underline text-blue-400">
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link to="/privacy" className="underline text-blue-400">
+          Privacy Policy
+        </Link>
+        .
       </p>
     </div>
   );
