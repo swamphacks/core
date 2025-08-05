@@ -2,7 +2,6 @@ import { Form, useAppForm, useFormErrors } from "@/components/Form";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { FieldGroup } from "@/components/ui/Field";
 import { Radio } from "@/components/ui/Radio";
-import { SelectItem } from "@/components/ui/Select";
 import {
   type FormItemSchemaType,
   type FormObject,
@@ -21,10 +20,9 @@ import {
   ShortAnswerQuestion,
   UploadQuestion,
 } from "@/features/FormBuilder/questions";
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import z from "zod";
 import { QuestionTypes } from "@/features/FormBuilder/types";
-import { ComboBoxItem } from "@/components/ui/ComboBox";
 // import { FormValidationContext } from "react-stately";
 // import { FormContext } from "react-aria-components";
 // import { useStore } from "@tanstack/react-form";
@@ -137,7 +135,7 @@ export function build(formObject: FormObject): () => ReactNode {
                         type="text"
                         autoComplete="off"
                         className="flex-1"
-                        // validationBehavior="aria"
+                        validationBehavior="aria"
                       />
                     );
                   case QuestionTypes.paragraph:
@@ -194,40 +192,27 @@ export function build(formObject: FormObject): () => ReactNode {
                       </field.CheckboxField>
                     );
                   case QuestionTypes.select:
-                    return item.searchable ? (
-                      <field.ComboBoxField
-                        {...newItem}
-                        name={field.name}
-                        className="flex-1"
-                        validationBehavior="aria"
-                      >
-                        {item.options.map((option) => (
-                          <ComboBoxItem key={option.value} id={option.value}>
-                            {option.label}
-                          </ComboBoxItem>
-                        ))}
-                      </field.ComboBoxField>
-                    ) : (
-                      <field.SelectField
-                        {...newItem}
-                        name={field.name}
-                        className="flex-1"
-                        validationBehavior="aria"
-                      >
-                        {item.options.map((option) => (
-                          <SelectItem key={option.value} id={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </field.SelectField>
+                    return (
+                      <SelectField
+                        item={
+                          newItem as Extract<
+                            FormItemSchemaType,
+                            { questionType: "select" }
+                          >
+                        }
+                        field={field}
+                      />
                     );
                   case QuestionTypes.multiselect:
                     return (
-                      <field.MultiSelectField
-                        {...newItem}
-                        name={field.name}
-                        options={item.options}
-                        validationBehavior="aria"
+                      <MultiSelectField
+                        item={
+                          newItem as Extract<
+                            FormItemSchemaType,
+                            { questionType: "multiselect" }
+                          >
+                        }
+                        field={field}
                       />
                     );
                   case QuestionTypes.date:
@@ -245,7 +230,6 @@ export function build(formObject: FormObject): () => ReactNode {
                         {...newItem}
                         name={field.name}
                         validationBehavior="aria"
-                        // description="Allowed file types: .pdf, .docx"
                       />
                     );
                   default:
@@ -349,4 +333,89 @@ export function build(formObject: FormObject): () => ReactNode {
       </div>
     );
   };
+}
+
+function SelectField({
+  item,
+  field,
+}: {
+  item: Extract<FormItemSchemaType, { questionType: "select" }>;
+  field: any;
+}) {
+  const [data, setData] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (typeof item.options === "object" && "data" in item.options) {
+      const data = item.options.data;
+
+      // TODO: where should we put these json files? is it already cached?
+      if (data === "schools") {
+        import(`./scripts/schools.json`).then((schools) => {
+          setData(schools.default);
+        });
+      } else if (data === "majors") {
+        import(`./scripts/majors.json`).then((majors) => {
+          setData(majors.default);
+        });
+      }
+    }
+  }, []);
+
+  return item.searchable ? (
+    <field.ComboBoxField
+      {...item}
+      name={field.name}
+      className="flex-1"
+      validationBehavior="aria"
+      virtualized={data.length > 100}
+      items={Array.isArray(item.options) ? item.options : data}
+    />
+  ) : (
+    <field.SelectField
+      {...item}
+      name={field.name}
+      className="flex-1"
+      validationBehavior="aria"
+      virtualized={data.length > 100}
+      items={Array.isArray(item.options) ? item.options : data}
+    />
+  );
+}
+
+function MultiSelectField({
+  item,
+  field,
+}: {
+  item: Extract<FormItemSchemaType, { questionType: "multiselect" }>;
+  field: any;
+}) {
+  const [data, setData] = useState<{ label: string; value: string }[]>([]);
+
+  const transformData = (data: { id: string; name: string }[]) =>
+    data.map((item) => ({ label: item.name, value: item.id }));
+
+  useEffect(() => {
+    if (typeof item.options === "object" && "data" in item.options) {
+      const data = item.options.data;
+
+      if (data === "schools") {
+        import(`./scripts/schools.json`).then((schools) => {
+          setData(transformData(schools.default));
+        });
+      } else if (data === "majors") {
+        import(`./scripts/majors.json`).then((majors) => {
+          setData(transformData(majors.default));
+        });
+      }
+    }
+  }, []);
+
+  return (
+    <field.MultiSelectField
+      {...item}
+      name={field.name}
+      options={Array.isArray(item.options) ? item.options : data}
+      validationBehavior="aria"
+    />
+  );
 }

@@ -57,7 +57,9 @@
       "name": "upload",
       "questionType": "upload",
       "label": "Upload your resume",
-      "required": true
+      "validation": {
+        "validMimeTypes": ["application/pdf"]
+      }
     }
   ]
 }

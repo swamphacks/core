@@ -136,11 +136,10 @@
               "placeholder": "Select your school",
               "label": "School",
               "required": true,
-              "options": [
-                { "label": "University of Florida", "value": "UF" },
-                { "label": "University of Central Florida", "value": "UCF" },
-                { "label": "Florida State University", "value": "FSU" }
-              ]
+              "searchable": true,
+              "options": {
+                "data": "schools"
+              }
             },
             {
               "type": "question",
@@ -208,32 +207,19 @@
           "placeholder": "Select your major(s)",
           "label": "Major(s)",
           "required": true,
-          "options": [
-            { "label": "Math", "value": "math" },
-            { "label": "Computer Science", "value": "computer science" },
-            {
-              "label": "this select should be populated programmatically",
-              "value": "3"
-            }
-          ]
+          "options": {
+            "data": "majors"
+          }
         },
 
         {
           "type": "question",
           "id": "minors",
           "name": "minors",
-          "questionType": "multiselect",
-          "placeholder": "Select your minor(s)",
+          "questionType": "shortAnswer",
+          "placeholder": "Enter your minor(s)",
           "label": "Minor(s)",
-          "required": true,
-          "options": [
-            { "label": "Math", "value": "math" },
-            { "label": "Computer Science", "value": "computer science" },
-            {
-              "label": "this select should be populated programmatically",
-              "value": "3"
-            }
-          ]
+          "required": true
         }
       ]
     },

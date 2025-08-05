@@ -16,12 +16,16 @@ export const NumberQuestion = createQuestionItem({
   }),
 
   extractValidationSchemaFromItem: (item) => {
-    const schema = z
-      .string("Fill out this field.")
-      .transform((val) => parseInt(val));
+    let schema = z.string("Fill out this field.");
+
+    if (item.required) {
+      schema = schema.min(1, "Fill out this field");
+    }
+
+    const newSchema = schema.transform((val) => parseInt(val));
 
     const { validation } = item;
-    if (!validation) return schema;
+    if (!validation) return newSchema;
 
     let numberSchema = z.number();
 
@@ -33,6 +37,6 @@ export const NumberQuestion = createQuestionItem({
       numberSchema = numberSchema.max(validation.max, "Number is too big.");
     }
 
-    return schema.pipe(numberSchema);
+    return newSchema.pipe(numberSchema);
   },
 });

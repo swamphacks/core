@@ -17,6 +17,10 @@ export const ShortAnswerQuestion = createQuestionItem({
   extractValidationSchemaFromItem: (item) => {
     let schema = z.string("Fill out this field.");
 
+    if (item.required) {
+      schema = schema.min(1, "Fill out this field.");
+    }
+
     const { validation } = item;
     if (!validation) return schema;
 
