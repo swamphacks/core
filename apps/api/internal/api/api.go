@@ -34,11 +34,10 @@ func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers, middleware *mw.
 }
 
 func (api *API) setupRoutes(mw *mw.Middleware) {
-	// var (
-	// ensureSuperuser = mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleSuperuser)
-	// TODO: write middleware for RequireEventRole()
-	// ensureEventAdmin     = mw.Auth.RequirePlatformRole(sqlc.EventRoleTypeAdmin)
-	// )
+	var (
+		ensureSuperuser  = mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleSuperuser)
+		ensureEventAdmin = mw.Event.RequireEventRole(sqlc.EventRoleTypeAdmin)
+	)
 
 	api.Router.Use(middleware.Logger)
 	api.Router.Use(middleware.RealIP)
@@ -74,13 +73,11 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// Event routes
 	api.Router.Route("/event", func(r chi.Router) {
-		// r.With(ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
-		r.Post("/", api.Handlers.Event.CreateEvent)
+		r.With(ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
 		r.Route("/{eventId}", func(r chi.Router) {
-			// r.With(ensureAdmin, ensureSuperuser).Patch("/", api.Handlers.Event.UpdateEventById)
+			r.With(ensureEventAdmin, ensureSuperuser).Patch("/", api.Handlers.Event.UpdateEventById)
 			r.Patch("/", api.Handlers.Event.UpdateEventById)
-			// r.With(ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
-			r.Delete("/", api.Handlers.Event.DeleteEventById)
+			r.With(ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
 		})
