@@ -37,7 +37,7 @@ export function _oauthSignIn<T extends AuthConfig>(config: T) {
     Cookies.set("sh_auth_nonce", state.nonce, {
       path: "/",
       sameSite: "lax",
-      secure: true,
+      secure: import.meta.env.DEV ? false : true,
     });
 
     const params = createOAuthRequestParams(
