@@ -86,15 +86,6 @@ export function getFormValidationSchema(
   return z.object(schema);
 }
 
-// TODO:
-// Better error handling
-// json file upload?
-// file upload (resumes)
-// handle input icons?
-
-// add date picker
-// add file upload
-
 export function build(formObject: FormObject): () => ReactNode {
   const { error, data } = FormSchema.safeParse(formObject);
 

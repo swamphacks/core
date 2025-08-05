@@ -31,18 +31,19 @@ export const UploadQuestion = createQuestionItem({
     const { validation } = item;
     if (!validation) return z.array(schema, "File(s) must be uploaded.");
 
-    const { maxSize = 10 } = validation;
-
-    if (Array.isArray(validation.validMimeTypes)) {
-      schema = schema.mime(validation.validMimeTypes);
+    if (validation.validMimeTypes) {
+      schema = z.file().mime(validation.validMimeTypes, "Invalid file type");
     }
 
-    if (Array.isArray(validation.invalidMimeTypes)) {
+    if (validation.invalidMimeTypes) {
       schema = schema.refine(
         (file) => !validation.invalidMimeTypes?.includes(file.type),
         "Invalid file type.",
       );
     }
+
+    // default 5MB
+    const { maxSize = 5 * 1024 * 1024 } = validation;
 
     schema = schema.refine((file) => {
       if (validation.minSize) {
@@ -52,6 +53,30 @@ export const UploadQuestion = createQuestionItem({
       return file.size <= maxSize;
     }, "File size is not within range.");
 
-    return z.array(schema);
+    const flattenedArraySchema = z.any().check((ctx) => {
+      if (!Array.isArray(ctx.value)) {
+        ctx.issues.push({
+          code: "custom",
+          message: "File(s) must be uploaded.",
+          input: ctx.value,
+        });
+        return;
+      }
+
+      for (const file of ctx.value) {
+        const result = schema.safeParse(file);
+        if (!result.success) {
+          for (const issue of result.error.issues) {
+            ctx.issues.push({
+              code: "custom",
+              message: issue.message,
+              input: ctx.value,
+            });
+          }
+        }
+      }
+    });
+
+    return flattenedArraySchema;
   },
 });
