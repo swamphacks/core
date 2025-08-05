@@ -2,13 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"reflect"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
@@ -33,11 +31,11 @@ func NewEventHandler(eventService *services.EventService, cfg *config.Config, lo
 
 // Be very careful with the types in this struct. If a type is not a pointer (pointer types allow a null value), and the field is not present in the json body, its default value will be passed to the SQL query, and be a non-null value will be put into coalese(), which will then make a NULL value impossible and instead make the default value the type's zero value in Go.
 type CreateEventFields struct {
-	Name             string     `json:"name" tag:"required"`
-	ApplicationOpen  time.Time  `json:"application_open" tag:"required"`
-	ApplicationClose time.Time  `json:"application_close" tag:"required"`
-	StartTime        time.Time  `json:"start_time" tag:"required"`
-	EndTime          time.Time  `json:"end_time" tag:"required"`
+	Name             string     `json:"name" validate:"required,min=5,max=30"`
+	ApplicationOpen  time.Time  `json:"application_open" validate:"required"`
+	ApplicationClose time.Time  `json:"application_close" validate:"required"`
+	StartTime        time.Time  `json:"start_time" validate:"required"`
+	EndTime          time.Time  `json:"end_time" validate:"required"`
 	Description      *string    `json:"description"`
 	Location         *string    `json:"location"`
 	LocationUrl      *string    `json:"location_url"`
@@ -76,15 +74,9 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Returns error when field containing `tag"required"` is set to a zero value or is missing.
-	fields := reflect.ValueOf(&req).Elem()
-	fmt.Printf("%v\n", fields.NumField())
-	for i := 0; i < fields.NumField(); i++ {
-		tags := fields.Type().Field(i).Tag.Get("tag")
-		if strings.Contains(tags, "required") && fields.Field(i).IsZero() {
-			res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", fmt.Sprintf("Required field is empty or missing: %v", fields.Type().Field(i).Tag.Get("json"))))
-			return
-		}
+	validate := validator.New()
+	if err := validate.Struct(req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", err.Error()))
 	}
 
 	if !req.ValidateTimeFields() {
