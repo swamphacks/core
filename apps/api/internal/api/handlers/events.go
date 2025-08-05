@@ -48,6 +48,22 @@ type CreateEventFields struct {
 	IsPublished      *bool      `json:"is_published"`
 }
 
+func (st CreateEventFields) ValidateTimeFields() bool {
+	if st.ApplicationClose.Before(st.ApplicationOpen) || st.ApplicationClose.Equal(st.ApplicationOpen) {
+		return false
+	}
+	if st.EndTime.Before(st.StartTime) || st.EndTime.Equal(st.StartTime) {
+		return false
+	}
+	if st.ApplicationOpen.Before(time.Now()) ||
+		st.ApplicationClose.Before(time.Now()) ||
+		st.StartTime.Before(time.Now()) ||
+		st.EndTime.Before(time.Now()) {
+		return false
+	}
+	return true
+}
+
 func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 	// Parse JSON body
@@ -71,16 +87,9 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Time checks
-	// Open/Close and Start/End blocks are allowed to overlap, as an event could have an open application while it is ongoing, so a comparison between the two is omitted.
-	if !req.ApplicationClose.After(req.ApplicationOpen) || req.ApplicationClose.Equal(req.ApplicationOpen) {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "'application_open' must be before 'application_close'"))
-	}
-	if !req.EndTime.After(req.StartTime) || req.EndTime.Equal(req.StartTime) {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "'start_time' must be before 'end_time'"))
-	}
-	if req.ApplicationOpen.Before(time.Now()) || req.ApplicationClose.Before(time.Now()) || req.StartTime.Before(time.Now()) || req.EndTime.Before(time.Now()) {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "Event and application periods must not take place before the current time"))
+	if !req.ValidateTimeFields() {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_time", "Time fields must be sequential and not in the past."))
+		return
 	}
 
 	params := sqlc.CreateEventParams{
