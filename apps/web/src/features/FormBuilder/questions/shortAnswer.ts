@@ -2,10 +2,14 @@ import { createQuestionItem } from "@/features/FormBuilder/questions/createQuest
 import { QuestionTypes } from "@/features/FormBuilder/types";
 import z from "zod";
 import { BaseQuestion } from "./baseQuestion";
+import { textFieldIcons } from "@/features/FormBuilder/icons";
 
 export const ShortAnswerQuestion = createQuestionItem({
   schema: BaseQuestion.extend({
     questionType: z.literal(QuestionTypes.shortAnswer),
+    iconName: z
+      .enum(Object.keys(textFieldIcons) as Array<keyof typeof textFieldIcons>)
+      .optional(),
     validation: z
       .object({
         maxLength: z.number(),

@@ -67,6 +67,7 @@
               "placeholder": "Enter a phone number",
               "label": "Phone",
               "required": true,
+              "iconName": "phone",
               "validation": {
                 "maxLength": 15
               }
@@ -84,7 +85,8 @@
               "questionType": "shortAnswer",
               "placeholder": "Enter your email",
               "label": "Preferred Email",
-              "required": true
+              "required": true,
+              "iconName": "at"
             },
 
             {
@@ -94,7 +96,8 @@
               "questionType": "shortAnswer",
               "placeholder": "Enter your school email",
               "label": "University Email",
-              "required": true
+              "required": true,
+              "iconName": "at"
             }
           ]
         },
@@ -105,7 +108,8 @@
           "questionType": "shortAnswer",
           "placeholder": "Enter link",
           "label": "Linkedin URL",
-          "required": true
+          "required": true,
+          "iconName": "linkedin"
         },
         {
           "type": "question",
@@ -114,7 +118,8 @@
           "questionType": "shortAnswer",
           "placeholder": "Enter link",
           "label": "Github URL",
-          "required": true
+          "required": true,
+          "iconName": "github"
         }
       ]
     },

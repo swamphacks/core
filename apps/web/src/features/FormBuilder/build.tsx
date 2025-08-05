@@ -23,6 +23,7 @@ import {
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import z from "zod";
 import { QuestionTypes } from "@/features/FormBuilder/types";
+import { textFieldIcons } from "@/features/FormBuilder/icons";
 // import { FormValidationContext } from "react-stately";
 // import { FormContext } from "react-aria-components";
 // import { useStore } from "@tanstack/react-form";
@@ -136,6 +137,11 @@ export function build(formObject: FormObject): () => ReactNode {
                         autoComplete="off"
                         className="flex-1"
                         validationBehavior="aria"
+                        icon={
+                          item.iconName
+                            ? textFieldIcons[item.iconName]
+                            : undefined
+                        }
                       />
                     );
                   case QuestionTypes.paragraph:
