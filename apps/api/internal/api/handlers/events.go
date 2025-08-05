@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -102,10 +103,9 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 	event, err := h.eventService.CreateEvent(r.Context(), params)
 	if err != nil {
-		switch err {
-		case services.ErrFailedToCreateEvent:
+		if err == services.ErrFailedToCreateEvent {
 			res.SendError(w, http.StatusInternalServerError, res.NewError("creation_error", "Failed to create event"))
-		default:
+		} else {
 			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
 		}
 	}
@@ -151,15 +151,31 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req sqlc.UpdateEventByIdParams
-	req.ID = eventId
 
-	// TODO: Replace with go-playground/validator equivalant or move
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
 	if err := decoder.Decode(&req); err != nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Invalid request body"))
 		return
 	}
+
+	// Refactorme: could be improved by unmarshalling values into a generic that can include nil information
+	// Todo: make sure that non nullable values can't be updated to null
+	// Todo: Time validation
+	req.NameDoUpdate = reflect.ValueOf(req.Name).IsValid()
+	req.DescriptionDoUpdate = reflect.ValueOf(req.Description).IsValid()
+	req.LocationDoUpdate = reflect.ValueOf(req.Location).IsValid()
+	req.LocationUrlDoUpdate = reflect.ValueOf(req.LocationUrl).IsValid()
+	req.MaxAttendeesDoUpdate = reflect.ValueOf(req.MaxAttendees).IsValid()
+	req.ApplicationOpenDoUpdate = reflect.ValueOf(req.ApplicationOpen).IsValid()
+	req.ApplicationCloseDoUpdate = reflect.ValueOf(req.ApplicationClose).IsValid()
+	req.RsvpDeadlineDoUpdate = reflect.ValueOf(req.RsvpDeadline).IsValid()
+	req.DecisionReleaseDoUpdate = reflect.ValueOf(req.DecisionRelease).IsValid()
+	req.StartTimeDoUpdate = reflect.ValueOf(req.StartTime).IsValid()
+	req.EndTimeDoUpdate = reflect.ValueOf(req.EndTime).IsValid()
+	req.WebsiteUrlDoUpdate = reflect.ValueOf(req.WebsiteUrl).IsValid()
+	req.IsPublishedDoUpdate = reflect.ValueOf(req.IsPublished).IsValid()
+	req.ID = eventId
 
 	event, err := h.eventService.UpdateEventById(r.Context(), req)
 

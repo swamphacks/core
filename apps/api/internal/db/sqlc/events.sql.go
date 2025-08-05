@@ -53,7 +53,6 @@ type CreateEventParams struct {
 	IsPublished      interface{} `json:"is_published"`
 }
 
-// TODO: allow optional parameters
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
 	row := q.db.QueryRow(ctx, createEvent,
 		arg.Name,
@@ -138,55 +137,97 @@ func (q *Queries) GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 const updateEventById = `-- name: UpdateEventById :exec
 UPDATE events
 SET
-    name = coalesce($1, name),
-    description = coalesce($2, description),
-    location = coalesce($3, location),
-    location_url = coalesce($4, location_url),
-    max_attendees = coalesce($5, max_attendees),
-    application_open = coalesce($6, application_open),
-    application_close = coalesce($7, application_close),
-    rsvp_deadline = coalesce($8, rsvp_deadline),
-    decision_release = coalesce($9, decision_release),
-    start_time = coalesce($10, start_time),
-    end_time = coalesce($11, end_time),
-    website_url = coalesce($12, website_url),
-    is_published = coalesce($13, is_published)
+    
+    -- status = CASE WHEN @status_do_update::boolean THEN @status::application_status ELSE status END,
+    name = CASE WHEN $1::boolean THEN $2 ELSE name END,
+    description = CASE WHEN $3::boolean THEN $4 ELSE description END,
+    location = CASE WHEN $5::boolean THEN $6 ELSE location END,
+    location_url = CASE WHEN $7::boolean THEN $8 ELSE location_url END,
+    max_attendees = CASE WHEN $9::boolean THEN $10 ELSE max_attendees END,
+    application_open = CASE WHEN $11::boolean THEN $12 ELSE application_open END,
+    application_close = CASE WHEN $13::boolean THEN $14 ELSE application_close END,
+    rsvp_deadline = CASE WHEN $15::boolean THEN $16 ELSE rsvp_deadline END,
+    decision_release = CASE WHEN $17::boolean THEN $18 ELSE decision_release END,
+    start_time = CASE WHEN $19::boolean THEN $20 ELSE start_time END,
+    end_time = CASE WHEN $21::boolean THEN $22 ELSE end_time END,
+    website_url = CASE WHEN $23::boolean THEN $24 ELSE website_url END,
+    is_published = CASE WHEN $25::boolean THEN $26 ELSE is_published END
+    
+    -- name = coalesce(sqlc.narg('name'), name),
+    -- description = coalesce(sqlc.narg('description'), description),
+    -- location = coalesce(sqlc.narg('location'), location),
+    -- location_url = coalesce(sqlc.narg('location_url'), location_url),
+    -- max_attendees = coalesce(sqlc.narg('max_attendees'), max_attendees),
+    -- application_open = coalesce(sqlc.narg('application_open'), application_open),
+    -- application_close = coalesce(sqlc.narg('application_close'), application_close),
+    -- rsvp_deadline = coalesce(sqlc.narg('rsvp_deadline'), rsvp_deadline),
+    -- decision_release = coalesce(sqlc.narg('decision_release'), decision_release),
+    -- start_time = coalesce(sqlc.narg('start_time'), start_time),
+    -- end_time = coalesce(sqlc.narg('end_time'), end_time),
+    -- website_url = coalesce(sqlc.narg('website_url'), website_url),
+    -- is_published = coalesce(sqlc.narg('is_published'), is_published)
 WHERE
-    id = $14::uuid
+    id = $27::uuid
 RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at
 `
 
 type UpdateEventByIdParams struct {
-	Name             *string    `json:"name"`
-	Description      *string    `json:"description"`
-	Location         *string    `json:"location"`
-	LocationUrl      *string    `json:"location_url"`
-	MaxAttendees     *int32     `json:"max_attendees"`
-	ApplicationOpen  *time.Time `json:"application_open"`
-	ApplicationClose *time.Time `json:"application_close"`
-	RsvpDeadline     *time.Time `json:"rsvp_deadline"`
-	DecisionRelease  *time.Time `json:"decision_release"`
-	StartTime        *time.Time `json:"start_time"`
-	EndTime          *time.Time `json:"end_time"`
-	WebsiteUrl       *string    `json:"website_url"`
-	IsPublished      *bool      `json:"is_published"`
-	ID               uuid.UUID  `json:"id"`
+	NameDoUpdate             bool       `json:"name_do_update"`
+	Name                     string     `json:"name"`
+	DescriptionDoUpdate      bool       `json:"description_do_update"`
+	Description              *string    `json:"description"`
+	LocationDoUpdate         bool       `json:"location_do_update"`
+	Location                 *string    `json:"location"`
+	LocationUrlDoUpdate      bool       `json:"location_url_do_update"`
+	LocationUrl              *string    `json:"location_url"`
+	MaxAttendeesDoUpdate     bool       `json:"max_attendees_do_update"`
+	MaxAttendees             *int32     `json:"max_attendees"`
+	ApplicationOpenDoUpdate  bool       `json:"application_open_do_update"`
+	ApplicationOpen          time.Time  `json:"application_open"`
+	ApplicationCloseDoUpdate bool       `json:"application_close_do_update"`
+	ApplicationClose         time.Time  `json:"application_close"`
+	RsvpDeadlineDoUpdate     bool       `json:"rsvp_deadline_do_update"`
+	RsvpDeadline             *time.Time `json:"rsvp_deadline"`
+	DecisionReleaseDoUpdate  bool       `json:"decision_release_do_update"`
+	DecisionRelease          *time.Time `json:"decision_release"`
+	StartTimeDoUpdate        bool       `json:"start_time_do_update"`
+	StartTime                time.Time  `json:"start_time"`
+	EndTimeDoUpdate          bool       `json:"end_time_do_update"`
+	EndTime                  time.Time  `json:"end_time"`
+	WebsiteUrlDoUpdate       bool       `json:"website_url_do_update"`
+	WebsiteUrl               *string    `json:"website_url"`
+	IsPublishedDoUpdate      bool       `json:"is_published_do_update"`
+	IsPublished              *bool      `json:"is_published"`
+	ID                       uuid.UUID  `json:"id"`
 }
 
 func (q *Queries) UpdateEventById(ctx context.Context, arg UpdateEventByIdParams) error {
 	_, err := q.db.Exec(ctx, updateEventById,
+		arg.NameDoUpdate,
 		arg.Name,
+		arg.DescriptionDoUpdate,
 		arg.Description,
+		arg.LocationDoUpdate,
 		arg.Location,
+		arg.LocationUrlDoUpdate,
 		arg.LocationUrl,
+		arg.MaxAttendeesDoUpdate,
 		arg.MaxAttendees,
+		arg.ApplicationOpenDoUpdate,
 		arg.ApplicationOpen,
+		arg.ApplicationCloseDoUpdate,
 		arg.ApplicationClose,
+		arg.RsvpDeadlineDoUpdate,
 		arg.RsvpDeadline,
+		arg.DecisionReleaseDoUpdate,
 		arg.DecisionRelease,
+		arg.StartTimeDoUpdate,
 		arg.StartTime,
+		arg.EndTimeDoUpdate,
 		arg.EndTime,
+		arg.WebsiteUrlDoUpdate,
 		arg.WebsiteUrl,
+		arg.IsPublishedDoUpdate,
 		arg.IsPublished,
 		arg.ID,
 	)

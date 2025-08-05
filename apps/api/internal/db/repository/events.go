@@ -12,9 +12,10 @@ import (
 
 var (
 	ErrEventNotFound         = errors.New("event not found")
+	ErrDuplicateEvent        = errors.New("event already exists in database")
 	ErrNoEventsDeleted       = errors.New("no events deleted")
 	ErrMultipleEventsDeleted = errors.New("multiple events affected by delete query while only expecting one to delete one")
-	ErrUnknown               = errors.New("An unkown error was caught!")
+	ErrUnknown               = errors.New("an unkown error was caught")
 )
 
 type EventRepository struct {
@@ -29,6 +30,9 @@ func NewEventRespository(db *db.DB) *EventRepository {
 
 func (r *EventRepository) CreateEvent(ctx context.Context, params sqlc.CreateEventParams) (*sqlc.Event, error) {
 	event, err := r.db.Query.CreateEvent(ctx, params)
+	if db.IsUniqueViolation(err) {
+		return nil, ErrDuplicateEvent
+	}
 	return &event, err
 }
 

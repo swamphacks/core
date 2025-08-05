@@ -29,19 +29,19 @@ WHERE id = $1;
 -- name: UpdateEventById :exec
 UPDATE events
 SET
-    name = coalesce(sqlc.narg('name'), name),
-    description = coalesce(sqlc.narg('description'), description),
-    location = coalesce(sqlc.narg('location'), location),
-    location_url = coalesce(sqlc.narg('location_url'), location_url),
-    max_attendees = coalesce(sqlc.narg('max_attendees'), max_attendees),
-    application_open = coalesce(sqlc.narg('application_open'), application_open),
-    application_close = coalesce(sqlc.narg('application_close'), application_close),
-    rsvp_deadline = coalesce(sqlc.narg('rsvp_deadline'), rsvp_deadline),
-    decision_release = coalesce(sqlc.narg('decision_release'), decision_release),
-    start_time = coalesce(sqlc.narg('start_time'), start_time),
-    end_time = coalesce(sqlc.narg('end_time'), end_time),
-    website_url = coalesce(sqlc.narg('website_url'), website_url),
-    is_published = coalesce(sqlc.narg('is_published'), is_published)
+    name = CASE WHEN @name_do_update::boolean THEN @name ELSE name END,
+    description = CASE WHEN @description_do_update::boolean THEN @description ELSE description END,
+    location = CASE WHEN @location_do_update::boolean THEN @location ELSE location END,
+    location_url = CASE WHEN @location_url_do_update::boolean THEN @location_url ELSE location_url END,
+    max_attendees = CASE WHEN @max_attendees_do_update::boolean THEN @max_attendees ELSE max_attendees END,
+    application_open = CASE WHEN @application_open_do_update::boolean THEN @application_open ELSE application_open END,
+    application_close = CASE WHEN @application_close_do_update::boolean THEN @application_close ELSE application_close END,
+    rsvp_deadline = CASE WHEN @rsvp_deadline_do_update::boolean THEN @rsvp_deadline ELSE rsvp_deadline END,
+    decision_release = CASE WHEN @decision_release_do_update::boolean THEN @decision_release ELSE decision_release END,
+    start_time = CASE WHEN @start_time_do_update::boolean THEN @start_time ELSE start_time END,
+    end_time = CASE WHEN @end_time_do_update::boolean THEN @end_time ELSE end_time END,
+    website_url = CASE WHEN @website_url_do_update::boolean THEN @website_url ELSE website_url END,
+    is_published = CASE WHEN @is_published_do_update::boolean THEN @is_published ELSE is_published END
 WHERE
     id = @id::uuid
 RETURNING *;

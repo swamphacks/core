@@ -32,10 +32,9 @@ func NewEventService(eventRepo *repository.EventRepository, logger zerolog.Logge
 func (s *EventService) CreateEvent(ctx context.Context, params sqlc.CreateEventParams) (*sqlc.Event, error) {
 	event, err := s.eventRepo.CreateEvent(ctx, params)
 	if err != nil {
-		switch err {
-		case repository.ErrEventNotFound:
+		if err == repository.ErrEventNotFound {
 			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
-		default:
+		} else {
 			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
 		}
 		return nil, ErrFailedToCreateEvent
@@ -47,10 +46,9 @@ func (s *EventService) CreateEvent(ctx context.Context, params sqlc.CreateEventP
 func (s *EventService) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Event, error) {
 	event, err := s.eventRepo.GetEventByID(ctx, id)
 	if err != nil {
-		switch err {
-		case repository.ErrEventNotFound:
+		if err == repository.ErrEventNotFound {
 			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
-		default:
+		} else {
 			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
 		}
 		return nil, ErrFailedToGetEvent
@@ -62,10 +60,9 @@ func (s *EventService) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Ev
 func (s *EventService) UpdateEventById(ctx context.Context, params sqlc.UpdateEventByIdParams) (*sqlc.Event, error) {
 	err := s.eventRepo.UpdateEventById(ctx, params)
 	if err != nil {
-		switch err {
-		case repository.ErrEventNotFound:
+		if err == repository.ErrEventNotFound {
 			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
-		default:
+		} else {
 			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
 		}
 		return nil, ErrFailedToUpdateEvent
