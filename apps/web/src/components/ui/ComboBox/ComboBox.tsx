@@ -65,7 +65,10 @@ export function ComboBox<T extends { id: string; name: string }>({
       </FieldGroup>
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
-      <Popover className="w-(--trigger-width) ml-0.5" isNonModal>
+      <Popover
+        className="min-w-[200px] sm:min-w-(--trigger-width) ml-0.5"
+        isNonModal
+      >
         {virtualized ? (
           <Virtualizer
             layout={ListLayout}

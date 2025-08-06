@@ -123,7 +123,7 @@ const MultiSelect = ({
         options={options}
         components={{ DropdownIndicator, ClearIndicator, MultiValueRemove }}
         classNames={{
-          placeholder: () => "text-[#89898A]",
+          placeholder: () => "text-[#89898A] font-light",
           control: (state) =>
             cn(
               selectStyles(state),

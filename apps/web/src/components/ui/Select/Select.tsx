@@ -23,7 +23,7 @@ import TablerChevronDown from "~icons/tabler/chevron-down";
 import { cn } from "@/utils/cn";
 
 export const styles = tv({
-  base: "h-9.5 flex items-center text-start gap-4 w-full cursor-default border border-input-border rounded-sm pl-3 pr-2 py-1.5 bg-surface",
+  base: "h-9.5 flex items-center text-start gap-4 w-full cursor-default border border-input-border rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-surface",
   variants: {
     isDisabled: {
       false:
@@ -79,7 +79,7 @@ export function Select<T extends { id: string; name: string }>({
     >
       {label && <Label isRequired={props.isRequired}>{label}</Label>}
       <Button className={styles}>
-        <SelectValue className="flex-1 placeholder-shown:text-[#89898A] truncate overflow-hidden" />
+        <SelectValue className="flex-1 placeholder-shown:text-[#89898A] placeholder-shown:font-light" />
         <TablerChevronDown
           aria-hidden
           className="w-4 h-4 text-gray-600 dark:text-zinc-400 forced-colors:text-[ButtonText] group-disabled:text-gray-200 dark:group-disabled:text-zinc-600 forced-colors:group-disabled:text-[GrayText]"
@@ -87,7 +87,7 @@ export function Select<T extends { id: string; name: string }>({
       </Button>
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
-      <Popover className="w-(--trigger-width)">
+      <Popover className="min-w-(--trigger-width)">
         {virtualized ? (
           <Virtualizer
             layout={ListLayout}

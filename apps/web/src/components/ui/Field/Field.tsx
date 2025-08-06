@@ -131,7 +131,7 @@ export const Input = forwardRef(
 
     return (
       <div className="flex items-center gap-1 bg-surface relative">
-        <div className="ml-2 text-text-secondary absolute pointer-events-none opacity-85">
+        <div className="ml-2 text-text-secondary absolute pointer-events-none opacity-45">
           <Icon />
         </div>
 
