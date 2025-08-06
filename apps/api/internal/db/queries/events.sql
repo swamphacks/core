@@ -50,3 +50,7 @@ RETURNING *;
 -- execrows returns affect row count on top of an error
 DELETE FROM events
 WHERE id = $1;
+
+-- name: GetEventRoleByIds :one
+SELECT * FROM event_roles
+WHERE user_id = @user_id::uuid AND event_id = @event_id::uuid;

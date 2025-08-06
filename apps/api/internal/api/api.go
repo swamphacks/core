@@ -34,6 +34,7 @@ func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers, middleware *mw.
 }
 
 func (api *API) setupRoutes(mw *mw.Middleware) {
+
 	var (
 		ensureSuperuser  = mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleSuperuser)
 		ensureEventAdmin = mw.Event.RequireEventRole(sqlc.EventRoleTypeAdmin)
@@ -73,11 +74,10 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// Event routes
 	api.Router.Route("/event", func(r chi.Router) {
-		r.With(ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
+		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
 		r.Route("/{eventId}", func(r chi.Router) {
-			r.With(ensureEventAdmin, ensureSuperuser).Patch("/", api.Handlers.Event.UpdateEventById)
-			r.Patch("/", api.Handlers.Event.UpdateEventById)
-			r.With(ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
+			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
+			r.With(mw.Auth.RequireAuth, ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
 		})

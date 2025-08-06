@@ -91,3 +91,17 @@ func (s *EventService) DeleteEventById(ctx context.Context, id uuid.UUID) error 
 
 	return err
 }
+
+func (s *EventService) GetEventRoleByIds(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (*sqlc.EventRole, error) {
+	eventRole, err := s.eventRepo.GetEventRoleByIds(ctx, userId, eventId)
+	if err != nil {
+		if err == repository.ErrEventRoleNotFound {
+			s.logger.Err(err).Msg(repository.ErrEventRoleNotFound.Error())
+		} else {
+			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
+		}
+		return nil, err
+	}
+
+	return eventRole, err
+}

@@ -12,6 +12,7 @@ import (
 
 var (
 	ErrEventNotFound         = errors.New("event not found")
+	ErrEventRoleNotFound     = errors.New("event role not found")
 	ErrDuplicateEvent        = errors.New("event already exists in database")
 	ErrNoEventsDeleted       = errors.New("no events deleted")
 	ErrMultipleEventsDeleted = errors.New("multiple events affected by delete query while only expecting one to delete one")
@@ -71,4 +72,20 @@ func (r *EventRepository) DeleteEventById(ctx context.Context, id uuid.UUID) err
 	}
 
 	return err
+}
+
+func (r *EventRepository) GetEventRoleByIds(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (*sqlc.EventRole, error) {
+	params := sqlc.GetEventRoleByIdsParams{
+		UserID:  userId,
+		EventID: eventId,
+	}
+
+	eventRole, err := r.db.Query.GetEventRoleByIds(ctx, params)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrEventRoleNotFound
+		}
+	}
+
+	return &eventRole, err
 }

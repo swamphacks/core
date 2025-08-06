@@ -134,11 +134,31 @@ func (q *Queries) GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 	return i, err
 }
 
+const getEventRoleByIds = `-- name: GetEventRoleByIds :one
+SELECT user_id, event_id, role, assigned_at FROM event_roles
+WHERE user_id = $1::uuid AND event_id = $2::uuid
+`
+
+type GetEventRoleByIdsParams struct {
+	UserID  uuid.UUID `json:"user_id"`
+	EventID uuid.UUID `json:"event_id"`
+}
+
+func (q *Queries) GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsParams) (EventRole, error) {
+	row := q.db.QueryRow(ctx, getEventRoleByIds, arg.UserID, arg.EventID)
+	var i EventRole
+	err := row.Scan(
+		&i.UserID,
+		&i.EventID,
+		&i.Role,
+		&i.AssignedAt,
+	)
+	return i, err
+}
+
 const updateEventById = `-- name: UpdateEventById :exec
 UPDATE events
 SET
-    
-    -- status = CASE WHEN @status_do_update::boolean THEN @status::application_status ELSE status END,
     name = CASE WHEN $1::boolean THEN $2 ELSE name END,
     description = CASE WHEN $3::boolean THEN $4 ELSE description END,
     location = CASE WHEN $5::boolean THEN $6 ELSE location END,
@@ -152,20 +172,6 @@ SET
     end_time = CASE WHEN $21::boolean THEN $22 ELSE end_time END,
     website_url = CASE WHEN $23::boolean THEN $24 ELSE website_url END,
     is_published = CASE WHEN $25::boolean THEN $26 ELSE is_published END
-    
-    -- name = coalesce(sqlc.narg('name'), name),
-    -- description = coalesce(sqlc.narg('description'), description),
-    -- location = coalesce(sqlc.narg('location'), location),
-    -- location_url = coalesce(sqlc.narg('location_url'), location_url),
-    -- max_attendees = coalesce(sqlc.narg('max_attendees'), max_attendees),
-    -- application_open = coalesce(sqlc.narg('application_open'), application_open),
-    -- application_close = coalesce(sqlc.narg('application_close'), application_close),
-    -- rsvp_deadline = coalesce(sqlc.narg('rsvp_deadline'), rsvp_deadline),
-    -- decision_release = coalesce(sqlc.narg('decision_release'), decision_release),
-    -- start_time = coalesce(sqlc.narg('start_time'), start_time),
-    -- end_time = coalesce(sqlc.narg('end_time'), end_time),
-    -- website_url = coalesce(sqlc.narg('website_url'), website_url),
-    -- is_published = coalesce(sqlc.narg('is_published'), is_published)
 WHERE
     id = $27::uuid
 RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at
