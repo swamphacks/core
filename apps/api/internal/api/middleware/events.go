@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"slices"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -29,7 +30,7 @@ func NewEventMiddleware(db *db.DB, logger zerolog.Logger, cfg *config.Config) *E
 	}
 }
 
-func (m *EventMiddleware) RequireEventRole(eventRole sqlc.EventRoleType) func(http.Handler) http.Handler {
+func (m *EventMiddleware) RequireEventRole(eventRoles []sqlc.EventRoleType) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// get user from context
@@ -50,13 +51,13 @@ func (m *EventMiddleware) RequireEventRole(eventRole sqlc.EventRoleType) func(ht
 			userEventRole, err := m.eventRespository.GetEventRoleByIds(r.Context(), userCtx.UserID, eventId)
 			if err != nil {
 				// TODO: Will throw if user doesn't have permission, but how should we handle that with other possible errors?
-				m.logger.Warn().Msgf("Error while trying to access %s with insufficient permissions (userId: %s, eventId: %s)", r.URL.Path, userCtx.UserID, eventId, err.Error())
+				m.logger.Warn().Msgf("Error while trying to access %s with insufficient permissions (userId: %s, eventId: %s)", r.URL.Path, userCtx.UserID, eventId)
 				response.SendError(w, http.StatusForbidden, response.NewError("forbidden", "You are forbidden from this resource."))
 				return
 
 			}
-			if userEventRole.Role != eventRole {
-				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions as role %s", r.URL.Path, string(userCtx.Role))
+			if !slices.Contains(eventRoles, userEventRole.Role) {
+				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions (eventRole: %s)", r.URL.Path, string(userEventRole.Role))
 				response.SendError(w, http.StatusForbidden, response.NewError("forbidden", "You are forbidden from this resource."))
 				return
 			}

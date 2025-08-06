@@ -36,8 +36,8 @@ func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers, middleware *mw.
 func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	var (
-		ensureSuperuser  = mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleSuperuser)
-		ensureEventAdmin = mw.Event.RequireEventRole(sqlc.EventRoleTypeAdmin)
+		ensureSuperuser  = mw.Auth.RequirePlatformRole([]sqlc.AuthUserRole{sqlc.AuthUserRoleSuperuser})
+		ensureEventAdmin = mw.Event.RequireEventRole([]sqlc.EventRoleType{sqlc.EventRoleTypeAdmin})
 	)
 
 	api.Router.Use(middleware.Logger)
@@ -99,7 +99,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleUser))
+			r.Use(mw.Auth.RequirePlatformRole([]sqlc.AuthUserRole{sqlc.AuthUserRoleUser}))
 			r.Get("/user", func(w http.ResponseWriter, r *http.Request) {
 				if _, err := w.Write([]byte("Welcome, user!\n")); err != nil {
 					log.Err(err)
@@ -108,7 +108,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleSuperuser))
+			r.Use(mw.Auth.RequirePlatformRole([]sqlc.AuthUserRole{sqlc.AuthUserRoleSuperuser}))
 			r.Get("/superuser", func(w http.ResponseWriter, r *http.Request) {
 				if _, err := w.Write([]byte("Welcome, superuser!\n")); err != nil {
 					log.Err(err)

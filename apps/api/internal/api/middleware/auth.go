@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -97,7 +98,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 	})
 }
 
-func (m *AuthMiddleware) RequirePlatformRole(role sqlc.AuthUserRole) func(http.Handler) http.Handler {
+func (m *AuthMiddleware) RequirePlatformRole(roles []sqlc.AuthUserRole) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// get user from context
@@ -109,7 +110,7 @@ func (m *AuthMiddleware) RequirePlatformRole(role sqlc.AuthUserRole) func(http.H
 			}
 
 			// check if user role matches required role
-			if userCtx.Role != role {
+			if !slices.Contains(roles, userCtx.Role) {
 				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions as role %s", r.URL.Path, string(userCtx.Role))
 				response.SendError(w, http.StatusForbidden, response.NewError("forbidden", "You are forbidden from this resource."))
 				return
