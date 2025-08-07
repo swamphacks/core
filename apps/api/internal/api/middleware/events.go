@@ -48,6 +48,11 @@ func (m *EventMiddleware) RequireEventRole(eventRoles []sqlc.EventRoleType) func
 				return
 			}
 
+			if userCtx.Role == sqlc.AuthUserRoleSuperuser {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			userEventRole, err := m.eventRespository.GetEventRoleByIds(r.Context(), userCtx.UserID, eventId)
 			if err != nil {
 				// TODO: Will throw if user doesn't have permission, but how should we handle that with other possible errors?

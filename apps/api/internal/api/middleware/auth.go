@@ -109,6 +109,11 @@ func (m *AuthMiddleware) RequirePlatformRole(roles []sqlc.AuthUserRole) func(htt
 				return
 			}
 
+			if userCtx.Role == sqlc.AuthUserRoleSuperuser {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			// check if user role matches required role
 			if !slices.Contains(roles, userCtx.Role) {
 				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions as role %s", r.URL.Path, string(userCtx.Role))

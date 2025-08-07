@@ -36,6 +36,7 @@ func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers, middleware *mw.
 func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	var (
+		// Both requireXXRole functions automatically allow superusers
 		ensureSuperuser  = mw.Auth.RequirePlatformRole([]sqlc.AuthUserRole{sqlc.AuthUserRoleSuperuser})
 		ensureEventAdmin = mw.Event.RequireEventRole([]sqlc.EventRoleType{sqlc.EventRoleTypeAdmin})
 	)
