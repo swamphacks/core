@@ -72,6 +72,8 @@ export const FileInput = (): JSX.Element => {
 
     updateFilesForInput(newFiles);
     setFiles(newFiles);
+
+    customProps.onChange?.(newFiles);
   };
 
   // not sure if we need this method if we set validationBehavior to "aria" inside the FileField component, but it should work for now.
@@ -149,13 +151,14 @@ export const FileInput = (): JSX.Element => {
             <TablerUpload />
             Browse files
           </Button>
-          <p className="text-sm text-text-secondary pl-1">
+          <p className="text-sm text-text-secondary text-center">
             or drop files here.
           </p>
         </div>
 
         <Input
           style={{ display: "none" }}
+          custom-hidden="true"
           type="file"
           ref={inputRef}
           onChange={onChange}

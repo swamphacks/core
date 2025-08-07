@@ -2,8 +2,11 @@ import { createQuestionItem } from "@/features/FormBuilder/questions/createQuest
 import { QuestionTypes } from "@/features/FormBuilder/types";
 import z from "zod";
 import { BaseQuestion } from "./baseQuestion";
+import { errorMessage } from "../errorMessage";
 
 export const UploadQuestion = createQuestionItem({
+  type: QuestionTypes.upload,
+
   schema: BaseQuestion.extend({
     questionType: z.literal(QuestionTypes.upload),
     validation: z
@@ -26,19 +29,30 @@ export const UploadQuestion = createQuestionItem({
   }),
 
   extractValidationSchemaFromItem: (item) => {
+    const error = errorMessage[QuestionTypes.upload];
+    const requiredMessage = item.requiredMessage ?? error.required;
+
     let schema = z.file();
 
     const { validation } = item;
-    if (!validation) return z.array(schema, "File(s) must be uploaded.");
+    if (!validation) {
+      let newSchema = z.array(schema, requiredMessage);
+
+      if (item.isRequired) {
+        newSchema = newSchema.min(1, requiredMessage);
+      }
+
+      return newSchema;
+    }
 
     if (validation.validMimeTypes) {
-      schema = z.file().mime(validation.validMimeTypes, "Invalid file type");
+      schema = z.file().mime(validation.validMimeTypes, error.invalidFileType);
     }
 
     if (validation.invalidMimeTypes) {
       schema = schema.refine(
         (file) => !validation.invalidMimeTypes?.includes(file.type),
-        "Invalid file type.",
+        error.invalidFileType,
       );
     }
 
@@ -51,13 +65,13 @@ export const UploadQuestion = createQuestionItem({
       }
 
       return file.size <= maxSize;
-    }, "File size is not within range.");
+    }, error.invalidSize);
 
     const flattenedArraySchema = z.any().check((ctx) => {
       if (!Array.isArray(ctx.value)) {
         ctx.issues.push({
           code: "custom",
-          message: "File(s) must be uploaded.",
+          message: error.required,
           input: ctx.value,
         });
         return;

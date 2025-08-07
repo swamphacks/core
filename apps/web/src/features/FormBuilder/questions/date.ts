@@ -2,8 +2,11 @@ import { createQuestionItem } from "@/features/FormBuilder/questions/createQuest
 import { QuestionTypes } from "@/features/FormBuilder/types";
 import z from "zod";
 import { BaseQuestion } from "./baseQuestion";
+import { errorMessage } from "../errorMessage";
 
 export const DateQuestion = createQuestionItem({
+  type: QuestionTypes.date,
+
   schema: BaseQuestion.extend({
     questionType: z.literal(QuestionTypes.date),
     validation: z
@@ -16,7 +19,10 @@ export const DateQuestion = createQuestionItem({
   }),
 
   extractValidationSchemaFromItem: (item) => {
-    const schema = z.date("Choose a date.");
+    const error = errorMessage[QuestionTypes.date];
+    const requiredMessage = item.requiredMessage ?? error.required;
+
+    const schema = z.date(requiredMessage);
 
     const { validation } = item;
     if (!validation) return schema;

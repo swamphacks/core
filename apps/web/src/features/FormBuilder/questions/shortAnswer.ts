@@ -3,8 +3,11 @@ import { QuestionTypes } from "@/features/FormBuilder/types";
 import z from "zod";
 import { BaseQuestion } from "./baseQuestion";
 import { textFieldIcons } from "@/features/FormBuilder/icons";
+import { errorMessage } from "../errorMessage";
 
 export const ShortAnswerQuestion = createQuestionItem({
+  type: QuestionTypes.shortAnswer,
+
   schema: BaseQuestion.extend({
     questionType: z.literal(QuestionTypes.shortAnswer),
     iconName: z
@@ -19,20 +22,20 @@ export const ShortAnswerQuestion = createQuestionItem({
   }),
 
   extractValidationSchemaFromItem: (item) => {
-    let schema = z.string("Fill out this field.");
+    const error = errorMessage[QuestionTypes.shortAnswer];
+    const requiredMessage = item.requiredMessage ?? error.required;
 
-    if (item.required) {
-      schema = schema.min(1, "Fill out this field.");
+    let schema = z.string(requiredMessage);
+
+    if (item.isRequired) {
+      schema = schema.min(1, requiredMessage);
     }
 
     const { validation } = item;
     if (!validation) return schema;
 
     if (typeof validation.maxLength === "number") {
-      schema = schema.max(
-        validation.maxLength,
-        "Value exceeded character limit.",
-      );
+      schema = schema.max(validation.maxLength, error.tooLong);
     }
 
     return schema;

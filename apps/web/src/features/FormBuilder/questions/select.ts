@@ -2,8 +2,11 @@ import { createQuestionItem } from "@/features/FormBuilder/questions/createQuest
 import { QuestionTypes } from "@/features/FormBuilder/types";
 import z from "zod";
 import { BaseQuestion } from "./baseQuestion";
+import { errorMessage } from "../errorMessage";
 
 export const SelectQuestion = createQuestionItem({
+  type: QuestionTypes.select,
+
   schema: BaseQuestion.extend({
     questionType: z.literal(QuestionTypes.select),
     searchable: z.boolean().default(false),
@@ -25,14 +28,27 @@ export const SelectQuestion = createQuestionItem({
           })),
       )
       .or(
-        z.object({
-          data: z.enum(
-            ["schools", "majors", "minors"],
-            "Invalid data option for select question.",
-          ),
-        }),
+        z
+          .object({
+            data: z.enum(
+              ["schools", "majors", "minors", "year"],
+              "Invalid data option for select question.",
+            ),
+            min: z.number().optional(),
+            max: z.number().optional(),
+          })
+          .refine((val) => {
+            if (val.data === "year") {
+              return val.min && val.max;
+            }
+
+            return true;
+          }),
       ),
   }),
 
-  extractValidationSchemaFromItem: () => z.string("Pick an item."), // string value of selection
+  extractValidationSchemaFromItem: (item) =>
+    z.string(
+      item.requiredMessage ?? errorMessage[QuestionTypes.select].required,
+    ), // string value of selection
 });

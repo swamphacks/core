@@ -3,8 +3,11 @@ import { QuestionTypes } from "@/features/FormBuilder/types";
 
 import z from "zod";
 import { BaseQuestion } from "./baseQuestion";
+import { errorMessage } from "../errorMessage";
 
 export const MultiSelectQuestion = createQuestionItem({
+  type: QuestionTypes.multiselect,
+
   schema: BaseQuestion.extend({
     questionType: z.literal(QuestionTypes.multiselect),
     options: z
@@ -30,10 +33,13 @@ export const MultiSelectQuestion = createQuestionItem({
   }),
 
   extractValidationSchemaFromItem: (item) => {
-    let schema = z.array(z.string(), "Pick an item or more from the list."); // array of string value of selections
+    const error = errorMessage[QuestionTypes.multiselect];
+    const requiredMessage = item.requiredMessage ?? error.required;
 
-    if (item.required) {
-      schema = schema.min(1, "pcik an item");
+    let schema = z.array(z.string(), requiredMessage); // array of string value of selections
+
+    if (item.isRequired) {
+      schema = schema.min(1, requiredMessage);
     }
 
     return schema;

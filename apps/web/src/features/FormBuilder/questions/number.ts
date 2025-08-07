@@ -2,8 +2,11 @@ import { createQuestionItem } from "@/features/FormBuilder/questions/createQuest
 import { QuestionTypes } from "@/features/FormBuilder/types";
 import z from "zod";
 import { BaseQuestion } from "./baseQuestion";
+import { errorMessage } from "../errorMessage";
 
 export const NumberQuestion = createQuestionItem({
+  type: QuestionTypes.number,
+
   schema: BaseQuestion.extend({
     questionType: z.literal(QuestionTypes.number),
     validation: z
@@ -16,10 +19,13 @@ export const NumberQuestion = createQuestionItem({
   }),
 
   extractValidationSchemaFromItem: (item) => {
-    let schema = z.string("Fill out this field.");
+    const error = errorMessage[QuestionTypes.number];
+    const requiredMessage = item.requiredMessage ?? error.required;
 
-    if (item.required) {
-      schema = schema.min(1, "Fill out this field");
+    let schema = z.string(requiredMessage);
+
+    if (item.isRequired) {
+      schema = schema.min(1, requiredMessage);
     }
 
     const newSchema = schema.transform((val) => parseInt(val));
@@ -30,11 +36,11 @@ export const NumberQuestion = createQuestionItem({
     let numberSchema = z.number();
 
     if (typeof validation.min === "number") {
-      numberSchema = numberSchema.min(validation.min, "Number is too small.");
+      numberSchema = numberSchema.min(validation.min, error.tooLow);
     }
 
     if (typeof validation.max === "number") {
-      numberSchema = numberSchema.max(validation.max, "Number is too big.");
+      numberSchema = numberSchema.max(validation.max, error.tooHigh);
     }
 
     return newSchema.pipe(numberSchema);

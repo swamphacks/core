@@ -19,7 +19,7 @@ function errorCallback(err) {
 
 function existInResult(target) {
   for (const item of results) {
-    if (item.id === target) {
+    if (item === target) {
       return true;
     }
   }
@@ -44,10 +44,11 @@ if (csvFilePath === "majors.csv") {
       const item = titleCase(Object.values(data)[1]);
 
       if (!existInResult(item)) {
-        results.push({
-          id: item,
-          name: item,
-        });
+        // results.push({
+        //   id: item,
+        //   name: item,
+        // });
+        results.push(item);
       }
     })
     .on("end", () => {
@@ -62,10 +63,11 @@ if (csvFilePath === "schools.csv") {
       const item = titleCase(Object.values(data)[0]);
 
       if (!existInResult(item)) {
-        results.push({
-          id: item,
-          name: item,
-        });
+        // results.push({
+        //   id: item,
+        //   name: item,
+        // });
+        results.push(item);
       }
     })
     .on("end", () => {

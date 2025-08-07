@@ -8,41 +8,12 @@ import {
   type FormQuestionItemSchemaType,
   FormSchema,
 } from "@/features/FormBuilder/formSchema";
-import {
-  CheckboxQuestion,
-  createQuestionItem,
-  DateQuestion,
-  MultipleChoiceQuestion,
-  MultiSelectQuestion,
-  NumberQuestion,
-  ParagraphQuestion,
-  SelectQuestion,
-  ShortAnswerQuestion,
-  UploadQuestion,
-} from "@/features/FormBuilder/questions";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import z from "zod";
 import { QuestionTypes } from "@/features/FormBuilder/types";
 import { textFieldIcons } from "@/features/FormBuilder/icons";
-// import { FormValidationContext } from "react-stately";
-// import { FormContext } from "react-aria-components";
-// import { useStore } from "@tanstack/react-form";
-
-const questionTypeItemMap = {
-  [QuestionTypes.shortAnswer]: ShortAnswerQuestion,
-  [QuestionTypes.paragraph]: ParagraphQuestion,
-  [QuestionTypes.number]: NumberQuestion,
-  [QuestionTypes.multipleChoice]: MultipleChoiceQuestion,
-  [QuestionTypes.checkbox]: CheckboxQuestion,
-  [QuestionTypes.select]: SelectQuestion,
-  [QuestionTypes.multiselect]: MultiSelectQuestion,
-  [QuestionTypes.upload]: UploadQuestion,
-  [QuestionTypes.date]: DateQuestion,
-  // Use `satisfies` here so `questionTypeItemMap` doesn't actually take on this Record type, which can cause type errors in `getFormItemValidationSchema`
-} satisfies Record<
-  keyof typeof QuestionTypes,
-  ReturnType<typeof createQuestionItem>
->;
+import { useStore } from "@tanstack/react-form";
+import { questionTypeItemMap } from "./questions/createQuestionItem";
 
 export function getFormItemValidationSchema(
   item: FormQuestionItemSchemaType,
@@ -56,10 +27,9 @@ export function getFormItemValidationSchema(
     );
   }
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  const schema = questionItem.extractValidationSchemaFromItem(item as any); // Not sure how to handle the type for `item` here so any it is.
+  const schema = questionItem.extractValidationSchemaFromItem(item);
 
-  return !item.required ? schema.optional() : schema;
+  return !item.isRequired ? schema.optional() : schema;
 }
 
 // https://stackoverflow.com/a/78818575
@@ -106,7 +76,7 @@ export function build(formObject: FormObject): () => ReactNode {
       },
     });
 
-    // const formRef = useRef<HTMLFormElement>(null);
+    const formRef = useRef<HTMLFormElement>(null);
 
     const formErrors = useFormErrors(form);
 
@@ -116,25 +86,16 @@ export function build(formObject: FormObject): () => ReactNode {
         if (item.type === "question") {
           return (
             <form.AppField
-              key={item.id}
+              key={item.name}
               name={item.name}
               children={(field) => {
-                const newItem = {
-                  ...item,
-                  isRequired: item.required, // rename `required` to `isRequired`
-                };
-
-                // @ts-ignore
-                delete newItem["required"];
-
                 switch (item.questionType) {
                   case QuestionTypes.shortAnswer:
                     return (
                       <field.TextField
-                        {...newItem}
+                        {...item}
                         name={field.name}
                         type="text"
-                        autoComplete="off"
                         className="flex-1"
                         validationBehavior="aria"
                         icon={
@@ -147,9 +108,8 @@ export function build(formObject: FormObject): () => ReactNode {
                   case QuestionTypes.paragraph:
                     return (
                       <field.TextField
-                        {...newItem}
+                        {...item}
                         name={field.name}
-                        autoComplete="off"
                         className="flex-1"
                         textarea
                         validationBehavior="aria"
@@ -158,10 +118,9 @@ export function build(formObject: FormObject): () => ReactNode {
                   case QuestionTypes.number:
                     return (
                       <field.TextField
-                        {...newItem}
+                        {...item}
                         name={field.name}
                         type="number"
-                        autoComplete="off"
                         className="flex-1"
                         validationBehavior="aria"
                       />
@@ -169,7 +128,7 @@ export function build(formObject: FormObject): () => ReactNode {
                   case QuestionTypes.multipleChoice:
                     return (
                       <field.RadioField
-                        {...newItem}
+                        {...item}
                         name={field.name}
                         className="flex-1"
                         validationBehavior="aria"
@@ -182,26 +141,12 @@ export function build(formObject: FormObject): () => ReactNode {
                       </field.RadioField>
                     );
                   case QuestionTypes.checkbox:
-                    return (
-                      <field.CheckboxField
-                        {...newItem}
-                        name={field.name}
-                        className="flex-1"
-                        validationBehavior="aria"
-                        isRequired={true}
-                      >
-                        {item.options.map((option) => (
-                          <Checkbox key={option.value} value={option.value}>
-                            {option.label}
-                          </Checkbox>
-                        ))}
-                      </field.CheckboxField>
-                    );
+                    return <CheckboxField item={item} field={field} />;
                   case QuestionTypes.select:
                     return (
                       <SelectField
                         item={
-                          newItem as Extract<
+                          item as Extract<
                             FormItemSchemaType,
                             { questionType: "select" }
                           >
@@ -213,7 +158,7 @@ export function build(formObject: FormObject): () => ReactNode {
                     return (
                       <MultiSelectField
                         item={
-                          newItem as Extract<
+                          item as Extract<
                             FormItemSchemaType,
                             { questionType: "multiselect" }
                           >
@@ -224,7 +169,7 @@ export function build(formObject: FormObject): () => ReactNode {
                   case QuestionTypes.date:
                     return (
                       <field.DatePickerField
-                        {...newItem}
+                        {...item}
                         name={field.name}
                         className="flex-1"
                         validationBehavior="aria"
@@ -233,7 +178,7 @@ export function build(formObject: FormObject): () => ReactNode {
                   case QuestionTypes.upload:
                     return (
                       <field.UploadField
-                        {...newItem}
+                        {...item}
                         name={field.name}
                         validationBehavior="aria"
                       />
@@ -248,9 +193,14 @@ export function build(formObject: FormObject): () => ReactNode {
 
         if (item.type === "section") {
           return (
-            <div key={item.label}>
+            <div className="mt-7" key={item.label}>
               <p className="text-xl font-medium">{item.label}</p>
-              <div className="mt-3 space-y-4">
+              {item.description && (
+                <div className="my-4">
+                  <p>{item.description}</p>
+                </div>
+              )}
+              <div className="mt-4 space-y-4">
                 {buildFormContent(item.content)}
               </div>
             </div>
@@ -271,31 +221,46 @@ export function build(formObject: FormObject): () => ReactNode {
     // Cache result so buildFormContent doesn't invoke on rerender
     const formContent = useMemo(() => buildFormContent(data.content), []);
 
-    // const errors = useStore(form.store, (state) => {
-    //   return state.errors;
-    // });
+    const errors = useStore(form.store, (state) => {
+      return state.errors;
+    });
 
-    // TODO: scroll to the element that has an error. what I have below only works for certain components, doesnt work for Select or Radio fields
-    // useEffect(() => {
-    //   if (errors.length === 0) return;
+    // scroll the first invalid element in the form into view
+    useEffect(() => {
+      if (errors.length === 0 || !formRef.current) return;
 
-    //   if (!formRef.current) return;
+      const form = formRef.current;
 
-    //   const form = formRef.current;
+      for (let i = 0; i < form.elements.length; i++) {
+        const element = form.elements[i] as HTMLElement;
+        const fieldName = element.getAttribute("name");
 
-    //   for (let i = 0; i < form.elements.length; i++) {
-    //     let element = form.elements[i];
-    //     // console.log(element);
-    //     if (
-    //       element.getAttribute("data-invalid") ||
-    //       element.getAttribute("data-custom-invalid")
-    //     ) {
-    //       element.focus();
-    //       // console.log(element);
-    //       return;
-    //     }
-    //   }
-    // }, [errors]);
+        if (fieldName) {
+          if (formErrors[fieldName].length > 0) {
+            const hidden =
+              element.getAttribute("type") === "hidden" ||
+              element.getAttribute("custom-hidden");
+
+            if (
+              (element instanceof HTMLInputElement ||
+                element instanceof HTMLTextAreaElement) &&
+              !hidden
+            ) {
+              element.focus();
+            } else {
+              if (hidden) {
+                // if the element is hidden, use parent to scroll. this is needed for datepicker field
+                element.parentElement?.scrollIntoView({ block: "center" });
+                return;
+              }
+              element.scrollIntoView({ block: "center" });
+            }
+
+            return;
+          }
+        }
+      }
+    }, [errors]);
 
     return (
       <div className="w-full sm:max-w-180 mx-auto font-figtree pb-2 p-2">
@@ -312,42 +277,21 @@ export function build(formObject: FormObject): () => ReactNode {
           }}
           validationErrors={formErrors}
           validationBehavior="aria"
+          ref={formRef}
         >
           <div className="space-y-6">{formContent}</div>
           <form.AppForm>
             <form.SubmitButton label="Submit" />
           </form.AppForm>
         </Form>
-        {/* <form
-          className="mt-5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
-          }}
-          ref={formRef}
-        >
-          <FormContext.Provider value={{ validationBehavior: "aria" }}>
-            <FormValidationContext.Provider value={formErrors}>
-              <div className="space-y-6">{formContent}</div>
-              <form.AppForm>
-                <form.SubmitButton label="Submit" />
-              </form.AppForm>
-            </FormValidationContext.Provider>
-          </FormContext.Provider>
-        </form> */}
       </div>
     );
   };
 }
 
-function SelectField({
-  item,
-  field,
-}: {
-  item: Extract<FormItemSchemaType, { questionType: "select" }>;
-  field: any;
-}) {
+function useJSONData(
+  item: Extract<FormItemSchemaType, { questionType: "select" | "multiselect" }>,
+) {
   const [data, setData] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -357,15 +301,50 @@ function SelectField({
       // TODO: where should we put these json files? is it already cached?
       if (data === "schools") {
         import(`./scripts/schools.json`).then((schools) => {
-          setData(schools.default);
+          setData(schools.default.map((item) => ({ id: item, name: item })));
         });
       } else if (data === "majors") {
         import(`./scripts/majors.json`).then((majors) => {
-          setData(majors.default);
+          setData(majors.default.map((item) => ({ id: item, name: item })));
         });
       }
     }
   }, []);
+
+  return data;
+}
+
+function SelectField({
+  item,
+  field,
+}: {
+  item: Extract<FormItemSchemaType, { questionType: "select" }>;
+  field: any;
+}) {
+  const data = useJSONData(item);
+
+  const yearData = useMemo(() => {
+    const data = [];
+    if (typeof item.options === "object" && "data" in item.options) {
+      if (item.options.data === "year") {
+        const minYear = item.options.min!;
+        const maxYear = item.options.max!;
+
+        for (let i = minYear; i <= maxYear; i++) {
+          data.push({
+            id: i?.toString(),
+            name: i?.toString(),
+          });
+        }
+
+        return data;
+      } else {
+        return undefined;
+      }
+    } else {
+      return undefined;
+    }
+  }, [item]);
 
   return item.searchable ? (
     <field.ComboBoxField
@@ -374,16 +353,20 @@ function SelectField({
       className="flex-1"
       validationBehavior="aria"
       virtualized={data.length > 100}
-      items={Array.isArray(item.options) ? item.options : data}
+      items={
+        Array.isArray(item.options) ? item.options : yearData ? yearData : data
+      }
     />
   ) : (
     <field.SelectField
       {...item}
       name={field.name}
-      className="flex-1"
+      className="flex-1 max-h-70"
       validationBehavior="aria"
       virtualized={data.length > 100}
-      items={Array.isArray(item.options) ? item.options : data}
+      items={
+        Array.isArray(item.options) ? item.options : yearData ? yearData : data
+      }
     />
   );
 }
@@ -395,33 +378,66 @@ function MultiSelectField({
   item: Extract<FormItemSchemaType, { questionType: "multiselect" }>;
   field: any;
 }) {
-  const [data, setData] = useState<{ label: string; value: string }[]>([]);
+  const data = useJSONData(item);
 
   const transformData = (data: { id: string; name: string }[]) =>
     data.map((item) => ({ label: item.name, value: item.id }));
-
-  useEffect(() => {
-    if (typeof item.options === "object" && "data" in item.options) {
-      const data = item.options.data;
-
-      if (data === "schools") {
-        import(`./scripts/schools.json`).then((schools) => {
-          setData(transformData(schools.default));
-        });
-      } else if (data === "majors") {
-        import(`./scripts/majors.json`).then((majors) => {
-          setData(transformData(majors.default));
-        });
-      }
-    }
-  }, []);
 
   return (
     <field.MultiSelectField
       {...item}
       name={field.name}
-      options={Array.isArray(item.options) ? item.options : data}
+      options={Array.isArray(item.options) ? item.options : transformData(data)}
       validationBehavior="aria"
     />
+  );
+}
+
+function CheckboxField({
+  item,
+  field,
+}: {
+  item: Extract<FormItemSchemaType, { questionType: "checkbox" }>;
+  field: any;
+}) {
+  // Render a single checkbox without label. This is to handle confirmation checkboxes
+  if (item.options.length === 1 && !item.label) {
+    const option = item.options[0];
+
+    return (
+      <div className="flex-1">
+        <Checkbox
+          validationBehavior="aria"
+          name={field.name}
+          key={option.value}
+          value={option.value}
+          onChange={(val) => field.handleChange(val && [option.value])}
+          className="text-base"
+          isRequired={item.isRequired}
+        >
+          <span>
+            {option.label}
+
+            <span className="text-base text-red-500 ml-1">*</span>
+          </span>
+        </Checkbox>
+      </div>
+    );
+  }
+
+  return (
+    <field.CheckboxField
+      {...item}
+      name={field.name}
+      className="flex-1"
+      validationBehavior="aria"
+      isRequired={item.isRequired}
+    >
+      {item.options.map((option) => (
+        <Checkbox key={option.value} value={option.value}>
+          {option.label}
+        </Checkbox>
+      ))}
+    </field.CheckboxField>
   );
 }

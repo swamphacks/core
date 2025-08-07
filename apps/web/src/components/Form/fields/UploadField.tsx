@@ -5,6 +5,11 @@ export default function UploadField(props: FileFieldProps) {
   const field = useFieldContext();
 
   return (
-    <FileField {...props} onChange={(files) => field.handleChange(files)} />
+    <FileField
+      {...props}
+      onChange={(files) =>
+        field.handleChange(files.length === 0 ? undefined : files)
+      }
+    />
   );
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import {
   Select as AriaSelect,
   type SelectProps as AriaSelectProps,
@@ -34,7 +34,7 @@ export const styles = tv({
 });
 
 export const listBoxContainerStyles = tv({
-  base: "outline-hidden p-1 max-h-[inherit] overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]",
+  base: "outline-hidden p-1 max-h-70 overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]",
 });
 
 export interface SelectProps<T extends object>
@@ -52,18 +52,19 @@ export function Select<T extends { id: string; name: string }>({
   description,
   errorMessage,
   items,
+  children,
   virtualized = false,
   ...props
 }: SelectProps<T>) {
   // This is needed in situation where the exact max width of the select is unknown and is controlled by something like `flex-1` for example
-  const [maxWidth, setMaxWidth] = useState<number | undefined>(undefined);
-  const selectRef = useRef<HTMLDivElement | null>(null);
+  // const [maxWidth, setMaxWidth] = useState<number | undefined>(undefined);
+  // const selectRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (selectRef && selectRef.current) {
-      setMaxWidth(selectRef.current.clientWidth);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (selectRef && selectRef.current) {
+  //     setMaxWidth(selectRef.current.clientWidth);
+  //   }
+  // }, []);
 
   return (
     <AriaSelect
@@ -72,14 +73,14 @@ export function Select<T extends { id: string; name: string }>({
         props.className,
         "group flex flex-col gap-1 font-figtree",
       )}
-      style={{
-        maxWidth,
-      }}
-      ref={selectRef}
+      // style={{
+      //   maxWidth,
+      // }}
+      // ref={selectRef}
     >
       {label && <Label isRequired={props.isRequired}>{label}</Label>}
       <Button className={styles}>
-        <SelectValue className="flex-1 placeholder-shown:text-[#89898A] placeholder-shown:font-light" />
+        <SelectValue className="flex-1 placeholder-shown:opacity-50" />
         <TablerChevronDown
           aria-hidden
           className="w-4 h-4 text-gray-600 dark:text-zinc-400 forced-colors:text-[ButtonText] group-disabled:text-gray-200 dark:group-disabled:text-zinc-600 forced-colors:group-disabled:text-[GrayText]"
@@ -97,12 +98,16 @@ export function Select<T extends { id: string; name: string }>({
               items={items}
               className={cn(listBoxContainerStyles(), "p-0")}
             >
-              {(item) => <SelectItem>{item.name}</SelectItem>}
+              {children
+                ? children
+                : (item) => <SelectItem>{item.name}</SelectItem>}
             </ListBox>
           </Virtualizer>
         ) : (
           <ListBox items={items} className={listBoxContainerStyles()}>
-            {(item) => <SelectItem>{item.name}</SelectItem>}
+            {children
+              ? children
+              : (item) => <SelectItem>{item.name}</SelectItem>}
           </ListBox>
         )}
       </Popover>

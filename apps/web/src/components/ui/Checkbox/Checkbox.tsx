@@ -22,7 +22,7 @@ export interface CheckboxGroupProps
   errorMessage?: string | ((validation: ValidationResult) => string);
 }
 
-export function CheckboxGroup(props: CheckboxGroupProps) {
+export function CheckboxGroup({ label = "", ...props }: CheckboxGroupProps) {
   return (
     <AriaCheckboxGroup
       {...props}
@@ -31,7 +31,7 @@ export function CheckboxGroup(props: CheckboxGroupProps) {
         "flex flex-col gap-2",
       )}
     >
-      <Label>{props.label}</Label>
+      <Label isRequired={props.isRequired}>{label}</Label>
       {props.children}
       {props.description && <Description>{props.description}</Description>}
       <FieldError>{props.errorMessage}</FieldError>

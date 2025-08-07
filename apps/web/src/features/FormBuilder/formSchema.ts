@@ -12,7 +12,7 @@ import {
 import { FormItemTypes } from "@/features/FormBuilder/types";
 import { z } from "zod";
 
-export const FormQuestionItemSchema = z.discriminatedUnion("questionType", [
+export const BaseFormQuestionItemSchema = z.discriminatedUnion("questionType", [
   ShortAnswerQuestion.schema,
   ParagraphQuestion.schema,
   NumberQuestion.schema,
@@ -23,6 +23,10 @@ export const FormQuestionItemSchema = z.discriminatedUnion("questionType", [
   UploadQuestion.schema,
   DateQuestion.schema,
 ]);
+
+export const FormQuestionItemSchema = BaseFormQuestionItemSchema.transform(
+  ({ required, ...data }) => ({ isRequired: required, ...data }),
+);
 
 export const FormLayoutItemSchema = z.object({
   type: z.literal(FormItemTypes.layout),
@@ -35,6 +39,7 @@ export const FormLayoutItemSchema = z.object({
 export const FormSectionItemSchema = z.object({
   type: z.literal(FormItemTypes.section),
   label: z.string().optional(),
+  description: z.string().optional(),
   content: z.array(
     z.union([FormLayoutItemSchema, FormQuestionItemSchema]),
     "A section cannot contain nested sections.",

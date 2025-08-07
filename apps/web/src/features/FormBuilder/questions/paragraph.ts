@@ -2,8 +2,11 @@ import { createQuestionItem } from "@/features/FormBuilder/questions/createQuest
 import { QuestionTypes } from "@/features/FormBuilder/types";
 import z from "zod";
 import { BaseQuestion } from "./baseQuestion";
+import { errorMessage } from "../errorMessage";
 
 export const ParagraphQuestion = createQuestionItem({
+  type: QuestionTypes.paragraph,
+
   schema: BaseQuestion.extend({
     questionType: z.literal(QuestionTypes.paragraph),
     validation: z
@@ -16,24 +19,24 @@ export const ParagraphQuestion = createQuestionItem({
   }),
 
   extractValidationSchemaFromItem: (item) => {
-    let schema = z.string("Fill out this field.");
+    const error = errorMessage[QuestionTypes.paragraph];
+    const requiredMessage = item.requiredMessage ?? error.required;
 
-    if (item.required) {
-      schema = schema.min(1, "Fill out this field.");
+    let schema = z.string(requiredMessage);
+
+    if (item.isRequired) {
+      schema = schema.min(1, requiredMessage);
     }
 
     const { validation } = item;
     if (!validation) return schema;
 
     if (typeof validation.maxLength === "number") {
-      schema = schema.max(
-        validation.maxLength,
-        "Value exceeded character limit.",
-      );
+      schema = schema.max(validation.maxLength, error.tooLong);
     }
 
     if (typeof validation.minLength === "number") {
-      schema = schema.min(validation.minLength, "Word count is too low.");
+      schema = schema.min(validation.minLength, error.tooShort);
     }
 
     return schema;

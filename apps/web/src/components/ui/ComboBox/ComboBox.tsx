@@ -41,6 +41,7 @@ export function ComboBox<T extends { id: string; name: string }>({
   errorMessage,
   items,
   placeholder,
+  children,
   virtualized = false,
   ...props
 }: ComboBoxProps<T>) {
@@ -78,7 +79,9 @@ export function ComboBox<T extends { id: string; name: string }>({
               items={items}
               className="overflow-y-auto max-h-70 outline-0 p-0 w-full box-border m-0"
             >
-              {(item) => <ComboBoxItem>{item.name}</ComboBoxItem>}
+              {children
+                ? children
+                : (item) => <ComboBoxItem>{item.name}</ComboBoxItem>}
             </ListBox>
           </Virtualizer>
         ) : (
@@ -86,7 +89,9 @@ export function ComboBox<T extends { id: string; name: string }>({
             items={items}
             className="outline-0 p-1 overflow-auto max-h-70"
           >
-            {(item) => <ComboBoxItem>{item.name}</ComboBoxItem>}
+            {children
+              ? children
+              : (item) => <ComboBoxItem>{item.name}</ComboBoxItem>}
           </ListBox>
         )}
       </Popover>
