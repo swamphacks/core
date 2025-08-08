@@ -1,4 +1,5 @@
 import { DevThemeSwitch } from "@/components/ThemeProvider";
+import NotFoundPage from "@/features/NotFound/NotFoundPage";
 import type { auth } from "@/lib/authClient";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
@@ -19,4 +20,5 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       )}
     </>
   ),
+  notFoundComponent: NotFoundPage,
 });

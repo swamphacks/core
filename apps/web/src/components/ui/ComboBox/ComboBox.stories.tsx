@@ -15,13 +15,22 @@ const meta = {
 
 export default meta;
 
+const items = [
+  { id: "chocolate", name: "Chocolate" },
+  { id: "mint", name: "Mint" },
+  { id: "strawberry", name: "Strawberry" },
+  { id: "vanilla", name: "Vanilla" },
+];
+
 export const Example = (args: any) => (
-  <ComboBox label="Example" placeholder="Select an item" isRequired {...args}>
-    <ComboBoxItem>Chocolate</ComboBoxItem>
-    <ComboBoxItem id="mint">Mint</ComboBoxItem>
-    <ComboBoxItem>Strawberry</ComboBoxItem>
-    <ComboBoxItem>Vanilla</ComboBoxItem>
-  </ComboBox>
+  <ComboBox
+    itm
+    label="Example"
+    placeholder="Select an item"
+    isRequired
+    items={items}
+    {...args}
+  />
 );
 
 export const DisabledItems = (args: any) => <Example {...args} />;

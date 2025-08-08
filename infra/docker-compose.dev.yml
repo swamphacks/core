@@ -6,3 +6,16 @@ services:
     restart: always
     env_file:
       - ./secrets/.env.dev.api
+
+  dev-email-worker:
+    image: ghcr.io/swamphacks/core-email-worker:dev
+    restart: always
+    env_file:
+      - ./secrets/.env.dev.api
+
+  dev-redis:
+    image: redis:8.0
+    command: ["redis-server", "--appendonly", "no", "--port", "6380", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - 6380:6380
+    attach: false
