@@ -283,7 +283,7 @@ function useJSONData(
         const data = item.options.data;
 
         if (data === "schools") {
-          fetch(`/public/assets/schools.json`)
+          fetch(`/assets/schools.json`)
             .then((res) => res.json())
             .then((schools) => {
               setData(
@@ -291,7 +291,7 @@ function useJSONData(
               );
             });
         } else if (data === "majors") {
-          fetch(`/public/assets/majors.json`)
+          fetch(`/assets/majors.json`)
             .then((res) => res.json())
             .then((majors) => {
               setData(majors.map((item: string) => ({ id: item, name: item })));
