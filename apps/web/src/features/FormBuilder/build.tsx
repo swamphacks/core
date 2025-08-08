@@ -278,20 +278,29 @@ function useJSONData(
   const [data, setData] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
-    if (typeof item.options === "object" && "data" in item.options) {
-      const data = item.options.data;
+    async function fetchData() {
+      if (typeof item.options === "object" && "data" in item.options) {
+        const data = item.options.data;
 
-      // TODO: where should we put these json files? is it already cached?
-      if (data === "schools") {
-        import(`./scripts/schools.json`).then((schools) => {
-          setData(schools.default.map((item) => ({ id: item, name: item })));
-        });
-      } else if (data === "majors") {
-        import(`./scripts/majors.json`).then((majors) => {
-          setData(majors.default.map((item) => ({ id: item, name: item })));
-        });
+        if (data === "schools") {
+          fetch(`/public/assets/schools.json`)
+            .then((res) => res.json())
+            .then((schools) => {
+              setData(
+                schools.map((item: string) => ({ id: item, name: item })),
+              );
+            });
+        } else if (data === "majors") {
+          fetch(`/public/assets/majors.json`)
+            .then((res) => res.json())
+            .then((majors) => {
+              setData(majors.map((item: string) => ({ id: item, name: item })));
+            });
+        }
       }
     }
+
+    fetchData();
   }, []);
 
   return data;
