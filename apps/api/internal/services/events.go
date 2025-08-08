@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 )
@@ -15,6 +16,7 @@ var (
 	ErrFailedToGetEvent    = errors.New("failed to get event")
 	ErrFailedToUpdateEvent = errors.New("failed to update event")
 	ErrFailedToDeleteEvent = errors.New("failed to delete event")
+	ErrFailedToParseUUID   = errors.New("failed to parse uuid")
 )
 
 type EventService struct {
@@ -92,6 +94,23 @@ func (s *EventService) DeleteEventById(ctx context.Context, id uuid.UUID) error 
 	return err
 }
 
+func (s *EventService) GetAllEvents(ctx context.Context) (*[]sqlc.Event, error) {
+	// Check role, if role is none or user, return published events only
+	userCtx, ok := ctx.Value(middleware.UserContextKey).(*middleware.UserContext)
+	if !ok {
+		s.logger.Warn().Msg("Couldn't get user context")
+		return s.eventRepo.GetPublishedEvents(ctx)
+	}
+
+	//TODO: Replace with switch later
+	if userCtx.Role == sqlc.AuthUserRoleUser {
+		return s.eventRepo.GetPublishedEvents(ctx)
+	}
+
+	return s.eventRepo.GetAllEvents(ctx)
+
+}
+
 func (s *EventService) GetEventRoleByIds(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (*sqlc.EventRole, error) {
 	eventRole, err := s.eventRepo.GetEventRoleByIds(ctx, userId, eventId)
 	if err != nil {
@@ -104,4 +123,8 @@ func (s *EventService) GetEventRoleByIds(ctx context.Context, userId uuid.UUID, 
 	}
 
 	return eventRole, err
+}
+
+func (s *EventService) GetEventStaffUsers(ctx context.Context, eventId uuid.UUID) (*[]sqlc.AuthUser, error) {
+	return s.eventRepo.GetEventStaff(ctx, eventId)
 }

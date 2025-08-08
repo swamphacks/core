@@ -1,6 +1,7 @@
 import { type Event } from "@/lib/openapi/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminEventsQueryKey } from "./useAdminEvents";
+import { api } from "@/lib/ky";
 
 async function updateAdminEvent() {
   // Update here
@@ -8,9 +9,9 @@ async function updateAdminEvent() {
   return {} as Event; // Hacky right now
 }
 
-async function deleteAdminEvent(event: Event) {
-  // Do deletion here
-  return event;
+async function deleteAdminEvent(eventId: string) {
+  await api.delete(`events/${eventId}`);
+  return eventId;
 }
 
 export function useAdminEventActions() {
@@ -31,11 +32,11 @@ export function useAdminEventActions() {
 
   const remove = useMutation({
     mutationFn: deleteAdminEvent,
-    onSuccess: (deletedEvent) => {
+    onSuccess: (deletedEventId) => {
       queryClient.setQueryData<Event[]>(adminEventsQueryKey, (old) => {
         if (!old) return old;
 
-        return old.filter((event) => event.id !== deletedEvent.id);
+        return old.filter((event) => event.id !== deletedEventId);
       });
     },
   });

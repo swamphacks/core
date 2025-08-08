@@ -4,10 +4,10 @@ import { useAdminStaffActions } from "../hooks/useAdminStaffActions";
 import { AddStaffForm } from "./AddStaffForm";
 import { StaffTable } from "./StaffTable";
 import { type ColumnDef } from "@tanstack/react-table";
-import { type StaffUser } from "../hooks/useEventStaffUsers";
 import { Modal } from "@/components/ui/Modal";
+import type { User } from "@/lib/openapi/types";
 
-const columns: ColumnDef<StaffUser>[] = [
+const columns: ColumnDef<User>[] = [
   {
     id: "name",
     header: "Name",
@@ -21,7 +21,7 @@ const columns: ColumnDef<StaffUser>[] = [
     header: "Email",
   },
   {
-    accessorKey: "eventRole",
+    accessorKey: "role",
     header: "Role",
   },
 ];

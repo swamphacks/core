@@ -215,3 +215,44 @@ func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *EventHandler) GetAllEvents(w http.ResponseWriter, r *http.Request) {
+	events, err := h.eventService.GetAllEvents(r.Context())
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong fetching events"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(events); err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
+		return
+	}
+}
+
+func (h *EventHandler) GetEventStaffUsers(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	users, err := h.eventService.GetEventStaffUsers(r.Context(), eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(users); err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
+		return
+	}
+}

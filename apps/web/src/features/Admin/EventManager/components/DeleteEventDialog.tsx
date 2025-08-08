@@ -19,10 +19,10 @@ function DeleteEventDialog({ event }: DeleteEventDialogProps) {
   const {
     remove: { mutateAsync, isPending },
   } = useAdminEventActions();
-  const { name } = event;
+  const { name, id } = event;
 
   const deleteEvent = async () => {
-    await mutateAsync(event, {
+    await mutateAsync(id, {
       // TODO: This state.close doesn't animate the fadeout correctly.
       onSuccess: () => state.close(),
     });

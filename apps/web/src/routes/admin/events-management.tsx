@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Heading, DialogTrigger } from "react-aria-components";
+import { Heading, DialogTrigger, Text } from "react-aria-components";
 
 import { Button } from "../../components/ui/Button";
 import { AddEventModal } from "@/features/Admin/EventManager/components/AddEventModal";
@@ -28,6 +28,7 @@ function RouteComponent() {
       </div>
 
       <div className="flex flex-row flex-wrap gap-6">
+        {data?.length === 0 && <Text>Wow, much empty...</Text>}
         {data &&
           data.map((val) => <EventDetailsCard key={val.id} event={val} />)}
       </div>

@@ -5,7 +5,7 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import type { StaffUser } from "../hooks/useEventStaffUsers";
+import type { User } from "@/lib/openapi/types";
 
 export function StaffTable({
   data,
@@ -13,8 +13,8 @@ export function StaffTable({
   isLoading,
   isError,
 }: {
-  data: StaffUser[];
-  columns: ColumnDef<StaffUser>[];
+  data: User[];
+  columns: ColumnDef<User>[];
   isLoading: boolean;
   isError: boolean;
 }) {
