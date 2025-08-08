@@ -92,7 +92,7 @@ export const FileInput = (): JSX.Element => {
       {/* TODO: make dropzone optional */}
       <DropZone
         className={cn(
-          "flex items-center justify-center border-1 border-input-border rounded-sm px-5 py-7 bg-surface min-h-25",
+          "flex items-center justify-start p-2 border-1 border-input-border rounded-sm bg-surface",
           inputStyles({ isInvalid: !!props["aria-invalid"] }),
         )}
         onDrop={async (e) => {
@@ -141,19 +141,20 @@ export const FileInput = (): JSX.Element => {
           customProps.onChange?.(newFiles);
         }}
       >
-        <div className="flex flex-col gap-1 min-w-0">
+        <div className="flex items-center gap-2 min-w-0 w-full">
           <Button
-            className="gap-2"
+            className="gap-2 opacity-80 rounded-sm dark:text-white"
             variant="secondary"
             size="sm"
             onPress={onPress}
           >
             <TablerUpload />
-            Browse files
+            Upload
           </Button>
-          <p className="text-sm text-text-secondary text-center">
-            or drop files here.
-          </p>
+          <div className="w-full flex justify-between">
+            <p className="text-text-secondary">or drop files here.</p>
+            <p className="text-text-secondary">Size limit: 5MB</p>
+          </div>
         </div>
 
         <Input

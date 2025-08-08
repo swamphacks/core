@@ -55,7 +55,9 @@ export function getFormValidationSchema(
   return z.object(schema);
 }
 
-export function build(formObject: FormObject): () => ReactNode {
+export function build(
+  formObject: FormObject,
+): (props: { onSubmit?: (data: any) => void }) => ReactNode {
   const { error, data } = FormSchema.safeParse(formObject);
 
   if (error) {
@@ -65,14 +67,13 @@ export function build(formObject: FormObject): () => ReactNode {
 
   const validationSchema = getFormValidationSchema(data.content);
 
-  return function Component() {
+  return function Component({ onSubmit }) {
     const form = useAppForm({
       validators: {
         onSubmit: validationSchema,
       },
       onSubmit: ({ value }) => {
-        // TODO: pass in custom on submit prop
-        console.log(value);
+        onSubmit?.(value);
       },
     });
 
@@ -91,6 +92,7 @@ export function build(formObject: FormObject): () => ReactNode {
               children={(field) => {
                 switch (item.questionType) {
                   case QuestionTypes.shortAnswer:
+                  case QuestionTypes.url:
                     return (
                       <field.TextField
                         {...item}
@@ -143,29 +145,9 @@ export function build(formObject: FormObject): () => ReactNode {
                   case QuestionTypes.checkbox:
                     return <CheckboxField item={item} field={field} />;
                   case QuestionTypes.select:
-                    return (
-                      <SelectField
-                        item={
-                          item as Extract<
-                            FormItemSchemaType,
-                            { questionType: "select" }
-                          >
-                        }
-                        field={field}
-                      />
-                    );
+                    return <SelectField item={item} field={field} />;
                   case QuestionTypes.multiselect:
-                    return (
-                      <MultiSelectField
-                        item={
-                          item as Extract<
-                            FormItemSchemaType,
-                            { questionType: "multiselect" }
-                          >
-                        }
-                        field={field}
-                      />
-                    );
+                    return <MultiSelectField item={item} field={field} />;
                   case QuestionTypes.date:
                     return (
                       <field.DatePickerField
@@ -193,7 +175,7 @@ export function build(formObject: FormObject): () => ReactNode {
 
         if (item.type === "section") {
           return (
-            <div className="mt-7" key={item.label}>
+            <div className="mt-7 text-text-main" key={item.id}>
               <p className="text-xl font-medium">{item.label}</p>
               {item.description && (
                 <div className="my-4">
@@ -209,8 +191,7 @@ export function build(formObject: FormObject): () => ReactNode {
 
         if (item.type === "layout") {
           return (
-            // TODO: remove math.random()
-            <FieldGroup className="gap-4" key={Math.random()}>
+            <FieldGroup className="gap-4" key={item.id}>
               {buildFormContent(item.content)}
             </FieldGroup>
           );
@@ -263,13 +244,15 @@ export function build(formObject: FormObject): () => ReactNode {
     }, [errors]);
 
     return (
-      <div className="w-full sm:max-w-180 mx-auto font-figtree pb-2 p-2">
+      <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">
         <div className="space-y-3 py-5 border-b-1 border-border">
-          <p className="text-2xl text-text-main">{data.metadata.title}</p>
-          <p className="text-text-secondary">{data.metadata.description}</p>
+          <p className="text-2xl text-text-main font-medium">
+            {data.metadata.title}
+          </p>
+          <p className="text-text-main">{data.metadata.description}</p>
         </div>
         <Form
-          className="mt-5"
+          className="mt-5 space-y-10"
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();

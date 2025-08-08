@@ -43,4 +43,10 @@ export const errorMessage = {
   [QuestionTypes.date]: {
     required: "Required",
   },
+
+  [QuestionTypes.url]: {
+    required: "Required",
+    invalidURL: "Invalid URL",
+    tooLong: "URL is too long",
+  },
 };

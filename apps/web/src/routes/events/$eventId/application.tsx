@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { build } from "@/features/FormBuilder/build";
 import data from "@/features/FormBuilder/stories/applicationFormExample.json";
 
-export const Route = createFileRoute("/application")({
+export const Route = createFileRoute("/events/$eventId/application")({
   component: RouteComponent,
 });
 
@@ -18,6 +18,7 @@ function RouteComponent() {
 }
 
 export const ApplicationForm = () => {
+  // TODO: Fetch the approriate form data corresponding to the event
   const Form = build(data);
 
   return <Form />;

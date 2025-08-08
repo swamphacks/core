@@ -22,8 +22,8 @@ export const ApplicationForm = () => {
   const Form = build(applicationFormData);
   return (
     <div className="w-full h-screen bg-surface">
-      <div className="w-full bg-surface transition-[background]">
-        <Form />
+      <div className="w-full bg-surface transition-[background] sm:pl-[calc(100vw-100%)]">
+        <Form onSubmit={(data) => console.log(data)} />
       </div>
     </div>
   );

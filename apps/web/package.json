@@ -37,6 +37,7 @@
     "clsx": "^2.1.1",
     "js-cookie": "^3.0.5",
     "ky": "^1.8.1",
+    "nanoid": "^5.1.5",
     "react": "^19.1.0",
     "react-aria": "^3.41.1",
     "react-aria-components": "^1.10.1",

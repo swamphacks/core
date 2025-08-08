@@ -91,7 +91,7 @@
         },
         {
           "name": "linkedin",
-          "questionType": "shortAnswer",
+          "questionType": "url",
           "placeholder": "Enter link",
           "label": "Linkedin URL",
           "required": true,
@@ -99,7 +99,7 @@
         },
         {
           "name": "github",
-          "questionType": "shortAnswer",
+          "questionType": "url",
           "placeholder": "Enter link",
           "label": "Github URL",
           "required": true,

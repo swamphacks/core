@@ -44,12 +44,14 @@ export function Label({
     <RACLabel
       {...props}
       className={cn(
-        "text-text-secondary font-medium cursor-default w-fit",
+        "text-text-main/90 text-[16px] font-medium cursor-default w-fit",
         props.className,
       )}
     >
       {props.children}
-      {isRequired && <span className="text-base text-red-500 ml-1">*</span>}
+      {isRequired && (
+        <span className="text-base text-red-500 dark:text-red-300 ml-1">*</span>
+      )}
     </RACLabel>
   );
 }

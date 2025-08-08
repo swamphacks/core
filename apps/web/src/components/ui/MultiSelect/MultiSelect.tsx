@@ -107,11 +107,15 @@ const MultiSelect = ({
   return (
     <div className="flex flex-col gap-1 flex-1 font-figtree">
       <label
-        className="text-text-secondary font-medium cursor-default w-fit"
+        className="text-text-main/90 font-medium cursor-default w-fit"
         htmlFor={id}
       >
         {label}
-        {isRequired && <span className="text-base text-red-500 ml-1">*</span>}
+        {isRequired && (
+          <span className="text-base text-red-500 dark:text-red-300 ml-1">
+            *
+          </span>
+        )}
       </label>
 
       <Select

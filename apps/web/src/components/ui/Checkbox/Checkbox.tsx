@@ -54,11 +54,12 @@ const boxStyles = tv({
   variants: {
     isSelected: {
       false:
-        "bg-white dark:bg-zinc-900 border-(--color) [--color:var(--color-gray-400)] dark:[--color:colors.zinc-400)] group-pressed:[--color:var(--color-gray-500)] dark:group-pressed:[--color:var(--color-zinc-300)]",
+        "bg-white dark:bg-neutral-800 border-(--color) [--color:var(--border)] group-pressed:[--color:var(--color-gray-500)] dark:group-pressed:[--color:var(--color-zinc-300)]",
+
       true: "bg-(--color) border-(--color) [--color:var(--color-blue-600)] group-pressed:[--color:var(--color-blue-700)] dark:[--color:var(--color-blue-300)] dark:group-pressed:[--color:var(--color-blue-200)] forced-colors:[--color:Highlight]!",
     },
     isInvalid: {
-      true: "[--color:var(--color-red-700)] dark:[--color:var(--color-red-600)] forced-colors:[--color:Mark]! group-pressed:[--color:var(--color-red-800)] dark:group-pressed:[--color:var(--color-red-700)]",
+      true: "[--color:var(--input-border-invalid)]  forced-colors:[--color:Mark]! group-pressed:[--color:var(--color-red-800)] dark:group-pressed:[--color:var(--color-red-700)]",
     },
     isDisabled: {
       true: "[--color:var(--color-gray-200)] dark:[--color:var(--color-zinc-700)] forced-colors:[--color:GrayText]!",

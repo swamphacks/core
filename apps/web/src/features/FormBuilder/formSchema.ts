@@ -11,6 +11,8 @@ import {
 } from "@/features/FormBuilder/questions";
 import { FormItemTypes } from "@/features/FormBuilder/types";
 import { z } from "zod";
+import { nanoid } from "nanoid";
+import { URLQuestion } from "@/features/FormBuilder/questions/url";
 
 export const BaseFormQuestionItemSchema = z.discriminatedUnion("questionType", [
   ShortAnswerQuestion.schema,
@@ -22,6 +24,7 @@ export const BaseFormQuestionItemSchema = z.discriminatedUnion("questionType", [
   MultiSelectQuestion.schema,
   UploadQuestion.schema,
   DateQuestion.schema,
+  URLQuestion.schema,
 ]);
 
 export const FormQuestionItemSchema = BaseFormQuestionItemSchema.transform(
@@ -30,6 +33,10 @@ export const FormQuestionItemSchema = BaseFormQuestionItemSchema.transform(
 
 export const FormLayoutItemSchema = z.object({
   type: z.literal(FormItemTypes.layout),
+  id: z
+    .string()
+    .optional()
+    .default(() => nanoid()),
   label: z.string().optional(),
   content: z
     .array(FormQuestionItemSchema, "A layout item can only contain questions.")
@@ -38,6 +45,10 @@ export const FormLayoutItemSchema = z.object({
 
 export const FormSectionItemSchema = z.object({
   type: z.literal(FormItemTypes.section),
+  id: z
+    .string()
+    .optional()
+    .default(() => nanoid()),
   label: z.string().optional(),
   description: z.string().optional(),
   content: z.array(

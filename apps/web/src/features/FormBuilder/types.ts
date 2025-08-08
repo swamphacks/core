@@ -8,6 +8,7 @@ export const QuestionTypes = {
   multiselect: "multiselect",
   upload: "upload",
   date: "date",
+  url: "url",
 } as const;
 
 export const FormItemTypes = {

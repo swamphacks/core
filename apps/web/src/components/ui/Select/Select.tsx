@@ -27,7 +27,7 @@ export const styles = tv({
   variants: {
     isDisabled: {
       false:
-        "text-text-main hover:bg-gray-100 dark:hover:bg-neutral-700 group-invalid:border-red-600 forced-colors:group-invalid:border-[Mark]",
+        "text-text-main hover:bg-gray-100 dark:hover:bg-neutral-700 group-invalid:border-input-border-invalid forced-colors:group-invalid:border-[Mark]",
       true: "text-gray-200 dark:text-zinc-600 forced-colors:text-[GrayText] dark:bg-zinc-800 dark:border-white/5 forced-colors:border-[GrayText]",
     },
   },
