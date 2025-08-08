@@ -22,7 +22,8 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (AuthUser, error)
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) error
 	DeleteApplication(ctx context.Context, arg DeleteApplicationParams) error
-	DeleteEvent(ctx context.Context, id uuid.UUID) error
+	// execrows returns affect row count on top of an error
+	DeleteEventById(ctx context.Context, id uuid.UUID) (int64, error)
 	DeleteExpiredSession(ctx context.Context) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error)
@@ -30,6 +31,7 @@ type Querier interface {
 	GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
 	GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
+	GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsParams) (EventRole, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (AuthSession, error)
 	GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthSession, error)
 	GetUserByEmail(ctx context.Context, email *string) (AuthUser, error)
