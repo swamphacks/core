@@ -14,7 +14,6 @@ import {
 import { tv } from "tailwind-variants";
 import { composeTailwindRenderProps, type Icon } from "@/components/ui/utils";
 import { cn } from "@/utils/cn";
-import TablerAsterisk from "~icons/tabler/asterisk";
 import { forwardRef } from "react";
 
 export const fieldBorderStyles = tv({
@@ -45,12 +44,14 @@ export function Label({
     <RACLabel
       {...props}
       className={cn(
-        "flex items-center gap-1 text-text-secondary font-medium cursor-default w-fit",
+        "text-text-main/90 text-[16px] font-medium cursor-default w-fit",
         props.className,
       )}
     >
       {props.children}
-      {isRequired && <TablerAsterisk className="text-[8px] text-red-500" />}
+      {isRequired && (
+        <span className="text-base text-red-500 dark:text-red-300 ml-1">*</span>
+      )}
     </RACLabel>
   );
 }
@@ -114,7 +115,7 @@ export const Input = forwardRef(
     ref: React.ForwardedRef<HTMLInputElement>,
   ) => {
     const inputClassName =
-      "h-9 py-1.5 w-full min-w-0 outline-0 bg-surface text-base text-text-main disabled:text-input-text-disabled";
+      "h-9.5 py-1.5 w-full min-w-0 outline-0 bg-surface text-base text-text-main disabled:text-input-text-disabled";
 
     if (!Icon) {
       return (
@@ -122,7 +123,7 @@ export const Input = forwardRef(
           {...props}
           className={composeTailwindRenderProps(
             props.className,
-            cn(inputClassName, "px-2"),
+            cn(inputClassName, "px-2.5"),
           )}
           ref={ref}
         />
@@ -131,7 +132,7 @@ export const Input = forwardRef(
 
     return (
       <div className="flex items-center gap-1 bg-surface relative">
-        <div className="ml-2 text-text-secondary absolute pointer-events-none opacity-85">
+        <div className="ml-2 text-text-secondary absolute pointer-events-none opacity-45">
           <Icon />
         </div>
 

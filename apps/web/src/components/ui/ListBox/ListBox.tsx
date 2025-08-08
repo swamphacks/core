@@ -84,11 +84,14 @@ export function DropdownItem(props: ListBoxItemProps) {
   const textValue =
     props.textValue ||
     (typeof props.children === "string" ? props.children : undefined);
+
   return (
     <AriaListBoxItem
       {...props}
       textValue={textValue}
-      className={dropdownItemStyles}
+      className={composeRenderProps(props.className, (className, renderProps) =>
+        dropdownItemStyles({ ...renderProps, className }),
+      )}
     >
       {composeRenderProps(props.children, (children, { isSelected }) => (
         <>
