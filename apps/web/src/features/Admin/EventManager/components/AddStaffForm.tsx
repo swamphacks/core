@@ -5,13 +5,15 @@ import { Select, SelectItem } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Group, Text } from "react-aria-components";
 import { useForm } from "@tanstack/react-form";
-import { addStaffSchema, type AddStaff } from "../hooks/useAdminStaffActions";
-import type { StaffUser } from "../hooks/useEventStaffUsers";
+import {
+  assignStaffRoleSchema,
+  type AssignStaffRole,
+} from "../hooks/useAdminStaffActions";
 
 export function AddStaffForm({
   onSubmit,
 }: {
-  onSubmit: (data: AddStaff) => Promise<StaffUser>;
+  onSubmit: (data: AssignStaffRole) => Promise<void>;
 }) {
   const form = useForm({
     defaultValues: {
@@ -19,21 +21,21 @@ export function AddStaffForm({
       role: "ADMIN",
     },
     onSubmit: async ({ value }) => {
-      const { data, success } = addStaffSchema.safeParse(value);
+      const { data, success } = assignStaffRoleSchema.safeParse(value);
       if (!success) return;
       await onSubmit(data);
       form.reset();
     },
     validators: {
-      onSubmit: addStaffSchema,
+      onSubmit: assignStaffRoleSchema,
     },
   });
 
   const errors = useFormErrors(form);
 
   const roleOptions = [
-    { id: "ADMIN", name: "Admin" },
-    { id: "STAFF", name: "Staff" },
+    { id: "admin", name: "Admin" },
+    { id: "staff", name: "Staff" },
   ];
 
   return (
@@ -70,6 +72,7 @@ export function AddStaffForm({
             {(field) => (
               <Select
                 label="Role"
+                defaultSelectedKey="Staff"
                 name={field.name}
                 selectedKey={field.state.value}
                 placeholder="Role"

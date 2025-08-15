@@ -17,16 +17,19 @@ var (
 	ErrFailedToUpdateEvent = errors.New("failed to update event")
 	ErrFailedToDeleteEvent = errors.New("failed to delete event")
 	ErrFailedToParseUUID   = errors.New("failed to parse uuid")
+	ErrMissingFields       = errors.New("missing fields")
 )
 
 type EventService struct {
 	eventRepo *repository.EventRepository
+	userRepo  *repository.UserRepository
 	logger    zerolog.Logger
 }
 
-func NewEventService(eventRepo *repository.EventRepository, logger zerolog.Logger) *EventService {
+func NewEventService(eventRepo *repository.EventRepository, userRepo *repository.UserRepository, logger zerolog.Logger) *EventService {
 	return &EventService{
 		eventRepo: eventRepo,
+		userRepo:  userRepo,
 		logger:    logger.With().Str("service", "EventService").Str("component", "events").Logger(),
 	}
 }
@@ -125,6 +128,56 @@ func (s *EventService) GetEventRoleByIds(ctx context.Context, userId uuid.UUID, 
 	return eventRole, err
 }
 
-func (s *EventService) GetEventStaffUsers(ctx context.Context, eventId uuid.UUID) (*[]sqlc.AuthUser, error) {
+func (s *EventService) GetEventStaffUsers(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetEventStaffRow, error) {
 	return s.eventRepo.GetEventStaff(ctx, eventId)
+}
+
+func (s *EventService) AssignEventRole(
+	ctx context.Context,
+	userId *uuid.UUID,
+	email *string,
+	eventId uuid.UUID,
+	role sqlc.EventRoleType,
+) error {
+	if userId == nil && email == nil {
+		return errors.New("must provide either userId or email")
+	}
+
+	var selectedUser *sqlc.AuthUser
+	var err error
+
+	if userId != nil {
+		selectedUser, err = s.userRepo.GetByID(ctx, *userId)
+		// Do not return if user not found, the query needs to fallback to other optiosn
+		if err != nil && !errors.Is(err, repository.ErrUserNotFound) {
+			s.logger.Err(err).Msg("Something went wrong getting by id")
+			return err
+		}
+	}
+
+	if selectedUser == nil && email != nil {
+		selectedUser, err = s.userRepo.GetByEmail(ctx, *email)
+		if err != nil {
+			s.logger.Err(err).Msg("Something went wrong getting by email")
+			return err
+		}
+	}
+
+	// Just a double safety check (should usually be caught by queries above)
+	if selectedUser == nil {
+		s.logger.Warn().Msg(("User not found from email OR id"))
+		return repository.ErrUserNotFound
+	}
+
+	// Now assign the event role
+	err = s.eventRepo.AssignRole(ctx, sqlc.AssignRoleParams{
+		EventID: eventId,
+		UserID:  selectedUser.ID,
+		Role:    role,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

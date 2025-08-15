@@ -15,6 +15,7 @@ type Querier interface {
 	// The unique constraint on (event_id, user_id) will prevent duplicates.
 	// Returns the newly created email record.
 	AddEmail(ctx context.Context, arg AddEmailParams) (EventInterestSubmission, error)
+	AssignRole(ctx context.Context, arg AssignRoleParams) error
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (AuthAccount, error)
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (Application, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
@@ -33,7 +34,7 @@ type Querier interface {
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
 	GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 	GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsParams) (EventRole, error)
-	GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]AuthUser, error)
+	GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEventStaffRow, error)
 	GetPublishedEvents(ctx context.Context) ([]Event, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (AuthSession, error)
 	GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthSession, error)

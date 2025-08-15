@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"reflect"
 	"time"
@@ -12,7 +13,10 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/email"
+	"github.com/swamphacks/core/apps/api/internal/parse"
 	"github.com/swamphacks/core/apps/api/internal/services"
 )
 
@@ -255,4 +259,63 @@ func (h *EventHandler) GetEventStaffUsers(w http.ResponseWriter, r *http.Request
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
 		return
 	}
+}
+
+type AssignRoleFields struct {
+	Email  *string            `json:"email"`
+	UserID *string            `json:"user_id"`
+	Role   sqlc.EventRoleType `json:"role"`
+}
+
+func (r *AssignRoleFields) Validate() error {
+	if r.Email != nil && !email.IsValidEmail(*r.Email) {
+		return fmt.Errorf("invalid email: %s", *r.Email)
+	}
+
+	switch r.Role {
+	case sqlc.EventRoleTypeAdmin, sqlc.EventRoleTypeStaff, sqlc.EventRoleTypeAttendee, sqlc.EventRoleTypeApplicant:
+		return nil
+	default:
+		return fmt.Errorf("invalid role: %q", r.Role)
+	}
+}
+
+func (h *EventHandler) AssignEventRole(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	var input AssignRoleFields
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_body", err.Error()))
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_body", err.Error()))
+		return
+	}
+
+	userId := parse.ParseUUIDOrNil(input.UserID)
+	email := parse.ParseStrToPtr(input.Email)
+
+	err = h.eventService.AssignEventRole(r.Context(), userId, email, eventId, input.Role)
+	if err != nil {
+		switch err {
+		case repository.ErrUserNotFound:
+			res.SendError(w, http.StatusNotFound, res.NewError("user_missing", "The user does not exist"))
+		default:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong on our end"))
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

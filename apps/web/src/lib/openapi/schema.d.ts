@@ -72,26 +72,7 @@ export interface paths {
      * Get all events
      * @description Gets only published events for normal users, and all events for superusers
      */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK: Events returned */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["Event"][];
-          };
-        };
-      };
-    };
+    get: operations["get-events"];
     put?: never;
     /** Create a new event */
     post: operations["post-event"];
@@ -111,101 +92,15 @@ export interface paths {
       cookie?: never;
     };
     /** Get an event */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK - Event received */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["Event"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        "5XX": {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["ErrorResponse"];
-          };
-        };
-      };
-    };
+    get: operations["get-single-event"];
     put?: never;
     post?: never;
     /** Delete an event */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK - Event deleted (patched) */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        "5XX": {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["ErrorResponse"];
-          };
-        };
-      };
-    };
+    delete: operations["delete-event"];
     options?: never;
     head?: never;
     /** Update an event */
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK - Event updated (patched) */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        "5XX": {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["ErrorResponse"];
-          };
-        };
-      };
-    };
+    patch: operations["patch-event"];
     trace?: never;
   };
   "/events/{eventId}/staff": {
@@ -221,39 +116,28 @@ export interface paths {
      * Get all staff users for an event
      * @description Gets all users with role STAFF or ADMIN
      */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK - Return users */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["User"][];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        "5XX": {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["ErrorResponse"];
-          };
-        };
-      };
-    };
+    get: operations["get-event-staff"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Change or add event role of a user */
+    post: operations["post-event-role"];
     delete?: never;
     options?: never;
     head?: never;
@@ -366,11 +250,19 @@ export interface components {
       updated_at: string;
       role: components["schemas"]["UserRole"];
     };
+    UserWithEventRole: components["schemas"]["User"] & {
+      event_role: components["schemas"]["EventRole"];
+    };
     /**
      * @example user
      * @enum {string}
      */
     UserRole: "user" | "superuser";
+    /**
+     * @example attendee
+     * @enum {string}
+     */
+    EventRole: "admin" | "staff" | "attendee" | "applicant";
   };
   responses: {
     /** @description Unauthenticated: Requester is not currently authenticated. */
@@ -570,6 +462,26 @@ export interface operations {
       };
     };
   };
+  "get-events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK: Events returned */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Event"][];
+        };
+      };
+    };
+  };
   "post-event": {
     parameters: {
       query?: never;
@@ -649,6 +561,177 @@ export interface operations {
         content: {
           schema: unknown;
           examples: unknown;
+        };
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "get-single-event": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK - Event received */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Event"];
+        };
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "delete-event": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK - Event deleted (patched) */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "patch-event": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK - Event updated (patched) */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "get-event-staff": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK - Return users */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserWithEventRole"][];
+        };
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "post-event-role": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @example user@example.com */
+          email?: string | null;
+          /**
+           * Format: uuid
+           * @example 123e4567-e89b-12d3-a456-426614174000
+           */
+          user_id?: string | null;
+          role: components["schemas"]["EventRole"];
+        };
+      };
+    };
+    responses: {
+      /** @description OK - Return users */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Not Found - User not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
         };
       };
       /** @description Server Error: Something went terribly wrong on our end. */

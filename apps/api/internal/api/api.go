@@ -81,6 +81,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
 			r.With(mw.Auth.RequireAuth, ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
 			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
+			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
 		})

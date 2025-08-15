@@ -1,11 +1,14 @@
 import { api } from "@/lib/ky";
-import type { Event } from "@/lib/openapi/types";
+import type { operations } from "@/lib/openapi/schema";
 import { useQuery } from "@tanstack/react-query";
 
 export const adminEventsQueryKey = ["admin", "events"] as const;
 
-export async function fetchEvents(): Promise<Event[]> {
-  const result = await api.get<Event[]>("events").json();
+type Events =
+  operations["get-events"]["responses"]["200"]["content"]["application/json"];
+
+export async function fetchEvents(): Promise<Events> {
+  const result = await api.get<Events>("events").json();
   console.log(result);
   return result;
 }

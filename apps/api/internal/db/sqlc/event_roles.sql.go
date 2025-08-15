@@ -7,27 +7,58 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
 
+const assignRole = `-- name: AssignRole :exec
+INSERT INTO event_roles (event_id, user_id, role)
+VALUES ($1, $2, $3)
+ON CONFLICT DO NOTHING
+`
+
+type AssignRoleParams struct {
+	EventID uuid.UUID     `json:"event_id"`
+	UserID  uuid.UUID     `json:"user_id"`
+	Role    EventRoleType `json:"role"`
+}
+
+func (q *Queries) AssignRole(ctx context.Context, arg AssignRoleParams) error {
+	_, err := q.db.Exec(ctx, assignRole, arg.EventID, arg.UserID, arg.Role)
+	return err
+}
+
 const getEventStaff = `-- name: GetEventStaff :many
-SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role
+SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, er.role AS event_role
 FROM auth.users u
 JOIN event_roles er ON u.id = er.user_id
 WHERE er.event_id = $1
   AND er.role IN ('admin', 'staff')
 `
 
-func (q *Queries) GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]AuthUser, error) {
+type GetEventStaffRow struct {
+	ID            uuid.UUID     `json:"id"`
+	Name          string        `json:"name"`
+	Email         *string       `json:"email"`
+	EmailVerified bool          `json:"email_verified"`
+	Onboarded     bool          `json:"onboarded"`
+	Image         *string       `json:"image"`
+	CreatedAt     time.Time     `json:"created_at"`
+	UpdatedAt     time.Time     `json:"updated_at"`
+	Role          AuthUserRole  `json:"role"`
+	EventRole     EventRoleType `json:"event_role"`
+}
+
+func (q *Queries) GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEventStaffRow, error) {
 	rows, err := q.db.Query(ctx, getEventStaff, eventID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AuthUser{}
+	items := []GetEventStaffRow{}
 	for rows.Next() {
-		var i AuthUser
+		var i GetEventStaffRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -38,6 +69,7 @@ func (q *Queries) GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]AuthU
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Role,
+			&i.EventRole,
 		); err != nil {
 			return nil, err
 		}

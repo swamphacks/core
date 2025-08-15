@@ -1,43 +1,31 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getEventStaffUsersQueryKey,
-  type StaffUser,
-} from "./useEventStaffUsers";
+import { getEventStaffUsersQueryKey } from "./useEventStaffUsers";
 import z from "zod";
+import { api } from "@/lib/ky";
 
-export const addStaffSchema = z.object({
+export const assignStaffRoleSchema = z.object({
   email: z.email("Must enter an email."),
-  role: z.enum(["STAFF", "ADMIN"], "Must be a valid role"),
+  role: z.enum(["staff", "admin"], "Must be a valid role"),
 });
 
-export type AddStaff = z.infer<typeof addStaffSchema>;
-
-async function addEventStaff(data: AddStaff): Promise<StaffUser> {
-  // Needs to make POST to backend
-  return {
-    userId: "6c62875a-a52c-4e98-8b02-5ead9ec0e193",
-    name: "Ben Gerald",
-    email: data.email,
-    eventRole: data.role,
-    image: null,
-    assignedAt: "2025-08-03T18:45:30.123Z",
-  };
-}
+export type AssignStaffRole = z.infer<typeof assignStaffRoleSchema>;
 
 export function useAdminStaffActions(eventId: string) {
   const queryClient = useQueryClient();
 
+  async function addEventStaff(data: AssignStaffRole) {
+    await api.post(`events/${eventId}/roles`, { json: data });
+  }
+
   const add = useMutation({
     mutationFn: addEventStaff,
-    onSuccess: (addedStaff) => {
-      queryClient.setQueryData<StaffUser[]>(
-        getEventStaffUsersQueryKey(eventId),
-        (old) => {
-          if (!old) return [addedStaff];
-
-          return [...old, addedStaff];
-        },
-      );
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: getEventStaffUsersQueryKey(eventId),
+      });
+    },
+    onError: (error) => {
+      console.log(error);
     },
   });
 

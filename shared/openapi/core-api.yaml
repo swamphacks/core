@@ -244,6 +244,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Event'
+
+      operationId: get-events
       tags:
         - Event
     post:
@@ -368,6 +370,7 @@ paths:
                   value:
                     error: internal_err
                     message: Something went wrong on our end.
+      operationId: get-single-event
       tags:
       - Event
     patch:
@@ -386,6 +389,7 @@ paths:
                   value:
                     error: internal_err
                     message: Something went wrong on our end.
+      operationId: patch-event
       tags:
       - Event
     delete:
@@ -404,6 +408,7 @@ paths:
                   value:
                     error: internal_err
                     message: Something went wrong on our end.
+      operationId: delete-event
       tags:
       - Event
   /events/{eventId}/staff:
@@ -425,7 +430,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/User'
+                  $ref: '#/components/schemas/UserWithEventRole'
         '5XX':
           description: 'Server Error: Something went terribly wrong on our end.'
           content:
@@ -437,6 +442,65 @@ paths:
                   value:
                     error: internal_err
                     message: Something went wrong on our end.
+      operationId: get-event-staff
+      tags:
+        - Event
+  /events/{eventId}/roles:
+    parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      summary: Change or add event role of a user 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  nullable: true
+                  example: "user@example.com"
+                user_id:
+                  type: string
+                  nullable: true
+                  format: uuid
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                role:
+                  $ref: '#/components/schemas/EventRole'
+              required:
+                - role
+      responses:
+        '200':
+          description: OK - Return users
+        '404':
+          description: Not Found - User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: user_not_found
+                    message: User could not be found.
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: post-event-role
       tags:
         - Event
       
@@ -615,12 +679,30 @@ components:
         - created_at
         - updated_at
         - role
+    UserWithEventRole:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            event_role:
+              $ref: '#/components/schemas/EventRole'
+          required:
+            - event_role
     UserRole:
       type: string
       enum:
         - user
         - superuser
       example: user
+    EventRole:
+      type: string
+      enum:
+        - admin
+        - staff
+        - attendee
+        - applicant
+      example: attendee
   securitySchemes:
     sh_session_id:
       type: http

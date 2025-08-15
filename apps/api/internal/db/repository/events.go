@@ -100,7 +100,11 @@ func (r *EventRepository) GetEventRoleByIds(ctx context.Context, userId uuid.UUI
 	return &eventRole, err
 }
 
-func (r *EventRepository) GetEventStaff(ctx context.Context, eventId uuid.UUID) (*[]sqlc.AuthUser, error) {
+func (r *EventRepository) GetEventStaff(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetEventStaffRow, error) {
 	users, err := r.db.Query.GetEventStaff(ctx, eventId)
 	return &users, err
+}
+
+func (r *EventRepository) AssignRole(ctx context.Context, params sqlc.AssignRoleParams) error {
+	return r.db.Query.AssignRole(ctx, params)
 }
