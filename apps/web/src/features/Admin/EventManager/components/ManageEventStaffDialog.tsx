@@ -48,7 +48,19 @@ export function ManageEventStaffDialog({ eventId }: { eventId: string }) {
             message: `Couldn't find user with email ${data.email}`,
             type: "error",
           });
+          return;
+        } else if (error instanceof HTTPError) {
+          showToast({
+            title: "Error",
+            message: `Something went wrong... Code: ${error.response.status}`,
+          });
+          return;
         }
+
+        showToast({
+          title: "Error",
+          message: `Something went wrong... ${error.name}`,
+        });
       },
     });
   };

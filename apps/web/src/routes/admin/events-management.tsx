@@ -11,7 +11,42 @@ export const Route = createFileRoute("/admin/events-management")({
 });
 
 function RouteComponent() {
-  const { data } = useAdminEvents();
+  const { data, isLoading, isError, error } = useAdminEvents();
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto p-6">
+        <header className="flex justify-between items-center mb-6">
+          <Heading className="text-text-main text-2xl">Event Manager</Heading>
+          <Button variant="primary" isDisabled aria-details="disabled">
+            Loading...
+          </Button>
+        </header>
+        <div className="flex flex-wrap gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="w-82 h-52 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || error) {
+    return (
+      <div className="mx-auto p-6 text-red-600">
+        <header className="flex justify-between items-center mb-6">
+          <Heading className="text-text-main text-2xl">Event Manager</Heading>
+          <Button variant="primary" isDisabled aria-details="disabled">
+            Create New Event
+          </Button>
+        </header>
+        <Text>Error loading events: {error?.message || "Unknown error"}</Text>
+      </div>
+    );
+  }
 
   return (
     <div>

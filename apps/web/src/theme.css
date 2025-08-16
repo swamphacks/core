@@ -135,6 +135,9 @@
   --input-border-disabled: var(--color-gray-200);
   --input-text-error: var(--color-red-600);
   --input-text-disabled: var(--color-gray-500);
+
+  --toastify-color-light: var(--color-surface);
+  --toastify-toast-width: auto;
 }
 
 .dark {
@@ -306,6 +309,8 @@
   --input-border-disabled: var(--color-zin-700);
   --input-text-error: var(--color-red-300);
   --input-text-disabled: var(--color-zinc-600);
+
+  --toastify-color-dark: var(--color-surface);
 }
 
 @theme inline {
