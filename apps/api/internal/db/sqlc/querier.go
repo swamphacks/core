@@ -15,6 +15,7 @@ type Querier interface {
 	// The unique constraint on (event_id, user_id) will prevent duplicates.
 	// Returns the newly created email record.
 	AddEmail(ctx context.Context, arg AddEmailParams) (EventInterestSubmission, error)
+	AssignRole(ctx context.Context, arg AssignRoleParams) error
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (AuthAccount, error)
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (Application, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
@@ -27,11 +28,14 @@ type Querier interface {
 	DeleteExpiredSession(ctx context.Context) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error)
+	GetAllEvents(ctx context.Context) ([]Event, error)
 	GetApplicationByUserAndEventID(ctx context.Context, arg GetApplicationByUserAndEventIDParams) (Application, error)
 	GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
 	GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 	GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsParams) (EventRole, error)
+	GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEventStaffRow, error)
+	GetPublishedEvents(ctx context.Context) ([]Event, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (AuthSession, error)
 	GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthSession, error)
 	GetUserByEmail(ctx context.Context, email *string) (AuthUser, error)

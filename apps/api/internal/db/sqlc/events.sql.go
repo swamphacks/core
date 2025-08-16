@@ -105,6 +105,47 @@ func (q *Queries) DeleteEventById(ctx context.Context, id uuid.UUID) (int64, err
 	return result.RowsAffected(), nil
 }
 
+const getAllEvents = `-- name: GetAllEvents :many
+SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at FROM events
+`
+
+func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
+	rows, err := q.db.Query(ctx, getAllEvents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Event{}
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Location,
+			&i.LocationUrl,
+			&i.MaxAttendees,
+			&i.ApplicationOpen,
+			&i.ApplicationClose,
+			&i.RsvpDeadline,
+			&i.DecisionRelease,
+			&i.StartTime,
+			&i.EndTime,
+			&i.WebsiteUrl,
+			&i.IsPublished,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getEventByID = `-- name: GetEventByID :one
 SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at FROM events
 WHERE id = $1
@@ -154,6 +195,48 @@ func (q *Queries) GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsPa
 		&i.AssignedAt,
 	)
 	return i, err
+}
+
+const getPublishedEvents = `-- name: GetPublishedEvents :many
+SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at FROM events
+WHERE is_published = TRUE
+`
+
+func (q *Queries) GetPublishedEvents(ctx context.Context) ([]Event, error) {
+	rows, err := q.db.Query(ctx, getPublishedEvents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Event{}
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Location,
+			&i.LocationUrl,
+			&i.MaxAttendees,
+			&i.ApplicationOpen,
+			&i.ApplicationClose,
+			&i.RsvpDeadline,
+			&i.DecisionRelease,
+			&i.StartTime,
+			&i.EndTime,
+			&i.WebsiteUrl,
+			&i.IsPublished,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateEventById = `-- name: UpdateEventById :exec

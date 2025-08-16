@@ -54,3 +54,10 @@ WHERE id = $1;
 -- name: GetEventRoleByIds :one
 SELECT * FROM event_roles
 WHERE user_id = @user_id::uuid AND event_id = @event_id::uuid;
+
+-- name: GetPublishedEvents :many
+SELECT * FROM events
+WHERE is_published = TRUE;
+
+-- name: GetAllEvents :many
+SELECT * FROM events;

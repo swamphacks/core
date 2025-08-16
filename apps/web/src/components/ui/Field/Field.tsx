@@ -115,7 +115,7 @@ export const Input = forwardRef(
     ref: React.ForwardedRef<HTMLInputElement>,
   ) => {
     const inputClassName =
-      "h-9.5 py-1.5 w-full min-w-0 outline-0 bg-surface text-base text-text-main disabled:text-input-text-disabled";
+      "min-h-9 py-1.5 w-full min-w-0 outline-0 bg-surface text-base text-text-main disabled:text-input-text-disabled";
 
     if (!Icon) {
       return (

@@ -74,11 +74,14 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	})
 
 	// Event routes
-	api.Router.Route("/event", func(r chi.Router) {
+	api.Router.Route("/events", func(r chi.Router) {
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
+		r.With(mw.Auth.RequireAuth).Get("/", api.Handlers.Event.GetAllEvents)
 		r.Route("/{eventId}", func(r chi.Router) {
 			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
 			r.With(mw.Auth.RequireAuth, ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
+			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
+			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
 		})

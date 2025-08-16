@@ -59,7 +59,7 @@ func main() {
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
-	eventService := services.NewEventService(eventRepo, logger)
+	eventService := services.NewEventService(eventRepo, userRepo, logger)
 	emailService := services.NewEmailService(taskQueueClient, logger)
 
 	// Injections into handlers

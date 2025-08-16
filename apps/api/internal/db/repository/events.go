@@ -74,6 +74,16 @@ func (r *EventRepository) DeleteEventById(ctx context.Context, id uuid.UUID) err
 	return err
 }
 
+func (r *EventRepository) GetAllEvents(ctx context.Context) (*[]sqlc.Event, error) {
+	events, err := r.db.Query.GetAllEvents(ctx)
+	return &events, err
+}
+
+func (r *EventRepository) GetPublishedEvents(ctx context.Context) (*[]sqlc.Event, error) {
+	events, err := r.db.Query.GetPublishedEvents(ctx)
+	return &events, err
+}
+
 func (r *EventRepository) GetEventRoleByIds(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (*sqlc.EventRole, error) {
 	params := sqlc.GetEventRoleByIdsParams{
 		UserID:  userId,
@@ -88,4 +98,13 @@ func (r *EventRepository) GetEventRoleByIds(ctx context.Context, userId uuid.UUI
 	}
 
 	return &eventRole, err
+}
+
+func (r *EventRepository) GetEventStaff(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetEventStaffRow, error) {
+	users, err := r.db.Query.GetEventStaff(ctx, eventId)
+	return &users, err
+}
+
+func (r *EventRepository) AssignRole(ctx context.Context, params sqlc.AssignRoleParams) error {
+	return r.db.Query.AssignRole(ctx, params)
 }
