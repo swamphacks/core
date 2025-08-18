@@ -17,7 +17,9 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/parse"
+	"github.com/swamphacks/core/apps/api/internal/ptr"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
 type EventHandler struct {
@@ -220,11 +222,29 @@ func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *EventHandler) GetAllEvents(w http.ResponseWriter, r *http.Request) {
-	events, err := h.eventService.GetAllEvents(r.Context())
+func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
+	// Parse query params
+	// inlcude_unpublished="true,false", default: false
+	queryParams := r.URL.Query()
+	includeUnpublished, err := web.ParseParamBoolean(queryParams, "include_unpublished", ptr.BoolToPtr(false))
 	if err != nil {
-		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong fetching events"))
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Missing/malformed query. Available parameters: include_unpublished=true,false"))
 		return
+	}
+
+	events, err := h.eventService.GetEvents(r.Context(), *includeUnpublished)
+	if err == services.ErrMissingFields {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Missing/malformed query. Available parameteres: status=all,published"))
+		return
+	}
+
+	if err == services.ErrMissingPerms {
+		res.SendError(w, http.StatusForbidden, res.NewError("forbidden", "You are forbidden from this resource."))
+		return
+	}
+
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
 	}
 
 	w.Header().Set("Content-Type", "application/json")

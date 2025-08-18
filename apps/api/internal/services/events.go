@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
-	"github.com/swamphacks/core/apps/api/internal/api/middleware"
+	ctxu "github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 )
@@ -18,6 +18,7 @@ var (
 	ErrFailedToDeleteEvent = errors.New("failed to delete event")
 	ErrFailedToParseUUID   = errors.New("failed to parse uuid")
 	ErrMissingFields       = errors.New("missing fields")
+	ErrMissingPerms        = errors.New("missing perms")
 )
 
 type EventService struct {
@@ -97,20 +98,16 @@ func (s *EventService) DeleteEventById(ctx context.Context, id uuid.UUID) error 
 	return err
 }
 
-func (s *EventService) GetAllEvents(ctx context.Context) (*[]sqlc.Event, error) {
-	// Check role, if role is none or user, return published events only
-	userCtx, ok := ctx.Value(middleware.UserContextKey).(*middleware.UserContext)
-	if !ok {
-		s.logger.Warn().Msg("Couldn't get user context")
-		return s.eventRepo.GetPublishedEvents(ctx)
+func (s *EventService) GetEvents(ctx context.Context, includeUnpublished bool) (*[]sqlc.GetEventsWithRolesRow, error) {
+	isSuperuser := ctxu.IsSuperuser(ctx)
+	userId := ctxu.GetUserIdFromCtx(ctx)
+
+	// Non-superusers can't get unpublished events
+	if !isSuperuser && includeUnpublished {
+		return nil, ErrMissingPerms
 	}
 
-	//TODO: Replace with switch later
-	if userCtx.Role == sqlc.AuthUserRoleUser {
-		return s.eventRepo.GetPublishedEvents(ctx)
-	}
-
-	return s.eventRepo.GetAllEvents(ctx)
+	return s.eventRepo.GetEventsWithRoles(ctx, userId, includeUnpublished)
 
 }
 

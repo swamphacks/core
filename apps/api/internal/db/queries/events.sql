@@ -56,8 +56,33 @@ SELECT * FROM event_roles
 WHERE user_id = @user_id::uuid AND event_id = @event_id::uuid;
 
 -- name: GetPublishedEvents :many
-SELECT * FROM events
-WHERE is_published = TRUE;
+SELECT
+    e.*,
+    er.role AS event_role
+FROM events e
+LEFT JOIN event_roles AS er
+    ON er.event_id = e.id
+    AND er.user_id = $1
+WHERE e.is_published = TRUE
+ORDER BY e.start_time ASC;
 
 -- name: GetAllEvents :many
-SELECT * FROM events;
+SELECT
+    e.*,
+    er.role AS event_role
+FROM events e
+LEFT JOIN event_roles AS er
+    ON er.event_id = e.id
+    AND er.user_id = $1
+ORDER BY e.start_time ASC;
+
+-- name: GetEventsWithRoles :many
+SELECT
+    e.*,
+    er.role AS event_role
+FROM events e
+LEFT JOIN event_roles er
+    ON er.event_id = e.id
+    AND er.user_id = sqlc.narg(user_id)
+WHERE (sqlc.arg(include_unpublished)::boolean IS TRUE OR e.is_published = TRUE)
+ORDER BY e.start_time ASC;

@@ -106,18 +106,45 @@ func (q *Queries) DeleteEventById(ctx context.Context, id uuid.UUID) (int64, err
 }
 
 const getAllEvents = `-- name: GetAllEvents :many
-SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at FROM events
+SELECT
+    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at,
+    er.role AS event_role
+FROM events e
+LEFT JOIN event_roles AS er
+    ON er.event_id = e.id
+    AND er.user_id = $1
+ORDER BY e.start_time ASC
 `
 
-func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
-	rows, err := q.db.Query(ctx, getAllEvents)
+type GetAllEventsRow struct {
+	ID               uuid.UUID         `json:"id"`
+	Name             string            `json:"name"`
+	Description      *string           `json:"description"`
+	Location         *string           `json:"location"`
+	LocationUrl      *string           `json:"location_url"`
+	MaxAttendees     *int32            `json:"max_attendees"`
+	ApplicationOpen  time.Time         `json:"application_open"`
+	ApplicationClose time.Time         `json:"application_close"`
+	RsvpDeadline     *time.Time        `json:"rsvp_deadline"`
+	DecisionRelease  *time.Time        `json:"decision_release"`
+	StartTime        time.Time         `json:"start_time"`
+	EndTime          time.Time         `json:"end_time"`
+	WebsiteUrl       *string           `json:"website_url"`
+	IsPublished      *bool             `json:"is_published"`
+	CreatedAt        *time.Time        `json:"created_at"`
+	UpdatedAt        *time.Time        `json:"updated_at"`
+	EventRole        NullEventRoleType `json:"event_role"`
+}
+
+func (q *Queries) GetAllEvents(ctx context.Context, userID uuid.UUID) ([]GetAllEventsRow, error) {
+	rows, err := q.db.Query(ctx, getAllEvents, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Event{}
+	items := []GetAllEventsRow{}
 	for rows.Next() {
-		var i Event
+		var i GetAllEventsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -135,6 +162,7 @@ func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
 			&i.IsPublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.EventRole,
 		); err != nil {
 			return nil, err
 		}
@@ -197,20 +225,52 @@ func (q *Queries) GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsPa
 	return i, err
 }
 
-const getPublishedEvents = `-- name: GetPublishedEvents :many
-SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at FROM events
-WHERE is_published = TRUE
+const getEventsWithRoles = `-- name: GetEventsWithRoles :many
+SELECT
+    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at,
+    er.role AS event_role
+FROM events e
+LEFT JOIN event_roles er
+    ON er.event_id = e.id
+    AND er.user_id = $1
+WHERE ($2::boolean IS TRUE OR e.is_published = TRUE)
+ORDER BY e.start_time ASC
 `
 
-func (q *Queries) GetPublishedEvents(ctx context.Context) ([]Event, error) {
-	rows, err := q.db.Query(ctx, getPublishedEvents)
+type GetEventsWithRolesParams struct {
+	UserID             *uuid.UUID `json:"user_id"`
+	IncludeUnpublished bool       `json:"include_unpublished"`
+}
+
+type GetEventsWithRolesRow struct {
+	ID               uuid.UUID         `json:"id"`
+	Name             string            `json:"name"`
+	Description      *string           `json:"description"`
+	Location         *string           `json:"location"`
+	LocationUrl      *string           `json:"location_url"`
+	MaxAttendees     *int32            `json:"max_attendees"`
+	ApplicationOpen  time.Time         `json:"application_open"`
+	ApplicationClose time.Time         `json:"application_close"`
+	RsvpDeadline     *time.Time        `json:"rsvp_deadline"`
+	DecisionRelease  *time.Time        `json:"decision_release"`
+	StartTime        time.Time         `json:"start_time"`
+	EndTime          time.Time         `json:"end_time"`
+	WebsiteUrl       *string           `json:"website_url"`
+	IsPublished      *bool             `json:"is_published"`
+	CreatedAt        *time.Time        `json:"created_at"`
+	UpdatedAt        *time.Time        `json:"updated_at"`
+	EventRole        NullEventRoleType `json:"event_role"`
+}
+
+func (q *Queries) GetEventsWithRoles(ctx context.Context, arg GetEventsWithRolesParams) ([]GetEventsWithRolesRow, error) {
+	rows, err := q.db.Query(ctx, getEventsWithRoles, arg.UserID, arg.IncludeUnpublished)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Event{}
+	items := []GetEventsWithRolesRow{}
 	for rows.Next() {
-		var i Event
+		var i GetEventsWithRolesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -228,6 +288,77 @@ func (q *Queries) GetPublishedEvents(ctx context.Context) ([]Event, error) {
 			&i.IsPublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.EventRole,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPublishedEvents = `-- name: GetPublishedEvents :many
+SELECT
+    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at,
+    er.role AS event_role
+FROM events e
+LEFT JOIN event_roles AS er
+    ON er.event_id = e.id
+    AND er.user_id = $1
+WHERE e.is_published = TRUE
+ORDER BY e.start_time ASC
+`
+
+type GetPublishedEventsRow struct {
+	ID               uuid.UUID         `json:"id"`
+	Name             string            `json:"name"`
+	Description      *string           `json:"description"`
+	Location         *string           `json:"location"`
+	LocationUrl      *string           `json:"location_url"`
+	MaxAttendees     *int32            `json:"max_attendees"`
+	ApplicationOpen  time.Time         `json:"application_open"`
+	ApplicationClose time.Time         `json:"application_close"`
+	RsvpDeadline     *time.Time        `json:"rsvp_deadline"`
+	DecisionRelease  *time.Time        `json:"decision_release"`
+	StartTime        time.Time         `json:"start_time"`
+	EndTime          time.Time         `json:"end_time"`
+	WebsiteUrl       *string           `json:"website_url"`
+	IsPublished      *bool             `json:"is_published"`
+	CreatedAt        *time.Time        `json:"created_at"`
+	UpdatedAt        *time.Time        `json:"updated_at"`
+	EventRole        NullEventRoleType `json:"event_role"`
+}
+
+func (q *Queries) GetPublishedEvents(ctx context.Context, userID uuid.UUID) ([]GetPublishedEventsRow, error) {
+	rows, err := q.db.Query(ctx, getPublishedEvents, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetPublishedEventsRow{}
+	for rows.Next() {
+		var i GetPublishedEventsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Location,
+			&i.LocationUrl,
+			&i.MaxAttendees,
+			&i.ApplicationOpen,
+			&i.ApplicationClose,
+			&i.RsvpDeadline,
+			&i.DecisionRelease,
+			&i.StartTime,
+			&i.EndTime,
+			&i.WebsiteUrl,
+			&i.IsPublished,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.EventRole,
 		); err != nil {
 			return nil, err
 		}

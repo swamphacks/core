@@ -69,8 +69,8 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get all events
-     * @description Gets only published events for normal users, and all events for superusers
+     * Get events
+     * @description Gets events with a nullable event role for authenticated users.
      */
     get: operations["get-events"];
     put?: never;
@@ -263,6 +263,12 @@ export interface components {
      * @enum {string}
      */
     EventRole: "admin" | "staff" | "attendee" | "applicant";
+    EventWithRole: components["schemas"]["Event"] & {
+      event_role?: {
+        event_role_type: components["schemas"]["EventRole"];
+        valid: boolean;
+      };
+    };
   };
   responses: {
     /** @description Unauthenticated: Requester is not currently authenticated. */
@@ -464,7 +470,10 @@ export interface operations {
   };
   "get-events": {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description If true, include unpublished events as well. Superusers ONLY. */
+        include_published?: boolean;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -477,7 +486,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["Event"][];
+          "application/json": components["schemas"]["EventWithRole"][];
         };
       };
     };
