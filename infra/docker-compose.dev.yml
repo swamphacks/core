@@ -15,7 +15,18 @@ services:
 
   dev-redis:
     image: redis:8.0
-    command: ["redis-server", "--appendonly", "no", "--port", "6380", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "no",
+        "--port",
+        "6380",
+        "--maxmemory",
+        "512mb",
+        "--maxmemory-policy",
+        "allkeys-lru",
+      ]
     ports:
       - 6380:6380
     attach: false

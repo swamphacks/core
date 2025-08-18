@@ -6,6 +6,12 @@ Before you begin, ensure you have the following installed:
 
 - **uv** by Astral.sh  
   Install from the official page: [https://github.com/astral-sh/uv](https://github.com/astral-sh/uv)
+
+  Note: You may need to add the directory where uv is installed to your PATH,
+  e.g. on bash where uv is installed in `/.local/bin`, run this command in `discord-bot` directory:
+
+  `export PATH="$HOME/.local/bin:$PATH"`
+
 - **Python 3.12 or higher**  
   Download from: [https://www.python.org/downloads/](https://www.python.org/downloads/)
 
