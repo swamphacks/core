@@ -1,0 +1,88 @@
+name: Deploy Discord Bot to Development
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "apps/discord-bot/**"
+      - "infra/docker-compose.dev.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image to GHCR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU for cross-platform builds
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push multi-arch image
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --push \
+            -t ghcr.io/${{ github.repository_owner }}/core-discord-bot:dev \
+            ./apps/discord-bot
+
+  run-migrations:
+    name: Run Goose Migrations
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Goose
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/pressly/goose/master/install.sh | sh
+
+      - name: Run migrations
+        run: |
+          goose -dir ./apps/api/internal/db/migrations postgres "${{ secrets.DEV_DB_URL }}" up
+
+  deploy:
+    name: Deploy to Development Server
+    runs-on: ubuntu-latest
+    needs: [build-and-push, run-migrations]
+
+    steps:
+      - name: SSH proxy commmand
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST_SWAMPHACKS }}
+          username: ${{ secrets.SSH_USERNAME_SWAMPHACKS }}
+          key: ${{ secrets.SSH_KEY_SWAMPHACKS }}
+          port: ${{ secrets.SSH_PORT_SWAMPHACKS }}
+          proxy_host: ${{ secrets.SSH_HOST_JUMP }}
+          proxy_username: ${{ secrets.SSH_USERNAME_JUMP }}
+          proxy_key: ${{ secrets.SSH_KEY_JUMP }}
+          proxy_port: ${{ secrets.SSH_PORT_JUMP }}
+          script: |
+            cd /home/admin/core/infra
+            git fetch
+            git checkout dev
+            git reset --hard origin/dev
+            git pull
+            infisical export --env=dev --format=dotenv --path="/api" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.dev.api
+            docker compose -f docker-compose.dev.yml pull dev-discord-bot
+            docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate dev-discord-bot
