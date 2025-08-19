@@ -233,8 +233,16 @@ paths:
         - Event
   /events:
     get:
-      summary: Get all events
-      description: Gets only published events for normal users, and all events for superusers
+      summary: Get events
+      description: Gets events with a nullable event role for authenticated users.
+      parameters:
+        - name: include_published
+          in: query
+          description: If true, include unpublished events as well. Superusers ONLY.
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: 'OK: Events returned'
@@ -243,7 +251,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Event'
+                  $ref: '#/components/schemas/EventWithUserInfo'
 
       operationId: get-events
       tags:
@@ -703,6 +711,42 @@ components:
         - attendee
         - applicant
       example: attendee
+    ApplicationStatus:
+      type: string
+      enum:
+        - started
+        - submitted
+        - under_review
+        - accepted
+        - rejected
+        - waitlisted
+        - withdrawn
+      example: under_review
+    EventWithUserInfo:
+      allOf:
+        - $ref: '#/components/schemas/Event'
+        - type: object
+          properties:
+            event_role:
+              type: object
+              properties:
+                event_role_type:
+                  $ref: '#/components/schemas/EventRole'
+                valid:
+                  type: boolean
+              required:
+                - event_role_type
+                - valid
+            application_status:
+              type: object
+              properties:
+                application_status:
+                  $ref: '#/components/schemas/ApplicationStatus'
+                valid:
+                  type: boolean
+              required:
+                - application_status
+                - valid
   securitySchemes:
     sh_session_id:
       type: http

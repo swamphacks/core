@@ -74,13 +74,21 @@ func (r *EventRepository) DeleteEventById(ctx context.Context, id uuid.UUID) err
 	return err
 }
 
-func (r *EventRepository) GetAllEvents(ctx context.Context) (*[]sqlc.Event, error) {
-	events, err := r.db.Query.GetAllEvents(ctx)
+func (r *EventRepository) GetAllEvents(ctx context.Context, userId uuid.UUID) (*[]sqlc.GetAllEventsRow, error) {
+	events, err := r.db.Query.GetAllEvents(ctx, userId)
 	return &events, err
 }
 
-func (r *EventRepository) GetPublishedEvents(ctx context.Context) (*[]sqlc.Event, error) {
-	events, err := r.db.Query.GetPublishedEvents(ctx)
+func (r *EventRepository) GetPublishedEvents(ctx context.Context, userId uuid.UUID) (*[]sqlc.GetPublishedEventsRow, error) {
+	events, err := r.db.Query.GetPublishedEvents(ctx, userId)
+	return &events, err
+}
+
+func (r *EventRepository) GetEventsWithRoles(ctx context.Context, userId *uuid.UUID, includeUnpublished bool) (*[]sqlc.GetEventsWithUserInfoRow, error) {
+	events, err := r.db.Query.GetEventsWithUserInfo(ctx, sqlc.GetEventsWithUserInfoParams{
+		UserID:             userId,
+		IncludeUnpublished: includeUnpublished,
+	})
 	return &events, err
 }
 

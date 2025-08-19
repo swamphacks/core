@@ -28,14 +28,15 @@ type Querier interface {
 	DeleteExpiredSession(ctx context.Context) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error)
-	GetAllEvents(ctx context.Context) ([]Event, error)
+	GetAllEvents(ctx context.Context, userID uuid.UUID) ([]GetAllEventsRow, error)
 	GetApplicationByUserAndEventID(ctx context.Context, arg GetApplicationByUserAndEventIDParams) (Application, error)
 	GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
 	GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 	GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsParams) (EventRole, error)
 	GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEventStaffRow, error)
-	GetPublishedEvents(ctx context.Context) ([]Event, error)
+	GetEventsWithUserInfo(ctx context.Context, arg GetEventsWithUserInfoParams) ([]GetEventsWithUserInfoRow, error)
+	GetPublishedEvents(ctx context.Context, userID uuid.UUID) ([]GetPublishedEventsRow, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (AuthSession, error)
 	GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthSession, error)
 	GetUserByEmail(ctx context.Context, email *string) (AuthUser, error)
