@@ -1,8 +1,7 @@
-import { Button } from "@/components/ui/Button";
 import { EventCard } from "@/features/Event/components/EventCard";
-import { auth } from "@/lib/authClient";
+import { useEventsWithUserInfo } from "@/features/Event/hooks/useEventsWithUserInfo";
 import { createFileRoute } from "@tanstack/react-router";
-import { Heading } from "react-aria-components";
+import { Heading, Text } from "react-aria-components";
 
 export const Route = createFileRoute("/_main/portal")({
   component: RouteComponent,
@@ -10,14 +9,52 @@ export const Route = createFileRoute("/_main/portal")({
 
 function RouteComponent() {
   const { user } = Route.useRouteContext();
-  const logout = async () => {
-    try {
-      await auth.logOut();
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Error during logout:", error);
-    }
-  };
+  const { data, isLoading, isError } = useEventsWithUserInfo();
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-2">
+          <Heading className="text-3xl text-text-main">
+            Welcome, {user?.name ?? "hacker"}!
+          </Heading>
+          <h2 className="text-text-secondary text-xl">
+            Ready to start hacking?
+          </h2>
+        </div>
+
+        <div className="flex flex-row gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="w-96 h-64 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || data === undefined) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <Heading className="text-3xl text-text-main">
+            Welcome, {user?.name ?? "hacker"}!
+          </Heading>
+          <h2 className="text-text-secondary text-xl">
+            Ready to start hacking?
+          </h2>
+        </div>
+
+        <div className="flex flex-row gap-6">
+          <Text className="text-red-500">
+            Whoops, something went wrong, please refresh and try again!
+          </Text>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -29,32 +66,15 @@ function RouteComponent() {
       </div>
 
       <div className="flex flex-row gap-6">
-        <EventCard
-          eventId="sfjslfjds"
-          status="notApplied"
-          title="SwampHacks XI"
-          description="Swamphacks's 11th hackathon"
-          date="Jan 20-21st"
-          location="Newell Hall"
-        />
+        {data.map((event) => (
+          <EventCard key={event.eventId} {...event} />
+        ))}
 
-        <EventCard
-          eventId="sfjslfjds"
-          status="notApplied"
-          title="SwampHacks XI"
-          description="Swamphacks's 11th hackathon"
-          date="Jan 20-21st"
-          location="Newell Hall"
-        />
-
-        <EventCard
-          eventId="sfjslfjds"
-          status="notApplied"
-          title="SwampHacks XI"
-          description="Swamphacks's 11th hackathon"
-          date="Jan 20-21st"
-          location="Newell Hall"
-        />
+        {data.length === 0 && (
+          <Text className="text-violet-600">
+            Awww such empty. Please check back later for events!
+          </Text>
+        )}
       </div>
     </div>
   );

@@ -8,7 +8,9 @@ type Events =
   operations["get-events"]["responses"]["200"]["content"]["application/json"];
 
 export async function fetchEvents(): Promise<Events> {
-  const result = await api.get<Events>("events?include_unpublished=true").json();
+  const result = await api
+    .get<Events>("events?include_unpublished=true")
+    .json();
   console.log(result);
   return result;
 }

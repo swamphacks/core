@@ -21,22 +21,71 @@ function formatDateRange(start: Date, end: Date): string {
   return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
 }
 
-function mapEventsAPIResponseToEventCardProps(data: EventWithUserInfo): EventCardProps {
-    let status: keyof typeof applicationStatus  = "notApplied" // Default
+export function mapEventsAPIResponseToEventCardProps(
+  data: EventWithUserInfo,
+): EventCardProps {
+  let status: keyof typeof applicationStatus = "notApplied"; // Default
 
-    if (!data.application_status) {
-        return {
-            eventId: data.id,
-            status,
-            title: data.name,
-            description: data.description ?? "No description",
-            date: 
-        }
+  if (!data.application_status) {
+    return {
+      eventId: data.id,
+      status,
+      title: data.name,
+      description: data.description ?? "No description",
+      date: formatDateRange(new Date(data.start_time), new Date(data.end_time)),
+      location: data.location ?? "Unknown",
+    };
+  }
+
+  // Handle roles cases
+  if (data.event_role?.event_role_type === "staff") {
+    status = "staff";
+  } else if (data.event_role?.event_role_type === "admin") {
+    status = "admin";
+  } else if (data.event_role?.event_role_type === "attendee") {
+    status = "attending";
+  } else if (data.event_role?.event_role_type === "applicant") {
+    // Handle application cases
+    switch (data.application_status.application_status) {
+      case "accepted":
+        status = "accepted";
+        break;
+      case "rejected":
+        status = "rejected";
+        break;
+      case "waitlisted":
+        status = "waitlisted";
+        break;
+      case "submitted":
+      case "under_review":
+        status = "underReview";
+        break;
+      case "started":
+        status = "notApplied";
+        break;
+      case "withdrawn":
+        status = "notGoing";
+        break;
+      default:
+        status = "notApplied"; // Default case
+        break;
     }
+  } else {
+    // If no specific role or application status, default to notApplied
+    status = "notApplied";
+  }
 
-    switch (data.application_status?.application_status) {
-        case "under_review" && data.application_status?.valid == true:
+  // Check if the event is completed
+  if (new Date(data.end_time) < new Date()) {
+    status = "completed";
+  }
 
-    }
+  return {
+    eventId: data.id,
+    status,
+    title: data.name,
+    description: data.description ?? "No description",
+    date: formatDateRange(new Date(data.start_time), new Date(data.end_time)),
+    location: data.location ?? "Unknown",
+  };
 }
-

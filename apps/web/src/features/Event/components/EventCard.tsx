@@ -70,15 +70,24 @@ const EventCard = ({
 
         {status === "accepted" ? (
           <div className="flex gap-2">
-            <EventButton className="w-full mt-4" status={status} />
+            <EventButton
+              className="w-full mt-4"
+              status={status}
+              eventId={eventId}
+            />
             <EventButton
               className="w-full mt-4"
               status="notGoing"
               text="Not Going"
+              eventId={eventId}
             />
           </div>
         ) : (
-          <EventButton className="w-full mt-4" status={status} />
+          <EventButton
+            className="w-full mt-4"
+            status={status}
+            eventId={eventId}
+          />
         )}
       </div>
     </Card>
