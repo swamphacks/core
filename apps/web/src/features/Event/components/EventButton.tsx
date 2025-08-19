@@ -68,7 +68,7 @@ const EventButton = ({
         });
         break;
       case "rejected":
-        // Navigate to the event info page
+        // Navigate to the rejected info page
         router.navigate({
           to: `/events/${eventId}/rejected`,
         });
@@ -80,13 +80,13 @@ const EventButton = ({
         });
         break;
       case "notGoing":
-        // Navigate to the event info page
+        // Navigate to the decline feedback page
         router.navigate({
           to: `/events/${eventId}/feedback/decline`,
         });
         break;
       case "completed":
-        // Navigate to the event info page
+        // Navigate to the event summary
         router.navigate({
           to: `/events/${eventId}/summary`,
         });
