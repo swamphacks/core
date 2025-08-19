@@ -4,754 +4,763 @@
  */
 
 export interface paths {
-  "/auth/callback": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/auth/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * OAuth2 Auth Callback
+         * @description This route is used for OAuth authentication methods to verify and login/create an account.
+         */
+        post: operations["post-v1-auth-callback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * OAuth2 Auth Callback
-     * @description This route is used for OAuth authentication methods to verify and login/create an account.
-     */
-    post: operations["post-v1-auth-callback"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Current User
+         * @description Get the currently authenticated user's information.
+         */
+        get: operations["get-auth-me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Current User
-     * @description Get the currently authenticated user's information.
-     */
-    get: operations["get-auth-me"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/interest": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/events/{eventId}/interest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Make an interest submission for an event (email list) */
+        post: operations["post-event-interest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Make an interest submission for an event (email list) */
-    post: operations["post-event-interest"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get events
+         * @description Gets events with a nullable event role for authenticated users.
+         */
+        get: operations["get-events"];
+        put?: never;
+        /** Create a new event */
+        post: operations["post-event"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get events
-     * @description Gets events with a nullable event role for authenticated users.
-     */
-    get: operations["get-events"];
-    put?: never;
-    /** Create a new event */
-    post: operations["post-event"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        eventId: string;
-      };
-      cookie?: never;
+    "/events/{eventId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        /** Get an event */
+        get: operations["get-single-event"];
+        put?: never;
+        post?: never;
+        /** Delete an event */
+        delete: operations["delete-event"];
+        options?: never;
+        head?: never;
+        /** Update an event */
+        patch: operations["patch-event"];
+        trace?: never;
     };
-    /** Get an event */
-    get: operations["get-single-event"];
-    put?: never;
-    post?: never;
-    /** Delete an event */
-    delete: operations["delete-event"];
-    options?: never;
-    head?: never;
-    /** Update an event */
-    patch: operations["patch-event"];
-    trace?: never;
-  };
-  "/events/{eventId}/staff": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        eventId: string;
-      };
-      cookie?: never;
+    "/events/{eventId}/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get all staff users for an event
+         * @description Gets all users with role STAFF or ADMIN
+         */
+        get: operations["get-event-staff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get all staff users for an event
-     * @description Gets all users with role STAFF or ADMIN
-     */
-    get: operations["get-event-staff"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/roles": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        eventId: string;
-      };
-      cookie?: never;
+    "/events/{eventId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change or add event role of a user */
+        post: operations["post-event-role"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Change or add event role of a user */
-    post: operations["post-event-role"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    Event: {
-      /** Format: uuid */
-      id: string;
-      name: string;
-      description?: string | null;
-      location?: string | null;
-      /** Format: uri */
-      location_url?: string | null;
-      /** Format: int32 */
-      max_attendees?: number | null;
-      /** Format: date-time */
-      application_open: string;
-      /** Format: date-time */
-      application_close: string;
-      /** Format: date-time */
-      rsvp_deadline?: string | null;
-      /** Format: date-time */
-      decision_release?: string | null;
-      /** Format: date-time */
-      start_time: string;
-      /** Format: date-time */
-      end_time: string;
-      /** Format: uri */
-      website_url?: string | null;
-      is_published?: boolean | null;
-      /** Format: date-time */
-      created_at?: string | null;
-      /** Format: date-time */
-      updated_at?: string | null;
+    schemas: {
+        Event: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description?: string | null;
+            location?: string | null;
+            /** Format: uri */
+            location_url?: string | null;
+            /** Format: int32 */
+            max_attendees?: number | null;
+            /** Format: date-time */
+            application_open: string;
+            /** Format: date-time */
+            application_close: string;
+            /** Format: date-time */
+            rsvp_deadline?: string | null;
+            /** Format: date-time */
+            decision_release?: string | null;
+            /** Format: date-time */
+            start_time: string;
+            /** Format: date-time */
+            end_time: string;
+            /** Format: uri */
+            website_url?: string | null;
+            is_published?: boolean | null;
+            /** Format: date-time */
+            created_at?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
+        };
+        /**
+         * ErrorResponse
+         * @description This model is returned on server errors, it returns an error code (lookup code definitions in documentation), an error key, and a message.
+         */
+        ErrorResponse: {
+            error: string;
+            message: string;
+        };
+        /**
+         * UserContext
+         * @description This is the model used when returning from GetMe. Used often in middleware!
+         */
+        UserContext: {
+            /** Format: uuid */
+            userId: string;
+            name: string;
+            onboarded: boolean;
+            /** Format: uri */
+            image?: string | null;
+            role: components["schemas"]["PlatformRole"];
+        };
+        /**
+         * PlatformRole
+         * @description A user's role on the platform. Either base permissions or elevated superuser perms.
+         * @enum {string}
+         */
+        PlatformRole: "user" | "superuser";
+        /** Session */
+        Session: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            user_id: string;
+            /** Format: date-time */
+            expires_at: string;
+            ip_address?: string | null;
+            user_agent?: string | null;
+        };
+        User: {
+            /**
+             * Format: uuid
+             * @example 123e4567-e89b-12d3-a456-426614174000
+             */
+            id: string;
+            /** @example John Doe */
+            name: string;
+            /**
+             * Format: email
+             * @example john@example.com
+             */
+            email?: string | null;
+            /** @example true */
+            email_verified: boolean;
+            /** @example false */
+            onboarded: boolean;
+            /**
+             * Format: uri
+             * @example https://example.com/avatar.jpg
+             */
+            image?: string | null;
+            /**
+             * Format: date-time
+             * @example 2025-08-08T17:00:00Z
+             */
+            created_at: string;
+            /**
+             * Format: date-time
+             * @example 2025-08-08T18:00:00Z
+             */
+            updated_at: string;
+            role: components["schemas"]["UserRole"];
+        };
+        UserWithEventRole: components["schemas"]["User"] & {
+            event_role: components["schemas"]["EventRole"];
+        };
+        /**
+         * @example user
+         * @enum {string}
+         */
+        UserRole: "user" | "superuser";
+        /**
+         * @example attendee
+         * @enum {string}
+         */
+        EventRole: "admin" | "staff" | "attendee" | "applicant";
+        /**
+         * @example under_review
+         * @enum {string}
+         */
+        ApplicationStatus: "started" | "submitted" | "under_review" | "accepted" | "rejected" | "waitlisted" | "withdrawn";
+        EventWithUserInfo: components["schemas"]["Event"] & {
+            event_role?: {
+                event_role_type: components["schemas"]["EventRole"];
+                valid: boolean;
+            };
+            application_status?: {
+                application_status: components["schemas"]["ApplicationStatus"];
+                valid: boolean;
+            };
+        };
     };
-    /**
-     * ErrorResponse
-     * @description This model is returned on server errors, it returns an error code (lookup code definitions in documentation), an error key, and a message.
-     */
-    ErrorResponse: {
-      error: string;
-      message: string;
+    responses: {
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        Unauthenticated: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description Unauthorized: User does not have access to this resource. */
+        Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        "Bad-Request": {
+            headers: {
+                [name: string]: unknown;
+            };
+            content?: never;
+        };
     };
-    /**
-     * UserContext
-     * @description This is the model used when returning from GetMe. Used often in middleware!
-     */
-    UserContext: {
-      /** Format: uuid */
-      userId: string;
-      name: string;
-      onboarded: boolean;
-      /** Format: uri */
-      image?: string | null;
-      role: components["schemas"]["PlatformRole"];
-    };
-    /**
-     * PlatformRole
-     * @description A user's role on the platform. Either base permissions or elevated superuser perms.
-     * @enum {string}
-     */
-    PlatformRole: "user" | "superuser";
-    /** Session */
-    Session: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      user_id: string;
-      /** Format: date-time */
-      expires_at: string;
-      ip_address?: string | null;
-      user_agent?: string | null;
-    };
-    User: {
-      /**
-       * Format: uuid
-       * @example 123e4567-e89b-12d3-a456-426614174000
-       */
-      id: string;
-      /** @example John Doe */
-      name: string;
-      /**
-       * Format: email
-       * @example john@example.com
-       */
-      email?: string | null;
-      /** @example true */
-      email_verified: boolean;
-      /** @example false */
-      onboarded: boolean;
-      /**
-       * Format: uri
-       * @example https://example.com/avatar.jpg
-       */
-      image?: string | null;
-      /**
-       * Format: date-time
-       * @example 2025-08-08T17:00:00Z
-       */
-      created_at: string;
-      /**
-       * Format: date-time
-       * @example 2025-08-08T18:00:00Z
-       */
-      updated_at: string;
-      role: components["schemas"]["UserRole"];
-    };
-    UserWithEventRole: components["schemas"]["User"] & {
-      event_role: components["schemas"]["EventRole"];
-    };
-    /**
-     * @example user
-     * @enum {string}
-     */
-    UserRole: "user" | "superuser";
-    /**
-     * @example attendee
-     * @enum {string}
-     */
-    EventRole: "admin" | "staff" | "attendee" | "applicant";
-    EventWithRole: components["schemas"]["Event"] & {
-      event_role?: {
-        event_role_type: components["schemas"]["EventRole"];
-        valid: boolean;
-      };
-    };
-  };
-  responses: {
-    /** @description Unauthenticated: Requester is not currently authenticated. */
-    Unauthenticated: {
-      headers: {
-        [name: string]: unknown;
-      };
-      content: {
-        "application/json": components["schemas"]["ErrorResponse"];
-      };
-    };
-    /** @description Unauthorized: User does not have access to this resource. */
-    Unauthorized: {
-      headers: {
-        [name: string]: unknown;
-      };
-      content: {
-        "application/json": components["schemas"]["ErrorResponse"];
-      };
-    };
-    "Bad-Request": {
-      headers: {
-        [name: string]: unknown;
-      };
-      content?: never;
-    };
-  };
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  "post-v1-auth-callback": {
-    parameters: {
-      query: {
-        /** @description The OAuth code passed back from the provider. Part of the PKCE flow. */
-        code: string;
-        /** @description The state containing a base64 encoded version of the nonce, provider, and redirect url. */
-        state: string;
-      };
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description The nonce for comparing against the callback state decoded to prevent CSRF attacks. */
-        sh_auth_nonce: string;
-      };
+    "post-v1-auth-callback": {
+        parameters: {
+            query: {
+                /** @description The OAuth code passed back from the provider. Part of the PKCE flow. */
+                code: string;
+                /** @description The state containing a base64 encoded version of the nonce, provider, and redirect url. */
+                state: string;
+            };
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description The nonce for comparing against the callback state decoded to prevent CSRF attacks. */
+                sh_auth_nonce: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK: User is logged in successfully. For when the redirect field is empty. */
+            200: {
+                headers: {
+                    /** @description Sets a sh_session cookie to signify auth status */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Found: Logged in and redirected to a requested location */
+            302: {
+                headers: {
+                    /** @description Sets a sh_session cookie to signify auth status */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request: Something went wrong with the request queries or their properties */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden: Something went wrong verifying identity or authenticating. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Bad Gateway: Authenticating OAuth server did not respond or user does not exist  */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK: User is logged in successfully. For when the redirect field is empty. */
-      200: {
-        headers: {
-          /** @description Sets a sh_session cookie to signify auth status */
-          "Set-Cookie"?: string;
-          [name: string]: unknown;
+    "get-auth-me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                /** @description The authenticated session token/id */
+                sh_session?: string;
+            };
         };
-        content?: never;
-      };
-      /** @description Found: Logged in and redirected to a requested location */
-      302: {
-        headers: {
-          /** @description Sets a sh_session cookie to signify auth status */
-          "Set-Cookie"?: string;
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description OK: Current user data returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserContext"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            /** @description Server Error: Something went terribly wrong on our end. */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
-        content?: never;
-      };
-      /** @description Bad Request: Something went wrong with the request queries or their properties */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description Forbidden: Something went wrong verifying identity or authenticating. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description Bad Gateway: Authenticating OAuth server did not respond or user does not exist  */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
     };
-  };
-  "get-auth-me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: {
-        /** @description The authenticated session token/id */
-        sh_session?: string;
-      };
+    "post-event-interest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: email
+                     * @example johndoe@ufl.edu
+                     */
+                    email: string;
+                    /** @example SHX Frontpage */
+                    source?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK: Interest email created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad request/Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Duplicate email found in DB */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Server Error: Something went terribly wrong on our end. */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK: Current user data returned */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    "get-events": {
+        parameters: {
+            query?: {
+                /** @description If true, include unpublished events as well. Superusers ONLY. */
+                include_published?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["UserContext"];
+        requestBody?: never;
+        responses: {
+            /** @description OK: Events returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventWithUserInfo"][];
+                };
+            };
         };
-      };
-      401: components["responses"]["Unauthenticated"];
-      /** @description Server Error: Something went terribly wrong on our end. */
-      "5XX": {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
     };
-  };
-  "post-event-interest": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        eventId: string;
-      };
-      cookie?: never;
+    "post-event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example Open Software Club's Workshop */
+                    name: string;
+                    /**
+                     * Format: date-time
+                     * @example 2025-08-01T08:00:00Z
+                     */
+                    application_open: string;
+                    /**
+                     * Format: date-time
+                     * @example 2025-12-01T023:59:00Z
+                     */
+                    application_close: string;
+                    /**
+                     * Format: date-time
+                     * @example 2026-02-10T17:00:00Z
+                     */
+                    start_time: string;
+                    /**
+                     * Format: date-time
+                     * @example 2026-02-12T08:00:00Z
+                     */
+                    end_time: string;
+                    description?: string;
+                    location?: string;
+                    location_url?: string;
+                    max_attendees?: number;
+                    /**
+                     * Format: date-time
+                     * @example 2025-08-01T08:00:00Z
+                     */
+                    rsvp_deadline?: string;
+                    /**
+                     * Format: date-time
+                     * @example 2025-08-01T08:00:00Z
+                     */
+                    decision_release?: string;
+                    website_url?: string;
+                    is_published?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description OK: Event created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Bad request/Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    examples: unknown;
+                };
+            };
+            /** @description endTime is before startTime or applicationClose is before applicationOpen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    schema: unknown;
+                    examples: unknown;
+                };
+            };
+            /** @description Server Error: Something went terribly wrong on our end. */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": {
-          /**
-           * Format: email
-           * @example johndoe@ufl.edu
-           */
-          email: string;
-          /** @example SHX Frontpage */
-          source?: string;
+    "get-single-event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
         };
-      };
+        requestBody?: never;
+        responses: {
+            /** @description OK - Event received */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            /** @description Server Error: Something went terribly wrong on our end. */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
     };
-    responses: {
-      /** @description OK: Interest email created */
-      201: {
-        headers: {
-          [name: string]: unknown;
+    "delete-event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
         };
-        content?: never;
-      };
-      /** @description Bad request/Malformed request */
-      400: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description OK - Event deleted (patched) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Server Error: Something went terribly wrong on our end. */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description Duplicate email found in DB */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description Server Error: Something went terribly wrong on our end. */
-      "5XX": {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
     };
-  };
-  "get-events": {
-    parameters: {
-      query?: {
-        /** @description If true, include unpublished events as well. Superusers ONLY. */
-        include_published?: boolean;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "patch-event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK - Event updated (patched) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Server Error: Something went terribly wrong on our end. */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK: Events returned */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    "get-event-staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["EventWithRole"][];
+        requestBody?: never;
+        responses: {
+            /** @description OK - Return users */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserWithEventRole"][];
+                };
+            };
+            /** @description Server Error: Something went terribly wrong on our end. */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
-      };
     };
-  };
-  "post-event": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "post-event-role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example user@example.com */
+                    email?: string | null;
+                    /**
+                     * Format: uuid
+                     * @example 123e4567-e89b-12d3-a456-426614174000
+                     */
+                    user_id?: string | null;
+                    role: components["schemas"]["EventRole"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK - Return users */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found - User not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Server Error: Something went terribly wrong on our end. */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @example Open Software Club's Workshop */
-          name: string;
-          /**
-           * Format: date-time
-           * @example 2025-08-01T08:00:00Z
-           */
-          application_open: string;
-          /**
-           * Format: date-time
-           * @example 2025-12-01T023:59:00Z
-           */
-          application_close: string;
-          /**
-           * Format: date-time
-           * @example 2026-02-10T17:00:00Z
-           */
-          start_time: string;
-          /**
-           * Format: date-time
-           * @example 2026-02-12T08:00:00Z
-           */
-          end_time: string;
-          description?: string;
-          location?: string;
-          location_url?: string;
-          max_attendees?: number;
-          /**
-           * Format: date-time
-           * @example 2025-08-01T08:00:00Z
-           */
-          rsvp_deadline?: string;
-          /**
-           * Format: date-time
-           * @example 2025-08-01T08:00:00Z
-           */
-          decision_release?: string;
-          website_url?: string;
-          is_published?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description OK: Event created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Bad request/Malformed request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-          examples: unknown;
-        };
-      };
-      /** @description endTime is before startTime or applicationClose is before applicationOpen */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          schema: unknown;
-          examples: unknown;
-        };
-      };
-      /** @description Server Error: Something went terribly wrong on our end. */
-      "5XX": {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  "get-single-event": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        eventId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK - Event received */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Event"];
-        };
-      };
-      /** @description Server Error: Something went terribly wrong on our end. */
-      "5XX": {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  "delete-event": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        eventId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK - Event deleted (patched) */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Server Error: Something went terribly wrong on our end. */
-      "5XX": {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  "patch-event": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        eventId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK - Event updated (patched) */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Server Error: Something went terribly wrong on our end. */
-      "5XX": {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  "get-event-staff": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        eventId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK - Return users */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserWithEventRole"][];
-        };
-      };
-      /** @description Server Error: Something went terribly wrong on our end. */
-      "5XX": {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  "post-event-role": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        eventId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @example user@example.com */
-          email?: string | null;
-          /**
-           * Format: uuid
-           * @example 123e4567-e89b-12d3-a456-426614174000
-           */
-          user_id?: string | null;
-          role: components["schemas"]["EventRole"];
-        };
-      };
-    };
-    responses: {
-      /** @description OK - Return users */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Not Found - User not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description Server Error: Something went terribly wrong on our end. */
-      "5XX": {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
 }

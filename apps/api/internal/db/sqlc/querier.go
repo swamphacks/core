@@ -35,7 +35,7 @@ type Querier interface {
 	GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 	GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsParams) (EventRole, error)
 	GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEventStaffRow, error)
-	GetEventsWithRoles(ctx context.Context, arg GetEventsWithRolesParams) ([]GetEventsWithRolesRow, error)
+	GetEventsWithUserInfo(ctx context.Context, arg GetEventsWithUserInfoParams) ([]GetEventsWithUserInfoRow, error)
 	GetPublishedEvents(ctx context.Context, userID uuid.UUID) ([]GetPublishedEventsRow, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (AuthSession, error)
 	GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthSession, error)

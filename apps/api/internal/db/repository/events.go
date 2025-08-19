@@ -84,8 +84,8 @@ func (r *EventRepository) GetPublishedEvents(ctx context.Context, userId uuid.UU
 	return &events, err
 }
 
-func (r *EventRepository) GetEventsWithRoles(ctx context.Context, userId *uuid.UUID, includeUnpublished bool) (*[]sqlc.GetEventsWithRolesRow, error) {
-	events, err := r.db.Query.GetEventsWithRoles(ctx, sqlc.GetEventsWithRolesParams{
+func (r *EventRepository) GetEventsWithRoles(ctx context.Context, userId *uuid.UUID, includeUnpublished bool) (*[]sqlc.GetEventsWithUserInfoRow, error) {
+	events, err := r.db.Query.GetEventsWithUserInfo(ctx, sqlc.GetEventsWithUserInfoParams{
 		UserID:             userId,
 		IncludeUnpublished: includeUnpublished,
 	})

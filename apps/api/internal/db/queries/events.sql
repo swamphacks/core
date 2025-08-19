@@ -76,13 +76,17 @@ LEFT JOIN event_roles AS er
     AND er.user_id = $1
 ORDER BY e.start_time ASC;
 
--- name: GetEventsWithRoles :many
+-- name: GetEventsWithUserInfo :many
 SELECT
     e.*,
-    er.role AS event_role
+    er.role AS event_role,
+    a.status AS application_status
 FROM events e
 LEFT JOIN event_roles er
     ON er.event_id = e.id
     AND er.user_id = sqlc.narg(user_id)
+LEFT JOIN applications a
+    ON a.event_id = e.id
+    AND a.user_id = sqlc.narg(user_id)
 WHERE (sqlc.arg(include_unpublished)::boolean IS TRUE OR e.is_published = TRUE)
 ORDER BY e.start_time ASC;

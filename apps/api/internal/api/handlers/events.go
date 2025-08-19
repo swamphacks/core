@@ -224,7 +224,7 @@ func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 
 func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	// Parse query params
-	// inlcude_unpublished="true,false", default: false
+	// include_unpublished="true,false", default: false
 	queryParams := r.URL.Query()
 	includeUnpublished, err := web.ParseParamBoolean(queryParams, "include_unpublished", ptr.BoolToPtr(false))
 	if err != nil {

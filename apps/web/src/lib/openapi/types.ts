@@ -8,3 +8,4 @@ export type Event = components["schemas"]["Event"];
 export type CreateEvent =
   operations["post-event"]["requestBody"]["content"]["application/json"];
 export type User = components["schemas"]["User"];
+export type EventWithUserInfo = components["schemas"]["EventWithUserInfo"]

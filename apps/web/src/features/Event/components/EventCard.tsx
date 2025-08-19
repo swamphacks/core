@@ -10,7 +10,7 @@ import type applicationStatus from "../applicationStatus";
 import { Separator } from "@/components/ui/Seperator";
 import { Card } from "@/components/ui/Card";
 
-interface EventCardProps {
+export interface EventCardProps {
   eventId: string;
   status: keyof typeof applicationStatus;
   title: string;

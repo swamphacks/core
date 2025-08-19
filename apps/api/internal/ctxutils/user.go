@@ -28,6 +28,7 @@ func IsUser(ctx context.Context) bool {
 	return userCtx.Role == sqlc.AuthUserRoleUser
 }
 
+// Takes in the request context and returns the userID or nil if not retrievable
 func GetUserIdFromCtx(ctx context.Context) *uuid.UUID {
 	userCtx, ok := ctx.Value(mw.UserContextKey).(*mw.UserContext)
 	if !ok {

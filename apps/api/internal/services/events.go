@@ -98,7 +98,7 @@ func (s *EventService) DeleteEventById(ctx context.Context, id uuid.UUID) error 
 	return err
 }
 
-func (s *EventService) GetEvents(ctx context.Context, includeUnpublished bool) (*[]sqlc.GetEventsWithRolesRow, error) {
+func (s *EventService) GetEvents(ctx context.Context, includeUnpublished bool) (*[]sqlc.GetEventsWithUserInfoRow, error) {
 	isSuperuser := ctxu.IsSuperuser(ctx)
 	userId := ctxu.GetUserIdFromCtx(ctx)
 
