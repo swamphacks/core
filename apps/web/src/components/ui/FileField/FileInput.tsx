@@ -13,12 +13,16 @@ import { inputStyles } from "@/components/ui/TextField";
 import { Button } from "@/components/ui/Button";
 import TablerX from "~icons/tabler/x";
 import TablerUpload from "~icons/tabler/upload";
-import { CustomPropsContext } from "./FileField";
+import { CustomPropsContext, type TFile } from "./FileField";
 import TablerFile from "~icons/tabler/file";
 
-export const FileInput = (): JSX.Element => {
+export const FileInput = ({
+  defaultValue = [],
+}: {
+  defaultValue?: TFile[];
+}): JSX.Element => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<TFile[]>(defaultValue);
   const [props] = useContextProps({} as InputProps, null, InputContext);
   const customProps = useContext(CustomPropsContext);
 
@@ -29,6 +33,8 @@ export const FileInput = (): JSX.Element => {
   }, []);
 
   const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    // TODO: upload to r2 here and get the file url
+
     if (props.multiple) {
       setFiles((prevFiles) => {
         if (!event.target.files) {
@@ -46,6 +52,7 @@ export const FileInput = (): JSX.Element => {
 
         const newFiles = [...prevFiles, ...event.target.files];
         customProps.onChange?.(newFiles);
+        customProps.onNewFiles?.([...event.target.files]);
         return newFiles;
       });
     } else {
@@ -63,6 +70,7 @@ export const FileInput = (): JSX.Element => {
 
       setFiles([file]);
       customProps.onChange?.([file]);
+      customProps.onNewFiles?.([file]);
     }
   }, []);
 
@@ -77,12 +85,41 @@ export const FileInput = (): JSX.Element => {
   };
 
   // not sure if we need this method if we set validationBehavior to "aria" inside the FileField component, but it should work for now.
-  const updateFilesForInput = (newFiles: File[]) => {
+  const updateFilesForInput = (newFiles: TFile[]) => {
     if (inputRef.current) {
       const dataTransfer = new DataTransfer();
-      newFiles.forEach((file) => dataTransfer.items.add(file));
+      newFiles.forEach(
+        (file) => file instanceof File && dataTransfer.items.add(file),
+      );
       inputRef.current.files = dataTransfer.files;
     }
+  };
+
+  const renderUploadFiles = () => {
+    return (
+      <div>
+        {files && files.length > 0 && (
+          <div className="mt-1 flex flex-col gap-1">
+            {files.map((file, i) => (
+              <div
+                key={i}
+                className="flex justify-between items-center gap-5 border-1 border-input-border rounded-sm p-2 bg-surface"
+              >
+                <div className="flex gap-1 items-center">
+                  <TablerFile className="text-text-secondary" />
+                  <p className="font-medium truncate text-sm">{file.name}</p>
+                </div>
+
+                <TablerX
+                  onClick={() => onRemoveFileByIndex(i)}
+                  className="text-sm text-gray-500 hover:text-red-500 cursor-pointer"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const allowedFileTypes = props.accept?.split(",");
@@ -100,7 +137,7 @@ export const FileInput = (): JSX.Element => {
             (file) => file.kind === "file",
           ) as FileDropItem[];
 
-          let newFiles: File[];
+          let newFiles: TFile[];
           if (props.multiple) {
             const allUploadedFiles = await Promise.all(
               fileDropItems.map((fileDropItem) => fileDropItem.getFile()),
@@ -132,6 +169,7 @@ export const FileInput = (): JSX.Element => {
             }
 
             newFiles = [file];
+            customProps.onNewFiles?.([file]);
             setFiles(newFiles);
           }
 
@@ -166,28 +204,7 @@ export const FileInput = (): JSX.Element => {
         />
       </DropZone>
 
-      <div>
-        {files && files.length > 0 && (
-          <div className="mt-1 flex flex-col gap-1">
-            {files.map((file, i) => (
-              <div
-                key={i}
-                className="flex justify-between items-center gap-5 border-1 border-input-border rounded-sm p-2 bg-surface"
-              >
-                <div className="flex gap-1 items-center">
-                  <TablerFile className="text-text-secondary" />
-                  <p className="font-medium truncate text-sm">{file.name}</p>
-                </div>
-
-                <TablerX
-                  onClick={() => onRemoveFileByIndex(i)}
-                  className="text-sm text-gray-500 hover:text-red-500 cursor-pointer"
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {renderUploadFiles()}
     </div>
   );
 };

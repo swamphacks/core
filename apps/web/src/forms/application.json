@@ -1,0 +1,362 @@
+{
+  "metadata": {
+    "title": "SwampHacks XI Application",
+    "description": "SwampHacks is the University of Florida’s largest annual hackathon. A 36-hour tech event where students from across the country come together to build projects, learn new skills, and connect with fellow innovators."
+  },
+
+  "content": [
+    {
+      "type": "section",
+      "label": "Personal Information",
+
+      "content": [
+        {
+          "type": "layout",
+          "content": [
+            {
+              "name": "firstName",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter your first name",
+              "label": "First Name",
+              "required": true,
+              "validation": {
+                "maxLength": 50
+              }
+            },
+
+            {
+              "name": "lastName",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter your last name",
+              "label": "Last Name",
+              "required": true,
+              "validation": {
+                "maxLength": 50
+              }
+            }
+          ]
+        },
+        {
+          "type": "layout",
+          "content": [
+            {
+              "name": "age",
+              "questionType": "number",
+              "placeholder": "Enter your age",
+              "label": "Age",
+              "required": true,
+              "validation": {
+                "min": 0,
+                "max": 99
+              }
+            },
+
+            {
+              "name": "phone",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter a phone number",
+              "label": "Phone",
+              "required": true,
+              "iconName": "phone",
+              "validation": {
+                "maxLength": 10,
+                "minLength": 10
+              }
+            }
+          ]
+        },
+        {
+          "type": "layout",
+          "content": [
+            {
+              "name": "preferredEmail",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter your email",
+              "label": "Preferred Email",
+              "required": true,
+              "iconName": "at"
+            },
+
+            {
+              "name": "universityEmail",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter your school email",
+              "label": "University Email",
+              "required": true,
+              "iconName": "at"
+            }
+          ]
+        },
+        {
+          "name": "linkedin",
+          "questionType": "url",
+          "placeholder": "Enter link",
+          "label": "Linkedin URL",
+          "required": true,
+          "iconName": "linkedin"
+        },
+        {
+          "name": "github",
+          "questionType": "url",
+          "placeholder": "Enter link",
+          "label": "Github URL",
+          "required": true,
+          "iconName": "github"
+        },
+        {
+          "name": "ageCertification",
+          "questionType": "checkbox",
+          "required": true,
+          "options": [
+            {
+              "label": "By clicking this,  I certify that I am 18 years old or will turn 18 before the event date.",
+              "value": "true"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "type": "section",
+      "label": "Education",
+
+      "content": [
+        {
+          "type": "layout",
+          "content": [
+            {
+              "name": "school",
+              "questionType": "select",
+              "placeholder": "Select your school",
+              "label": "School",
+              "required": true,
+              "searchable": true,
+              "options": {
+                "data": "schools"
+              }
+            },
+            {
+              "name": "level",
+              "questionType": "select",
+              "placeholder": "Select your level",
+              "label": "Level of Study",
+              "required": true,
+              "options": [
+                { "label": "High School", "value": "0" },
+                { "label": "Undergraduate", "value": "1" },
+                { "label": "Graduate", "value": "2" },
+                {
+                  "label": "Professional / Continuing Education",
+                  "value": "3"
+                },
+                { "label": "Other", "value": "4" }
+              ]
+            }
+          ]
+        },
+
+        {
+          "type": "layout",
+
+          "content": [
+            {
+              "name": "year",
+              "questionType": "select",
+              "placeholder": "Select your year",
+              "label": "Year in College",
+              "required": true,
+              "options": [
+                { "label": "1st Year", "value": "1" },
+                { "label": "2nd Year", "value": "2" },
+                { "label": "3rd Year", "value": "3" },
+                { "label": "4th Year", "value": "4" },
+                { "label": "Graduate Student", "value": "5" },
+                { "label": "Other", "value": "6" }
+              ]
+            },
+            {
+              "name": "graduationYear",
+              "questionType": "select",
+              "placeholder": "Select Year",
+              "label": "Graduation Year",
+              "required": true,
+              "options": {
+                "data": "year",
+                "min": 2023,
+                "max": 2030
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "majors",
+          "questionType": "multiselect",
+          "placeholder": "Select your major(s)",
+          "label": "Major(s)",
+          "required": true,
+          "options": {
+            "data": "majors"
+          }
+        },
+
+        {
+          "name": "minors",
+          "questionType": "shortAnswer",
+          "placeholder": "Enter your minor(s)",
+          "label": "Minor(s)",
+          "required": false
+        }
+      ]
+    },
+
+    {
+      "type": "section",
+      "label": "Experience & Preferences",
+
+      "content": [
+        {
+          "name": "experience",
+          "questionType": "multipleChoice",
+          "label": "How many hackathons have you participated in?",
+          "required": true,
+          "options": [
+            { "label": "Swamphacks would be my first!", "value": "0" },
+            { "label": "1", "value": "1" },
+            { "label": "2", "value": "2" },
+            { "label": "3", "value": "3" },
+            { "label": "4", "value": "4" }
+          ]
+        },
+        {
+          "name": "projectExperience",
+          "questionType": "multipleChoice",
+          "label": "Have you created an independent programming project before?",
+          "required": true,
+          "options": [
+            {
+              "label": "No, this is my first programming experience",
+              "value": "no-first"
+            },
+            {
+              "label": "No, but I have experience programming in my courses",
+              "value": "no-course"
+            },
+            { "label": "Yes", "value": "yes" }
+          ]
+        },
+        {
+          "name": "shirtSize",
+          "questionType": "select",
+          "label": "T-Shirt Size",
+          "placeholder": "Select your size",
+          "required": true,
+          "options": [
+            { "label": "Small", "value": "small" },
+            { "label": "Medium", "value": "medium" },
+            { "label": "Large", "value": "large" }
+          ]
+        },
+        {
+          "type": "question",
+          "name": "resume",
+          "questionType": "upload",
+          "label": "Upload your resume",
+          "required": true,
+          "validation": {
+            "validMimeTypes": ["application/pdf"]
+          }
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "label": "Miscellaneous",
+      "content": [
+        {
+          "name": "essay1",
+          "questionType": "paragraph",
+          "placeholder": "Answer here...",
+          "label": "[150 words] What is your most memorable experience working in a group? What did you learn and accomplish?",
+          "required": true
+        },
+        {
+          "name": "essay2",
+          "questionType": "paragraph",
+          "placeholder": "Answer here...",
+          "label": "[150 words] Tell us about a project you are most proud of.",
+          "required": true
+        },
+        {
+          "name": "referral",
+          "questionType": "checkbox",
+          "placeholder": "How did you learn about SwampHacks?",
+          "label": "How did you learn about SwampHacks?",
+          "required": true,
+          "options": [
+            { "label": "Instagram", "value": "instagram" },
+            { "label": "Discord", "value": "discord" },
+            { "label": "Linkedin", "value": "linkedin" },
+            { "label": "Word of Mouth", "value": "wordOfMouth" },
+            { "label": "Website", "value": "website" },
+            { "label": "Class Announcement", "value": "classAnnouncement" },
+            { "label": "Other", "value": "other" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "type": "section",
+      "label": "SwampHacks Consent & Agreements",
+
+      "content": [
+        {
+          "name": "pictureConsent",
+          "questionType": "checkbox",
+          "label": "I consent to SwampHacks photo and video policy. We will be taking pictures and recording videos throughout the events for promotional use.",
+          "required": true,
+          "options": [{ "label": "I agree", "value": "1" }]
+        },
+        {
+          "name": "inpersonAcknowledgement",
+          "questionType": "checkbox",
+          "label": "By submitting this application, I recognize that SwampHacks is an in-person only event and my in-person attendance is expected if I am offered acceptance. I also recognize that SwampHacks will be providing free meals but will not be covering transportation costs. ",
+          "required": true,
+          "options": [{ "label": "I agree", "value": "1" }]
+        }
+      ]
+    },
+
+    {
+      "type": "section",
+      "label": "MLH Consent & Agreements",
+      "description": "We are currently in the process of partnering with MLH. The following 3 checkboxes are for this partnership. If we do not end up partnering with MLH, your information will not be shared",
+
+      "content": [
+        {
+          "name": "agreeToConduct",
+          "questionType": "checkbox",
+          "label": "I have read and agree to the MLH Code of Conduct.",
+          "required": true,
+          "options": [{ "label": "I agree", "value": "1" }]
+        },
+        {
+          "name": "infoShareAuthorization",
+          "questionType": "checkbox",
+          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the MLH Privacy Policy. I have read and agree to the MLH Code of Conduct.",
+          "required": true,
+          "options": [{ "label": "I agree", "value": "1" }]
+        },
+        {
+          "name": "agreeToMLHEmails",
+          "questionType": "checkbox",
+          "label": "I authorize MLH to send me occasional emails about relevant events, career opportunities, and community announcements.",
+          "required": false,
+          "options": [{ "label": "I agree", "value": "1" }]
+        }
+      ]
+    }
+  ]
+}

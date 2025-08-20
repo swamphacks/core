@@ -33,10 +33,17 @@ export const UploadQuestion = createQuestionItem({
     const requiredMessage = item.requiredMessage ?? error.required;
 
     let schema = z.file();
+    const skeletonFileSchema = z.object(
+      {
+        id: z.string(),
+        name: z.string(),
+      },
+      "Invalid file",
+    );
 
     const { validation } = item;
     if (!validation) {
-      let newSchema = z.array(schema, requiredMessage);
+      let newSchema = z.array(schema.or(skeletonFileSchema), requiredMessage);
 
       if (item.isRequired) {
         newSchema = newSchema.min(1, requiredMessage);
@@ -47,9 +54,7 @@ export const UploadQuestion = createQuestionItem({
 
     if (validation.validMimeTypes) {
       schema = z.file().mime(validation.validMimeTypes, error.invalidFileType);
-    }
-
-    if (validation.invalidMimeTypes) {
+    } else if (validation.invalidMimeTypes) {
       schema = schema.refine(
         (file) => !validation.invalidMimeTypes?.includes(file.type),
         error.invalidFileType,
@@ -71,7 +76,7 @@ export const UploadQuestion = createQuestionItem({
       if (!Array.isArray(ctx.value)) {
         ctx.issues.push({
           code: "custom",
-          message: error.required,
+          message: requiredMessage,
           input: ctx.value,
         });
         return;
@@ -80,10 +85,20 @@ export const UploadQuestion = createQuestionItem({
       for (const file of ctx.value) {
         const result = schema.safeParse(file);
         if (!result.success) {
-          for (const issue of result.error.issues) {
+          if (result.error.issues[0].code === "invalid_type") {
+            const result2 = skeletonFileSchema.safeParse(file);
+
+            if (!result2.success) {
+              ctx.issues.push({
+                code: "custom",
+                message: result2.error.issues[0].message,
+                input: ctx.value,
+              });
+            }
+          } else {
             ctx.issues.push({
               code: "custom",
-              message: issue.message,
+              message: result.error.issues[0].message,
               input: ctx.value,
             });
           }

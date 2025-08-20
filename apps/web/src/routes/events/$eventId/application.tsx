@@ -1,6 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { build } from "@/features/FormBuilder/build";
-import data from "@/features/FormBuilder/stories/applicationFormExample.json";
+import data from "@/forms/application.json";
+import { useEffect, useRef, useState } from "react";
+import { env } from "@/config/env";
+import { QuestionTypes } from "@/features/FormBuilder/types";
 
 export const Route = createFileRoute("/events/$eventId/application")({
   component: RouteComponent,
@@ -17,9 +20,133 @@ function RouteComponent() {
   );
 }
 
-export const ApplicationForm = () => {
-  // TODO: Fetch the approriate form data corresponding to the event
-  const Form = build(data);
+const SAVE_DELAY_MS = 1000; // delay in time before saving form progress
 
-  return <Form />;
+export const ApplicationForm = () => {
+  const location = useLocation();
+  // TODO: Fetch the approriate form data corresponding to the event
+  const { Form, fieldsMeta } = build(data);
+  const [defaultValues, setDefaultValues] = useState<Record<string, any>>({});
+  const fileFields = useRef(new Set<string>());
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // const attachments = useRef<
+  //   Record<
+  //     string,
+  //     {
+  //       id: string;
+  //       name: string;
+  //       size: number;
+  //       url: string;
+  //     }[]
+  //   >
+  // >({});
+
+  useEffect(() => {
+    // document.addEventListener("visibilitychange", () => {
+    //   if (document.visibilityState === "hidden") {
+    //     navigator.sendBeacon(`http://localhost:8080/ping`);
+    //   }
+    // });
+    fetch(`${env.BASE_API_URL}${location.pathname}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setDefaultValues(JSON.parse(atob(data["application"])));
+      });
+  }, []);
+
+  return (
+    <Form
+      defaultValues={defaultValues}
+      onSubmit={(data) => {
+        const formData = new FormData();
+
+        for (const key in data) {
+          if (fieldsMeta[key] === QuestionTypes.upload) {
+            for (const file of data[key]) {
+              formData.append(`${key}[]`, file);
+            }
+          } else {
+            formData.set(key, data[key]);
+          }
+        }
+
+        fetch(`${env.BASE_API_URL}${location.pathname}/submit`, {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+
+        setIsSubmitted(true);
+      }}
+      onNewAttachments={(newFiles) => {
+        for (const field in newFiles) {
+          fileFields.current.add(field);
+        }
+      }}
+      // onNewAttachments={async (newFiles) => {
+      //   for (let field in newFiles) {
+      //     const file = newFiles[field][0];
+
+      //     if (!(file instanceof File)) continue;
+
+      //     fetch(
+      //       `${env.BASE_API_URL}${location.pathname}/upload?filename=${encodeURIComponent(file.name)}`,
+      //       {
+      //         method: "POST",
+      //         headers: {
+      //           "Content-Type": file.type || "application/octet-stream",
+      //         },
+      //         credentials: "include",
+      //         body: file,
+      //       },
+      //     )
+      //       .then((res) => res.json())
+      //       .then((data) => {
+      //         console.log(data);
+      //         fetch(data["URL"], {
+      //           method: "PUT",
+      //           body: file,
+      //         })
+      //           .then((result) => {
+      //             console.log("Upload successful:", result);
+      //           })
+      //           .catch((error) => {
+      //             console.error("Upload failed:", error);
+      //           });
+      //       });
+
+      //     attachments.current = {
+      //       ...attachments.current,
+      //       [field]: [
+      //         {
+      //           id: `${field}-file`,
+      //           name: file.name,
+      //           size: file.size,
+      //           url: "TODO",
+      //         },
+      //       ],
+      //     };
+      //   }
+
+      //   // TODO: upload files to cloudflare r2, retrieve a url
+      // }}
+      onChangeDelayMs={SAVE_DELAY_MS}
+      onChange={(formValues) => {
+        if (isSubmitted) return;
+
+        for (const field of fileFields.current) {
+          delete formValues[field];
+        }
+
+        fetch(`${env.BASE_API_URL}${location.pathname}/save`, {
+          method: "POST",
+          body: JSON.stringify(formValues),
+          credentials: "include",
+        });
+      }}
+    />
+  );
 };

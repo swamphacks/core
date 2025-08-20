@@ -19,6 +19,8 @@ var (
 	ErrFailedToParseUUID   = errors.New("failed to parse uuid")
 	ErrMissingFields       = errors.New("missing fields")
 	ErrMissingPerms        = errors.New("missing perms")
+
+	ErrFailedToSubmitApplication = errors.New("failed to submit application")
 )
 
 type EventService struct {
@@ -173,6 +175,50 @@ func (s *EventService) AssignEventRole(
 		Role:    role,
 	})
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *EventService) CreateApplication(ctx context.Context, params sqlc.CreateApplicationParams) (*sqlc.Application, error) {
+	application, err := s.eventRepo.CreateApplication(ctx, params)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	return application, nil
+}
+
+func (s *EventService) GetApplicationByUserAndEventID(ctx context.Context, params sqlc.GetApplicationByUserAndEventIDParams) (*sqlc.Application, error) {
+	application, err := s.eventRepo.GetApplicationByUserAndEventID(ctx, params)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	return application, nil
+}
+
+func (s *EventService) SubmitApplication(ctx context.Context, data any, userId uuid.UUID, eventId uuid.UUID) error {
+	err := s.eventRepo.SubmitApplication(ctx, data, userId, eventId)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *EventService) SaveApplication(ctx context.Context, data any, params sqlc.UpdateApplicationParams) error {
+	err := s.eventRepo.SaveApplication(ctx, data, params)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
 		return err
 	}
 

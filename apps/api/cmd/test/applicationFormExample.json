@@ -47,17 +47,17 @@
             "data": "majors"
           }
         },
-        {
-          "name": "school",
-          "questionType": "select",
-          "placeholder": "Select your school",
-          "label": "School",
-          "required": true,
-          "searchable": true,
-          "options": {
-            "data": "schools"
-          }
-        },
+         {
+              "name": "school",
+              "questionType": "select",
+              "placeholder": "Select your school",
+              "label": "School",
+              "required": true,
+              "searchable": true,
+              "options": {
+                "data": "schools"
+              }
+            },
         {
           "type": "question",
           "name": "resume",

@@ -32,9 +32,12 @@ type Config struct {
 	AllowedOriginsString string   `env:"ALLOWED_ORIGINS"`
 	AllowedOrigins       []string ``
 
-	Auth      AuthConfig   `envPrefix:"AUTH_"`
+	Auth      AuthConfig
 	Cookie    CookieConfig `envPrefix:"COOKIE_"`
 	ClientUrl string       `env:"CLIENT_URL"`
+
+	AwsAccessKey       string `env:"AWS_ACCESS_KEY"`
+	AwsSecretAccessKey string `env:"AWS_SECRET_ACCESS_KEY"`
 }
 
 func Load() *Config {

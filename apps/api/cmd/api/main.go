@@ -55,6 +55,7 @@ func main() {
 	sessionRepo := repository.NewSessionRepository(database)
 	eventInterestRepo := repository.NewEventInterestRepository(database)
 	eventRepo := repository.NewEventRespository(database)
+	// applicationRepo := repository.NewApplicationRepository(database)
 
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)

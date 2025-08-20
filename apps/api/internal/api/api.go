@@ -87,6 +87,10 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(mw.Auth.RequireAuth).Get("/role", api.Handlers.Event.GetEventRole)
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
+			r.With(mw.Auth.RequireAuth).Post("/application/submit", api.Handlers.Event.SubmitApplication)
+			r.With(mw.Auth.RequireAuth).Post("/application/save", api.Handlers.Event.SaveApplication)
+			r.With(mw.Auth.RequireAuth).Post("/application/upload", api.Handlers.Event.UploadAttachment)
+			r.With(mw.Auth.RequireAuth).Get("/application", api.Handlers.Event.GetApplicationByUserAndEventID)
 		})
 	})
 

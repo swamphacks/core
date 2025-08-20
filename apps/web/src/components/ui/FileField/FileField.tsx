@@ -20,6 +20,8 @@ import { Description, FieldError, Label } from "@/components/ui/Field";
 import { FileInput } from "./FileInput";
 import type { ValidationError } from "@tanstack/react-form";
 
+export type TFile = File | { id: string; name: string; size: number };
+
 export interface FileFieldProps {
   name: string;
   isRequired?: boolean | undefined;
@@ -27,25 +29,28 @@ export interface FileFieldProps {
   multiple?: boolean | undefined;
   description?: string;
   label?: string;
-  onChange?: (files: File[]) => void;
+  onChange?: (files: TFile[]) => void;
+  onNewFiles?: (files: File[]) => void;
   maxSize?: number;
   errorMessage?: string;
   validationBehavior?: "aria" | "native";
+  defaultValue?: TFile[];
 }
 
 // This context allows FileField to accept arbitrary props so that the FileInput component can use without affecting
 // the props of the underlying input component
 export const CustomPropsContext = createContext<{
-  onChange?: (args: any) => void;
+  onChange?: (args: TFile[]) => void;
+  onNewFiles?: (files: File[]) => void;
   maxSize?: number;
   error?: ValidationError;
   resetValidation: () => void;
 }>(undefined!);
 
-export const FileField = (props: FileFieldProps) => {
+export const FileField = ({ defaultValue, ...props }: FileFieldProps) => {
   return (
     <FileFieldWrapper {...props}>
-      <FileInput />
+      <FileInput defaultValue={defaultValue} />
       <div>
         <Description>{props.description}</Description>
       </div>
@@ -62,6 +67,7 @@ export const FileFieldWrapper = ({
   multiple,
   label,
   onChange,
+  onNewFiles,
   maxSize,
   errorMessage,
   validationBehavior = "aria",
@@ -132,6 +138,7 @@ export const FileFieldWrapper = ({
       <CustomPropsContext.Provider
         value={{
           onChange,
+          onNewFiles,
           maxSize,
           resetValidation: formValidationState.resetValidation,
         }}

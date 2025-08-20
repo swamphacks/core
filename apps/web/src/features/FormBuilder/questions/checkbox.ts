@@ -24,12 +24,16 @@ export const CheckboxQuestion = createQuestionItem({
     const error = errorMessage[QuestionTypes.checkbox];
     const requiredMessage = item.requiredMessage ?? error.required;
 
-    let schema = z.array(z.string(), requiredMessage); // array of string value of selections
+    if (item.options.length === 1 && !item.label) {
+      return z.boolean(requiredMessage);
+    } else {
+      let schema = z.array(z.string(), requiredMessage);
 
-    if (item.isRequired) {
-      schema = schema.min(1, requiredMessage);
+      if (item.isRequired) {
+        schema = schema.min(1, requiredMessage);
+      }
+
+      return schema;
     }
-
-    return schema;
   },
 });

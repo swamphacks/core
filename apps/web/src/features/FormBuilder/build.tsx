@@ -14,6 +14,8 @@ import { QuestionTypes } from "@/features/FormBuilder/types";
 import { textFieldIcons } from "@/features/FormBuilder/icons";
 import { useStore } from "@tanstack/react-form";
 import { questionTypeItemMap } from "./questions/createQuestionItem";
+import { parseDate } from "@internationalized/date";
+import { useDebounce } from "@uidotdev/usehooks";
 
 export function getFormItemValidationSchema(
   item: FormQuestionItemSchemaType,
@@ -34,16 +36,24 @@ export function getFormItemValidationSchema(
 
 // https://stackoverflow.com/a/78818575
 // Dynamically build a zod schema from the validation field
-export function getFormValidationSchema(
+export function getFormValidationSchemaAndFields(
   content: FormItemSchemaType[],
-): z.ZodType {
+): {
+  validationSchema: z.ZodType;
+  fields: string[];
+  fieldsMeta: Record<string, keyof typeof QuestionTypes>;
+} {
   const schema: Record<string, z.ZodType<any>> = {};
+  const fields: string[] = [];
+  const fieldsMeta: Record<string, keyof typeof QuestionTypes> = {};
 
   const traverseFormContent = (content: FormItemSchemaType[]) => {
     // For every question, attempt to parse its validation schema from the `validation` field if exist.
     for (const item of content) {
       if (item.type === "question") {
         schema[item.name] = getFormItemValidationSchema(item);
+        fields.push(item.name);
+        fieldsMeta[item.name] = item.questionType;
       } else {
         traverseFormContent(item.content);
       }
@@ -52,12 +62,45 @@ export function getFormValidationSchema(
 
   traverseFormContent(content);
 
-  return z.object(schema);
+  return {
+    validationSchema: z.object(schema),
+    fields,
+    fieldsMeta,
+  };
 }
 
-export function build(
-  formObject: FormObject,
-): (props: { onSubmit?: (data: any) => void }) => ReactNode {
+// this function ensure that default values are in the proper shape according to their question's zod schema
+function transformDefaultValues(
+  defaultValues: Record<string, any>,
+  fieldsMeta: Record<string, keyof typeof QuestionTypes>,
+) {
+  for (const field in defaultValues) {
+    if (fieldsMeta[field] === QuestionTypes.checkbox) {
+      if (typeof defaultValues[field] === "string") {
+        defaultValues[field] = defaultValues[field].split(",");
+      }
+    } else if (fieldsMeta[field] === QuestionTypes.multiselect) {
+      if (typeof defaultValues[field] === "string") {
+        defaultValues[field] = defaultValues[field].split(",");
+      }
+    } else if (fieldsMeta[field] === QuestionTypes.number) {
+      defaultValues[field] = defaultValues[field].toString();
+    }
+  }
+}
+
+export function build(formObject: FormObject): {
+  Form: (props: {
+    onSubmit?: (data: Record<string, any>) => void;
+    onNewAttachments?: (data: Record<string, File[]>) => void;
+    onChangeDelayMs?: number;
+    onChange?: (formValues: Record<string, any>) => void;
+    defaultValues?: Record<string, any>;
+  }) => ReactNode;
+  fields: string[];
+  fieldsMeta: Record<string, keyof typeof QuestionTypes>;
+  defaultFieldValues: Record<string, undefined>;
+} {
   const { error, data } = FormSchema.safeParse(formObject);
 
   if (error) {
@@ -65,210 +108,265 @@ export function build(
     throw error;
   }
 
-  const validationSchema = getFormValidationSchema(data.content);
+  const { validationSchema, fields, fieldsMeta } =
+    getFormValidationSchemaAndFields(data.content);
 
-  return function Component({ onSubmit }) {
-    const form = useAppForm({
-      validators: {
-        onSubmit: validationSchema,
-      },
-      onSubmit: ({ value }) => {
-        onSubmit?.(value);
-      },
-    });
+  const defaultFieldValues: Record<string, undefined> = {};
 
-    const formRef = useRef<HTMLFormElement>(null);
+  for (const key of fields) {
+    defaultFieldValues[key] = undefined;
+  }
 
-    const formErrors = useFormErrors(form);
+  return {
+    fields,
+    fieldsMeta,
+    defaultFieldValues,
+    Form: function Component({
+      onSubmit,
+      onNewAttachments,
+      onChange,
+      defaultValues = {},
+      onChangeDelayMs = 5000,
+    }) {
+      transformDefaultValues(defaultValues, fieldsMeta);
 
-    // Recursively create form field components based on field type (section, layout, or question) and question types
-    const buildFormContent = (content: FormItemSchemaType[]) => {
-      return content.map((item) => {
-        if (item.type === "question") {
-          return (
-            <form.AppField
-              key={item.name}
-              name={item.name}
-              children={(field) => {
-                switch (item.questionType) {
-                  case QuestionTypes.shortAnswer:
-                  case QuestionTypes.url:
-                    return (
-                      <field.TextField
-                        {...item}
-                        name={field.name}
-                        type="text"
-                        className="flex-1"
-                        validationBehavior="aria"
-                        icon={
-                          item.iconName
-                            ? textFieldIcons[item.iconName]
-                            : undefined
-                        }
-                      />
-                    );
-                  case QuestionTypes.paragraph:
-                    return (
-                      <field.TextField
-                        {...item}
-                        name={field.name}
-                        className="flex-1"
-                        textarea
-                        validationBehavior="aria"
-                      />
-                    );
-                  case QuestionTypes.number:
-                    return (
-                      <field.TextField
-                        {...item}
-                        name={field.name}
-                        type="number"
-                        className="flex-1"
-                        validationBehavior="aria"
-                      />
-                    );
-                  case QuestionTypes.multipleChoice:
-                    return (
-                      <field.RadioField
-                        {...item}
-                        name={field.name}
-                        className="flex-1"
-                        validationBehavior="aria"
-                      >
-                        {item.options.map((option) => (
-                          <Radio key={option.value} value={option.value}>
-                            {option.label}
-                          </Radio>
-                        ))}
-                      </field.RadioField>
-                    );
-                  case QuestionTypes.checkbox:
-                    return <CheckboxField item={item} field={field} />;
-                  case QuestionTypes.select:
-                    return <SelectField item={item} field={field} />;
-                  case QuestionTypes.multiselect:
-                    return <MultiSelectField item={item} field={field} />;
-                  case QuestionTypes.date:
-                    return (
-                      <field.DatePickerField
-                        {...item}
-                        name={field.name}
-                        className="flex-1"
-                        validationBehavior="aria"
-                      />
-                    );
-                  case QuestionTypes.upload:
-                    return (
-                      <field.UploadField
-                        {...item}
-                        name={field.name}
-                        validationBehavior="aria"
-                      />
-                    );
-                  default:
-                    break;
-                }
-              }}
-            />
-          );
-        }
-
-        if (item.type === "section") {
-          return (
-            <div className="mt-7 text-text-main" key={item.id}>
-              <p className="text-xl font-medium">{item.label}</p>
-              {item.description && (
-                <div className="my-4">
-                  <p>{item.description}</p>
-                </div>
-              )}
-              <div className="mt-4 space-y-4">
-                {buildFormContent(item.content)}
-              </div>
-            </div>
-          );
-        }
-
-        if (item.type === "layout") {
-          return (
-            <FieldGroup className="gap-4" key={item.id}>
-              {buildFormContent(item.content)}
-            </FieldGroup>
-          );
-        }
+      const form = useAppForm({
+        defaultValues: { ...defaultValues },
+        validators: {
+          // @ts-ignore
+          onSubmit: validationSchema,
+        },
+        onSubmit: ({ value }) => {
+          onSubmit?.(value);
+        },
       });
-    };
 
-    // Cache result so buildFormContent doesn't invoke on rerender
-    const formContent = useMemo(() => buildFormContent(data.content), []);
+      const isDirty = useDebounce(form.state.isDirty, onChangeDelayMs);
+      const formValues = useDebounce(
+        form.state.values,
+        onChangeDelayMs,
+      ) as Record<string, any>;
 
-    const errors = useStore(form.store, (state) => {
-      return state.errors;
-    });
+      useEffect(() => {
+        if (isDirty && Object.keys(formValues).length >= 1) {
+          onChange?.({
+            ...defaultFieldValues,
+            ...formValues,
+          });
+        }
+      }, [isDirty, formValues]);
 
-    // scroll the first invalid element in the form into view
-    useEffect(() => {
-      if (errors.length === 0 || !formRef.current) return;
+      const formRef = useRef<HTMLFormElement>(null);
 
-      const form = formRef.current;
+      const formErrors = useFormErrors(form);
 
-      for (let i = 0; i < form.elements.length; i++) {
-        const element = form.elements[i] as HTMLElement;
-        const fieldName = element.getAttribute("name");
+      // Recursively create form field components based on field type (section, layout, or question) and question types
+      const buildFormContent = (content: FormItemSchemaType[]) => {
+        return content.map((item) => {
+          if (item.type === "question") {
+            return (
+              <form.AppField
+                key={item.name}
+                name={item.name}
+                children={(field) => {
+                  const fieldValue = field.state.value as string | undefined;
 
-        if (fieldName) {
-          if (formErrors[fieldName].length > 0) {
-            const hidden =
-              element.getAttribute("type") === "hidden" ||
-              element.getAttribute("custom-hidden");
+                  switch (item.questionType) {
+                    case QuestionTypes.shortAnswer:
+                    case QuestionTypes.url:
+                      return (
+                        <field.TextField
+                          {...item}
+                          name={field.name}
+                          defaultValue={fieldValue}
+                          type="text"
+                          className="flex-1"
+                          validationBehavior="aria"
+                          icon={
+                            item.iconName
+                              ? textFieldIcons[item.iconName]
+                              : undefined
+                          }
+                        />
+                      );
+                    case QuestionTypes.paragraph:
+                      return (
+                        <field.TextField
+                          {...item}
+                          name={field.name}
+                          defaultValue={fieldValue}
+                          className="flex-1"
+                          textarea
+                          validationBehavior="aria"
+                        />
+                      );
+                    case QuestionTypes.number:
+                      return (
+                        <field.TextField
+                          {...item}
+                          name={field.name}
+                          defaultValue={fieldValue}
+                          type="number"
+                          className="flex-1"
+                          validationBehavior="aria"
+                        />
+                      );
+                    case QuestionTypes.multipleChoice:
+                      return (
+                        <field.RadioField
+                          {...item}
+                          name={field.name}
+                          defaultValue={fieldValue}
+                          className="flex-1"
+                          validationBehavior="aria"
+                        >
+                          {item.options.map((option) => (
+                            <Radio key={option.value} value={option.value}>
+                              {option.label}
+                            </Radio>
+                          ))}
+                        </field.RadioField>
+                      );
+                    case QuestionTypes.checkbox:
+                      return <CheckboxField item={item} field={field} />;
+                    case QuestionTypes.select:
+                      return <SelectField item={item} field={field} />;
+                    case QuestionTypes.multiselect:
+                      return <MultiSelectField item={item} field={field} />;
+                    case QuestionTypes.date:
+                      return (
+                        <field.DatePickerField
+                          {...item}
+                          name={field.name}
+                          className="flex-1"
+                          validationBehavior="aria"
+                          defaultValue={parseDate(fieldValue ?? "")} // TODO: verify correctness
+                        />
+                      );
+                    case QuestionTypes.upload:
+                      return (
+                        <field.UploadField
+                          {...item}
+                          name={field.name}
+                          validationBehavior="aria"
+                          defaultValue={field.state.value as any}
+                          onChange={(files) => {
+                            field.handleChange(
+                              files.length === 0 ? null : files,
+                            );
+                          }}
+                          onNewFiles={(newFiles) => {
+                            onNewAttachments?.({
+                              [field.name]: newFiles,
+                            });
+                          }}
+                        />
+                      );
+                    default:
+                      break;
+                  }
+                }}
+              />
+            );
+          }
 
-            if (
-              (element instanceof HTMLInputElement ||
-                element instanceof HTMLTextAreaElement) &&
-              !hidden
-            ) {
-              element.focus();
-            } else {
-              if (hidden) {
-                // if the element is hidden, use parent to scroll. this is needed for datepicker field
-                element.parentElement?.scrollIntoView({ block: "center" });
-                return;
+          if (item.type === "section") {
+            return (
+              <div className="mt-7 text-text-main" key={item.id}>
+                <p className="text-xl font-medium">{item.label}</p>
+                {item.description && (
+                  <div className="my-4">
+                    <p>{item.description}</p>
+                  </div>
+                )}
+                <div className="mt-4 space-y-4">
+                  {buildFormContent(item.content)}
+                </div>
+              </div>
+            );
+          }
+
+          if (item.type === "layout") {
+            return (
+              <FieldGroup className="gap-4" key={item.id}>
+                {buildFormContent(item.content)}
+              </FieldGroup>
+            );
+          }
+        });
+      };
+
+      // Cache result so buildFormContent doesn't invoke on rerender
+      const formContent = useMemo(() => buildFormContent(data.content), []);
+
+      const errors = useStore(form.store, (state) => {
+        return state.errors;
+      });
+
+      // scroll the first invalid element in the form into view
+      useEffect(() => {
+        if (errors.length === 0 || !formRef.current) return;
+
+        const form = formRef.current;
+
+        for (let i = 0; i < form.elements.length; i++) {
+          const element = form.elements[i] as HTMLElement;
+          const fieldName = element.getAttribute("name");
+
+          if (fieldName) {
+            if (formErrors[fieldName].length > 0) {
+              const hidden =
+                element.getAttribute("type") === "hidden" ||
+                element.getAttribute("custom-hidden");
+
+              if (
+                (element instanceof HTMLInputElement ||
+                  element instanceof HTMLTextAreaElement) &&
+                !hidden
+              ) {
+                element.focus();
+              } else {
+                if (hidden) {
+                  // if the element is hidden, use parent to scroll. this is needed for datepicker field
+                  element.parentElement?.scrollIntoView({ block: "center" });
+                  return;
+                }
+                element.scrollIntoView({ block: "center" });
               }
-              element.scrollIntoView({ block: "center" });
-            }
 
-            return;
+              return;
+            }
           }
         }
-      }
-    }, [errors]);
+      }, [errors]);
 
-    return (
-      <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">
-        <div className="space-y-3 py-5 border-b-1 border-border">
-          <p className="text-2xl text-text-main font-medium">
-            {data.metadata.title}
-          </p>
-          <p className="text-text-main">{data.metadata.description}</p>
+      return (
+        <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">
+          <div className="space-y-3 py-5 border-b-1 border-border">
+            <p className="text-2xl text-text-main font-medium">
+              {data.metadata.title}
+            </p>
+            <p className="text-text-main">{data.metadata.description}</p>
+          </div>
+          <Form
+            className="mt-5 space-y-10"
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
+            }}
+            validationErrors={formErrors}
+            validationBehavior="aria"
+            ref={formRef}
+          >
+            <div className="space-y-6">{formContent}</div>
+            <form.AppForm>
+              <form.SubmitButton label="Submit" />
+            </form.AppForm>
+          </Form>
         </div>
-        <Form
-          className="mt-5 space-y-10"
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
-          }}
-          validationErrors={formErrors}
-          validationBehavior="aria"
-          ref={formRef}
-        >
-          <div className="space-y-6">{formContent}</div>
-          <form.AppForm>
-            <form.SubmitButton label="Submit" />
-          </form.AppForm>
-        </Form>
-      </div>
-    );
+      );
+    },
   };
 }
 
@@ -345,6 +443,7 @@ function SelectField({
       className="flex-1"
       validationBehavior="aria"
       virtualized={data.length > 100}
+      defaultSelectedKey={field.state.value}
       items={
         Array.isArray(item.options) ? item.options : yearData ? yearData : data
       }
@@ -356,6 +455,7 @@ function SelectField({
       className="flex-1 max-h-70"
       validationBehavior="aria"
       virtualized={data.length > 100}
+      defaultSelectedKey={field.state.value}
       items={
         Array.isArray(item.options) ? item.options : yearData ? yearData : data
       }
@@ -375,12 +475,35 @@ function MultiSelectField({
   const transformData = (data: { id: string; name: string }[]) =>
     data.map((item) => ({ label: item.name, value: item.id }));
 
+  let defaultValue = field.state.value;
+
+  const mapFn = (item: any) => {
+    if (typeof item === "object" && item["label"] && item["value"]) {
+      return item;
+    }
+
+    return {
+      label: item,
+      value: item,
+    };
+  };
+
+  if (typeof defaultValue === "string") {
+    defaultValue = defaultValue.split(",").map(mapFn);
+  } else {
+    defaultValue = defaultValue.map(mapFn);
+  }
+
   return (
     <field.MultiSelectField
       {...item}
       name={field.name}
       options={Array.isArray(item.options) ? item.options : transformData(data)}
       validationBehavior="aria"
+      defaultValue={defaultValue}
+      onChange={(data: any) =>
+        field.handleChange(data.map((item: any) => item.value))
+      }
     />
   );
 }
@@ -403,9 +526,10 @@ function CheckboxField({
           name={field.name}
           key={option.value}
           value={option.value}
-          onChange={(val) => field.handleChange(val && [option.value])}
+          onChange={(val) => field.setValue(val ? true : null)}
           className="text-base"
           isRequired={item.isRequired}
+          defaultSelected={field.state.value}
         >
           <span>
             {option.label}
@@ -424,6 +548,7 @@ function CheckboxField({
       className="flex-1"
       validationBehavior="aria"
       isRequired={item.isRequired}
+      defaultValue={field.state.value}
     >
       {item.options.map((option) => (
         <Checkbox key={option.value} value={option.value}>
