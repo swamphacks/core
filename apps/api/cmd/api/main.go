@@ -14,6 +14,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/storage"
 )
 
 func main() {
@@ -49,12 +50,19 @@ func main() {
 	// Create new middleware injectable
 	mw := middleware.NewMiddleware(database, logger, cfg)
 
+	// Initialize storage clients
+	r2Client, err := storage.NewR2Client(cfg.CF.AccountID, cfg.CF.AccessKeyId, cfg.CF.AccessKeySecret, logger)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to create R2 client")
+	}
+
 	// Injections into repositories
 	userRepo := repository.NewUserRepository(database)
 	accountRepo := repository.NewAccountRespository(database)
 	sessionRepo := repository.NewSessionRepository(database)
 	eventInterestRepo := repository.NewEventInterestRepository(database)
 	eventRepo := repository.NewEventRespository(database)
+	applicationRepo := repository.NewApplicationRepository(database)
 	// applicationRepo := repository.NewApplicationRepository(database)
 
 	// Injections into services
@@ -62,9 +70,10 @@ func main() {
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
 	eventService := services.NewEventService(eventRepo, userRepo, logger)
 	emailService := services.NewEmailService(taskQueueClient, logger)
+	applicationService := services.NewApplicationService(applicationRepo, r2Client)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, eventInterestService, eventService, emailService, cfg, logger)
+	apiHandlers := handlers.NewHandlers(authService, eventInterestService, eventService, emailService, applicationService, cfg, logger)
 
 	api := api.NewAPI(&logger, apiHandlers, mw)
 

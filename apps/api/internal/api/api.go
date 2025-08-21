@@ -87,10 +87,21 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(mw.Auth.RequireAuth).Get("/role", api.Handlers.Event.GetEventRole)
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
-			r.With(mw.Auth.RequireAuth).Post("/application/submit", api.Handlers.Event.SubmitApplication)
-			r.With(mw.Auth.RequireAuth).Post("/application/save", api.Handlers.Event.SaveApplication)
-			r.With(mw.Auth.RequireAuth).Post("/application/upload", api.Handlers.Event.UploadAttachment)
-			r.With(mw.Auth.RequireAuth).Get("/application", api.Handlers.Event.GetApplicationByUserAndEventID)
+
+			// This route below is not preferred over using path parameters
+			// r.With(mw.Auth.RequireAuth).Get("/application", api.Handlers.Event.GetApplicationByUserAndEventID)
+
+			r.Route("/applications", func(r chi.Router) {
+				r.Use(mw.Auth.RequireAuth)
+
+				r.Post("/submit", api.Handlers.Event.SubmitApplication)
+				r.Post("/save", api.Handlers.Event.SaveApplication)
+
+				r.Route("/{applicationId}", func(r chi.Router) {
+					// Where we will put application and event specific routes
+				})
+				// r.Post("/upload", api.Handlers.Event.UploadAttachment)
+			})
 		})
 	})
 

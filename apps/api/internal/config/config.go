@@ -25,6 +25,18 @@ type AuthConfig struct {
 	// Feel free to add more as implementations grow
 }
 
+type CloudflareConfig struct {
+	AccountID       string `env:"ACCOUNT_ID"`
+	AccessKeyId     string `env:"ACCESS_KEY_ID"`
+	AccessKeySecret string `env:"ACCESS_KEY_SECRET"`
+}
+
+type CoreBuckets struct {
+	Avatars            string `env:"USER_AVATARS" envDefault:"core-user-avatars-dev"`
+	ApplicationResumes string `env:"APPLICATION_RESUMES" envDefault:"core-application-resumes-dev"`
+	EventAssets        string `env:"EVENT_ASSETS" envDefault:"core-event-assets-dev"`
+}
+
 type Config struct {
 	DatabaseURL          string   `env:"DATABASE_URL"`
 	RedisURL             string   `env:"REDIS_URL"`
@@ -38,6 +50,9 @@ type Config struct {
 
 	AwsAccessKey       string `env:"AWS_ACCESS_KEY"`
 	AwsSecretAccessKey string `env:"AWS_SECRET_ACCESS_KEY"`
+
+	CF          CloudflareConfig `envPrefix:"CF_"`
+	CoreBuckets CoreBuckets      `envPrefix:"CORE_BUCKETS_"`
 }
 
 func Load() *Config {
