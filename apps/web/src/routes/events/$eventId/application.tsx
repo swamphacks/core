@@ -4,6 +4,8 @@ import data from "@/forms/application.json";
 import { useEffect, useRef, useState } from "react";
 import { env } from "@/config/env";
 import { QuestionTypes } from "@/features/FormBuilder/types";
+import { ErrorBoundary } from "react-error-boundary";
+import TablerAlertCircle from "~icons/tabler/alert-circle";
 
 export const Route = createFileRoute("/events/$eventId/application")({
   component: RouteComponent,
@@ -11,12 +13,14 @@ export const Route = createFileRoute("/events/$eventId/application")({
 
 function RouteComponent() {
   return (
-    <div className="w-full h-screen bg-surface">
-      {/* this padding left prevent the page being shifted when the form fully loads because of the scrollbar */}
-      <div className="w-full bg-surface transition-[background] sm:pl-[calc(100vw-100%)]">
-        <ApplicationForm />
+    <ErrorBoundary FallbackComponent={Fallback}>
+      <div className="w-full h-screen bg-surface">
+        {/* this padding left prevent the page being shifted when the form fully loads because of the scrollbar */}
+        <div className="w-full bg-surface transition-[background] sm:pl-[calc(100vw-100%)]">
+          <ApplicationForm />
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 
@@ -150,3 +154,12 @@ export const ApplicationForm = () => {
     />
   );
 };
+
+function Fallback() {
+  return (
+    <div className="w-full h-full bg-surface flex justify-center items-center gap-2 text-red-400">
+      <TablerAlertCircle />
+      <p>Something went wrong while loading form :(</p>
+    </div>
+  );
+}
