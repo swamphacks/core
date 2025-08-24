@@ -9,6 +9,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+* {
+  --toastify-toast-width: auto;
+}
+
 html,
 body,
 #root {
@@ -25,3 +29,7 @@ body,
 /* #root {
   @apply transition-bg duration-300;
 } */
+
+.Toastify__close-button {
+  color: var(--color-text-main);
+}

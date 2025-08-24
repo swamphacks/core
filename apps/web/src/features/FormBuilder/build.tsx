@@ -8,7 +8,14 @@ import {
   type FormQuestionItemSchemaType,
   FormSchema,
 } from "@/features/FormBuilder/formSchema";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import z from "zod";
 import { QuestionTypes } from "@/features/FormBuilder/types";
 import { textFieldIcons } from "@/features/FormBuilder/icons";
@@ -16,6 +23,7 @@ import { useStore } from "@tanstack/react-form";
 import { questionTypeItemMap } from "./questions/createQuestionItem";
 import { parseDate } from "@internationalized/date";
 import { useDebounce } from "@uidotdev/usehooks";
+import TablerCircleCheck from "~icons/tabler/circle-check";
 
 export function getFormItemValidationSchema(
   item: FormQuestionItemSchemaType,
@@ -73,7 +81,7 @@ export function getFormValidationSchemaAndFields(
 function transformDefaultValues(
   defaultValues: Record<string, any>,
   fieldsMeta: Record<string, keyof typeof QuestionTypes>,
-) {
+): Record<string, any> {
   for (const field in defaultValues) {
     if (fieldsMeta[field] === QuestionTypes.checkbox) {
       if (typeof defaultValues[field] === "string") {
@@ -87,15 +95,18 @@ function transformDefaultValues(
       defaultValues[field] = defaultValues[field].toString();
     }
   }
+
+  return defaultValues;
 }
 
 export function build(formObject: FormObject): {
   Form: (props: {
-    onSubmit?: (data: Record<string, any>) => void;
+    onSubmit?: (data: Record<string, any>) => Promise<void>;
     onNewAttachments?: (data: Record<string, File[]>) => void;
     onChangeDelayMs?: number;
     onChange?: (formValues: Record<string, any>) => void;
     defaultValues?: Record<string, any>;
+    SubmitSuccessComponent?: React.ComponentType;
   }) => ReactNode;
   fields: string[];
   fieldsMeta: Record<string, keyof typeof QuestionTypes>;
@@ -121,23 +132,30 @@ export function build(formObject: FormObject): {
     fields,
     fieldsMeta,
     defaultFieldValues,
-    Form: function Component({
+    Form: memo(function Component({
       onSubmit,
       onNewAttachments,
       onChange,
       defaultValues = {},
       onChangeDelayMs = 5000,
+      SubmitSuccessComponent = FallbackSubmitSuccessComponent,
     }) {
-      transformDefaultValues(defaultValues, fieldsMeta);
+      const [, rerender] = useState({});
+      useEffect(() => rerender({}), [defaultValues]);
+
+      const transformedDefaultValues = useMemo(
+        () => transformDefaultValues(defaultValues, fieldsMeta),
+        [defaultValues],
+      );
 
       const form = useAppForm({
-        defaultValues: { ...defaultValues },
+        defaultValues: transformedDefaultValues,
         validators: {
           // @ts-ignore
           onSubmit: validationSchema,
         },
-        onSubmit: ({ value }) => {
-          onSubmit?.(value);
+        onSubmit: async ({ value }) => {
+          await onSubmit?.(value);
         },
       });
 
@@ -340,6 +358,10 @@ export function build(formObject: FormObject): {
         }
       }, [errors]);
 
+      const isSubmitted = useStore(form.store, (state) => {
+        return state.isSubmitted;
+      });
+
       return (
         <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">
           <div className="space-y-3 py-5 border-b-1 border-border">
@@ -348,25 +370,31 @@ export function build(formObject: FormObject): {
             </p>
             <p className="text-text-main">{data.metadata.description}</p>
           </div>
-          <Form
-            className="mt-5 space-y-10"
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              form.handleSubmit();
-            }}
-            validationErrors={formErrors}
-            validationBehavior="aria"
-            ref={formRef}
-          >
-            <div className="space-y-6">{formContent}</div>
-            <form.AppForm>
-              <form.SubmitButton label="Submit" />
-            </form.AppForm>
-          </Form>
+          {isSubmitted ? (
+            <div className="mt-3">
+              <SubmitSuccessComponent />
+            </div>
+          ) : (
+            <Form
+              className="mt-5 space-y-10"
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                form.handleSubmit();
+              }}
+              validationErrors={formErrors}
+              validationBehavior="aria"
+              ref={formRef}
+            >
+              <div className="space-y-6">{formContent}</div>
+              <form.AppForm>
+                <form.SubmitButton label="Submit" />
+              </form.AppForm>
+            </Form>
+          )}
         </div>
       );
-    },
+    }),
   };
 }
 
@@ -491,7 +519,7 @@ function MultiSelectField({
   if (typeof defaultValue === "string") {
     defaultValue = defaultValue.split(",").map(mapFn);
   } else {
-    defaultValue = defaultValue.map(mapFn);
+    defaultValue = Array.isArray(defaultValue) ? defaultValue.map(mapFn) : [];
   }
 
   return (
@@ -556,5 +584,14 @@ function CheckboxField({
         </Checkbox>
       ))}
     </field.CheckboxField>
+  );
+}
+
+function FallbackSubmitSuccessComponent() {
+  return (
+    <div className="flex items-center gap-2 py-3 pl-3 bg-badge-bg-accepted/50 text-badge-text-accepted font-medium">
+      <TablerCircleCheck />
+      <p>Thank you! Your application has been received.</p>
+    </div>
   );
 }
