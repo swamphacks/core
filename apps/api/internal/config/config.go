@@ -48,9 +48,6 @@ type Config struct {
 	Cookie    CookieConfig `envPrefix:"COOKIE_"`
 	ClientUrl string       `env:"CLIENT_URL"`
 
-	AwsAccessKey       string `env:"AWS_ACCESS_KEY"`
-	AwsSecretAccessKey string `env:"AWS_SECRET_ACCESS_KEY"`
-
 	CF          CloudflareConfig `envPrefix:"CF_"`
 	CoreBuckets CoreBuckets      `envPrefix:"CORE_BUCKETS_"`
 }
