@@ -69,6 +69,7 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 	userIdPtr := ctxutils.GetUserIdFromCtx(r.Context())
 
 	if userIdPtr == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
 		return
 	}
 
@@ -171,21 +172,25 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 
 	eventId, err := getEventID(w, r)
 
-	if err == nil {
-		w.WriteHeader(http.StatusBadRequest)
+	if err != nil {
 		return
 	}
 
 	userIdPtr := ctxutils.GetUserIdFromCtx(r.Context())
 
 	if userIdPtr == nil {
-		w.WriteHeader(http.StatusBadRequest)
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
 		return
 	}
 
 	userId := *userIdPtr
 
-	h.appService.SubmitApplication(r.Context(), submission, resumeFileBuffer.Bytes(), userId, eventId)
+	err = h.appService.SubmitApplication(r.Context(), submission, resumeFileBuffer.Bytes(), userId, eventId)
+
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("submit_application_error", "Something went wrong while submitting application"))
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -207,15 +212,21 @@ func (h *ApplicationHandler) SaveApplication(w http.ResponseWriter, r *http.Requ
 	userIdPtr := ctxutils.GetUserIdFromCtx(r.Context())
 
 	if userIdPtr == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
 		return
 	}
 
 	userId := *userIdPtr
 
-	h.appService.SaveApplication(r.Context(), data, sqlc.UpdateApplicationParams{
+	err = h.appService.SaveApplication(r.Context(), data, sqlc.UpdateApplicationParams{
 		UserID:  userId,
 		EventID: eventId,
 	})
+
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("save_application_error", "Something went wrong while saving application"))
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }

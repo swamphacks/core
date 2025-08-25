@@ -75,19 +75,19 @@ export const ApplicationForm = () => {
       credentials: "include",
     });
 
-    const resBody = await res.json();
-
     if (!res.ok) {
+      const resBody = await res.json();
+
       showToast({
         title: "Submission Error",
         message: resBody.message || "Something went wrong",
         type: "error",
       });
-      setIsInvalid(true);
-      return;
-    }
 
-    setIsSubmitted(true);
+      setIsInvalid(true);
+    } else {
+      setIsSubmitted(true);
+    }
   }, []);
 
   const onNewAttachments = useCallback((newFiles: Record<string, File[]>) => {

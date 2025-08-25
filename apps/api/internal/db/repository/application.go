@@ -75,7 +75,7 @@ func (r *ApplicationRepository) SubmitApplication(ctx context.Context, data any,
 
 	err = r.db.Query.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
 		StatusDoUpdate:      true,
-		Status:              sqlc.ApplicationStatusStarted,
+		Status:              sqlc.ApplicationStatusSubmitted,
 		ApplicationDoUpdate: true,
 		Application:         jsonBytes,
 		UserID:              userId,

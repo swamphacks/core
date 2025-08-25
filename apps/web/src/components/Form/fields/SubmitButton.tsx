@@ -10,7 +10,7 @@ export function SubmitButton({ label = "Submit" }: { label?: string }) {
         return (
           <div className="flex justify-start mb-20">
             <Button type="submit" isDisabled={!canSubmit || isSubmitting}>
-              {label}
+              {isSubmitting ? "Submitting..." : label}
             </Button>
           </div>
         );
