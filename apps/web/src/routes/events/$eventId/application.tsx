@@ -87,6 +87,7 @@ export const ApplicationForm = () => {
       setIsInvalid(true);
     } else {
       setIsSubmitted(true);
+      setIsInvalid(false);
     }
   }, []);
 

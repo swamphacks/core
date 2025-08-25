@@ -148,7 +148,7 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 	submission.Essay2 = r.FormValue("essay2")
 	submission.Referral = r.FormValue("referral")
 	submission.PictureConsent = r.FormValue("pictureConsent")
-	submission.InpersonAcknowledgement = r.FormValue("inpersonAcknowledgement")
+	submission.InPersonAcknowledgement = r.FormValue("inpersonAcknowledgement")
 	submission.AgreeToConduct = r.FormValue("agreeToConduct")
 	submission.InfoShareAuthorization = r.FormValue("infoShareAuthorization")
 	submission.AgreeToMLHEmails = r.FormValue("agreeToMLHEmails")

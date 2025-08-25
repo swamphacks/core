@@ -38,10 +38,10 @@ type ApplicationSubmissionFields struct {
 	Essay2                  string `json:"essay2" validate:"required"`
 	Referral                string `json:"referral" validate:"required"`
 	PictureConsent          string `json:"pictureConsent" validate:"required"`
-	InpersonAcknowledgement string `json:"inpersonAcknowledgement" validate:"required"`
+	InPersonAcknowledgement string `json:"inpersonAcknowledgement" validate:"required"`
 	AgreeToConduct          string `json:"agreeToConduct" validate:"required"`
 	InfoShareAuthorization  string `json:"infoShareAuthorization" validate:"required"`
-	AgreeToMLHEmails        string `json:"agreeToMLHEmails" validate:"required"`
+	AgreeToMLHEmails        string `json:"agreeToMLHEmails"`
 }
 
 type ApplicationService struct {
