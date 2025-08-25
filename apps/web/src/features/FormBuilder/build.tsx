@@ -99,15 +99,18 @@ function transformDefaultValues(
   return defaultValues;
 }
 
+export interface FormProps {
+  onSubmit?: (data: Record<string, any>) => Promise<void>;
+  onNewAttachments?: (data: Record<string, File[]>) => void;
+  onChangeDelayMs?: number;
+  onChange?: (formValues: Record<string, any>) => void;
+  defaultValues?: Record<string, any>;
+  isInvalid?: boolean;
+  SubmitSuccessComponent?: React.ComponentType;
+}
+
 export function build(formObject: FormObject): {
-  Form: (props: {
-    onSubmit?: (data: Record<string, any>) => Promise<void>;
-    onNewAttachments?: (data: Record<string, File[]>) => void;
-    onChangeDelayMs?: number;
-    onChange?: (formValues: Record<string, any>) => void;
-    defaultValues?: Record<string, any>;
-    SubmitSuccessComponent?: React.ComponentType;
-  }) => ReactNode;
+  Form: (props: FormProps) => ReactNode;
   fields: string[];
   fieldsMeta: Record<string, keyof typeof QuestionTypes>;
   defaultFieldValues: Record<string, undefined>;
@@ -138,6 +141,7 @@ export function build(formObject: FormObject): {
       onChange,
       defaultValues = {},
       onChangeDelayMs = 5000,
+      isInvalid = false,
       SubmitSuccessComponent = FallbackSubmitSuccessComponent,
     }) {
       const [, rerender] = useState({});
@@ -358,9 +362,11 @@ export function build(formObject: FormObject): {
         }
       }, [errors]);
 
-      const isSubmitted = useStore(form.store, (state) => {
+      const isSubmittedState = useStore(form.store, (state) => {
         return state.isSubmitted;
       });
+
+      const isSubmitted = isSubmittedState && !isInvalid;
 
       return (
         <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">

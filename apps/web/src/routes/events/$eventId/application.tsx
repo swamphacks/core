@@ -44,6 +44,7 @@ export const ApplicationForm = () => {
   const [defaultValues, setDefaultValues] = useState<Record<string, any>>({});
   const fileFields = useRef(new Set<string>());
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isInvalid, setIsInvalid] = useState(false);
 
   useEffect(() => {
     fetch(`${env.BASE_API_URL}${location.pathname}`, {
@@ -82,7 +83,8 @@ export const ApplicationForm = () => {
         message: resBody.message || "Something went wrong",
         type: "error",
       });
-      // setSubmitError(resBody.message);
+      setIsInvalid(true);
+      return;
     }
 
     setIsSubmitted(true);
@@ -120,6 +122,7 @@ export const ApplicationForm = () => {
       onChangeDelayMs={SAVE_DELAY_MS}
       onChange={onChange}
       SubmitSuccessComponent={SubmitSuccess}
+      isInvalid={isInvalid}
     />
   );
 };

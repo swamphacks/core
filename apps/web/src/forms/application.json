@@ -74,7 +74,10 @@
               "placeholder": "Enter your email",
               "label": "Preferred Email",
               "required": true,
-              "iconName": "at"
+              "iconName": "at",
+              "validation": {
+                "email": true
+              }
             },
 
             {
@@ -83,7 +86,10 @@
               "placeholder": "Enter your school email",
               "label": "University Email",
               "required": true,
-              "iconName": "at"
+              "iconName": "at",
+              "validation": {
+                "email": true
+              }
             }
           ]
         },
