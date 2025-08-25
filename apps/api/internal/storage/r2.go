@@ -40,13 +40,14 @@ func NewR2Client(accountId, accessKey, secretkey string, logger zerolog.Logger) 
 	}, nil
 }
 
-func (c *R2Client) Store(ctx context.Context, bucketName, key string, data []byte) error {
+func (c *R2Client) Store(ctx context.Context, bucketName, key string, data []byte, contentType *string) error {
 	r := bytes.NewReader(data)
 
 	_, err := c.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(key),
-		Body:   r,
+		Bucket:      aws.String(bucketName),
+		Key:         aws.String(key),
+		Body:        r,
+		ContentType: contentType,
 	})
 	if err != nil {
 		c.logger.Err(err).Msgf("Failed to upload object to S3 with key %s", key)

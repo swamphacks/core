@@ -3,24 +3,125 @@ package services
 import (
 	"context"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/storage"
 )
+
+// TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
+// these fields are only applicable to swamphacks xi, not other events
+type ApplicationSubmissionFields struct {
+	FirstName               string `json:"firstName" validate:"required,max=50"`
+	LastName                string `json:"lastName" validate:"required,max=50"`
+	Age                     int    `json:"age" validate:"required,min=0,max=99"`
+	Phone                   string `json:"phone" validate:"required,len=10"`
+	PreferredEmail          string `json:"preferredEmail" validate:"required,email"`
+	UniversityEmail         string `json:"universityEmail" validate:"required,email"`
+	Linkedin                string `json:"linkedin" validate:"required,url"`
+	Github                  string `json:"github" validate:"required,url"`
+	AgeCertification        bool   `json:"ageCertification" validate:"required,boolean"`
+	School                  string `json:"school" validate:"required"`
+	Level                   string `json:"level" validate:"required"`
+	Year                    string `json:"year" validate:"required"`
+	GraduationYear          string `json:"graduationYear" validate:"required"`
+	Majors                  string `json:"majors" validate:"required"`
+	Minors                  string `json:"minors"`
+	Experience              string `json:"experience" validate:"required"`
+	ProjectExperience       string `json:"projectExperience" validate:"required"`
+	ShirtSize               string `json:"shirtSize" validate:"required"`
+	Essay1                  string `json:"essay1" validate:"required"`
+	Essay2                  string `json:"essay2" validate:"required"`
+	Referral                string `json:"referral" validate:"required"`
+	PictureConsent          string `json:"pictureConsent" validate:"required"`
+	InpersonAcknowledgement string `json:"inpersonAcknowledgement" validate:"required"`
+	AgreeToConduct          string `json:"agreeToConduct" validate:"required"`
+	InfoShareAuthorization  string `json:"infoShareAuthorization" validate:"required"`
+	AgreeToMLHEmails        string `json:"agreeToMLHEmails" validate:"required"`
+}
 
 type ApplicationService struct {
 	appRepo *repository.ApplicationRepository
 	storage storage.Storage
+	buckets *config.CoreBuckets
+	txm     *db.TransactionManager
+	logger  zerolog.Logger
 }
 
-func NewApplicationService(appRepo *repository.ApplicationRepository, storage storage.Storage) *ApplicationService {
+func NewApplicationService(appRepo *repository.ApplicationRepository, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
 	return &ApplicationService{
 		appRepo: appRepo,
 		storage: storage,
+		buckets: buckets,
+		txm:     txm,
+		logger:  logger,
 	}
 }
 
-// THIS IS AN EXAMPLE FUNCTION
-func (s *ApplicationService) CreateApplication() error {
-	s.storage.Store(context.Background(), "core-application-resumes-dev", "application_data", []byte("application data"))
+func (s *ApplicationService) GetApplicationByUserAndEventID(ctx context.Context, params sqlc.GetApplicationByUserAndEventIDParams) (*sqlc.Application, error) {
+	application, err := s.appRepo.GetApplicationByUserAndEventID(ctx, params)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	return application, nil
+}
+
+func (s *ApplicationService) CreateApplication(ctx context.Context, params sqlc.CreateApplicationParams) (*sqlc.Application, error) {
+	application, err := s.appRepo.CreateApplication(ctx, params)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	return application, nil
+}
+
+func (s *ApplicationService) SubmitApplication(ctx context.Context, data ApplicationSubmissionFields, resume []byte, userId uuid.UUID, eventId uuid.UUID) error {
+	// Submitting application is an atomic operation
+	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+
+		err := txAppRepo.SubmitApplication(ctx, data, userId, eventId)
+
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		contentType := "application/pdf"
+		err = s.storage.Store(ctx, s.buckets.ApplicationResumes, eventId.String()+"/"+userId.String(), resume, &contentType)
+
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *ApplicationService) SaveApplication(ctx context.Context, data any, params sqlc.UpdateApplicationParams) error {
+	err := s.appRepo.SaveApplication(ctx, data, params)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+
 	return nil
 }

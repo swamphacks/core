@@ -63,14 +63,13 @@ func main() {
 	eventInterestRepo := repository.NewEventInterestRepository(database)
 	eventRepo := repository.NewEventRespository(database)
 	applicationRepo := repository.NewApplicationRepository(database)
-	// applicationRepo := repository.NewApplicationRepository(database)
 
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
 	eventService := services.NewEventService(eventRepo, userRepo, logger)
 	emailService := services.NewEmailService(taskQueueClient, logger)
-	applicationService := services.NewApplicationService(applicationRepo, r2Client)
+	applicationService := services.NewApplicationService(applicationRepo, txm, r2Client, &cfg.CoreBuckets, logger)
 
 	// Injections into handlers
 	apiHandlers := handlers.NewHandlers(authService, eventInterestService, eventService, emailService, applicationService, cfg, logger)
