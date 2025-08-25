@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/email"
@@ -195,6 +196,34 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res.Send(w, http.StatusOK, event)
+}
+
+func (h *EventHandler) GetEventRole(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	eventRole, err := h.eventService.GetEventRoleByIds(r.Context(), *userId, eventId)
+	if err != nil {
+		res.SendError(w, http.StatusNotFound, res.NewError("not_found", "Role not found for user and event"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(eventRole)
 }
 
 func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
