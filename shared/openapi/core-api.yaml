@@ -511,7 +511,72 @@ paths:
       operationId: post-event-role
       tags:
         - Event
-      
+  /events/{eventId}/role:
+    parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      summary: Get the current user's event role for an event
+      responses:
+        '200':
+          description: OK - Return role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NullableEventRoleRow'
+              examples:
+                Example 1:
+                  value:
+                    role: attendee
+                    user_id: 123e4567-e89b-12d3-a456-426614174000
+                    event_id: 123e4567-e89b-12d3-a456-426614174001
+                    assigned_at: 2025-08-08T17:00:00Z
+                Example 2 (no role):
+                  value:
+                    role: null
+                    user_id: 123e4567-e89b-12d3-a456-426614174000
+                    event_id: 123e4567-e89b-12d3-a456-426614174001
+                    assigned_at: null
+        '400':
+          description: Not Found - Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: invalid_event_id
+                    message: Event ID missing or malformed.
+        '404':
+          description: Not Found - Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: user_not_found
+                    message: User could not be found.
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: get-user-event-role
+      tags:
+        - Event
 components:
   schemas:
     Event:
@@ -747,6 +812,24 @@ components:
               required:
                 - application_status
                 - valid
+    NullableEventRoleRow:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/EventRole'
+          nullable: true
+        user_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        assigned_at:
+          type: string
+          format: date-time
+      required:
+        - user_id
+        - event_id
   securitySchemes:
     sh_session_id:
       type: http

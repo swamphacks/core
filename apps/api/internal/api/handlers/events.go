@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -198,6 +199,13 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 	res.Send(w, http.StatusOK, event)
 }
 
+type NullableEventRole struct {
+	UserID     uuid.UUID           `json:"user_id"`
+	EventID    uuid.UUID           `json:"event_id"`
+	Role       *sqlc.EventRoleType `json:"role"`
+	AssignedAt *time.Time          `json:"assigned_at"`
+}
+
 func (h *EventHandler) GetEventRole(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -218,12 +226,27 @@ func (h *EventHandler) GetEventRole(w http.ResponseWriter, r *http.Request) {
 
 	eventRole, err := h.eventService.GetEventRoleByIds(r.Context(), *userId, eventId)
 	if err != nil {
-		res.SendError(w, http.StatusNotFound, res.NewError("not_found", "Role not found for user and event"))
+		if errors.Is(err, repository.ErrEventRoleNotFound) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(NullableEventRole{
+				UserID:     *userId,
+				EventID:    eventId,
+				Role:       nil,
+				AssignedAt: nil,
+			})
+		} else {
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went terribly wrong."))
+		}
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(eventRole)
+	json.NewEncoder(w).Encode(NullableEventRole{
+		UserID:     eventRole.UserID,
+		EventID:    eventRole.EventID,
+		Role:       &eventRole.Role,
+		AssignedAt: eventRole.AssignedAt,
+	})
 }
 
 func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {

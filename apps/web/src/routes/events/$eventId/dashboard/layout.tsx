@@ -1,50 +1,51 @@
-import { Outlet, useParams, createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import StaffAppShell from "./components/StaffAppShell";
-import AttendeeAppShell from "./components/AttendeeAppShell";
-import ApplicantAppShell from "./components/ApplicantAppShell";
-import { api } from "@/lib/ky";
+import AttendeeAppShell from "@/features/Dashboard/components/AttendeeAppShell";
+import { getUserEventRole } from "@/features/Event/api/getUserEventRole";
+import NotFoundPage from "@/features/NotFound/NotFoundPage";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+
 export const Route = createFileRoute("/events/$eventId/dashboard")({
   component: RouteComponent,
-});
-function useUserRole() {
-  const { eventId } = useParams({ from: "/events/$eventId/dashboard" });
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["event-role", eventId],
-    queryFn: async () => {
-      const res = await api.get(`events/${eventId}/role`).json<any>();
-      return res.role;
-    },
-    enabled: !!eventId,
-  });
+  beforeLoad: async ({ context, params }) => {
+    // Get event roles, permissions, etc.
 
-  if (isLoading) return undefined;
-  if (error) return undefined;
-  return data as "staff" | "attendee" | "applicant" | undefined;
-}
+    const data = await context.queryClient.fetchQuery({
+      queryKey: ["eventRole", params.eventId],
+      queryFn: () => getUserEventRole(params.eventId),
+    });
+
+    // Parse assigned at string to Date object
+    let parsedAssignedAt: Date | null = null;
+    if (data?.assigned_at) {
+      parsedAssignedAt = new Date(data.assigned_at);
+    }
+
+    return {
+      eventRole: data.role,
+      roleAssignedAt: parsedAssignedAt ?? null,
+    };
+  },
+});
+
 function RouteComponent() {
-  const role = useUserRole();
-  if (!role) return <div>Loading...</div>;
-  if (role === "staff") {
-    return (
-      <StaffAppShell>
-        <Outlet />
-      </StaffAppShell>
-    );
+  const { eventRole } = Route.useRouteContext();
+  const { eventId } = Route.useParams();
+
+  if (!eventRole) {
+    return <NotFoundPage />;
   }
-  if (role === "attendee") {
-    return (
-      <AttendeeAppShell>
-        <Outlet />
-      </AttendeeAppShell>
-    );
+
+  switch (eventRole) {
+    case "staff":
+      return <div>Staff Dashboard</div>;
+    case "attendee":
+      return (
+        <AttendeeAppShell eventId={eventId}>
+          <Outlet />
+        </AttendeeAppShell>
+      );
+    case "applicant":
+      return <div>Applicant Dashboard</div>;
+    default:
+      return <div>Unknown role: {eventRole}</div>;
   }
-  if (role === "applicant") {
-    return (
-      <ApplicantAppShell>
-        <Outlet />
-      </ApplicantAppShell>
-    );
-  }
-  return <div>Unknown role, Possibly Admin</div>;
 }
