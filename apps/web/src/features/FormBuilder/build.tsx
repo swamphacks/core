@@ -106,6 +106,7 @@ export interface FormProps {
   onChange?: (formValues: Record<string, any>) => void;
   defaultValues?: Record<string, any>;
   isInvalid?: boolean;
+  isSubmitted?: boolean;
   SubmitSuccessComponent?: React.ComponentType;
 }
 
@@ -142,10 +143,11 @@ export function build(formObject: FormObject): {
       defaultValues = {},
       onChangeDelayMs = 5000,
       isInvalid = false,
+      isSubmitted: isSubmittedProp = false,
       SubmitSuccessComponent = FallbackSubmitSuccessComponent,
     }) {
-      const [, rerender] = useState({});
-      useEffect(() => rerender({}), [defaultValues]);
+      // const [, rerender] = useState({});
+      // useEffect(() => rerender({}), [defaultValues]);
 
       const transformedDefaultValues = useMemo(
         () => transformDefaultValues(defaultValues, fieldsMeta),
@@ -366,7 +368,7 @@ export function build(formObject: FormObject): {
         return state.isSubmitted;
       });
 
-      const isSubmitted = isSubmittedState && !isInvalid;
+      const isSubmitted = (isSubmittedState || isSubmittedProp) && !isInvalid;
 
       return (
         <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">

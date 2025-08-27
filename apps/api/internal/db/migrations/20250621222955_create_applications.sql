@@ -5,9 +5,8 @@ CREATE TYPE application_status AS ENUM ('started', 'submitted', 'under_review', 
 
 CREATE TABLE applications (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    -- event_id UUID REFERENCES events(id) ON DELETE CASCADE,
-    -- TODO: remove this
-    event_id UUID, 
+    event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+    -- event_id UUID, 
     status application_status DEFAULT 'started',
     application JSONB NOT NULL DEFAULT '{}'::JSONB,
     resume_url TEXT,

@@ -33,8 +33,6 @@ export const FileInput = ({
   }, []);
 
   const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    // TODO: upload to r2 here and get the file url
-
     if (props.multiple) {
       setFiles((prevFiles) => {
         if (!event.target.files) {

@@ -52,6 +52,10 @@ export const ApplicationForm = () => {
     })
       .then((res) => res.json())
       .then((data) => {
+        if (data["submitted"]) {
+          setIsSubmitted(true);
+          return;
+        }
         setDefaultValues(JSON.parse(atob(data["application"])));
       });
   }, []);
@@ -124,6 +128,7 @@ export const ApplicationForm = () => {
       onChange={onChange}
       SubmitSuccessComponent={SubmitSuccess}
       isInvalid={isInvalid}
+      isSubmitted={isSubmitted}
     />
   );
 };

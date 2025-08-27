@@ -102,6 +102,11 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 		return
 	}
 
+	if application.Status.ApplicationStatus != sqlc.ApplicationStatusStarted {
+		res.Send(w, http.StatusOK, map[string]any{"submitted": true})
+		return
+	}
+
 	res.Send(w, http.StatusOK, application)
 }
 
