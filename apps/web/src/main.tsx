@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
-
+import NotFoundPage from "@/features/NotFound/NotFoundPage";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
 import { ThemeProvider } from "./components/ThemeProvider";
@@ -16,6 +16,7 @@ const router = createRouter({
     ...TanStackQueryProviderContext,
     userQuery: undefined!,
   },
+  defaultNotFoundComponent: NotFoundPage,
 });
 
 declare module "@tanstack/react-router" {
