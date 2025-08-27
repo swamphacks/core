@@ -1,17 +1,25 @@
-import { Link as TanstackLink } from "@tanstack/react-router";
+import { useLocation } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell/AppShell";
 import { NavLink } from "@/components/AppShell/NavLink";
 import TablerLayoutCollage from "~icons/tabler/layout-collage";
-import TablerBooks from "~icons/tabler/books";
-import TablerSocial from "~icons/tabler/social";
-import React from "react"; // Import React to use ReactNode type
+import { type PropsWithChildren } from "react";
 
-// Accept a 'children' prop
+interface DashboardAppShellProps {
+  eventId: string;
+}
+
 export default function ApplicantAppShell({
+  eventId,
   children,
-}: {
-  children: React.ReactNode;
-}) {
+}: PropsWithChildren<DashboardAppShellProps>) {
+  const pathname = useLocation({ select: (loc) => loc.pathname });
+
+  const dashboardOverviewActive = /^\/events\/[^/]+\/dashboard\/?$/.test(
+    pathname,
+  );
+  const applicationStatusActive =
+    /^\/events\/[^/]+\/dashboard\/application-status\/?$/.test(pathname);
+
   return (
     <AppShell>
       <AppShell.Header>
@@ -21,47 +29,21 @@ export default function ApplicantAppShell({
       </AppShell.Header>
 
       <AppShell.Navbar>
-        <TanstackLink to="/portal">
-          {({ isActive }) => (
-            <NavLink
-              label="Events Portal"
-              leftSection={
-                <TablerLayoutCollage className="w-5 aspect-square" />
-              }
-              active={isActive}
-            />
-          )}
-        </TanstackLink>
-
         <NavLink
-          label="Resources"
-          leftSection={<TablerBooks className="w-5 aspect-square" />}
-        >
-          <TanstackLink to="/resources/programming">
-            {({ isActive }) => (
-              <NavLink label="Programming" active={isActive} />
-            )}
-          </TanstackLink>
-          <TanstackLink to="/resources/sponsors">
-            {({ isActive }) => <NavLink label="Sponsors" active={isActive} />}
-          </TanstackLink>
-        </NavLink>
-
-        <TanstackLink to="/community">
-          {({ isActive }) => (
-            <NavLink
-              label="Community"
-              leftSection={<TablerSocial className="w-5 aspect-square" />}
-              active={isActive}
-            />
-          )}
-        </TanstackLink>
+          label="Overview"
+          href={`/events/${eventId}/dashboard`}
+          leftSection={<TablerLayoutCollage className="w-5 aspect-square" />}
+          active={dashboardOverviewActive}
+        />
+        <NavLink
+          label="Status"
+          href={`/events/${eventId}/dashboard/application-status`}
+          leftSection={<TablerLayoutCollage className="w-5 aspect-square" />}
+          active={applicationStatusActive}
+        />
       </AppShell.Navbar>
 
-      <AppShell.Main>
-        {/* Render the children prop here instead of a hardcoded Outlet */}
-        {children}
-      </AppShell.Main>
+      <AppShell.Main>{children}</AppShell.Main>
     </AppShell>
   );
 }

@@ -1,16 +1,38 @@
-import { Link as TanstackLink } from "@tanstack/react-router";
+import { useLocation, useRouteContext } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell/AppShell";
 import { NavLink } from "@/components/AppShell/NavLink";
-import TablerLayoutCollage from "~icons/tabler/layout-collage";
-import TablerSocial from "~icons/tabler/social";
-import React from "react"; // Import React to use ReactNode type
+import TablerLayoutDashboard from "~icons/tabler/layout-dashboard";
+import TablerUsersGroup from "~icons/tabler/users-group";
+import TablerClipboardCheck from "~icons/tabler/clipboard-check";
+import TablerMail from "~icons/tabler/mail";
+import TablerSettings from "~icons/tabler/settings";
+import { type PropsWithChildren } from "react";
 
-// Accept a 'children' prop
-export default function StaffAppShell({
+interface DashboardAppShellProps {
+  eventId: string;
+}
+
+export default function AttendeeAppShell({
+  eventId,
   children,
-}: {
-  children: React.ReactNode;
-}) {
+}: PropsWithChildren<DashboardAppShellProps>) {
+  const pathname = useLocation({ select: (loc) => loc.pathname });
+  const { eventRole } = useRouteContext(pathname);
+  const dashboardOverviewActive = /^\/events\/[^/]+\/dashboard\/?$/.test(
+    pathname,
+  );
+
+  const applicationReviewActive =
+    /^\/events\/[^/]+\/dashboard\/application-review\/?$/.test(pathname);
+
+  const emailsActive = /^\/events\/[^/]+\/dashboard\/emails\/?$/.test(pathname);
+
+  const staffOverviewActive =
+    /^\/events\/[^/]+\/dashboard\/staff-overview\/?$/.test(pathname);
+
+  const configsActive = /^\/events\/[^/]+\/dashboard\/configs\/?$/.test(
+    pathname,
+  );
   return (
     <AppShell>
       <AppShell.Header>
@@ -20,33 +42,41 @@ export default function StaffAppShell({
       </AppShell.Header>
 
       <AppShell.Navbar>
-        <TanstackLink to="/portal">
-          {({ isActive }) => (
-            <NavLink
-              label="Emails"
-              leftSection={
-                <TablerLayoutCollage className="w-5 aspect-square" />
-              }
-              active={isActive}
-            />
-          )}
-        </TanstackLink>
-
-        <TanstackLink to="/community">
-          {({ isActive }) => (
-            <NavLink
-              label="Attendees"
-              leftSection={<TablerSocial className="w-5 aspect-square" />}
-              active={isActive}
-            />
-          )}
-        </TanstackLink>
+        <NavLink
+          label="Overview"
+          href={`/events/${eventId}/dashboard`}
+          leftSection={<TablerLayoutDashboard className="w-5 aspect-square" />}
+          active={dashboardOverviewActive}
+        />
+        <NavLink
+          label="Staff Overview"
+          href={`/events/${eventId}/dashboard/staff-overview`}
+          leftSection={<TablerUsersGroup className="w-5 aspect-square" />}
+          active={staffOverviewActive}
+        />
+        <NavLink
+          label="Review Apps"
+          href={`/events/${eventId}/dashboard/application-review`}
+          leftSection={<TablerClipboardCheck className="w-5 aspect-square" />}
+          active={applicationReviewActive}
+        />
+        <NavLink
+          label="Send Emails"
+          href={`/events/${eventId}/dashboard/emails`}
+          leftSection={<TablerMail className="w-5 aspect-square" />}
+          active={emailsActive}
+        />
+        {eventRole == "admin" && (
+          <NavLink
+            label="Configs"
+            href={`/events/${eventId}/dashboard/configs`}
+            leftSection={<TablerSettings className="w-5 aspect-square" />}
+            active={configsActive}
+          />
+        )}
       </AppShell.Navbar>
 
-      <AppShell.Main>
-        {/* Render the children prop here instead of a hardcoded Outlet */}
-        {children}
-      </AppShell.Main>
+      <AppShell.Main>{children}</AppShell.Main>
     </AppShell>
   );
 }
