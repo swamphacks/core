@@ -34,7 +34,7 @@ function RouteComponent() {
   );
 }
 
-const SAVE_DELAY_MS = 1000; // delay in time before saving form progress
+const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
 // TODO: Fetch the approriate form data corresponding to the event
 export const ApplicationForm = () => {
