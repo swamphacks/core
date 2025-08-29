@@ -44,7 +44,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Use(middleware.Logger)
 	api.Router.Use(middleware.RealIP)
 	api.Router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:5174", "https://swamphacks.com"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
