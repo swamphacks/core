@@ -39,13 +39,13 @@ function RouteComponent() {
   switch (eventRole) {
     case "admin":
       return (
-        <StaffAppShell eventId={eventId}>
+        <StaffAppShell eventRole={eventRole} eventId={eventId}>
           <Outlet />
         </StaffAppShell>
       );
     case "staff":
       return (
-        <StaffAppShell eventId={eventId}>
+        <StaffAppShell eventRole={eventRole} eventId={eventId}>
           <Outlet />
         </StaffAppShell>
       );

@@ -1,9 +1,9 @@
-import { useLocation } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell/AppShell";
 import { NavLink } from "@/components/AppShell/NavLink";
 import TablerLayoutCollage from "~icons/tabler/layout-collage";
-import TablerBooks from "~icons/tabler/books";
-import TablerSocial from "~icons/tabler/social";
+import TablerUsersGroup from "~icons/tabler/users-group";
+import TablerCalendar from "~icons/tabler/calendar";
 import { type PropsWithChildren } from "react";
 
 interface DashboardAppShellProps {
@@ -22,19 +22,22 @@ export default function AttendeeAppShell({
   const myTeamActive = /^\/events\/[^/]+\/dashboard\/my-team\/?$/.test(
     pathname,
   );
-  const exploreTeamsActive =
-    /^\/events\/[^/]+\/dashboard\/explore-teams\/?$/.test(pathname);
   const scheduleActive = /^\/events\/[^/]+\/dashboard\/schedule\/?$/.test(
     pathname,
   );
-
-  const teamsTabActive = myTeamActive || exploreTeamsActive;
-
   return (
     <AppShell>
       <AppShell.Header>
         <div className="w-full px-4 flex flex-row justify-between h-full items-center">
-          <h1 className="text-2xl font-bold">Attendee Dashboard</h1>
+          {/* This needs to be replaced with the hackathon name */}
+          <h1 className="text-2xl font-bold">SwampHacks</h1>
+
+          <Link
+            to="/portal"
+            className="text-blue-500 underline underline-offset-4"
+          >
+            Back to portal
+          </Link>
         </div>
       </AppShell.Header>
 
@@ -47,28 +50,16 @@ export default function AttendeeAppShell({
         />
 
         <NavLink
-          label="Teams"
-          leftSection={<TablerBooks className="w-5 aspect-square" />}
-          initialExpanded={teamsTabActive}
-        >
-          <NavLink
-            label="My Team"
-            href={`/events/${eventId}/dashboard/my-team`}
-            leftSection={<TablerLayoutCollage className="w-5 aspect-square" />}
-            active={myTeamActive}
-          />
-          <NavLink
-            label="Explore Teams"
-            href={`/events/${eventId}/dashboard/explore-teams`}
-            leftSection={<TablerLayoutCollage className="w-5 aspect-square" />}
-            active={exploreTeamsActive}
-          />
-        </NavLink>
+          label="My Team"
+          href={`/events/${eventId}/dashboard/my-team`}
+          leftSection={<TablerUsersGroup className="w-5 aspect-square" />}
+          active={myTeamActive}
+        />
 
         <NavLink
           label="Schedule"
           href={`/events/${eventId}/dashboard/schedule`}
-          leftSection={<TablerSocial className="w-5 aspect-square" />}
+          leftSection={<TablerCalendar className="w-5 aspect-square" />}
           active={scheduleActive}
         />
       </AppShell.Navbar>
