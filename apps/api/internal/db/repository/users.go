@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 
 	"github.com/google/uuid"
@@ -46,7 +45,7 @@ func (r *UserRepository) Create(ctx context.Context, params sqlc.CreateUserParam
 
 func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*sqlc.AuthUser, error) {
 	user, err := r.db.Query.GetUserByID(ctx, id)
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		return nil, ErrUserNotFound
 	} else if err != nil {
 		return nil, err
@@ -57,7 +56,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*sqlc.AuthU
 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*sqlc.AuthUser, error) {
 	user, err := r.db.Query.GetUserByEmail(ctx, &email)
-	if errors.Is(err, sql.ErrNoRows) {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrUserNotFound
 	} else if err != nil {
 		return nil, err

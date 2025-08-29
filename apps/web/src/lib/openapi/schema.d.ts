@@ -144,6 +144,25 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/role": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    /** Get the current user's event role for an event */
+    get: operations["get-user-event-role"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -284,6 +303,15 @@ export interface components {
         application_status: components["schemas"]["ApplicationStatus"];
         valid: boolean;
       };
+    };
+    NullableEventRoleRow: {
+      role?: components["schemas"]["EventRole"];
+      /** Format: uuid */
+      user_id: string;
+      /** Format: uuid */
+      event_id: string;
+      /** Format: date-time */
+      assigned_at?: string;
     };
   };
   responses: {
@@ -751,6 +779,55 @@ export interface operations {
         content?: never;
       };
       /** @description Not Found - User not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "get-user-event-role": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK - Return role */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NullableEventRoleRow"];
+        };
+      };
+      /** @description Not Found - Role not found */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Not Found - Role not found */
       404: {
         headers: {
           [name: string]: unknown;

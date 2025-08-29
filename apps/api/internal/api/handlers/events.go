@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -13,6 +14,7 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/email"
@@ -195,6 +197,56 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res.Send(w, http.StatusOK, event)
+}
+
+type NullableEventRole struct {
+	UserID     uuid.UUID           `json:"user_id"`
+	EventID    uuid.UUID           `json:"event_id"`
+	Role       *sqlc.EventRoleType `json:"role"`
+	AssignedAt *time.Time          `json:"assigned_at"`
+}
+
+func (h *EventHandler) GetEventRole(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	eventRole, err := h.eventService.GetEventRoleByIds(r.Context(), *userId, eventId)
+	if err != nil {
+		if errors.Is(err, repository.ErrEventRoleNotFound) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(NullableEventRole{
+				UserID:     *userId,
+				EventID:    eventId,
+				Role:       nil,
+				AssignedAt: nil,
+			})
+		} else {
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went terribly wrong."))
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(NullableEventRole{
+		UserID:     eventRole.UserID,
+		EventID:    eventRole.EventID,
+		Role:       &eventRole.Role,
+		AssignedAt: eventRole.AssignedAt,
+	})
 }
 
 func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {

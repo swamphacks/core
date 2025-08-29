@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 )
@@ -40,7 +40,7 @@ func (r *EventRepository) CreateEvent(ctx context.Context, params sqlc.CreateEve
 func (r *EventRepository) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Event, error) {
 	event, err := r.db.Query.GetEventByID(ctx, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, ErrEventNotFound
 		}
 		return nil, err
@@ -51,7 +51,7 @@ func (r *EventRepository) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc
 func (r *EventRepository) UpdateEventById(ctx context.Context, params sqlc.UpdateEventByIdParams) error {
 	err := r.db.Query.UpdateEventById(ctx, params)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return ErrEventNotFound
 		}
 	}
@@ -61,7 +61,7 @@ func (r *EventRepository) UpdateEventById(ctx context.Context, params sqlc.Updat
 func (r *EventRepository) DeleteEventById(ctx context.Context, id uuid.UUID) error {
 	affectedRows, err := r.db.Query.DeleteEventById(ctx, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return ErrEventNotFound
 		}
 	}
@@ -100,7 +100,7 @@ func (r *EventRepository) GetEventRoleByIds(ctx context.Context, userId uuid.UUI
 
 	eventRole, err := r.db.Query.GetEventRoleByIds(ctx, params)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, ErrEventRoleNotFound
 		}
 	}
