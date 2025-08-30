@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strings"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
@@ -25,9 +26,11 @@ type AuthConfig struct {
 }
 
 type Config struct {
-	DatabaseURL string `env:"DATABASE_URL"`
-	RedisURL    string `env:"REDIS_URL"`
-	Port        string `env:"PORT" envDefault:"8080"`
+	DatabaseURL          string   `env:"DATABASE_URL"`
+	RedisURL             string   `env:"REDIS_URL"`
+	Port                 string   `env:"PORT" envDefault:"8080"`
+	AllowedOriginsString string   `env:"ALLOWED_ORIGINS"`
+	AllowedOrigins       []string ``
 
 	Auth      AuthConfig   `envPrefix:"AUTH_"`
 	Cookie    CookieConfig `envPrefix:"COOKIE_"`
@@ -38,6 +41,7 @@ func Load() *Config {
 	loadEnv()
 
 	cfg, err := env.ParseAs[Config]()
+	cfg.AllowedOrigins = strings.Split(cfg.AllowedOriginsString, ",")
 	if err != nil {
 		log.Fatal().Msgf("Failed to parse env: %v", err)
 	}
