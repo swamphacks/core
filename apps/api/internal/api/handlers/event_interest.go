@@ -61,7 +61,7 @@ func (h *EventInterestHandler) AddEmailToEvent(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		switch err {
 		case services.ErrEmailConflict:
-			res.SendError(w, http.StatusConflict, res.NewError("duplicate_email", "Email is already registered for this event"))
+			res.SendError(w, http.StatusConflict, res.NewError("duplicate_email", "Email already subscribed for updates"))
 		case services.ErrFailedToCreateSubmission:
 			res.SendError(w, http.StatusInternalServerError, res.NewError("submission_error", "Failed to create event interest submission"))
 		default:
