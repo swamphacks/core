@@ -95,6 +95,11 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		r.Post("/queue", api.Handlers.Email.QueueEmail)
 	})
 
+	// Email routes
+	api.Router.Route("/email", func(r chi.Router) {
+		r.Post("/queue", api.Handlers.Email.QueueEmail)
+	})
+
 	// Protected test routes
 	api.Router.Route("/protected", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
