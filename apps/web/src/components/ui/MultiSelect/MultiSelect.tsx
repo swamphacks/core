@@ -17,9 +17,8 @@ import {
   tagStyles,
 } from "@/components/ui/Tag";
 import TablerX from "~icons/tabler/x";
-import { useId, useRef, useState, type CSSProperties } from "react";
+import { useId, useState, type CSSProperties } from "react";
 import { ErrorList, fieldBorderStyles } from "@/components/ui/Field";
-import TablerAsterisk from "~icons/tabler/asterisk";
 
 const DropdownIndicator = (props: DropdownIndicatorProps) => {
   return (
@@ -73,6 +72,8 @@ export interface MultiSelectProps {
   // Not sure if its better to do this https://react-spectrum.adobe.com/react-aria/Form.html#custom-children
   // accepting errors props should work for now.
   errors?: string[];
+
+  validationBehavior?: "aria" | "native";
 }
 
 export const MULTISELECT_NAME_PREFIX = "multiselect-";
@@ -84,16 +85,21 @@ const MultiSelect = ({
   options,
   onChange,
   errors,
+  validationBehavior = "native",
   ...props
 }: MultiSelectProps) => {
   const id = useId();
-  const hiddenSelectRef = useRef<HTMLSelectElement | null>(null);
+  // const hiddenSelectRef = useRef<HTMLSelectElement | null>(null);
   const [isInvalid, setIsInvalid] = useState(false);
 
   const renderErrors = () => {
     if (isInvalid) return <p>Please select an item in the list.</p>;
 
     if (errors && errors.length > 0) {
+      if (errors.length === 1) {
+        return <p>{errors[0]}</p>;
+      }
+
       return <ErrorList errors={errors} />;
     }
   };
@@ -101,11 +107,15 @@ const MultiSelect = ({
   return (
     <div className="flex flex-col gap-1 flex-1 font-figtree">
       <label
-        className="flex items-center gap-1 text-text-secondary font-medium cursor-default w-fit"
+        className="text-text-main/90 font-medium cursor-default w-fit"
         htmlFor={id}
       >
         {label}
-        {isRequired && <TablerAsterisk className="text-[8px] text-red-500" />}
+        {isRequired && (
+          <span className="text-base text-red-500 dark:text-red-300 ml-1">
+            *
+          </span>
+        )}
       </label>
 
       <Select
@@ -116,7 +126,7 @@ const MultiSelect = ({
         options={options}
         components={{ DropdownIndicator, ClearIndicator, MultiValueRemove }}
         classNames={{
-          placeholder: () => "text-[#89898A]",
+          placeholder: () => "opacity-50",
           control: (state) =>
             cn(
               selectStyles(state),
@@ -133,13 +143,13 @@ const MultiSelect = ({
           valueContainer: () => "gap-1",
         }}
         onChange={(data) => {
-          const selectedValues = data.map((item) => (item as Option).value);
+          // const selectedValues = data.map((item) => (item as Option).value);
 
-          if (hiddenSelectRef.current) {
-            for (const option of hiddenSelectRef.current.options) {
-              option.selected = selectedValues.includes(option.value);
-            }
-          }
+          // if (hiddenSelectRef.current) {
+          //   for (const option of hiddenSelectRef.current.options) {
+          //     option.selected = selectedValues.includes(option.value);
+          //   }
+          // }
 
           if (isInvalid && data.length > 0) {
             setIsInvalid(false);
@@ -153,6 +163,8 @@ const MultiSelect = ({
             transition: "none",
           }),
         }}
+        required={isRequired && validationBehavior === "native"}
+        name={name}
         {...props}
       />
 
@@ -161,9 +173,9 @@ const MultiSelect = ({
       </div>
 
       {/* This is a dummy select element used for form submissions. Its values are updated based on the actual Select component above.
-          It doesn't do anything since we are using Tanstack Form, but i'll leave it here just in case it comes in handy in the future.
-      */}
-      <select
+       */}
+      {/* <select
+        data-invalid={errors && errors.length > 0}
         tabIndex={-1}
         autoComplete="off"
         style={{
@@ -172,11 +184,15 @@ const MultiSelect = ({
           position: "absolute",
           pointerEvents: "none",
         }}
-        required={isRequired}
+        required={isRequired && validationBehavior === "native"}
         multiple
         name={`${MULTISELECT_NAME_PREFIX}${name}`}
         ref={hiddenSelectRef}
-        onInvalid={() => setIsInvalid(true)}
+        onInvalid={() => {
+          if (validationBehavior === "native") {
+            setIsInvalid(true);
+          }
+        }}
       >
         {options.map((option) => (
           <option
@@ -185,7 +201,7 @@ const MultiSelect = ({
             defaultValue={option.value}
           />
         ))}
-      </select>
+      </select> */}
     </div>
   );
 };

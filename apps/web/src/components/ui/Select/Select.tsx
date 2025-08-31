@@ -5,8 +5,10 @@ import {
   Button,
   ListBox,
   type ListBoxItemProps,
+  ListLayout,
   SelectValue,
   type ValidationResult,
+  Virtualizer,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { Description, FieldError, Label } from "@/components/ui/Field";
@@ -18,20 +20,21 @@ import {
 import { Popover } from "@/components/ui/Popover";
 import { composeTailwindRenderProps } from "@/components/ui/utils";
 import TablerChevronDown from "~icons/tabler/chevron-down";
+import { cn } from "@/utils/cn";
 
 export const styles = tv({
   base: "h-9.5 flex items-center text-start gap-4 w-full cursor-default border border-input-border rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-surface",
   variants: {
     isDisabled: {
       false:
-        "text-text-main hover:bg-gray-100 dark:hover:bg-neutral-700 group-invalid:border-red-600 forced-colors:group-invalid:border-[Mark]",
+        "text-text-main hover:bg-gray-100 dark:hover:bg-neutral-700 group-invalid:border-input-border-invalid forced-colors:group-invalid:border-[Mark]",
       true: "text-gray-200 dark:text-zinc-600 forced-colors:text-[GrayText] dark:bg-zinc-800 dark:border-white/5 forced-colors:border-[GrayText]",
     },
   },
 });
 
 export const listBoxContainerStyles = tv({
-  base: "outline-hidden p-1 max-h-[inherit] overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]",
+  base: "outline-hidden p-1 max-h-70 overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]",
 });
 
 export interface SelectProps<T extends object>
@@ -41,16 +44,28 @@ export interface SelectProps<T extends object>
   errorMessage?: string | ((validation: ValidationResult) => string);
   items?: Iterable<T>;
   children: React.ReactNode | ((item: T) => React.ReactNode);
+  virtualized?: boolean;
 }
 
-export function Select<T extends object>({
+export function Select<T extends { id: string; name: string }>({
   label,
   description,
   errorMessage,
-  children,
   items,
+  children,
+  virtualized = false,
   ...props
 }: SelectProps<T>) {
+  // This is needed in situation where the exact max width of the select is unknown and is controlled by something like `flex-1` for example
+  // const [maxWidth, setMaxWidth] = useState<number | undefined>(undefined);
+  // const selectRef = useRef<HTMLDivElement | null>(null);
+
+  // useEffect(() => {
+  //   if (selectRef && selectRef.current) {
+  //     setMaxWidth(selectRef.current.clientWidth);
+  //   }
+  // }, []);
+
   return (
     <AriaSelect
       {...props}
@@ -58,10 +73,14 @@ export function Select<T extends object>({
         props.className,
         "group flex flex-col gap-1 font-figtree",
       )}
+      // style={{
+      //   maxWidth,
+      // }}
+      // ref={selectRef}
     >
       {label && <Label isRequired={props.isRequired}>{label}</Label>}
       <Button className={styles}>
-        <SelectValue className="flex-1 placeholder-shown:text-[#89898A]" />
+        <SelectValue className="flex-1 placeholder-shown:opacity-50" />
         <TablerChevronDown
           aria-hidden
           className="w-4 h-4 text-gray-600 dark:text-zinc-400 forced-colors:text-[ButtonText] group-disabled:text-gray-200 dark:group-disabled:text-zinc-600 forced-colors:group-disabled:text-[GrayText]"
@@ -70,9 +89,27 @@ export function Select<T extends object>({
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
       <Popover className="min-w-(--trigger-width)">
-        <ListBox items={items} className={listBoxContainerStyles()}>
-          {children}
-        </ListBox>
+        {virtualized ? (
+          <Virtualizer
+            layout={ListLayout}
+            layoutOptions={{ rowHeight: 33, padding: 4, gap: 0 }}
+          >
+            <ListBox
+              items={items}
+              className={cn(listBoxContainerStyles(), "p-0")}
+            >
+              {children
+                ? children
+                : (item) => <SelectItem>{item.name}</SelectItem>}
+            </ListBox>
+          </Virtualizer>
+        ) : (
+          <ListBox items={items} className={listBoxContainerStyles()}>
+            {children
+              ? children
+              : (item) => <SelectItem>{item.name}</SelectItem>}
+          </ListBox>
+        )}
       </Popover>
     </AriaSelect>
   );

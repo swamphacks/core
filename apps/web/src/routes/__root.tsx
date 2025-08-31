@@ -1,9 +1,12 @@
 import { DevThemeSwitch } from "@/components/ThemeProvider";
+import NotFoundPage from "@/features/NotFound/NotFoundPage";
 import type { auth } from "@/lib/authClient";
+import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
 interface RouterContext {
   userQuery: ReturnType<typeof auth.useUser>;
+  queryClient: QueryClient;
 }
 
 const IS_DEV = import.meta.env.DEV;
@@ -19,4 +22,5 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       )}
     </>
   ),
+  notFoundComponent: NotFoundPage,
 });

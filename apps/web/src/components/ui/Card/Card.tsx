@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { forwardRef } from "react";
 import { tv, type VariantProps } from "tailwind-variants";
 

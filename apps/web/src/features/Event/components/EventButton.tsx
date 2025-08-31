@@ -3,6 +3,7 @@ import { tv } from "tailwind-variants";
 import applicationStatus from "../applicationStatus";
 import { Button, button, type ButtonProps } from "@/components/ui/Button";
 import { cn } from "@/utils/cn";
+import { useRouter } from "@tanstack/react-router";
 
 type ApplicationStatusTypes = keyof typeof applicationStatus;
 
@@ -25,11 +26,13 @@ export const eventButton = tv({
 
 interface EventButtonProps extends ButtonProps {
   status: ApplicationStatusTypes;
+  eventId: string;
   text?: string;
 }
 
 const EventButton = ({
   status: statusProp,
+  eventId,
   className,
   text,
 }: EventButtonProps) => {
@@ -38,11 +41,64 @@ const EventButton = ({
     variant: "skeleton",
     className,
   });
+  const router = useRouter();
+
+  const onClick = () => {
+    switch (statusProp) {
+      case "accepted":
+        // Make API call and then navigate to dashboard with accepted query param
+        console.log("Accepted button clicked for event");
+        router.navigate({
+          to: `/events/${eventId}/dashboard`,
+        });
+        break;
+      case "attending":
+      case "staff":
+      case "admin":
+      case "underReview":
+        // Navigate to the dashboard
+        router.navigate({
+          to: `/events/${eventId}/dashboard`,
+        });
+        break;
+      case "waitlisted":
+        // Navigate to the waitlist page
+        router.navigate({
+          to: `/events/${eventId}/waitlist/info`,
+        });
+        break;
+      case "rejected":
+        // Navigate to the rejected info page
+        router.navigate({
+          to: `/events/${eventId}/rejected`,
+        });
+        break;
+      case "notApplied":
+        // Navigate to the application page
+        router.navigate({
+          to: `/events/${eventId}/application`,
+        });
+        break;
+      case "notGoing":
+        // Navigate to the decline feedback page
+        router.navigate({
+          to: `/events/${eventId}/feedback/decline`,
+        });
+        break;
+      case "completed":
+        // Navigate to the event summary
+        router.navigate({
+          to: `/events/${eventId}/summary`,
+        });
+        break;
+    }
+  };
 
   return (
     <Button
       variant="skeleton"
       className={cn(eventButtonClassName, "font-semibold")}
+      onClick={onClick}
     >
       {text || applicationStatus[statusProp].button.text}
     </Button>

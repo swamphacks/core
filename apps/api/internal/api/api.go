@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
 	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
+	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 )
 
@@ -34,10 +35,18 @@ func NewAPI(logger *zerolog.Logger, handlers *handlers.Handlers, middleware *mw.
 }
 
 func (api *API) setupRoutes(mw *mw.Middleware) {
+	var (
+		// Both requireXXRole functions automatically allow superusers
+		ensureSuperuser  = mw.Auth.RequirePlatformRole([]sqlc.AuthUserRole{sqlc.AuthUserRoleSuperuser})
+		ensureEventAdmin = mw.Event.RequireEventRole([]sqlc.EventRoleType{sqlc.EventRoleTypeAdmin})
+	)
+
+	AllowedOrigins := config.Load().AllowedOrigins
+
 	api.Router.Use(middleware.Logger)
 	api.Router.Use(middleware.RealIP)
 	api.Router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -67,8 +76,18 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	})
 
 	// Event routes
-	api.Router.Route("/event", func(r chi.Router) {
-		r.Post("/{eventId}/interest", api.Handlers.EventInterest.AddEmailToEvent)
+	api.Router.Route("/events", func(r chi.Router) {
+		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
+		r.With(mw.Auth.RequireAuth).Get("/", api.Handlers.Event.GetEvents)
+		r.Route("/{eventId}", func(r chi.Router) {
+			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
+			r.With(mw.Auth.RequireAuth, ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
+			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
+			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
+			r.With(mw.Auth.RequireAuth).Get("/role", api.Handlers.Event.GetEventRole)
+			r.Get("/", api.Handlers.Event.GetEventByID)
+			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
+		})
 	})
 
 	// Email routes
@@ -87,7 +106,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleUser))
+			r.Use(mw.Auth.RequirePlatformRole([]sqlc.AuthUserRole{sqlc.AuthUserRoleUser}))
 			r.Get("/user", func(w http.ResponseWriter, r *http.Request) {
 				if _, err := w.Write([]byte("Welcome, user!\n")); err != nil {
 					log.Err(err)
@@ -96,7 +115,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(mw.Auth.RequirePlatformRole(sqlc.AuthUserRoleSuperuser))
+			r.Use(mw.Auth.RequirePlatformRole([]sqlc.AuthUserRole{sqlc.AuthUserRoleSuperuser}))
 			r.Get("/superuser", func(w http.ResponseWriter, r *http.Request) {
 				if _, err := w.Write([]byte("Welcome, superuser!\n")); err != nil {
 					log.Err(err)

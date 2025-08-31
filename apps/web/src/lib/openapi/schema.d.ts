@@ -44,7 +44,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/event/{eventId}/interest": {
+  "/events/{eventId}/interest": {
     parameters: {
       query?: never;
       header?: never;
@@ -61,10 +61,142 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get events
+     * @description Gets events with a nullable event role for authenticated users.
+     */
+    get: operations["get-events"];
+    put?: never;
+    /** Create a new event */
+    post: operations["post-event"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    /** Get an event */
+    get: operations["get-single-event"];
+    put?: never;
+    post?: never;
+    /** Delete an event */
+    delete: operations["delete-event"];
+    options?: never;
+    head?: never;
+    /** Update an event */
+    patch: operations["patch-event"];
+    trace?: never;
+  };
+  "/events/{eventId}/staff": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    /**
+     * Get all staff users for an event
+     * @description Gets all users with role STAFF or ADMIN
+     */
+    get: operations["get-event-staff"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Change or add event role of a user */
+    post: operations["post-event-role"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/role": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    /** Get the current user's event role for an event */
+    get: operations["get-user-event-role"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    Event: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      description?: string | null;
+      location?: string | null;
+      /** Format: uri */
+      location_url?: string | null;
+      /** Format: int32 */
+      max_attendees?: number | null;
+      /** Format: date-time */
+      application_open: string;
+      /** Format: date-time */
+      application_close: string;
+      /** Format: date-time */
+      rsvp_deadline?: string | null;
+      /** Format: date-time */
+      decision_release?: string | null;
+      /** Format: date-time */
+      start_time: string;
+      /** Format: date-time */
+      end_time: string;
+      /** Format: uri */
+      website_url?: string | null;
+      is_published?: boolean | null;
+      /** Format: date-time */
+      created_at?: string | null;
+      /** Format: date-time */
+      updated_at?: string | null;
+    };
     /**
      * ErrorResponse
      * @description This model is returned on server errors, it returns an error code (lookup code definitions in documentation), an error key, and a message.
@@ -102,6 +234,84 @@ export interface components {
       expires_at: string;
       ip_address?: string | null;
       user_agent?: string | null;
+    };
+    User: {
+      /**
+       * Format: uuid
+       * @example 123e4567-e89b-12d3-a456-426614174000
+       */
+      id: string;
+      /** @example John Doe */
+      name: string;
+      /**
+       * Format: email
+       * @example john@example.com
+       */
+      email?: string | null;
+      /** @example true */
+      email_verified: boolean;
+      /** @example false */
+      onboarded: boolean;
+      /**
+       * Format: uri
+       * @example https://example.com/avatar.jpg
+       */
+      image?: string | null;
+      /**
+       * Format: date-time
+       * @example 2025-08-08T17:00:00Z
+       */
+      created_at: string;
+      /**
+       * Format: date-time
+       * @example 2025-08-08T18:00:00Z
+       */
+      updated_at: string;
+      role: components["schemas"]["UserRole"];
+    };
+    UserWithEventRole: components["schemas"]["User"] & {
+      event_role: components["schemas"]["EventRole"];
+    };
+    /**
+     * @example user
+     * @enum {string}
+     */
+    UserRole: "user" | "superuser";
+    /**
+     * @example attendee
+     * @enum {string}
+     */
+    EventRole: "admin" | "staff" | "attendee" | "applicant";
+    /**
+     * @example under_review
+     * @enum {string}
+     */
+    ApplicationStatus:
+      | "started"
+      | "submitted"
+      | "under_review"
+      | "accepted"
+      | "rejected"
+      | "waitlisted"
+      | "withdrawn";
+    EventWithUserInfo: components["schemas"]["Event"] & {
+      event_role?: {
+        event_role_type: components["schemas"]["EventRole"];
+        valid: boolean;
+      };
+      application_status?: {
+        application_status: components["schemas"]["ApplicationStatus"];
+        valid: boolean;
+      };
+    };
+    NullableEventRoleRow: {
+      role?: components["schemas"]["EventRole"];
+      /** Format: uuid */
+      user_id: string;
+      /** Format: uuid */
+      event_id: string;
+      /** Format: date-time */
+      assigned_at?: string;
     };
   };
   responses: {
@@ -284,6 +494,341 @@ export interface operations {
       };
       /** @description Duplicate email found in DB */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "get-events": {
+    parameters: {
+      query?: {
+        /** @description If true, include unpublished events as well. Superusers ONLY. */
+        include_published?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK: Events returned */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EventWithUserInfo"][];
+        };
+      };
+    };
+  };
+  "post-event": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @example Open Software Club's Workshop */
+          name: string;
+          /**
+           * Format: date-time
+           * @example 2025-08-01T08:00:00Z
+           */
+          application_open: string;
+          /**
+           * Format: date-time
+           * @example 2025-12-01T023:59:00Z
+           */
+          application_close: string;
+          /**
+           * Format: date-time
+           * @example 2026-02-10T17:00:00Z
+           */
+          start_time: string;
+          /**
+           * Format: date-time
+           * @example 2026-02-12T08:00:00Z
+           */
+          end_time: string;
+          description?: string;
+          location?: string;
+          location_url?: string;
+          max_attendees?: number;
+          /**
+           * Format: date-time
+           * @example 2025-08-01T08:00:00Z
+           */
+          rsvp_deadline?: string;
+          /**
+           * Format: date-time
+           * @example 2025-08-01T08:00:00Z
+           */
+          decision_release?: string;
+          website_url?: string;
+          is_published?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description OK: Event created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Bad request/Malformed request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+          examples: unknown;
+        };
+      };
+      /** @description endTime is before startTime or applicationClose is before applicationOpen */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          schema: unknown;
+          examples: unknown;
+        };
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "get-single-event": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK - Event received */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Event"];
+        };
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "delete-event": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK - Event deleted (patched) */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "patch-event": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK - Event updated (patched) */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "get-event-staff": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK - Return users */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserWithEventRole"][];
+        };
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "post-event-role": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @example user@example.com */
+          email?: string | null;
+          /**
+           * Format: uuid
+           * @example 123e4567-e89b-12d3-a456-426614174000
+           */
+          user_id?: string | null;
+          role: components["schemas"]["EventRole"];
+        };
+      };
+    };
+    responses: {
+      /** @description OK - Return users */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Not Found - User not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Server Error: Something went terribly wrong on our end. */
+      "5XX": {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  "get-user-event-role": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK - Return role */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NullableEventRoleRow"];
+        };
+      };
+      /** @description Not Found - Role not found */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Not Found - Role not found */
+      404: {
         headers: {
           [name: string]: unknown;
         };

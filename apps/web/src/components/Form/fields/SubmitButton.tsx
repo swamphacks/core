@@ -7,7 +7,7 @@ export function SubmitButton({ label = "Submit" }: { label?: string }) {
     <form.Subscribe
       selector={(state) => state.canSubmit}
       children={(canSubmit) => (
-        <div className="flex justify-end">
+        <div className="flex justify-start mb-20">
           <Button type="submit" isDisabled={!canSubmit}>
             {label}
           </Button>
