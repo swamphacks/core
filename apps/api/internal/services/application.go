@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -44,25 +46,43 @@ type ApplicationSubmissionFields struct {
 	AgreeToMLHEmails        string `json:"agreeToMLHEmails"`
 }
 
+var (
+	ErrApplicationDeadlinePassed = errors.New("the application deadline has passed")
+	ErrApplicationUnavailable    = errors.New("unable to access the application")
+)
+
 type ApplicationService struct {
-	appRepo *repository.ApplicationRepository
-	storage storage.Storage
-	buckets *config.CoreBuckets
-	txm     *db.TransactionManager
-	logger  zerolog.Logger
+	appRepo       *repository.ApplicationRepository
+	eventsService *EventService
+	storage       storage.Storage
+	buckets       *config.CoreBuckets
+	txm           *db.TransactionManager
+	logger        zerolog.Logger
 }
 
-func NewApplicationService(appRepo *repository.ApplicationRepository, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
+func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
 	return &ApplicationService{
-		appRepo: appRepo,
-		storage: storage,
-		buckets: buckets,
-		txm:     txm,
-		logger:  logger,
+		appRepo:       appRepo,
+		eventsService: eventsService,
+		storage:       storage,
+		buckets:       buckets,
+		txm:           txm,
+		logger:        logger,
 	}
 }
 
 func (s *ApplicationService) GetApplicationByUserAndEventID(ctx context.Context, params sqlc.GetApplicationByUserAndEventIDParams) (*sqlc.Application, error) {
+
+	canAccessApplication, err := s.ApplicationOpen(ctx, params.EventID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !canAccessApplication {
+		return nil, ErrApplicationUnavailable
+	}
+
 	application, err := s.appRepo.GetApplicationByUserAndEventID(ctx, params)
 
 	if err != nil {
@@ -74,6 +94,16 @@ func (s *ApplicationService) GetApplicationByUserAndEventID(ctx context.Context,
 }
 
 func (s *ApplicationService) CreateApplication(ctx context.Context, params sqlc.CreateApplicationParams) (*sqlc.Application, error) {
+	canCreateApplication, err := s.ApplicationOpen(ctx, params.EventID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !canCreateApplication {
+		return nil, nil
+	}
+
 	application, err := s.appRepo.CreateApplication(ctx, params)
 
 	if err != nil {
@@ -85,8 +115,18 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, params sqlc.
 }
 
 func (s *ApplicationService) SubmitApplication(ctx context.Context, data ApplicationSubmissionFields, resume []byte, userId uuid.UUID, eventId uuid.UUID) error {
+	canSubmitApplication, err := s.ApplicationOpen(ctx, eventId)
+
+	if err != nil {
+		return err
+	}
+
+	if !canSubmitApplication {
+		return ErrApplicationDeadlinePassed
+	}
+
 	// Submitting application is an atomic operation
-	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+	err = s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.appRepo.NewTx(tx)
 
 		err := txAppRepo.SubmitApplication(ctx, data, userId, eventId)
@@ -115,8 +155,8 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 	return nil
 }
 
-func (s *ApplicationService) SaveApplication(ctx context.Context, data any, params sqlc.UpdateApplicationParams) error {
-	err := s.appRepo.SaveApplication(ctx, data, params)
+func (s *ApplicationService) SaveApplication(ctx context.Context, data any, userId, eventId uuid.UUID) error {
+	err := s.appRepo.SaveApplication(ctx, data, userId, eventId)
 
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())
@@ -124,4 +164,21 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, para
 	}
 
 	return nil
+}
+
+func (s *ApplicationService) ApplicationOpen(ctx context.Context, eventId uuid.UUID) (bool, error) {
+	event, err := s.eventsService.GetEventByID(ctx, eventId)
+
+	if err != nil {
+		s.logger.Err(err).Msg("ApplicationOpen check error: " + err.Error())
+		return false, err
+	}
+
+	submissionTime := time.Now()
+
+	if submissionTime.Before(event.ApplicationOpen) || submissionTime.After(event.ApplicationClose) {
+		return false, nil
+	}
+
+	return true, nil
 }

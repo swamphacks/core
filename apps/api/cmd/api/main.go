@@ -69,7 +69,7 @@ func main() {
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
 	eventService := services.NewEventService(eventRepo, userRepo, logger)
 	emailService := services.NewEmailService(taskQueueClient, logger)
-	applicationService := services.NewApplicationService(applicationRepo, txm, r2Client, &cfg.CoreBuckets, logger)
+	applicationService := services.NewApplicationService(applicationRepo, eventService, txm, r2Client, &cfg.CoreBuckets, logger)
 
 	// Injections into handlers
 	apiHandlers := handlers.NewHandlers(authService, eventInterestService, eventService, emailService, applicationService, cfg, logger)

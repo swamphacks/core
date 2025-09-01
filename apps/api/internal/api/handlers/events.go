@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -390,80 +391,3 @@ func (h *EventHandler) AssignEventRole(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
-
-// func (h *EventHandler) UploadAttachment(w http.ResponseWriter, r *http.Request) {
-// 	// filename := r.URL.Query().Get("filename")
-
-// 	// if filename == "" {
-// 	// 	res.SendError(w, http.StatusBadRequest, res.NewError("a", "no file name"))
-// 	// 	return
-// 	// }
-
-// 	// // Ensure directory exists
-// 	// if err := os.MkdirAll("./uploads", 0755); err != nil {
-// 	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-// 	// 	return
-// 	// }
-
-// 	// out, err := os.Create("./uploads/" + filename)
-
-// 	// if err != nil {
-// 	// 	fmt.Println(err)
-
-// 	// 	res.SendError(w, http.StatusBadRequest, res.NewError("a", "can't create file"))
-// 	// 	return
-// 	// }
-// 	// defer out.Close()
-// 	// _, err = io.Copy(out, r.Body)
-// 	// if err != nil {
-// 	// 	res.SendError(w, http.StatusBadRequest, res.NewError("a", "can't copy file"))
-// 	// 	return
-// 	// }
-
-// 	// w.Header().Set("Content-Type", "text/plain")
-// 	// fmt.Fprintln(w, "Uploaded:", filename)
-// 	sdkConfig, err := awsConfig.LoadDefaultConfig(context.TODO())
-
-// 	if err != nil {
-// 		res.SendError(w, http.StatusInternalServerError, res.NewError("a", "load sdk config"))
-// 		return
-// 	}
-
-// 	s3Client := s3.NewFromConfig(sdkConfig)
-// 	presignClient := s3.NewPresignClient(s3Client)
-// 	presigner := Presigner{PresignClient: presignClient}
-
-// 	presignedPutRequest, err := presigner.PutObject(r.Context(), "hieu-infra-test", "testKey", 60)
-
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	log.Printf("Got a presigned %v request to URL:\n\t%v\n", presignedPutRequest.Method,
-// 		presignedPutRequest.URL)
-
-// 	res.Send(w, http.StatusOK, presignedPutRequest)
-// }
-
-// type Presigner struct {
-// 	PresignClient *s3.PresignClient
-// }
-
-// // PutObject makes a presigned request that can be used to put an object in a bucket.
-// // The presigned request is valid for the specified number of seconds.
-// func (presigner Presigner) PutObject(
-// 	ctx context.Context, bucketName string, objectKey string, lifetimeSecs int64) (*v4.PresignedHTTPRequest, error) {
-
-// 	ContentType := "application/pdf"
-// 	request, err := presigner.PresignClient.PresignPutObject(ctx, &s3.PutObjectInput{
-// 		Bucket:      aws.String(bucketName),
-// 		Key:         aws.String(objectKey),
-// 		ContentType: &ContentType,
-// 	}, func(opts *s3.PresignOptions) {
-// 		opts.Expires = time.Duration(lifetimeSecs * int64(time.Second))
-// 	})
-// 	if err != nil {
-// 		log.Printf("Couldn't get a presigned request to put %v:%v. Here's why: %v\n",
-// 			bucketName, objectKey, err)
-// 	}
-// 	return request, err
-// }

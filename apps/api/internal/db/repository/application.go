@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 
@@ -56,7 +55,7 @@ func (r *ApplicationRepository) GetApplicationByUserAndEventID(ctx context.Conte
 	application, err := r.db.Query.GetApplicationByUserAndEventID(ctx, params)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrApplicationNotFound
 		}
 
@@ -89,7 +88,7 @@ func (r *ApplicationRepository) SubmitApplication(ctx context.Context, data any,
 	return nil
 }
 
-func (r *ApplicationRepository) SaveApplication(ctx context.Context, data any, params sqlc.UpdateApplicationParams) error {
+func (r *ApplicationRepository) SaveApplication(ctx context.Context, data any, userId, eventId uuid.UUID) error {
 	jsonBytes, err := json.Marshal(data)
 
 	if err != nil {
@@ -101,8 +100,8 @@ func (r *ApplicationRepository) SaveApplication(ctx context.Context, data any, p
 		Status:              sqlc.ApplicationStatusStarted,
 		ApplicationDoUpdate: true,
 		Application:         jsonBytes,
-		UserID:              params.UserID,
-		EventID:             params.EventID,
+		UserID:              userId,
+		EventID:             eventId,
 	})
 
 	if err != nil {

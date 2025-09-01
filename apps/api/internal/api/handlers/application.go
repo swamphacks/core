@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -11,7 +10,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
@@ -29,54 +27,29 @@ func NewApplicationHandler(appService *services.ApplicationService) *Application
 	}
 }
 
-func getEventID(w http.ResponseWriter, r *http.Request) (uuid.UUID, error) {
+func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
+
 	if eventIdStr == "" {
-		err := errors.New("missing_event_id")
-		errMsg := "The event ID is missing from the URL!"
-
-		log.Err(err).Msg(errMsg)
-
-		res.SendError(w, http.StatusBadRequest,
-			res.NewError(err.Error(), errMsg))
-
-		return uuid.Nil, err
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
 	}
 
 	eventId, err := uuid.Parse(eventIdStr)
 	if err != nil {
-		err = errors.New("invalid_event_id")
-		errMsg := "The event ID is not a valid UUID"
-
-		log.Err(err).Msg(errMsg)
-
-		res.SendError(w, http.StatusBadRequest,
-			res.NewError(err.Error(), errMsg))
-
-		return uuid.Nil, err
-	}
-
-	return eventId, nil
-}
-
-func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWriter, r *http.Request) {
-	eventId, err := getEventID(w, r)
-
-	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
 		return
 	}
 
-	userIdPtr := ctxutils.GetUserIdFromCtx(r.Context())
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
 
-	if userIdPtr == nil {
+	if userId == nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
 		return
 	}
 
-	userId := *userIdPtr
-
 	params := sqlc.GetApplicationByUserAndEventIDParams{
-		UserID:  userId,
+		UserID:  *userId,
 		EventID: eventId,
 	}
 
@@ -85,23 +58,36 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 	if err != nil {
 		if err == repository.ErrApplicationNotFound {
 			params := sqlc.CreateApplicationParams{
-				UserID:  userId,
+				UserID:  *userId,
 				EventID: eventId,
 			}
+
 			newApplication, err := h.appService.CreateApplication(r.Context(), params)
+
 			if err != nil {
 				res.SendError(w, http.StatusBadRequest, res.NewError("create_application_error", "can't create application"))
-			} else {
-				res.Send(w, http.StatusOK, newApplication)
+				return
 			}
-			res.SendError(w, http.StatusBadRequest, res.NewError("application_not_found", "can't find application"))
-		} else {
-			res.SendError(w, http.StatusBadRequest, res.NewError("get_application_error", "error retrieving application"))
+
+			if newApplication == nil {
+				res.SendError(w, http.StatusBadRequest, res.NewError("create_application_error", "can't create application"))
+				return
+			}
+
+			res.Send(w, http.StatusOK, newApplication)
+			return
 		}
 
+		if err == services.ErrApplicationUnavailable {
+			res.SendError(w, http.StatusBadRequest, res.NewError("get_application_error", "the application is unavailable"))
+			return
+		}
+
+		res.SendError(w, http.StatusBadRequest, res.NewError("get_application_error", "error retrieving application"))
 		return
 	}
 
+	// If the application status is not "started", then it means the user has submitted the application
 	if application.Status.ApplicationStatus != sqlc.ApplicationStatusStarted {
 		res.Send(w, http.StatusOK, map[string]any{"submitted": true})
 		return
@@ -159,9 +145,12 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 	submission.AgreeToMLHEmails = r.FormValue("agreeToMLHEmails")
 
 	resumeFile, _, err := r.FormFile("resume[]")
-	if err == nil {
-		defer resumeFile.Close()
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "invalid resume file"))
+		return
 	}
+
+	defer resumeFile.Close()
 
 	resumeFileBuffer := bytes.NewBuffer(nil)
 
@@ -175,24 +164,34 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	eventId, err := getEventID(w, r)
+	eventIdStr := chi.URLParam(r, "eventId")
 
-	if err != nil {
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
 		return
 	}
 
-	userIdPtr := ctxutils.GetUserIdFromCtx(r.Context())
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
 
-	if userIdPtr == nil {
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+
+	if userId == nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
 		return
 	}
 
-	userId := *userIdPtr
-
-	err = h.appService.SubmitApplication(r.Context(), submission, resumeFileBuffer.Bytes(), userId, eventId)
+	err = h.appService.SubmitApplication(r.Context(), submission, resumeFileBuffer.Bytes(), *userId, eventId)
 
 	if err != nil {
+		if err == services.ErrApplicationDeadlinePassed {
+			res.SendError(w, http.StatusInternalServerError, res.NewError("submit_application_error", services.ErrApplicationDeadlinePassed.Error()))
+			return
+		}
+
 		res.SendError(w, http.StatusInternalServerError, res.NewError("submit_application_error", "Something went wrong while submitting application"))
 		return
 	}
@@ -208,25 +207,27 @@ func (h *ApplicationHandler) SaveApplication(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	eventId, err := getEventID(w, r)
+	eventIdStr := chi.URLParam(r, "eventId")
 
-	if err != nil {
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
 		return
 	}
 
-	userIdPtr := ctxutils.GetUserIdFromCtx(r.Context())
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
 
-	if userIdPtr == nil {
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+
+	if userId == nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
 		return
 	}
 
-	userId := *userIdPtr
-
-	err = h.appService.SaveApplication(r.Context(), data, sqlc.UpdateApplicationParams{
-		UserID:  userId,
-		EventID: eventId,
-	})
+	err = h.appService.SaveApplication(r.Context(), data, *userId, eventId)
 
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("save_application_error", "Something went wrong while saving application"))

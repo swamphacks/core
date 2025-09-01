@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -44,7 +45,7 @@ type Config struct {
 	AllowedOriginsString string   `env:"ALLOWED_ORIGINS"`
 	AllowedOrigins       []string ``
 
-	Auth      AuthConfig
+	Auth      AuthConfig   `envPrefix:"AUTH_"`
 	Cookie    CookieConfig `envPrefix:"COOKIE_"`
 	ClientUrl string       `env:"CLIENT_URL"`
 
@@ -60,6 +61,8 @@ func Load() *Config {
 	if err != nil {
 		log.Fatal().Msgf("Failed to parse env: %v", err)
 	}
+
+	fmt.Println(cfg)
 
 	return &cfg
 }
