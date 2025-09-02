@@ -54,7 +54,6 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 	}
 
 	application, err := h.appService.GetApplicationByUserAndEventID(r.Context(), params)
-
 	if err != nil {
 		if err == repository.ErrApplicationNotFound {
 			params := sqlc.CreateApplicationParams{

@@ -71,17 +71,6 @@ func NewApplicationService(appRepo *repository.ApplicationRepository, eventsServ
 }
 
 func (s *ApplicationService) GetApplicationByUserAndEventID(ctx context.Context, params sqlc.GetApplicationByUserAndEventIDParams) (*sqlc.Application, error) {
-
-	canAccessApplication, err := s.eventsService.IsApplicationsOpen(ctx, params.EventID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !canAccessApplication {
-		return nil, ErrApplicationUnavailable
-	}
-
 	application, err := s.appRepo.GetApplicationByUserAndEventID(ctx, params)
 
 	if err != nil {

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -62,13 +61,11 @@ func Load() *Config {
 		log.Fatal().Msgf("Failed to parse env: %v", err)
 	}
 
-	fmt.Println(cfg)
-
 	return &cfg
 }
 
 func loadEnv() {
-	files := []string{".env.local", ".env.development", ".env"}
+	files := []string{".env.local", ".env.dev", ".env"}
 	for _, f := range files {
 		if _, err := os.Stat(f); err == nil {
 			log.Info().Str("file", f).Msg("Loading environment file.")

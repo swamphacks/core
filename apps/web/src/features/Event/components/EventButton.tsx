@@ -4,6 +4,7 @@ import applicationStatus from "../applicationStatus";
 import { Button, button, type ButtonProps } from "@/components/ui/Button";
 import { cn } from "@/utils/cn";
 import { useRouter } from "@tanstack/react-router";
+import { toast } from "react-toastify";
 
 type ApplicationStatusTypes = keyof typeof applicationStatus;
 
@@ -89,6 +90,11 @@ const EventButton = ({
         // Navigate to the event summary
         router.navigate({
           to: `/events/${eventId}/summary`,
+        });
+        break;
+      case "upcoming":
+        toast.info("Applications for this event have not opened yet.", {
+          position: "bottom-right",
         });
         break;
     }
