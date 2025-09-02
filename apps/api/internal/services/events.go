@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -179,4 +180,20 @@ func (s *EventService) AssignEventRole(
 	}
 
 	return nil
+}
+
+func (s *EventService) IsApplicationsOpen(ctx context.Context, eventId uuid.UUID) (bool, error) {
+	event, err := s.GetEventByID(ctx, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg("ApplicationOpen check error: " + err.Error())
+		return false, err
+	}
+
+	if !*event.IsPublished {
+		return false, nil
+	}
+
+	now := time.Now()
+	open := now.After(event.ApplicationOpen) && now.Before(event.ApplicationClose)
+	return open, nil
 }

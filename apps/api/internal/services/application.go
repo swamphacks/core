@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -73,7 +72,7 @@ func NewApplicationService(appRepo *repository.ApplicationRepository, eventsServ
 
 func (s *ApplicationService) GetApplicationByUserAndEventID(ctx context.Context, params sqlc.GetApplicationByUserAndEventIDParams) (*sqlc.Application, error) {
 
-	canAccessApplication, err := s.ApplicationOpen(ctx, params.EventID)
+	canAccessApplication, err := s.eventsService.IsApplicationsOpen(ctx, params.EventID)
 
 	if err != nil {
 		return nil, err
@@ -94,7 +93,7 @@ func (s *ApplicationService) GetApplicationByUserAndEventID(ctx context.Context,
 }
 
 func (s *ApplicationService) CreateApplication(ctx context.Context, params sqlc.CreateApplicationParams) (*sqlc.Application, error) {
-	canCreateApplication, err := s.ApplicationOpen(ctx, params.EventID)
+	canCreateApplication, err := s.eventsService.IsApplicationsOpen(ctx, params.EventID)
 
 	if err != nil {
 		return nil, err
@@ -115,7 +114,7 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, params sqlc.
 }
 
 func (s *ApplicationService) SubmitApplication(ctx context.Context, data ApplicationSubmissionFields, resume []byte, userId uuid.UUID, eventId uuid.UUID) error {
-	canSubmitApplication, err := s.ApplicationOpen(ctx, eventId)
+	canSubmitApplication, err := s.eventsService.IsApplicationsOpen(ctx, eventId)
 
 	if err != nil {
 		return err
@@ -164,25 +163,4 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 	}
 
 	return nil
-}
-
-func (s *ApplicationService) ApplicationOpen(ctx context.Context, eventId uuid.UUID) (bool, error) {
-	event, err := s.eventsService.GetEventByID(ctx, eventId)
-
-	if err != nil {
-		s.logger.Err(err).Msg("ApplicationOpen check error: " + err.Error())
-		return false, err
-	}
-
-	if !(*event.IsPublished) {
-		return false, nil
-	}
-
-	submissionTime := time.Now()
-
-	if submissionTime.Before(event.ApplicationOpen) || submissionTime.After(event.ApplicationClose) {
-		return false, nil
-	}
-
-	return true, nil
 }
