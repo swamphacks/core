@@ -11,6 +11,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/ptr"
 	"github.com/swamphacks/core/apps/api/internal/storage"
 )
 
@@ -127,6 +128,12 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		contentType := "application/pdf"
 		err = s.storage.Store(ctx, s.buckets.ApplicationResumes, eventId.String()+"/"+userId.String(), resume, &contentType)
 
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		err = s.eventsService.AssignEventRole(ctx, ptr.UUIDToPtr(userId), nil, eventId, sqlc.EventRoleTypeApplicant)
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
 			return err
