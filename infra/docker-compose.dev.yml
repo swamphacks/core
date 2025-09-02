@@ -30,3 +30,9 @@ services:
     ports:
       - 6380:6380
     attach: false
+
+  dev-discord:
+    image: ghcr.io/swamphacks/core-discord:dev
+    restart: always
+    env_file:
+      - ./secrets/.env.dev.discord
