@@ -174,6 +174,10 @@ func (s *ApplicationService) ApplicationOpen(ctx context.Context, eventId uuid.U
 		return false, err
 	}
 
+	if !(*event.IsPublished) {
+		return false, nil
+	}
+
 	submissionTime := time.Now()
 
 	if submissionTime.Before(event.ApplicationOpen) || submissionTime.After(event.ApplicationClose) {
