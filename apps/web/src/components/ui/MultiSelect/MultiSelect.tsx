@@ -3,6 +3,7 @@ import Select, {
   type ClearIndicatorProps,
   type DropdownIndicatorProps,
   type MultiValueRemoveProps,
+  type PropsValue,
 } from "react-select";
 import TablerChevronDown from "~icons/tabler/chevron-down";
 import {
@@ -68,6 +69,7 @@ export interface MultiSelectProps {
   options: Option[];
   isRequired?: boolean;
   onChange?: (data: Option[]) => void;
+  defaultValue?: PropsValue<Option>;
 
   // Not sure if its better to do this https://react-spectrum.adobe.com/react-aria/Form.html#custom-children
   // accepting errors props should work for now.
@@ -85,6 +87,7 @@ const MultiSelect = ({
   options,
   onChange,
   errors,
+  defaultValue,
   validationBehavior = "native",
   ...props
 }: MultiSelectProps) => {
@@ -124,13 +127,15 @@ const MultiSelect = ({
         unstyled
         isMulti
         options={options}
+        defaultValue={defaultValue}
+        // @ts-ignore
         components={{ DropdownIndicator, ClearIndicator, MultiValueRemove }}
         classNames={{
           placeholder: () => "opacity-50",
           control: (state) =>
             cn(
               selectStyles(state),
-              "h-full",
+              "h-full pl-2",
               fieldBorderStyles({
                 isInvalid: isInvalid || (errors && errors.length > 0),
               }),

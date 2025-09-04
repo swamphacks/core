@@ -71,8 +71,21 @@ export function mapEventsAPIResponseToEventCardProps(
         break;
     }
   } else {
-    // If no specific role or application status, default to notApplied
-    status = "notApplied";
+    // Check if applications are even open
+    const now = new Date();
+    const appStart = new Date(data.application_open);
+    const appEnd = new Date(data.application_close);
+
+    if (now >= appStart && now <= appEnd) {
+      // Applications are open
+      status = "notApplied";
+    } else if (now < appStart) {
+      // Applications not yet open
+      status = "upcoming";
+    } else if (now > appEnd) {
+      // Applications closed
+      status = "notGoing";
+    }
   }
 
   // Check if the event is completed

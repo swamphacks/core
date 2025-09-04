@@ -19,9 +19,9 @@ export function showToast({
   type,
 }: ToastProps) {
   toast(
-    <div className="flex flex-col px-2">
+    <div className="flex flex-col px-3 text-text-main">
       {title && <Heading className="text-md font-semibold">{title}</Heading>}
-      <Text className="">{message}</Text>
+      <Text>{message}</Text>
     </div>,
     {
       autoClose: duration ?? 5000, // Default 5 seconds,

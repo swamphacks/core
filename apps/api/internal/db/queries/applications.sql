@@ -14,8 +14,7 @@ WHERE user_id = $1 AND event_id = $2;
 UPDATE applications
 SET
     status = CASE WHEN @status_do_update::boolean THEN @status::application_status ELSE status END,
-    application = CASE WHEN @application_do_update::boolean THEN @application::JSONB ELSE application END,
-    resume_url = CASE WHEN @resume_url_do_update::boolean THEN @resume_url ELSE resume_url END
+    application = CASE WHEN @application_do_update::boolean THEN @application::JSONB ELSE application END
 WHERE
     user_id = @user_id AND event_id = @event_id;
 

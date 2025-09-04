@@ -87,6 +87,14 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(mw.Auth.RequireAuth).Get("/role", api.Handlers.Event.GetEventRole)
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
+
+			r.Route("/application", func(r chi.Router) {
+				r.Use(mw.Auth.RequireAuth)
+
+				r.Get("/", api.Handlers.Application.GetApplicationByUserAndEventID)
+				r.Post("/submit", api.Handlers.Application.SubmitApplication)
+				r.Post("/save", api.Handlers.Application.SaveApplication)
+			})
 		})
 	})
 
