@@ -47,7 +47,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Use(middleware.RealIP)
 	api.Router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   AllowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
@@ -73,6 +73,14 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.Get("/me", api.Handlers.Auth.GetMe)
 			r.Post("/logout", api.Handlers.Auth.Logout)
 		})
+	})
+
+	// User routes
+	api.Router.Route("/users", func(r chi.Router) {
+		r.Use(mw.Auth.RequireAuth)
+		r.Get("/me", api.Handlers.User.GetProfile)
+		r.Patch("/me", api.Handlers.User.UpdateProfile)
+		r.Patch("/me/onboarded", api.Handlers.User.UpdateOnboarded)
 	})
 
 	// Event routes

@@ -66,13 +66,14 @@ func main() {
 
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
+	userService := services.NewUserService(userRepo, logger)
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
 	eventService := services.NewEventService(eventRepo, userRepo, logger)
 	emailService := services.NewEmailService(taskQueueClient, logger)
 	applicationService := services.NewApplicationService(applicationRepo, eventService, txm, r2Client, &cfg.CoreBuckets, logger)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, eventInterestService, eventService, emailService, applicationService, cfg, logger)
+	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, cfg, logger)
 
 	api := api.NewAPI(&logger, apiHandlers, mw)
 

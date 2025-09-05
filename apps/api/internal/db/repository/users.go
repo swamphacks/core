@@ -64,3 +64,24 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*sqlc.Au
 
 	return &user, nil
 }
+
+func (r *UserRepository) UpdateUser(ctx context.Context, params sqlc.UpdateUserParams) error {
+	err := r.db.Query.UpdateUser(ctx, params)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return ErrUserNotFound
+		}
+	}
+	return err
+}
+
+// Why does SQLC have a function specifically for onboarded?
+func (r *UserRepository) UpdateUserOnboarded(ctx context.Context, id uuid.UUID) error {
+	err := r.db.Query.UpdateUserOnboarded(ctx, id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return ErrUserNotFound
+		}
+	}
+	return err
+}
