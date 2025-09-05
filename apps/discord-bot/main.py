@@ -11,6 +11,9 @@ from discord.app_commands import CheckFailure, AppCommandError
 
 # Set up logging configuration
 log_dir: pathlib.Path = pathlib.Path(__file__).parent / 'logs'
+# create logs directory if it doesn't exist, if it does it just moves on
+log_dir.mkdir(parents=True, exist_ok=True)
+
 handler: logging.FileHandler = logging.FileHandler(
     log_dir / 'discord-bot.log',
     encoding='utf-8',
