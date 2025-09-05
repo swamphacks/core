@@ -137,7 +137,6 @@
   --input-text-disabled: var(--color-gray-500);
 
   --toastify-color-light: var(--color-surface);
-  --toastify-toast-width: auto;
 }
 
 .dark {
@@ -436,4 +435,6 @@
   --color-input-border-disabled: var(--input-border-disabled);
   --color-input-text-error: var(--input-text-error);
   --color-input-text-disabled: var(--input-text-disabled);
+
+  --toastify-text-color: var(--text-main);
 }

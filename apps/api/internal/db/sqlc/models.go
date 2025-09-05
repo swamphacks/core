@@ -150,7 +150,6 @@ type Application struct {
 	EventID     uuid.UUID             `json:"event_id"`
 	Status      NullApplicationStatus `json:"status"`
 	Application []byte                `json:"application"`
-	ResumeUrl   *string               `json:"resume_url"`
 	CreatedAt   time.Time             `json:"created_at"`
 	SavedAt     time.Time             `json:"saved_at"`
 	UpdatedAt   time.Time             `json:"updated_at"`

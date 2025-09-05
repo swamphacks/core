@@ -36,7 +36,15 @@ export const MultiSelectQuestion = createQuestionItem({
     const error = errorMessage[QuestionTypes.multiselect];
     const requiredMessage = item.requiredMessage ?? error.required;
 
-    let schema = z.array(z.string(), requiredMessage); // array of string value of selections
+    let schema = z.array(
+      z.string().or(
+        z.object({
+          label: z.string(),
+          value: z.string(),
+        }),
+      ),
+      requiredMessage,
+    ); // array of string value of selections
 
     if (item.isRequired) {
       schema = schema.min(1, requiredMessage);

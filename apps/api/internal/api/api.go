@@ -2,10 +2,12 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/httprate"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
@@ -80,13 +82,21 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
 		r.With(mw.Auth.RequireAuth).Get("/", api.Handlers.Event.GetEvents)
 		r.Route("/{eventId}", func(r chi.Router) {
+
 			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
 			r.With(mw.Auth.RequireAuth, ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
 			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
 			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
 			r.With(mw.Auth.RequireAuth).Get("/role", api.Handlers.Event.GetEventRole)
 			r.Get("/", api.Handlers.Event.GetEventByID)
-			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
+			r.With(httprate.LimitByIP(5, time.Minute)).Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
+			r.Route("/application", func(r chi.Router) {
+				r.Use(mw.Auth.RequireAuth)
+
+				r.Get("/", api.Handlers.Application.GetApplicationByUserAndEventID)
+				r.Post("/submit", api.Handlers.Application.SubmitApplication)
+				r.Post("/save", api.Handlers.Application.SaveApplication)
+			})
 		})
 	})
 

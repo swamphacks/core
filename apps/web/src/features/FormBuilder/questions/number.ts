@@ -28,12 +28,10 @@ export const NumberQuestion = createQuestionItem({
       schema = schema.min(1, requiredMessage);
     }
 
-    const newSchema = schema.transform((val) => parseInt(val));
-
     const { validation } = item;
-    if (!validation) return newSchema;
+    if (!validation) return schema.transform((val) => parseInt(val));
 
-    let numberSchema = z.number();
+    let numberSchema = z.number(requiredMessage);
 
     if (typeof validation.min === "number") {
       numberSchema = numberSchema.min(validation.min, error.tooLow);
@@ -43,6 +41,9 @@ export const NumberQuestion = createQuestionItem({
       numberSchema = numberSchema.max(validation.max, error.tooHigh);
     }
 
-    return newSchema.pipe(numberSchema);
+    return z
+      .string()
+      .transform((val) => parseInt(val))
+      .pipe(numberSchema);
   },
 });
