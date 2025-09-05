@@ -41,7 +41,7 @@ func NewEventService(eventRepo *repository.EventRepository, userRepo *repository
 func (s *EventService) CreateEvent(ctx context.Context, params sqlc.CreateEventParams) (*sqlc.Event, error) {
 	event, err := s.eventRepo.CreateEvent(ctx, params)
 	if err != nil {
-		if err == repository.ErrEventNotFound {
+		if errors.Is(err, repository.ErrEventNotFound) {
 			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
 		} else {
 			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
@@ -55,7 +55,7 @@ func (s *EventService) CreateEvent(ctx context.Context, params sqlc.CreateEventP
 func (s *EventService) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Event, error) {
 	event, err := s.eventRepo.GetEventByID(ctx, id)
 	if err != nil {
-		if err == repository.ErrEventNotFound {
+		if errors.Is(err, repository.ErrEventNotFound) {
 			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
 		} else {
 			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
@@ -69,7 +69,7 @@ func (s *EventService) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Ev
 func (s *EventService) UpdateEventById(ctx context.Context, params sqlc.UpdateEventByIdParams) (*sqlc.Event, error) {
 	err := s.eventRepo.UpdateEventById(ctx, params)
 	if err != nil {
-		if err == repository.ErrEventNotFound {
+		if errors.Is(err, repository.ErrEventNotFound) {
 			s.logger.Err(err).Msg(repository.ErrEventNotFound.Error())
 		} else {
 			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
@@ -117,7 +117,7 @@ func (s *EventService) GetEvents(ctx context.Context, includeUnpublished bool) (
 func (s *EventService) GetEventRoleByIds(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (*sqlc.EventRole, error) {
 	eventRole, err := s.eventRepo.GetEventRoleByIds(ctx, userId, eventId)
 	if err != nil {
-		if err == repository.ErrEventRoleNotFound {
+		if errors.Is(err, repository.ErrEventRoleNotFound) {
 			s.logger.Err(err).Msg(repository.ErrEventRoleNotFound.Error())
 		} else {
 			s.logger.Err(err).Msg(repository.ErrUnknown.Error())

@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -55,7 +56,7 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 
 	application, err := h.appService.GetApplicationByUserAndEventID(r.Context(), params)
 	if err != nil {
-		if err == repository.ErrApplicationNotFound {
+		if errors.Is(err, repository.ErrApplicationNotFound) {
 			params := sqlc.CreateApplicationParams{
 				UserID:  *userId,
 				EventID: eventId,
@@ -76,8 +77,7 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 			res.Send(w, http.StatusOK, newApplication)
 			return
 		}
-
-		if err == services.ErrApplicationUnavailable {
+		if errors.Is(err, services.ErrApplicationUnavailable) {
 			res.SendError(w, http.StatusBadRequest, res.NewError("get_application_error", "the application is unavailable"))
 			return
 		}
@@ -186,7 +186,7 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 	err = h.appService.SubmitApplication(r.Context(), submission, resumeFileBuffer.Bytes(), *userId, eventId)
 
 	if err != nil {
-		if err == services.ErrApplicationDeadlinePassed {
+		if errors.Is(err, services.ErrApplicationDeadlinePassed) {
 			res.SendError(w, http.StatusInternalServerError, res.NewError("submit_application_error", services.ErrApplicationDeadlinePassed.Error()))
 			return
 		}

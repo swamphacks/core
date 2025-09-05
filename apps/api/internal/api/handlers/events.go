@@ -111,7 +111,7 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 	event, err := h.eventService.CreateEvent(r.Context(), params)
 	if err != nil {
-		if err == services.ErrFailedToCreateEvent {
+		if errors.Is(err, services.ErrFailedToCreateEvent) {
 			res.SendError(w, http.StatusInternalServerError, res.NewError("creation_error", "Failed to create event"))
 		} else {
 			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
@@ -285,12 +285,12 @@ func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	events, err := h.eventService.GetEvents(r.Context(), *includeUnpublished)
-	if err == services.ErrMissingFields {
+	if errors.Is(err, services.ErrMissingFields) {
 		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Missing/malformed query. Available parameteres: status=all,published"))
 		return
 	}
 
-	if err == services.ErrMissingPerms {
+	if errors.Is(err, services.ErrMissingPerms) {
 		res.SendError(w, http.StatusForbidden, res.NewError("forbidden", "You are forbidden from this resource."))
 		return
 	}
