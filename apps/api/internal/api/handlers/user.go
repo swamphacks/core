@@ -8,6 +8,7 @@ import (
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/services"
 )
 
@@ -76,7 +77,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	// Validate email format if provided
 	if req.Email != nil && *req.Email != "" {
 		// Basic email validation - you might want to use a more robust validation library
-		if !isValidEmail(*req.Email) {
+		if !email.IsValidEmail(*req.Email) {
 			res.SendError(w, http.StatusBadRequest, res.NewError("invalid_email", "Invalid email format"))
 			return
 		}
@@ -161,24 +162,4 @@ func (h *UserHandler) UpdateOnboarded(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res.Send(w, http.StatusOK, user)
-}
-
-// Very basic email validation, checking for @ and .
-func isValidEmail(email string) bool {
-	if len(email) == 0 {
-		return false
-	}
-	atCount := 0
-	dotAfterAt := false
-	for _, char := range email {
-		if char == '@' {
-			atCount++
-			if atCount > 1 {
-				return false // Multiple @ symbols
-			}
-		} else if char == '.' && atCount == 1 {
-			dotAfterAt = true
-		}
-	}
-	return atCount == 1 && dotAfterAt && len(email) > 5
 }
