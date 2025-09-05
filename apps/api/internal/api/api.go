@@ -2,12 +2,10 @@ package api
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/httprate"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
