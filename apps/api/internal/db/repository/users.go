@@ -45,7 +45,7 @@ func (r *UserRepository) Create(ctx context.Context, params sqlc.CreateUserParam
 
 func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*sqlc.AuthUser, error) {
 	user, err := r.db.Query.GetUserByID(ctx, id)
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrUserNotFound
 	} else if err != nil {
 		return nil, err
