@@ -49,7 +49,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Use(middleware.RealIP)
 	api.Router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   AllowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
@@ -60,16 +60,17 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		api.Logger.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("Received ping.")
 		w.Header().Set("Content-Type", "text/plain")
-		w.Header().Set("Content-Length", "6") // "pong!\n" is 6 bytes
+		w.Header().Set("Content-Length", "6")
 		if _, err := w.Write([]byte("pong!\n")); err != nil {
 			log.Err(err)
 		}
 	})
 
-	// Auth routes
+	// --- Auth routes ---
 	api.Router.Route("/auth", func(r chi.Router) {
 		r.Get("/callback", api.Handlers.Auth.OAuthCallback)
 
+		// Protected auth routes
 		r.Group(func(r chi.Router) {
 			r.Use(mw.Auth.RequireAuth)
 			r.Get("/me", api.Handlers.Auth.GetMe)
@@ -77,22 +78,42 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		})
 	})
 
-	// Event routes
-	api.Router.Route("/events", func(r chi.Router) {
-		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
-		r.With(mw.Auth.RequireAuth).Get("/", api.Handlers.Event.GetEvents)
-		r.Route("/{eventId}", func(r chi.Router) {
+	// --- User routes ---
+	api.Router.Route("/users", func(r chi.Router) {
+		r.Use(mw.Auth.RequireAuth)
+		r.Get("/me", api.Handlers.User.GetProfile)
+		r.Patch("/me/onboarding", api.Handlers.User.CompleteOnboarding)
+	})
 
-			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
-			r.With(mw.Auth.RequireAuth, ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
-			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
-			r.With(mw.Auth.RequireAuth, ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
-			r.With(mw.Auth.RequireAuth).Get("/role", api.Handlers.Event.GetEventRole)
+	// --- Event routes ---
+	api.Router.Route("/events", func(r chi.Router) {
+
+		// Superuser-only
+		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
+
+		// Authenticated
+		r.With(mw.Auth.RequireAuth).Get("/", api.Handlers.Event.GetEvents)
+
+		// Event-specific routes
+		r.Route("/{eventId}", func(r chi.Router) {
+			r.Use(mw.Auth.RequireAuth)
+
+			// General access
 			r.Get("/", api.Handlers.Event.GetEventByID)
-			r.With(httprate.LimitByIP(5, time.Minute)).Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
+			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
+
+			// Admin-only
+			r.With(ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
+			r.With(ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
+			r.With(ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
+			r.With(ensureEventAdmin).Get("/role", api.Handlers.Event.GetEventRole)
+
+			// Superuser-only
+			r.With(ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
+
+			// Application routes
 			r.Route("/application", func(r chi.Router) {
 				r.Use(mw.Auth.RequireAuth)
-
 				r.Get("/", api.Handlers.Application.GetApplicationByUserAndEventID)
 				r.Post("/submit", api.Handlers.Application.SubmitApplication)
 				r.Post("/save", api.Handlers.Application.SaveApplication)

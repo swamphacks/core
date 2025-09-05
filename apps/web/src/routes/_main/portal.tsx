@@ -2,14 +2,26 @@ import { EventCard } from "@/features/Event/components/EventCard";
 import { useEventsWithUserInfo } from "@/features/Event/hooks/useEventsWithUserInfo";
 import { createFileRoute } from "@tanstack/react-router";
 import { Heading, Text } from "react-aria-components";
+import { useState } from "react";
+import { OnboardingModal } from "@/features/Onboarding/components/OnboardingModal";
+import Cookies from "js-cookie";
 
 export const Route = createFileRoute("/_main/portal")({
+  beforeLoad: (context) => {
+    const { user } = context.context;
+    const hasSkippedCookie = Cookies.get("welcome-modal-skipped") === "true";
+    const showOnboardingModal = !hasSkippedCookie && !!user && !user.onboarded;
+    return {
+      showOnboardingModal: showOnboardingModal,
+    };
+  },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { user } = Route.useRouteContext();
+  const { user, showOnboardingModal } = Route.useRouteContext();
   const { data, isLoading, isError } = useEventsWithUserInfo();
+  const [isModalOpen, setIsModalOpen] = useState(showOnboardingModal);
 
   if (isLoading) {
     return (
@@ -57,25 +69,33 @@ function RouteComponent() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <Heading className="text-3xl text-text-main">
-          Welcome, {user?.name ?? "hacker"}!
-        </Heading>
-        <h2 className="text-text-secondary text-xl">Ready to start hacking?</h2>
-      </div>
+    <div>
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-2">
+          <Heading className="text-3xl text-text-main">
+            Welcome, {user?.name ?? "hacker"}!
+          </Heading>
+          <h2 className="text-text-secondary text-xl">
+            Ready to start hacking?
+          </h2>
+        </div>
 
-      <div className="flex flex-row gap-6">
-        {data.map((event) => (
-          <EventCard key={event.eventId} {...event} />
-        ))}
+        <div className="flex flex-row gap-6">
+          {data.map((event) => (
+            <EventCard key={event.eventId} {...event} />
+          ))}
 
-        {data.length === 0 && (
-          <Text className="text-violet-600">
-            Awww such empty. Please check back later for events!
-          </Text>
-        )}
+          {data.length === 0 && (
+            <Text className="text-violet-600">
+              Awww such empty. Please check back later for events!
+            </Text>
+          )}
+        </div>
       </div>
+      <OnboardingModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      ></OnboardingModal>
     </div>
   );
 }

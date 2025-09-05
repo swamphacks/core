@@ -64,3 +64,13 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*sqlc.Au
 
 	return &user, nil
 }
+
+func (r *UserRepository) UpdateUser(ctx context.Context, params sqlc.UpdateUserParams) error {
+	err := r.db.Query.UpdateUser(ctx, params)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return ErrUserNotFound
+		}
+	}
+	return err
+}

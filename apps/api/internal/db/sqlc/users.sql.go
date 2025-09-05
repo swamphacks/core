@@ -14,7 +14,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO auth.users (name, email, image)
 VALUES ($1, $2, $3)
-RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, role
+RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email
 `
 
 type CreateUserParams struct {
@@ -36,6 +36,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AuthUse
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Role,
+		&i.PreferredEmail,
 	)
 	return i, err
 }
@@ -51,7 +52,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email FROM auth.users
 WHERE email = $1
 `
 
@@ -68,12 +69,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email *string) (AuthUser, 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Role,
+		&i.PreferredEmail,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email FROM auth.users
 WHERE id = $1
 `
 
@@ -90,6 +92,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, erro
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Role,
+		&i.PreferredEmail,
 	)
 	return i, err
 }
@@ -100,25 +103,28 @@ SET
     name = CASE WHEN $1::boolean THEN $2 ELSE name END,
     email = CASE WHEN $3::boolean THEN $4 ELSE email END,
     email_verified = CASE WHEN $5::boolean THEN $6 ELSE email_verified END,
-    onboarded = CASE WHEN $7::boolean THEN $8 ELSE onboarded END,
-    image = CASE WHEN $9::boolean THEN $10 ELSE image END,
+    preferred_email = CASE WHEN $7::boolean THEN $8 ELSE preferred_email END,
+    onboarded = CASE WHEN $9::boolean THEN $10 ELSE onboarded END,
+    image = CASE WHEN $11::boolean THEN $12 ELSE image END,
     updated_at = NOW()
 WHERE
-    id = $11::uuid
+    id = $13::uuid
 `
 
 type UpdateUserParams struct {
-	NameDoUpdate          bool      `json:"name_do_update"`
-	Name                  string    `json:"name"`
-	EmailDoUpdate         bool      `json:"email_do_update"`
-	Email                 *string   `json:"email"`
-	EmailVerifiedDoUpdate bool      `json:"email_verified_do_update"`
-	EmailVerified         bool      `json:"email_verified"`
-	OnboardedDoUpdate     bool      `json:"onboarded_do_update"`
-	Onboarded             bool      `json:"onboarded"`
-	ImageDoUpdate         bool      `json:"image_do_update"`
-	Image                 *string   `json:"image"`
-	ID                    uuid.UUID `json:"id"`
+	NameDoUpdate           bool      `json:"name_do_update"`
+	Name                   string    `json:"name"`
+	EmailDoUpdate          bool      `json:"email_do_update"`
+	Email                  *string   `json:"email"`
+	EmailVerifiedDoUpdate  bool      `json:"email_verified_do_update"`
+	EmailVerified          bool      `json:"email_verified"`
+	PreferredEmailDoUpdate bool      `json:"preferred_email_do_update"`
+	PreferredEmail         *string   `json:"preferred_email"`
+	OnboardedDoUpdate      bool      `json:"onboarded_do_update"`
+	Onboarded              bool      `json:"onboarded"`
+	ImageDoUpdate          bool      `json:"image_do_update"`
+	Image                  *string   `json:"image"`
+	ID                     uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
@@ -129,6 +135,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.Email,
 		arg.EmailVerifiedDoUpdate,
 		arg.EmailVerified,
+		arg.PreferredEmailDoUpdate,
+		arg.PreferredEmail,
 		arg.OnboardedDoUpdate,
 		arg.Onboarded,
 		arg.ImageDoUpdate,
