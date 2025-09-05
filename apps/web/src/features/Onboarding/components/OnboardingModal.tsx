@@ -2,7 +2,6 @@ import {
   ModalOverlay,
   Modal as RAC_Modal,
   Dialog,
-  Button,
   Form,
   Heading,
 } from "react-aria-components";
@@ -12,6 +11,7 @@ import { TextField } from "@/components/ui/TextField";
 import { api } from "@/lib/ky";
 import { showToast } from "@/lib/toast/toast";
 import Cookies from "js-cookie";
+import { Button } from "@/components/ui/Button";
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -20,10 +20,7 @@ interface OnboardingModalProps {
 
 const onboardingSchema = z.object({
   preferredName: z.string().min(1, "A preferred name is required"),
-  preferredEmail: z
-    .string()
-    .min(1, "A preferred email is required")
-    .email("Please enter a valid email address"),
+  preferredEmail: z.email("Please enter a valid email address"),
 });
 
 export function OnboardingModal({
@@ -41,24 +38,16 @@ export function OnboardingModal({
     },
     onSubmit: async ({ value }) => {
       try {
-        // Update user with new information
-        await api.patch("users/me", {
+        await api.patch("users/me/onboarding", {
           json: {
+            preferred_email: value.preferredEmail,
             name: value.preferredName,
-            email: value.preferredEmail,
-          },
-        });
-
-        // Mark user as onboarded
-        await api.patch("users/me/onboarded", {
-          json: {
-            onboarded: true,
           },
         });
 
         showToast({
           title: "Profile Updated",
-          message: "Your profile has been updated successfully!",
+          message: "Your profile has been updated successfully.",
           type: "success",
         });
 
@@ -97,18 +86,25 @@ export function OnboardingModal({
             }}
             className="flex flex-col gap-4"
           >
-            <div className="text-center">
-              <Heading slot="title" className="text-xl font-semibold mb-2">
-                Welcome!
+            <div className="text-center flex flex-col justify-center items-center">
+              <img
+                className="dark:hidden h-24 w-24"
+                src="/core-favicon-light.svg"
+              />
+              <img
+                className="dark:block hidden h-24 w-24"
+                src="/core-favicon-dark.svg"
+              />
+              <Heading slot="title" className="text-2xl font-bold mb-2">
+                Tell us about yourself!
               </Heading>
-              <p>Please input your preferred name and email.</p>
             </div>
             <div className="flex flex-col gap-2">
               <form.Field name="preferredName">
                 {(field) => (
                   <div>
                     <TextField
-                      label="Preferred Name"
+                      label="Name"
                       type="text"
                       name={field.name}
                       value={field.state.value}
@@ -139,13 +135,13 @@ export function OnboardingModal({
               </form.Field>
             </div>
 
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3 justify-between">
               <Button
-                type="button"
+                variant="skeleton"
                 onPress={handleSkip}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                className="flex-1 border-input-border border-[1px] rounded-sm"
               >
-                Skip
+                Skip for now
               </Button>
               <form.Subscribe
                 selector={(state) => [state.canSubmit, state.isSubmitting]}
@@ -153,10 +149,11 @@ export function OnboardingModal({
                 {([canSubmit, isSubmitting]) => (
                   <Button
                     type="submit"
+                    variant="primary"
                     isDisabled={!canSubmit || isSubmitting}
-                    className="px-4 py-2 bg-violet-600 text-white rounded hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:bg-transparent disabled:text-gray-600"
+                    className="bg-cyan-700 flex-1 text-white rounded-sm disabled:bg-neutral-200 dark:disabled:bg-neutral-700 disabled:text-neutral-400 hover:bg-cyan-800 pressed:bg-cyan-700"
                   >
-                    {isSubmitting ? "Submitting..." : "Submit"}
+                    {isSubmitting ? "Submitting..." : "Continue"}
                   </Button>
                 )}
               </form.Subscribe>

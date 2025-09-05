@@ -44,8 +44,6 @@ func (s *UserService) GetUser(ctx context.Context, userId uuid.UUID) (*sqlc.Auth
 	return user, nil
 }
 
-// Should we have the helper functions,
-// UpdateUser updates user information with conditional field updates
 func (s *UserService) UpdateUser(ctx context.Context, userId uuid.UUID, params sqlc.UpdateUserParams) error {
 	// Set the user ID in the params
 	params.ID = userId
@@ -64,37 +62,15 @@ func (s *UserService) UpdateUser(ctx context.Context, userId uuid.UUID, params s
 	return nil
 }
 
-// UpdateUserOnboarded sets the user's onboarded status to true
-func (s *UserService) UpdateUserOnboarded(ctx context.Context, userId uuid.UUID) error {
-	err := s.userRepo.UpdateUserOnboarded(ctx, userId)
-	if err != nil {
-		if err == repository.ErrUserNotFound {
-			s.logger.Err(err).Msg(repository.ErrUserNotFound.Error())
-			return ErrUserNotFound
-		} else {
-			s.logger.Err(err).Msg("failed to update user onboarded status")
-			return ErrFailedToUpdateUser
-		}
-	}
-
-	return nil
-}
-
-// UpdateUserProfile is a convenience method for updating name and email, calls above update function
-func (s *UserService) UpdateUserProfile(ctx context.Context, userId uuid.UUID, name *string, email *string) error {
+func (s *UserService) CompleteOnboarding(ctx context.Context, userId uuid.UUID, name, email string) error {
 	params := sqlc.UpdateUserParams{
-		ID: userId,
-	}
-
-	// Set update flags and values based on what's provided
-	if name != nil {
-		params.NameDoUpdate = true
-		params.Name = *name
-	}
-
-	if email != nil {
-		params.EmailDoUpdate = true
-		params.Email = email
+		ID:                     userId,
+		NameDoUpdate:           true,
+		Name:                   name,
+		PreferredEmailDoUpdate: true,
+		PreferredEmail:         &email,
+		OnboardedDoUpdate:      true,
+		Onboarded:              true,
 	}
 
 	return s.UpdateUser(ctx, userId, params)
