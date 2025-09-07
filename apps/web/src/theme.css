@@ -129,12 +129,14 @@
   --event-button-text-completed: var(--color-zinc-900);
 
   /* INPUTS */
+  --input-bg: var(--color-background);
+  --input-bg-disbaled: var(--color-gray-200);
   --input-border: var(--color-border);
   --input-border-focused: var(--color-zinc-500);
   --input-border-invalid: var(--color-red-600);
-  --input-border-disabled: var(--color-gray-200);
+  --input-border-disabled: var(--color-border);
   --input-text-error: var(--color-red-600);
-  --input-text-disabled: var(--color-gray-500);
+  --input-text-disabled: var(--color-gray-700);
 
   --toastify-color-light: var(--color-surface);
 }
@@ -163,7 +165,7 @@
   --button-primary-hover: var(--color-blue-700);
   --button-primary-pressed: var(--color-blue-800);
   --button-primary-disabled: var(--color-blue-300);
-  --button-secondary: var(--color-zinc-600);
+  --button-secondary: var(--color-zinc-800);
   --button-secondary-hover: var(--color-zinc-500);
   --button-secondary-pressed: var(--color-zinc-400);
   --button-secondary-disabled: var(--color-neutral-700);
@@ -302,12 +304,14 @@
   --event-button-text-completed: var(--color-neutral-50);
 
   /* INPUTS */
-  --input-border: var(--color-border);
-  --input-border-focused: var(--color-zinc-400);
+  --input-bg: var(--color-neutral-900);
+  --input-bg-disbaled: var(--color-zinc-800);
+  --input-border: var(--color-neutral-700);
+  --input-border-focused: var(--color-zinc-500);
   --input-border-invalid: var(--color-red-300);
-  --input-border-disabled: var(--color-zin-700);
+  --input-border-disabled: var(--color-zinc-700);
   --input-text-error: var(--color-red-300);
-  --input-text-disabled: var(--color-zinc-600);
+  --input-text-disabled: var(--color-white);
 
   --toastify-color-dark: var(--color-surface);
 }
@@ -429,6 +433,8 @@
   --color-event-button-text-not-going: var(--event-button-text-not-going);
   --color-event-button-text-completed: var(--event-button-text-completed);
 
+  --color-input-bg: var(--input-bg);
+  --color-input-bg-disbaled: var(--input-bg-disbaled);
   --color-input-border: var(--input-border);
   --color-input-border-focused: var(--input-border-focused);
   --color-input-border-invalid: var(--input-border-invalid);

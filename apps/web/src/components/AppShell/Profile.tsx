@@ -1,7 +1,12 @@
 import TablerSettings from "~icons/tabler/settings";
 import TablerLogout from "~icons/tabler/logout";
+import { useRouter } from "@tanstack/react-router";
+import { useAppShell } from "@/components/AppShell/AppShellContext";
 
 export function Profile({ name, role }: { name: string; role: string }) {
+  const router = useRouter();
+  const { setMobileNavOpen } = useAppShell();
+
   return (
     <div className="flex items-center gap-2">
       <img
@@ -14,14 +19,33 @@ export function Profile({ name, role }: { name: string; role: string }) {
           <p className="text-sm text-text-secondary opacity-85">{role}</p>
         </div>
         <div className="flex items-center gap-1">
-          <div className="hover:bg-navlink-bg-active p-1 rounded-md">
+          <ProfileIcon
+            onClick={() => {
+              router.navigate({ to: "/settings" });
+              setMobileNavOpen(false);
+            }}
+          >
             <TablerSettings />
-          </div>
-          <div className="hover:bg-navlink-bg-active p-1 rounded-md">
+          </ProfileIcon>
+          <ProfileIcon>
             <TablerLogout className="text-badge-text-rejected" />
-          </div>
+          </ProfileIcon>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ProfileIcon({
+  children,
+  ...props
+}: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) {
+  return (
+    <div
+      {...props}
+      className="hover:bg-navlink-bg-active p-1 rounded-md hover:cursor-pointer duration-100 opacity-80"
+    >
+      {children}
     </div>
   );
 }

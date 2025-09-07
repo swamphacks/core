@@ -1,11 +1,12 @@
+import { cn } from "@/utils/cn";
 import { useTheme } from "./ThemeProvider";
 
-export function Logo() {
+export function Logo({ className }: { className?: string }) {
   const { theme } = useTheme();
 
   return (
     <img
-      className="py-5"
+      className={cn(className)}
       src={
         theme === "dark"
           ? "/assets/SwampHacks_Logo_Light.png"

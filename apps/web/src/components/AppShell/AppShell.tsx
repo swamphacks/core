@@ -87,9 +87,9 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
           {navbar && (
             <aside className="w-64 h-full px-2 py-4 border-r border-neutral-300 dark:border-neutral-800 hidden md:block">
               <nav className="flex flex-col gap-2 h-full">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-3">
                   <div className="w-13">
-                    <Logo />
+                    <Logo className="py-2" />
                   </div>
                   <h1 className="text-xl font-bold">SwampHacks</h1>
                 </div>
