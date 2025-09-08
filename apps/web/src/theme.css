@@ -1,6 +1,6 @@
 :root {
-  --background: oklch(0.9551 0 0);
-  --surface: var(--color-neutral-50);
+  --surface: oklch(98.015% 0.00011 271.152);
+  --background: var(--color-white);
   --border: var(--color-zinc-300);
   --accent-main: var(--color-blue-500);
 
@@ -11,7 +11,7 @@
 
   /* NAVBAR */
   --navlink-bg-inactive: transparent;
-  --navlink-bg-active: var(--color-neutral-300);
+  --navlink-bg-active: var(--color-neutral-200);
 
   /* NAVBAR TEXT */
   --navlink-text: var(--text-main);
@@ -129,21 +129,22 @@
   --event-button-text-completed: var(--color-zinc-900);
 
   /* INPUTS */
-  --input-bg: var(--color-background);
+  --input-bg: var(--color-white);
   --input-bg-disbaled: var(--color-gray-200);
   --input-border: var(--color-border);
   --input-border-focused: var(--color-zinc-500);
   --input-border-invalid: var(--color-red-600);
   --input-border-disabled: var(--color-border);
   --input-text-error: var(--color-red-600);
-  --input-text-disabled: var(--color-gray-700);
+  --input-text-disabled: var(--color-gray-500);
 
   --toastify-color-light: var(--color-surface);
 }
 
 .dark {
+  /* --surface: var(--color-neutral-900); */
+  --surface: #202020;
   --background: var(--color-neutral-900);
-  --surface: var(--color-neutral-800);
   --border: var(--color-zinc-600);
   --accent-main: var(--color-blue-400);
 
@@ -154,7 +155,7 @@
 
   /* NAVBAR */
   --navlink-bg-inactive: transparent;
-  --navlink-bg-active: var(--surface);
+  --navlink-bg-active: var(--color-neutral-800);
 
   /* NAVBAR TEXT */
   --navlink-text: var(--text-main);
@@ -304,14 +305,14 @@
   --event-button-text-completed: var(--color-neutral-50);
 
   /* INPUTS */
-  --input-bg: var(--color-neutral-900);
-  --input-bg-disbaled: var(--color-zinc-800);
+  --input-bg: var(--color-neutral-800);
+  --input-bg-disbaled: var(--color-neutral-900);
   --input-border: var(--color-neutral-700);
   --input-border-focused: var(--color-zinc-500);
   --input-border-invalid: var(--color-red-300);
   --input-border-disabled: var(--color-zinc-700);
   --input-text-error: var(--color-red-300);
-  --input-text-disabled: var(--color-white);
+  --input-text-disabled: var(--color-zinc-400);
 
   --toastify-color-dark: var(--color-surface);
 }

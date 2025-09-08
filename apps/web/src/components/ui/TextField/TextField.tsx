@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/Field";
 import { composeTailwindRenderProps, type Icon } from "@/components/ui/utils";
 import { TextArea } from "react-aria-components";
+import { cn } from "@/utils/cn";
 
 export const inputStyles = tv({
   base: "outline-0 border-1 rounded-sm",
@@ -29,6 +30,7 @@ export interface TextFieldProps extends RAC_TextFieldProps {
   description?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
   icon?: Icon;
+  iconPlacement?: "left" | "right";
   textarea?: boolean;
 }
 
@@ -40,6 +42,7 @@ const TextField = ({
   isRequired,
   icon,
   textarea,
+  iconPlacement = "left",
   ...props
 }: TextFieldProps) => {
   return (
@@ -54,11 +57,21 @@ const TextField = ({
       {label && <Label isRequired={isRequired}>{label}</Label>}
       {textarea ? (
         <TextArea
-          className={composeTailwindRenderProps(inputStyles, "px-2 py-1.5")}
+          className={composeTailwindRenderProps(
+            inputStyles,
+            cn(
+              "px-2 py-1.5 bg-input-bg text-base text-text-main disabled:cursor-not-allowed disabled:text-input-text-disabled disabled:bg-input-bg-disbaled",
+            ),
+          )}
           placeholder={placeholder}
         />
       ) : (
-        <Input className={inputStyles} placeholder={placeholder} icon={icon} />
+        <Input
+          className={inputStyles}
+          placeholder={placeholder}
+          icon={icon}
+          iconPlacement={iconPlacement}
+        />
       )}
 
       {description && <Description>{description}</Description>}

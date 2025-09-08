@@ -13,9 +13,9 @@ function RouteComponent() {
   const { eventId } = Route.useParams();
   return (
     <ErrorBoundary FallbackComponent={Fallback}>
-      <div className="w-full h-screen bg-surface">
+      <div className="w-full h-screen bg-white dark:bg-background">
         {/* this padding left prevent the page being shifted when the form fully loads because of the scrollbar */}
-        <div className="w-full bg-surface transition-[background] sm:pl-[calc(100vw-100%)]">
+        <div className="w-full bg-white dark:bg-background transition-[background] sm:pl-[calc(100vw-100%)]">
           <ApplicationForm eventId={eventId} />
         </div>
       </div>

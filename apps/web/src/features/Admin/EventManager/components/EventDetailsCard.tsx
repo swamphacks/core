@@ -48,7 +48,7 @@ function EventDetailsCard({ event }: EventDetailsCardProps) {
   } = event;
 
   return (
-    <Card className="p-4 flex flex-col gap-6 justify-between">
+    <Card className="p-4 flex flex-col gap-6 justify-between border border-neutral-200 dark:border-neutral-800">
       <div className="flex flex-col gap-1">
         <Heading className="text-xl font-semibold">{name}</Heading>
         <Text className="text-text-secondary">
