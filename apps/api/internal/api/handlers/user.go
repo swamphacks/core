@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/services"
 )
@@ -42,6 +43,96 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res.Send(w, http.StatusOK, user)
+}
+
+type UpdateProfileRequest struct {
+	Name           string `json:"name"`
+	PreferredEmail string `json:"preferred_email"`
+}
+
+type UpdateEmailConsentRequest struct {
+	EmailConsent bool `json:"email_consent"`
+}
+
+func (h *UserHandler) UpdateEmailConsent(w http.ResponseWriter, r *http.Request) {
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	var req UpdateEmailConsentRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
+	if err := decoder.Decode(&req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Invalid request body"))
+		return
+	}
+
+	params := sqlc.UpdateUserParams{
+		EmailConsentDoUpdate: true,
+		EmailConsent:         req.EmailConsent,
+	}
+
+	err := h.userService.UpdateUser(r.Context(), *userId, params)
+	if err != nil {
+		h.logger.Err(err).Msg("failed to update email consent")
+		if err == services.ErrUserNotFound {
+			res.SendError(w, http.StatusNotFound, res.NewError("user_not_found", "User not found"))
+		} else {
+			res.SendError(w, http.StatusInternalServerError, res.NewError("update_failed", "Failed to update email consent"))
+		}
+		return
+	}
+}
+
+func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	var req UpdateProfileRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
+	if err := decoder.Decode(&req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Invalid request body"))
+		return
+	}
+
+	// Validate required fields
+	if req.Name == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Name is required"))
+		return
+	}
+
+	// Validate email format
+	if req.PreferredEmail != "" {
+		if !email.IsValidEmail(req.PreferredEmail) {
+			res.SendError(w, http.StatusBadRequest, res.NewError("invalid_email", "Invalid email format"))
+			return
+		}
+	}
+
+	params := sqlc.UpdateUserParams{
+		ID:                     *userId,
+		NameDoUpdate:           true,
+		Name:                   req.Name,
+		PreferredEmailDoUpdate: true,
+		PreferredEmail:         &req.PreferredEmail,
+	}
+
+	err := h.userService.UpdateUser(r.Context(), *userId, params)
+	if err != nil {
+		h.logger.Err(err).Msg("failed to update user settings")
+		if err == services.ErrUserNotFound {
+			res.SendError(w, http.StatusNotFound, res.NewError("user_not_found", "User not found"))
+		} else {
+			res.SendError(w, http.StatusInternalServerError, res.NewError("update_failed", "Failed to update user settings"))
+		}
+		return
+	}
 }
 
 type CompleteOnboardingRequest struct {
