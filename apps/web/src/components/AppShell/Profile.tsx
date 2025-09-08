@@ -1,10 +1,21 @@
 import TablerSettings from "~icons/tabler/settings";
 import TablerLogout from "~icons/tabler/logout";
-import { useRouter } from "@tanstack/react-router";
 import { useAppShell } from "@/components/AppShell/AppShellContext";
+import { cn } from "@/utils/cn";
 
-export function Profile({ name, role }: { name: string; role: string }) {
-  const router = useRouter();
+export function Profile({
+  name,
+  role,
+  isSettingsOpen,
+  toggleSettings,
+  logout,
+}: {
+  name: string;
+  role: string;
+  isSettingsOpen: boolean;
+  toggleSettings: () => void;
+  logout: () => void;
+}) {
   const { setMobileNavOpen } = useAppShell();
 
   return (
@@ -21,13 +32,14 @@ export function Profile({ name, role }: { name: string; role: string }) {
         <div className="flex items-center gap-1">
           <ProfileIcon
             onClick={() => {
-              router.navigate({ to: "/settings" });
+              toggleSettings();
               setMobileNavOpen(false);
             }}
+            className={cn(isSettingsOpen && "bg-navlink-bg-active")}
           >
             <TablerSettings />
           </ProfileIcon>
-          <ProfileIcon>
+          <ProfileIcon onClick={logout}>
             <TablerLogout className="text-badge-text-rejected" />
           </ProfileIcon>
         </div>
@@ -38,12 +50,16 @@ export function Profile({ name, role }: { name: string; role: string }) {
 
 function ProfileIcon({
   children,
+  className,
   ...props
 }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) {
   return (
     <div
       {...props}
-      className="hover:bg-navlink-bg-active p-1 rounded-md hover:cursor-pointer duration-100 opacity-80"
+      className={cn(
+        "hover:bg-navlink-bg-active p-1 rounded-md hover:cursor-pointer duration-100 opacity-80",
+        className,
+      )}
     >
       {children}
     </div>
