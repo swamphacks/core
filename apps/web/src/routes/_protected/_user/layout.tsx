@@ -5,7 +5,6 @@ import TablerBooks from "~icons/tabler/books";
 import TablerSocial from "~icons/tabler/social";
 import { AppShell } from "@/components/AppShell/AppShell";
 
-// This layout component performs authentication checks before the user can access protected pages
 export const Route = createFileRoute("/_protected/_user")({
   pendingComponent: () => <p>Loading...</p>,
   component: RouteComponent,
