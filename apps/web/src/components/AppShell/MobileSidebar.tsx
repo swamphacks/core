@@ -24,7 +24,7 @@ const SlideoutNavbar = ({ children, isOpen }: MobileSidebarProps) => {
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <nav className="flex flex-col gap-2 px-2 py-3">{children}</nav>
+        <nav className="flex flex-col gap-2 px-2 py-3 h-[92%]">{children}</nav>
       </aside>
     </>
   );

@@ -287,14 +287,20 @@
           "questionType": "paragraph",
           "placeholder": "Answer here...",
           "label": "[150 words] What is your most memorable experience working in a group? What did you learn and accomplish?",
-          "required": true
+          "required": true,
+          "validation": {
+            "max": 150
+          }
         },
         {
           "name": "essay2",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
           "label": "[150 words] Tell us about a project you are most proud of.",
-          "required": true
+          "required": true,
+          "validation": {
+            "max": 150
+          }
         },
         {
           "name": "referral",

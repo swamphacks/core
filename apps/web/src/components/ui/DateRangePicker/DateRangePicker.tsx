@@ -61,7 +61,7 @@ export function DateRangePicker<T extends DateValue>({
       )}
     >
       {label && <Label isRequired={props.isRequired}>{label}</Label>}
-      <FieldGroup className="min-w-[208px] w-auto border-1 rounded-sm items-center bg-surface justify-evenly flex-nowrap gap-2">
+      <FieldGroup className="min-w-[208px] w-auto border-1 rounded-sm items-center bg-input-bg justify-evenly flex-nowrap gap-2">
         <DateInput
           slot="start"
           className="border-none min-w-[120px] flex-1 px-2 py-2 text-sm"

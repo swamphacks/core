@@ -101,7 +101,7 @@ export const FileInput = ({
             {files.map((file, i) => (
               <div
                 key={i}
-                className="flex justify-between items-center gap-5 border-1 border-input-border rounded-sm p-2 bg-surface"
+                className="flex justify-between items-center gap-5 border-1 border-input-border rounded-sm p-2 bg-input-bg"
               >
                 <div className="flex gap-1 items-center">
                   <TablerFile className="text-text-secondary" />
@@ -127,7 +127,7 @@ export const FileInput = ({
       {/* TODO: make dropzone optional */}
       <DropZone
         className={cn(
-          "flex items-center justify-start p-2 border-1 border-input-border rounded-sm bg-surface",
+          "flex items-center justify-start p-2 border-1 border-input-border rounded-sm bg-input-bg",
           inputStyles({ isInvalid: !!props["aria-invalid"] }),
         )}
         onDrop={async (e) => {
@@ -179,8 +179,8 @@ export const FileInput = ({
       >
         <div className="flex items-center gap-2 min-w-0 w-full">
           <Button
-            className="gap-2 opacity-80 rounded-sm dark:text-white"
-            variant="secondary"
+            className="gap-2 opacity-80 rounded-sm dark:text-white border-1 border-input-border bg-button-secondary hover:bg-button-secondary-hover"
+            variant="skeleton"
             size="sm"
             onPress={onPress}
           >

@@ -16,7 +16,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     <>
       <Outlet />
       {IS_DEV && (
-        <div className="fixed inline-flex w-fit z-[999] bottom-3 left-3 text-white">
+        <div className="fixed inline-flex w-fit z-[999] bottom-3 right-3 text-white">
           <DevThemeSwitch />
         </div>
       )}

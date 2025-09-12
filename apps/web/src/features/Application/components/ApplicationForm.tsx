@@ -120,7 +120,13 @@ function SubmitSuccess() {
         <p>Thank you! Your application has been received.</p>
       </div>
       <Link
-        onClick={() => router.navigate({ to: "/portal", replace: true })}
+        onClick={() =>
+          router.navigate({
+            to: "/portal",
+            replace: true,
+            reloadDocument: true,
+          })
+        }
         className="flex items-center gap-1 text-blue-500 select-none cursor-pointer hover:underline"
       >
         <TablerArrowLeft /> Back to dashboard

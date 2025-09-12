@@ -9,7 +9,7 @@ export function _useUser() {
     queryKey,
     queryFn: async () => await _getUser(),
     refetchOnWindowFocus: false,
-    refetchOnMount: "always",
+    refetchOnMount: true,
     staleTime: 1000 * 60 * 10, // 10 minutes
     retry: false,
   });

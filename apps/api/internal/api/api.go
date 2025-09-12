@@ -80,6 +80,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Route("/users", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
 		r.Get("/me", api.Handlers.User.GetProfile)
+		r.Patch("/me", api.Handlers.User.UpdateUser)
+		r.Patch("/me/email-consent", api.Handlers.User.UpdateEmailConsent)
 		r.Patch("/me/onboarding", api.Handlers.User.CompleteOnboarding)
 	})
 
@@ -99,12 +101,12 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			// General access
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
+			r.Get("/role", api.Handlers.Event.GetEventRole)
 
 			// Admin-only
 			r.With(ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
 			r.With(ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
 			r.With(ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
-			r.With(ensureEventAdmin).Get("/role", api.Handlers.Event.GetEventRole)
 
 			// Superuser-only
 			r.With(ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)

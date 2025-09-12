@@ -11,8 +11,8 @@ export const ParagraphQuestion = createQuestionItem({
     questionType: z.literal(QuestionTypes.paragraph),
     validation: z
       .object({
-        minLength: z.number(),
-        maxLength: z.number(),
+        min: z.number(),
+        max: z.number(),
       })
       .partial()
       .optional(),
@@ -31,12 +31,12 @@ export const ParagraphQuestion = createQuestionItem({
     const { validation } = item;
     if (!validation) return schema;
 
-    if (typeof validation.maxLength === "number") {
-      schema = schema.max(validation.maxLength, error.tooLong);
+    if (typeof validation.max === "number") {
+      schema = schema.max(validation.max, error.tooLong);
     }
 
-    if (typeof validation.minLength === "number") {
-      schema = schema.min(validation.minLength, error.tooShort);
+    if (typeof validation.min === "number") {
+      schema = schema.min(validation.min, error.tooShort);
     }
 
     return schema;

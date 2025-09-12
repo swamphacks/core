@@ -111,11 +111,15 @@ export function FieldGroup(props: GroupProps) {
 
 export const Input = forwardRef(
   (
-    { icon: Icon, ...props }: InputProps & { icon?: Icon },
+    {
+      icon: Icon,
+      iconPlacement = "left",
+      ...props
+    }: InputProps & { icon?: Icon; iconPlacement?: "left" | "right" },
     ref: React.ForwardedRef<HTMLInputElement>,
   ) => {
     const inputClassName =
-      "min-h-9 py-1.5 w-full min-w-0 outline-0 bg-surface text-base text-text-main disabled:text-input-text-disabled";
+      "min-h-9 py-1.5 w-full min-w-0 outline-0 bg-input-bg text-base text-text-main disabled:cursor-not-allowed disabled:text-input-text-disabled disabled:bg-input-bg-disbaled disabled:opacity-70";
 
     if (!Icon) {
       return (
@@ -129,21 +133,30 @@ export const Input = forwardRef(
         />
       );
     }
+    // console.log(iconPlacement);
 
     return (
       <div className="flex items-center gap-1 bg-surface relative">
-        <div className="ml-2 text-text-secondary absolute pointer-events-none opacity-45">
-          <Icon />
-        </div>
+        {iconPlacement === "left" && (
+          <div className="ml-2 text-text-secondary absolute pointer-events-none opacity-45">
+            <Icon />
+          </div>
+        )}
 
         <RACInput
           {...props}
           className={composeTailwindRenderProps(
             props.className,
-            cn(inputClassName, "pl-8 pr-2"),
+            cn(inputClassName, "pl-3 pr-2", iconPlacement === "left" && "pl-8"),
           )}
           ref={ref}
         />
+
+        {iconPlacement === "right" && (
+          <div className="text-text-secondary absolute right-0 pr-2 pointer-events-none opacity-45">
+            <Icon />
+          </div>
+        )}
       </div>
     );
   },

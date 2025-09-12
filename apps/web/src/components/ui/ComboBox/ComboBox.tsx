@@ -54,7 +54,7 @@ export function ComboBox<T extends { id: string; name: string }>({
       )}
     >
       <Label isRequired={props.isRequired}>{label}</Label>
-      <FieldGroup className="border-1 rounded-sm bg-surface overflow-hidden items-center h-9.5">
+      <FieldGroup className="border-1 rounded-sm bg-input-bg overflow-hidden items-center h-9.5">
         <Input placeholder={placeholder} />
         <Button
           variant="icon"
