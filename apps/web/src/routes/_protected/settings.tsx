@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_protected/settings")({
 function RouteComponent() {
   const logout = async () => {
     await auth.logOut();
-    location.reload();
+    window.location.href = "/";
   };
 
   return (

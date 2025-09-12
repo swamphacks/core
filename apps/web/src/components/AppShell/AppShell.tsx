@@ -16,6 +16,7 @@ import IconX from "~icons/tabler/x";
 import { Logo } from "../Logo";
 import { auth } from "@/lib/authClient";
 import { Profile } from "./Profile";
+import { MobileProfile } from "@/components/AppShell/MobileProfile";
 
 interface AppShellComponent extends FC<PropsWithChildren> {
   Header: FC<PropsWithChildren>;
@@ -74,19 +75,31 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
               <TablerMenu2 className="w-8 h-8" />
             )}
           </Button>
-          <div className="flex items-center gap-2 ml-3">
-            <div className="w-13">
-              <Logo />
+          <div className="flex justify-between w-full items-center">
+            <div>
+              <div className="flex items-center gap-2 ml-3">
+                <div className="w-13">
+                  <Logo />
+                </div>
+                <h1 className="text-xl font-bold">SwampHacks</h1>
+              </div>
+              {header}
             </div>
-            <h1 className="text-xl font-bold">SwampHacks</h1>
+            <MobileProfile
+              name={user.name}
+              role={role}
+              logout={async () => {
+                await auth.logOut();
+                window.location.href = "/";
+              }}
+            />
           </div>
-          {header}
         </header>
 
         <div className="flex flex-1 min-h-0 relative">
           {/* Desktop Sidebar */}
           {navbar && (
-            <aside className="w-64 h-full px-2 py-4 border-r bg-surface border-neutral-200 dark:border-neutral-800 hidden md:block">
+            <aside className="w-64 h-full px-2 py-3 border-r bg-surface border-neutral-200 dark:border-neutral-800 hidden md:block">
               <nav className="flex flex-col gap-2 h-full">
                 <div className="flex items-center gap-2 mb-3 ml-2">
                   <div className="w-13">
@@ -106,7 +119,6 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
           <SlideoutNavbar isOpen={isSelected}>
             <div className="flex flex-col justify-between h-full">
               <div>{navbar}</div>
-              <Profile name={user.name} role={role} />
             </div>
           </SlideoutNavbar>
 

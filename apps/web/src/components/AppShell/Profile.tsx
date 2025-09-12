@@ -14,8 +14,8 @@ export function Profile({ name, role }: { name: string; role: string }) {
         className="w-8 aspect-square rounded-full"
       />
       <div className="flex justify-between w-full items-center">
-        <div>
-          <p className="text-sm">{name}</p>
+        <div className="w-full">
+          <p className="text-sm truncate max-w-40">{name}</p>
           <p className="text-sm text-text-secondary opacity-85">{role}</p>
         </div>
         <div className="flex items-center gap-1">

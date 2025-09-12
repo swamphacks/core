@@ -5,6 +5,7 @@ import { Heading, Text } from "react-aria-components";
 import { useState } from "react";
 import { OnboardingModal } from "@/features/Onboarding/components/OnboardingModal";
 import Cookies from "js-cookie";
+import { auth } from "@/lib/authClient";
 
 export const Route = createFileRoute("/_protected/_user/portal")({
   beforeLoad: (context) => {
@@ -19,7 +20,10 @@ export const Route = createFileRoute("/_protected/_user/portal")({
 });
 
 function RouteComponent() {
-  const { user, showOnboardingModal } = Route.useRouteContext();
+  const { data: userData } = auth.useUser();
+  const { user } = userData!;
+
+  const { showOnboardingModal } = Route.useRouteContext();
   const { data, isLoading, isError } = useEventsWithUserInfo();
   const [isModalOpen, setIsModalOpen] = useState(showOnboardingModal);
 
