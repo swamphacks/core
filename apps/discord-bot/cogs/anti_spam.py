@@ -95,7 +95,7 @@ class AntiSpam(commands.Cog):
         for word, count in words_count.items():
             if word.startswith("<@") and count > 3:
                 return True, f"Please refrain from excessively mentioning another user."
-            if count > 10:
+            if count > 20:
                 return True, f"Your message has been deleted for excessive spamming {word}."
             
         return False, None

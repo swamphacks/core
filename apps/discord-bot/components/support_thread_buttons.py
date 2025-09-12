@@ -2,12 +2,23 @@ from discord.ui import View, Button
 from discord import ButtonStyle, Interaction
 import discord
 from discord.errors import NotFound
-from utils.checks import is_mod_slash
 from utils.mentor_functions import set_busy_mentor, set_available_mentor
 from components.ticket_state import claimed_tickets
+from chatbot.llm import summarize_text
 
 class SupportThreadButtons(View):
+    """
+    View for support thread buttons which is used in ThreadSupportModal to add buttons onto the embed sent to the reports channel.
+
+    """
     def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput) -> None:
+        """
+        Initializes the SupportThreadButtons view with the given thread and description input.
+
+        Args:
+            thread (discord.Thread): The support thread to which the buttons will be added.
+            description_input (discord.ui.TextInput): The text input containing the description of the issue.
+        """
         super().__init__(timeout=None)
         self.thread = thread
         self.description_input = description_input
@@ -16,7 +27,15 @@ class SupportThreadButtons(View):
 
 
 class CloseThreadButton(Button):
+    """Button to close a support thread, archive it, and lock it."""
     def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput):
+        """
+        Initializes the CloseThreadButton with the given thread and description input.
+
+        Args:
+            thread (discord.Thread): The support thread to be closed.
+            description_input (discord.ui.TextInput): The text input containing the description of the issue.
+        """
         super().__init__(label="Close Thread", style=ButtonStyle.primary, custom_id="close_thread", emoji="❌")
         self.thread = thread
         self.description_input = description_input
@@ -25,13 +44,19 @@ class CloseThreadButton(Button):
         claimed_tickets.pop(self.thread.id, None)
         # print(claimed_tickets)
         
-         # create embed to send to reports channel
+        # get channels
         reports_channel = discord.utils.get(interaction.guild.channels, name="reports")
         if not reports_channel:
             await interaction.response.send_message("❌ Reports channel not found.", ephemeral=True)
             return
+        archived_threads_channel = discord.utils.get(interaction.guild.channels, name="archived-support-threads")
+        if not archived_threads_channel:
+            await interaction.response.send_message("❌ Archived threads channel not found.", ephemeral=True)
+            return
+        bot_avatar_url = interaction.client.user.avatar.url if interaction.client.user.avatar.url else None
         
         try:
+            # rename the thread to get new title
             prefix = "archived-"
             title = ""
             if interaction.message.embeds:
@@ -41,8 +66,34 @@ class CloseThreadButton(Button):
             else:
                 title = self.thread.name
             new_name = f"archived-{title}"
-            await self.thread.edit(name=new_name,archived=True, locked=True)
+            
+            ### FUNCTIONALITY FOR LLM SUMMARIZATION ###
+            # fetch all messages
+            messages = []
+            async for msg in self.thread.history(limit=None):
+                if msg.content:
+                    messages.append(msg.content)
+            combined_text = "\n".join(messages)
+            # get summary of thread
+            summary = await summarize_text(combined_text)
+            embed = discord.Embed(
+                title=f"💡 Summary of thread: {self.thread.mention}",
+                description=f"**Title**: {title}\n{summary}",
+                color=discord.Color.blue()
+            )
+            embed.set_footer(
+                text="Powered by SwampHacks",
+                icon_url=bot_avatar_url
+            )
+
+            # send the summary to the archived threads channel
+            await archived_threads_channel.send(embed=embed)
+
+            # archive and lock the thread
             await interaction.response.send_message(f"Thread: {self.thread.mention} has been archived and locked.", ephemeral=True)
+            await self.thread.edit(name=new_name,archived=True, locked=True)
+
+            
             # Set mentor status
             await set_available_mentor(interaction.user, True)
             await set_busy_mentor(interaction.user, False)
@@ -85,7 +136,15 @@ class CloseThreadButton(Button):
             await interaction.response.send_message(f"Failed to archive the support thread. Error: {e}", ephemeral=True)
 
 class ClaimThreadButton(Button):
+    """Button to claim a support thread and add the mentor to it."""
     def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput):
+        """
+        Initializes the ClaimThreadButton with the given thread and description input.
+
+        Args:
+            thread (discord.Thread): The support thread to be claimed.
+            description_input (discord.ui.TextInput): The text input containing the description of the issue.
+        """
         super().__init__(label="Claim Thread", style=ButtonStyle.primary, custom_id="claim_thread", emoji="📥")
         self.thread = thread
         self.description_input = description_input
