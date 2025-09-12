@@ -84,6 +84,8 @@ func (h *UserHandler) UpdateEmailConsent(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -133,6 +135,8 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 type CompleteOnboardingRequest struct {
@@ -177,4 +181,6 @@ func (h *UserHandler) CompleteOnboarding(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 }

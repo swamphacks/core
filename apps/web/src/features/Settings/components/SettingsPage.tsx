@@ -7,49 +7,28 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/utils/cn";
 import z from "zod";
 import { useFormErrors } from "@/components/Form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/ky";
-import { queryKey as authQueryKey } from "@/lib/auth/hooks/useUser";
 import { auth } from "@/lib/authClient";
 import { showToast } from "@/lib/toast/toast";
 import { useState } from "react";
 import TablerPlaystationX from "~icons/tabler/playstation-x";
 import TablerLock from "~icons/tabler/lock";
+import {
+  settingsFieldsSchema,
+  useSettingsActions,
+} from "../hooks/useSettingsActions";
+import TablerLogout from "~icons/tabler/logout";
+import { useRouter, useCanGoBack } from "@tanstack/react-router";
+import TablerHome from "~icons/tabler/home";
 
-const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  preferredEmail: z.preprocess(
-    (val: string) => (val === "" ? undefined : val),
-    z.email("Email address is invalid").optional(),
-  ),
-});
+export function SettingsPage({ logout }: { logout: () => void }) {
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
 
-export function SettingsPage({
-  isOpen,
-  toggleSettings,
-}: {
-  isOpen: boolean;
-  toggleSettings: () => void;
-}) {
-  const queryClient = useQueryClient();
   const { data } = auth.useUser();
   const { user } = data!;
 
-  const updatePersonalInfoMutation = useMutation({
-    mutationFn: (data: z.infer<typeof schema>) => {
-      return api
-        .patch("users/me", {
-          json: {
-            name: data.name,
-            preferred_email: data.preferredEmail,
-          },
-        })
-        .json();
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: authQueryKey });
-    },
-  });
+  const { updateAccountInfo } = useSettingsActions();
 
   const [emailConsent, setEmailConsent] = useState(user?.emailConsent);
 
@@ -59,11 +38,11 @@ export function SettingsPage({
       preferredEmail: user?.preferredEmail,
     },
     validators: {
-      onChange: schema,
+      onChange: settingsFieldsSchema,
     },
     onSubmit: async ({ value }) => {
-      await updatePersonalInfoMutation.mutateAsync(
-        value as z.infer<typeof schema>,
+      await updateAccountInfo.mutateAsync(
+        value as z.infer<typeof settingsFieldsSchema>,
         {
           onSuccess: () => {
             form.reset(value);
@@ -91,27 +70,28 @@ export function SettingsPage({
     }
   };
 
-  // TODO: figure out how to put this settings into a modal overlay so it only renders whenever the user clicks on settings
-  // instead of rendering everytime
-
   return (
     <div
       className={cn(
         "absolute inset-0 z-40 bg-white dark:bg-background transition-all duration-200 p-6",
-        isOpen
-          ? "opacity-100 visible pointer-events-auto"
-          : "opacity-0 invisible pointer-events-none",
       )}
     >
-      <div>
+      <div className="flex justify-center">
         <div className="sm:w-117 flex flex-col gap-8">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center">
               <Heading className="text-2xl text-text-main">Settings</Heading>
-              <TablerPlaystationX
-                onClick={toggleSettings}
-                className="size-7 hover:cursor-pointer text-text-secondary hover:text-text-main"
-              />
+              {canGoBack ? (
+                <TablerPlaystationX
+                  onClick={() => router.history.back()}
+                  className="size-7 hover:cursor-pointer text-text-secondary hover:text-text-main"
+                />
+              ) : (
+                <TablerHome
+                  onClick={() => router.navigate({ to: "/portal" })}
+                  className="size-7 hover:cursor-pointer text-text-secondary hover:text-text-main"
+                />
+              )}
             </div>
             <h2 className="text-text-secondary text-lg">
               Manage your account settings and preferences.
@@ -175,8 +155,7 @@ export function SettingsPage({
                         placeholder="Ex: albert.gator@ufl.edu"
                         validationBehavior="aria"
                         isDisabled
-                        description="This is the email associated with your Discord
-                          account. It is set when you signed in with Discord."
+                        description="This email is associated with your third party login. You cannot change this."
                         icon={() => <TablerLock className="text-text-main" />}
                         iconPlacement="right"
                       />
@@ -221,7 +200,7 @@ export function SettingsPage({
               </Switch>
             </div>
 
-            <div className="mb-3">
+            <div>
               <Text className="text-lg font-medium block">Socials</Text>
               <div className="inline-flex items-center gap-2 mt-3 rounded-md border-1 bg-button-secondary p-2 border-input-border">
                 <span className="bg-button-primary rounded-md p-1">
@@ -233,6 +212,16 @@ export function SettingsPage({
                 </span>
                 <span>Connected with Discord</span>
               </div>
+            </div>
+
+            <div className="my-5">
+              <Button
+                variant="skeleton"
+                className="border border-badge-text-rejected text-badge-text-rejected hover:bg-badge-text-rejected/10"
+                onClick={logout}
+              >
+                Log Out <TablerLogout className="text-badge-text-rejected" />
+              </Button>
             </div>
           </div>
         </div>

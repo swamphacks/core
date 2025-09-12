@@ -16,7 +16,6 @@ import IconX from "~icons/tabler/x";
 import { Logo } from "../Logo";
 import { auth } from "@/lib/authClient";
 import { Profile } from "./Profile";
-import { SettingsPage } from "@/features/Settings/components/SettingsPage";
 
 interface AppShellComponent extends FC<PropsWithChildren> {
   Header: FC<PropsWithChildren>;
@@ -42,8 +41,6 @@ function extractAppShellChildren(children: ReactNode) {
 
 const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
   const { toggle, isSelected, setSelected } = useToggleState();
-  const { toggle: toggleSettings, isSelected: isSettingsOpen } =
-    useToggleState();
 
   const { header, navbar, main } = useMemo(
     () => extractAppShellChildren(children),
@@ -53,11 +50,6 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
 
   const user = data?.user;
   const role = user?.role === "user" ? "Hacker" : "Administrator";
-
-  const logout = async () => {
-    await auth.logOut();
-    location.reload();
-  };
 
   if (data?.error || !user) {
     return <p>Something went wrong while loading user information.</p>;
@@ -73,7 +65,7 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
     >
       <div className="flex h-screen w-screen flex-col relative overflow-hidden">
         {/* Topbar */}
-        <header className="md:hidden h-16 w-full flex items-center px-4 md:px-2 border-b-1 border-neutral-300 dark:border-neutral-800">
+        <header className="bg-surface md:hidden h-16 w-full flex items-center px-4 md:px-2 border-b-1 border-neutral-300 dark:border-neutral-800">
           {/* Mobile Burger menu */}
           <Button onPress={toggle}>
             {isSelected ? (
@@ -104,13 +96,7 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
                 </div>
                 <div className="flex flex-col justify-between h-full">
                   <div>{navbar}</div>
-                  <Profile
-                    name={user.name}
-                    role={role}
-                    toggleSettings={toggleSettings}
-                    isSettingsOpen={isSettingsOpen}
-                    logout={logout}
-                  />
+                  <Profile name={user.name} role={role} />
                 </div>
               </nav>
             </aside>
@@ -120,13 +106,7 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
           <SlideoutNavbar isOpen={isSelected}>
             <div className="flex flex-col justify-between h-full">
               <div>{navbar}</div>
-              <Profile
-                name={user.name}
-                role={role}
-                toggleSettings={toggleSettings}
-                isSettingsOpen={isSettingsOpen}
-                logout={logout}
-              />
+              <Profile name={user.name} role={role} />
             </div>
           </SlideoutNavbar>
 
@@ -134,10 +114,6 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
           {main && (
             <main className="flex-1 p-6 overflow-y-auto relative bg-background">
               {main}
-              <SettingsPage
-                isOpen={isSettingsOpen}
-                toggleSettings={toggleSettings}
-              />
             </main>
           )}
         </div>

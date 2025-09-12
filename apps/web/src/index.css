@@ -18,7 +18,7 @@ body,
 #root {
   height: 100%;
   font-family: "Figtree", sans-serif;
-  background-color: var(--color-surface);
+  background-color: var(--color-background);
 }
 
 .dark {

@@ -1,21 +1,10 @@
 import TablerSettings from "~icons/tabler/settings";
-import TablerLogout from "~icons/tabler/logout";
 import { useAppShell } from "@/components/AppShell/AppShellContext";
 import { cn } from "@/utils/cn";
+import { useRouter } from "@tanstack/react-router";
 
-export function Profile({
-  name,
-  role,
-  isSettingsOpen,
-  toggleSettings,
-  logout,
-}: {
-  name: string;
-  role: string;
-  isSettingsOpen: boolean;
-  toggleSettings: () => void;
-  logout: () => void;
-}) {
+export function Profile({ name, role }: { name: string; role: string }) {
+  const router = useRouter();
   const { setMobileNavOpen } = useAppShell();
 
   return (
@@ -32,15 +21,11 @@ export function Profile({
         <div className="flex items-center gap-1">
           <ProfileIcon
             onClick={() => {
-              toggleSettings();
+              router.navigate({ to: "/settings" });
               setMobileNavOpen(false);
             }}
-            className={cn(isSettingsOpen && "bg-navlink-bg-active")}
           >
             <TablerSettings />
-          </ProfileIcon>
-          <ProfileIcon onClick={logout}>
-            <TablerLogout className="text-badge-text-rejected" />
           </ProfileIcon>
         </div>
       </div>

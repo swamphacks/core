@@ -15,7 +15,7 @@ const Login = () => {
   const redirect = search.redirect;
 
   return (
-    <div className="flex flex-col items-center bg-background rounded-md px-3 pt-6 shadow-md text-text-main">
+    <div className="flex flex-col items-center bg-surface rounded-md px-3 pt-6 shadow-md text-text-main">
       <Logo
         src={
           theme === "dark"
