@@ -14,7 +14,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO auth.users (name, email, image)
 VALUES ($1, $2, $3)
-RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email
+RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent
 `
 
 type CreateUserParams struct {
@@ -37,6 +37,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AuthUse
 		&i.UpdatedAt,
 		&i.Role,
 		&i.PreferredEmail,
+		&i.EmailConsent,
 	)
 	return i, err
 }
@@ -52,7 +53,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent FROM auth.users
 WHERE email = $1
 `
 
@@ -70,12 +71,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email *string) (AuthUser, 
 		&i.UpdatedAt,
 		&i.Role,
 		&i.PreferredEmail,
+		&i.EmailConsent,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent FROM auth.users
 WHERE id = $1
 `
 
@@ -93,6 +95,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, erro
 		&i.UpdatedAt,
 		&i.Role,
 		&i.PreferredEmail,
+		&i.EmailConsent,
 	)
 	return i, err
 }
@@ -106,9 +109,10 @@ SET
     preferred_email = CASE WHEN $7::boolean THEN $8 ELSE preferred_email END,
     onboarded = CASE WHEN $9::boolean THEN $10 ELSE onboarded END,
     image = CASE WHEN $11::boolean THEN $12 ELSE image END,
+    email_consent = CASE WHEN $13::boolean THEN $14 ELSE email_consent END,
     updated_at = NOW()
 WHERE
-    id = $13::uuid
+    id = $15::uuid
 `
 
 type UpdateUserParams struct {
@@ -124,6 +128,8 @@ type UpdateUserParams struct {
 	Onboarded              bool      `json:"onboarded"`
 	ImageDoUpdate          bool      `json:"image_do_update"`
 	Image                  *string   `json:"image"`
+	EmailConsentDoUpdate   bool      `json:"email_consent_do_update"`
+	EmailConsent           bool      `json:"email_consent"`
 	ID                     uuid.UUID `json:"id"`
 }
 
@@ -141,6 +147,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.Onboarded,
 		arg.ImageDoUpdate,
 		arg.Image,
+		arg.EmailConsentDoUpdate,
+		arg.EmailConsent,
 		arg.ID,
 	)
 	return err

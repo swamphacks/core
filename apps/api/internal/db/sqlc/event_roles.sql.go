@@ -30,7 +30,7 @@ func (q *Queries) AssignRole(ctx context.Context, arg AssignRoleParams) error {
 }
 
 const getEventStaff = `-- name: GetEventStaff :many
-SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, er.role AS event_role
+SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.role AS event_role
 FROM auth.users u
 JOIN event_roles er ON u.id = er.user_id
 WHERE er.event_id = $1
@@ -48,6 +48,7 @@ type GetEventStaffRow struct {
 	UpdatedAt      time.Time     `json:"updated_at"`
 	Role           AuthUserRole  `json:"role"`
 	PreferredEmail *string       `json:"preferred_email"`
+	EmailConsent   bool          `json:"email_consent"`
 	EventRole      EventRoleType `json:"event_role"`
 }
 
@@ -71,6 +72,7 @@ func (q *Queries) GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEv
 			&i.UpdatedAt,
 			&i.Role,
 			&i.PreferredEmail,
+			&i.EmailConsent,
 			&i.EventRole,
 		); err != nil {
 			return nil, err

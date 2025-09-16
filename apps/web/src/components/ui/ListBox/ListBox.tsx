@@ -64,7 +64,7 @@ export const dropdownItemStyles = tv({
   base: "group flex items-center gap-4 cursor-default select-none py-2 pl-3 pr-1 rounded-sm outline-0 text-sm forced-color-adjust-none",
   variants: {
     isDisabled: {
-      false: "text-text-main",
+      // false: "text-text-main",
       true: "text-input-text-disabled forced-colors:text-[GrayText]",
     },
     isFocused: {

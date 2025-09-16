@@ -28,7 +28,7 @@ const EventCard = ({
   location,
 }: EventCardProps) => {
   return (
-    <Card>
+    <Card className="border">
       <div className="w-full">
         <img
           className="w-full h-40 object-cover rounded-t-md"

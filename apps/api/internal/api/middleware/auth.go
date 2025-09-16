@@ -30,11 +30,14 @@ type AuthMiddleware struct {
 }
 
 type UserContext struct {
-	UserID    uuid.UUID         `json:"userId"`
-	Name      string            `json:"name"`
-	Onboarded bool              `json:"onboarded"`
-	Image     *string           `json:"image,omitempty"` // omit if nil
-	Role      sqlc.AuthUserRole `json:"role"`
+	UserID         uuid.UUID         `json:"userId"`
+	Email          *string           `json:"email"`
+	PreferredEmail *string           `json:"preferredEmail"`
+	Name           string            `json:"name"`
+	Onboarded      bool              `json:"onboarded"`
+	Image          *string           `json:"image,omitempty"` // omit if nil
+	Role           sqlc.AuthUserRole `json:"role"`
+	EmailConsent   bool              `json:"emailConsent"`
 }
 
 type SessionContext struct {
@@ -79,11 +82,14 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 		}
 
 		userContext := UserContext{
-			UserID:    user.UserID,
-			Name:      user.Name,
-			Image:     user.Image,
-			Onboarded: user.Onboarded,
-			Role:      user.Role,
+			UserID:         user.UserID,
+			Name:           user.Name,
+			Email:          user.Email,
+			PreferredEmail: user.PreferredEmail,
+			Image:          user.Image,
+			Onboarded:      user.Onboarded,
+			Role:           user.Role,
+			EmailConsent:   user.EmailConsent,
 		}
 
 		sessionContext := SessionContext{

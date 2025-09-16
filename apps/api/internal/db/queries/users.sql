@@ -25,6 +25,7 @@ SET
     preferred_email = CASE WHEN @preferred_email_do_update::boolean THEN @preferred_email ELSE preferred_email END,
     onboarded = CASE WHEN @onboarded_do_update::boolean THEN @onboarded ELSE onboarded END,
     image = CASE WHEN @image_do_update::boolean THEN @image ELSE image END,
+    email_consent = CASE WHEN @email_consent_do_update::boolean THEN @email_consent ELSE email_consent END,
     updated_at = NOW()
 WHERE
     id = @id::uuid;

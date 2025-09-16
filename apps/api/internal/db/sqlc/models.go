@@ -193,6 +193,7 @@ type AuthUser struct {
 	UpdatedAt      time.Time    `json:"updated_at"`
 	Role           AuthUserRole `json:"role"`
 	PreferredEmail *string      `json:"preferred_email"`
+	EmailConsent   bool         `json:"email_consent"`
 }
 
 type Event struct {
