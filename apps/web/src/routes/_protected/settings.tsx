@@ -1,15 +1,17 @@
 import { SettingsPage } from "@/features/Settings/components/SettingsPage";
 import { auth } from "@/lib/authClient";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/settings")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const router = useRouter();
+
   const logout = async () => {
     await auth.logOut();
-    window.location.href = "/";
+    await router.navigate({ to: "/", replace: true, reloadDocument: true }); // Force reload to reset auth state (Not ideal, but works for now)
   };
 
   return (

@@ -3,6 +3,7 @@ import { Button, MenuTrigger } from "react-aria-components";
 import TablerSettings from "~icons/tabler/settings";
 import { Menu, MenuItem } from "@/components/ui/Menu";
 import TablerLogout from "~icons/tabler/logout";
+import { auth } from "@/lib/authClient";
 
 export function MobileProfile({
   name,
@@ -14,6 +15,8 @@ export function MobileProfile({
   logout: () => void;
 }) {
   const router = useRouter();
+  const { data } = auth.useUser();
+  const { user } = data!;
 
   return (
     <div className="flex items-center gap-2">
@@ -24,7 +27,10 @@ export function MobileProfile({
         >
           <img
             alt=""
-            src="https://i.pinimg.com/736x/8b/d2/f6/8bd2f653f38322972e404925ab67294a.jpg"
+            src={
+              user?.image ||
+              "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small_2x/default-avatar-icon-of-social-media-user-vector.jpg"
+            }
             className="w-9 h-9 rounded-full"
           />
         </Button>

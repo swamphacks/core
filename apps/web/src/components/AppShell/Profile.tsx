@@ -2,15 +2,21 @@ import TablerSettings from "~icons/tabler/settings";
 import { useAppShell } from "@/components/AppShell/AppShellContext";
 import { cn } from "@/utils/cn";
 import { useRouter } from "@tanstack/react-router";
+import { auth } from "@/lib/authClient";
 
 export function Profile({ name, role }: { name: string; role: string }) {
   const router = useRouter();
   const { setMobileNavOpen } = useAppShell();
+  const { data } = auth.useUser();
+  const { user } = data!;
 
   return (
     <div className="flex items-center gap-2">
       <img
-        src="https://i.pinimg.com/736x/8b/d2/f6/8bd2f653f38322972e404925ab67294a.jpg"
+        src={
+          user?.image ||
+          "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small_2x/default-avatar-icon-of-social-media-user-vector.jpg"
+        }
         className="w-8 aspect-square rounded-full"
       />
       <div className="flex justify-between w-full items-center">
