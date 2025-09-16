@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -8,10 +9,13 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
 	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+
+	"github.com/MarceloPetrucio/go-scalar-api-reference"
 )
 
 type API struct {
@@ -53,6 +57,23 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+
+	api.Router.Get("/openapi", func(w http.ResponseWriter, r *http.Request) {
+		htmlContent, err := scalar.ApiReferenceHTML(&scalar.Options{
+			// SpecURL: "https://generator3.swagger.io/openapi.json",// allow external URL or local path file
+			SpecURL: "./docs/swagger.json",
+			CustomOptions: scalar.CustomOptions{
+				PageTitle: "SwampHacks API",
+			},
+			DarkMode: true,
+		})
+
+		if err != nil {
+			fmt.Printf("%v", err)
+		}
+
+		fmt.Fprintln(w, htmlContent)
+	})
 
 	// Health check
 	api.Router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {

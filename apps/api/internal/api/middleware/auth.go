@@ -29,15 +29,32 @@ type AuthMiddleware struct {
 	cfg    *config.Config
 }
 
+// UserContext represents the authenticated user in API requests.
+// @Description Information about the current user session.
 type UserContext struct {
-	UserID         uuid.UUID         `json:"userId"`
-	Email          *string           `json:"email"`
-	PreferredEmail *string           `json:"preferredEmail"`
-	Name           string            `json:"name"`
-	Onboarded      bool              `json:"onboarded"`
-	Image          *string           `json:"image,omitempty"` // omit if nil
-	Role           sqlc.AuthUserRole `json:"role"`
-	EmailConsent   bool              `json:"emailConsent"`
+	// Unique identifier for the user
+	UserID uuid.UUID `json:"userId" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
+
+	// Primary email address (nullable)
+	Email *string `json:"email" example:"user@example.com"`
+
+	// Preferred email address for communications
+	PreferredEmail *string `json:"preferredEmail" example:"user.alt@example.com"`
+
+	// Full display name
+	Name string `json:"name" example:"Jane Doe"`
+
+	// Whether the user completed onboarding
+	Onboarded bool `json:"onboarded" example:"true"`
+
+	// Optional profile image URL
+	Image *string `json:"image,omitempty" example:"https://cdn.example.com/avatar.png" extensions:"nullable"`
+
+	// Role assigned to the user
+	Role sqlc.AuthUserRole `json:"role"`
+
+	// Whether the user agreed to receive emails
+	EmailConsent bool `json:"emailConsent" example:"false"`
 }
 
 type SessionContext struct {

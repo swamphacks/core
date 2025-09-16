@@ -1,0 +1,147 @@
+{
+    "components": {
+        "schemas": {
+            "middleware.UserContext": {
+                "description": "Information about the current user session.",
+                "properties": {
+                    "email": {
+                        "description": "Primary email address (nullable)",
+                        "example": "user@example.com",
+                        "type": "string"
+                    },
+                    "emailConsent": {
+                        "description": "Whether the user agreed to receive emails",
+                        "example": false,
+                        "type": "boolean"
+                    },
+                    "image": {
+                        "description": "Optional profile image URL\n@nullable",
+                        "example": "https://cdn.example.com/avatar.png",
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Full display name",
+                        "example": "Jane Doe",
+                        "type": "string"
+                    },
+                    "onboarded": {
+                        "description": "Whether the user completed onboarding",
+                        "example": true,
+                        "type": "boolean"
+                    },
+                    "preferredEmail": {
+                        "description": "Preferred email address for communications",
+                        "example": "user.alt@example.com",
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/sqlc.AuthUserRole"
+                    },
+                    "userId": {
+                        "description": "Unique identifier for the user",
+                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                        "format": "uuid",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "response.ErrorResponse": {
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "sqlc.AuthUserRole": {
+                "description": "Role assigned to the user",
+                "enum": [
+                    "user",
+                    "superuser"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "AuthUserRoleUser",
+                    "AuthUserRoleSuperuser"
+                ]
+            }
+        }
+    },
+    "info": {
+        "contact": {
+            "email": "support@swagger.io",
+            "name": "API Support",
+            "url": "http://www.swagger.io/support"
+        },
+        "description": "This is SwampHacks' OpenAPI documentation.",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "termsOfService": "TODO",
+        "title": "SwampHacks Test API",
+        "version": "1.0"
+    },
+    "externalDocs": {
+        "description": "",
+        "url": ""
+    },
+    "paths": {
+        "/auth/me": {
+            "get": {
+                "description": "get user from session",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/middleware.UserContext"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal Server Error"
+                    }
+                },
+                "summary": "Get details of current user.",
+                "tags": [
+                    "auth"
+                ]
+            }
+        }
+    },
+    "openapi": "3.1.0"
+}

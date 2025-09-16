@@ -29,6 +29,17 @@ func NewAuthHandler(authService *services.AuthService, cfg *config.Config, logge
 	}
 }
 
+// GetMe godoc
+//
+//	@Summary		Get details of current user.
+//	@Description	get user from session
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	middleware.UserContext
+//	@Failure		400	{object}	response.ErrorResponse
+//	@Failure		500	{object}	response.ErrorResponse
+//	@Router			/auth/me 		[get]
 func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	user, err := h.authService.GetMe(r.Context())
 	if err != nil {

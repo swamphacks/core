@@ -9,3 +9,5 @@ migrate-down:
 generate:
 	@sqlc generate
 	
+generate-openapi:
+	swag init --dir cmd/api,internal/api/handlers --parseDependency -v3.1
