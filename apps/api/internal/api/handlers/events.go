@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -19,6 +18,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/parse"
+	. "github.com/swamphacks/core/apps/api/internal/parse"
 	"github.com/swamphacks/core/apps/api/internal/ptr"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/web"
@@ -146,6 +146,22 @@ func (h *EventHandler) GetEventByID(w http.ResponseWriter, r *http.Request) {
 	res.Send(w, http.StatusOK, event)
 }
 
+type UpdateEventFields struct {
+	Name             Optional[string]     `json:"name"`
+	Description      Optional[*string]    `json:"description"`
+	Location         Optional[*string]    `json:"location"`
+	LocationUrl      Optional[*string]    `json:"location_url"`
+	MaxAttendees     Optional[*int32]     `json:"max_attendees"`
+	ApplicationOpen  Optional[time.Time]  `json:"application_open"`
+	ApplicationClose Optional[time.Time]  `json:"application_close"`
+	RsvpDeadline     Optional[*time.Time] `json:"rsvp_deadline"`
+	DecisionRelease  Optional[*time.Time] `json:"decision_release"`
+	StartTime        Optional[time.Time]  `json:"start_time"`
+	EndTime          Optional[time.Time]  `json:"end_time"`
+	WebsiteUrl       Optional[*string]    `json:"website_url"`
+	IsPublished      Optional[bool]       `json:"is_published"`
+}
+
 func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -158,7 +174,7 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req sqlc.UpdateEventByIdParams
+	var req UpdateEventFields
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
@@ -167,25 +183,50 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Refactorme: could be improved by unmarshalling values into a generic that can include nil information
-	// Todo: make sure that non nullable values can't be updated to null
-	// Todo: Time validation
-	req.NameDoUpdate = reflect.ValueOf(req.Name).IsValid()
-	req.DescriptionDoUpdate = reflect.ValueOf(req.Description).IsValid()
-	req.LocationDoUpdate = reflect.ValueOf(req.Location).IsValid()
-	req.LocationUrlDoUpdate = reflect.ValueOf(req.LocationUrl).IsValid()
-	req.MaxAttendeesDoUpdate = reflect.ValueOf(req.MaxAttendees).IsValid()
-	req.ApplicationOpenDoUpdate = reflect.ValueOf(req.ApplicationOpen).IsValid()
-	req.ApplicationCloseDoUpdate = reflect.ValueOf(req.ApplicationClose).IsValid()
-	req.RsvpDeadlineDoUpdate = reflect.ValueOf(req.RsvpDeadline).IsValid()
-	req.DecisionReleaseDoUpdate = reflect.ValueOf(req.DecisionRelease).IsValid()
-	req.StartTimeDoUpdate = reflect.ValueOf(req.StartTime).IsValid()
-	req.EndTimeDoUpdate = reflect.ValueOf(req.EndTime).IsValid()
-	req.WebsiteUrlDoUpdate = reflect.ValueOf(req.WebsiteUrl).IsValid()
-	req.IsPublishedDoUpdate = reflect.ValueOf(req.IsPublished).IsValid()
-	req.ID = eventId
+	var params = sqlc.UpdateEventByIdParams{
+		NameDoUpdate: req.Name.Present,
+		Name:         req.Name.Value,
 
-	event, err := h.eventService.UpdateEventById(r.Context(), req)
+		DescriptionDoUpdate: req.Description.Present,
+		Description:         req.Description.Value,
+
+		LocationDoUpdate: req.Location.Present,
+		Location:         req.Location.Value,
+
+		LocationUrlDoUpdate: req.LocationUrl.Present,
+		LocationUrl:         req.LocationUrl.Value,
+
+		MaxAttendeesDoUpdate: req.MaxAttendees.Present,
+		MaxAttendees:         req.MaxAttendees.Value,
+
+		ApplicationOpenDoUpdate: req.ApplicationOpen.Present,
+		ApplicationOpen:         req.ApplicationOpen.Value,
+
+		ApplicationCloseDoUpdate: req.ApplicationClose.Present,
+		ApplicationClose:         req.ApplicationClose.Value,
+
+		RsvpDeadlineDoUpdate: req.RsvpDeadline.Present,
+		RsvpDeadline:         req.RsvpDeadline.Value,
+
+		DecisionReleaseDoUpdate: req.DecisionRelease.Present,
+		DecisionRelease:         req.DecisionRelease.Value,
+
+		StartTimeDoUpdate: req.StartTime.Present,
+		StartTime:         req.StartTime.Value,
+
+		EndTimeDoUpdate: req.EndTime.Present,
+		EndTime:         req.EndTime.Value,
+
+		WebsiteUrlDoUpdate: req.WebsiteUrl.Present,
+		WebsiteUrl:         req.WebsiteUrl.Value,
+
+		IsPublishedDoUpdate: req.IsPublished.Present,
+		IsPublished:         &req.IsPublished.Value,
+
+		ID: eventId,
+	}
+
+	event, err := h.eventService.UpdateEventById(r.Context(), params)
 
 	if err != nil {
 		switch err {

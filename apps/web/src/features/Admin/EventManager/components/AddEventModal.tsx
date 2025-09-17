@@ -6,7 +6,6 @@ import {
   OverlayTriggerStateContext,
   Text,
   type DateRange,
-  type DateValue,
 } from "react-aria-components";
 import z from "zod";
 import { useCreateAdminEvent } from "../hooks/useCreateAdminEvent";
@@ -14,24 +13,21 @@ import { useFormErrors } from "@/components/Form";
 import { Modal } from "@/components/ui/Modal";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { useContext } from "react";
-
-const calenderDateTimeSchema = z
-  .custom<DateValue>()
-  .transform((val) => val.toDate("UTC"));
+import { DateTimeSchema } from "@/utils/customSchemas";
 
 const addEventSchema = z.object({
   eventName: z.string().min(1, "Event name is required"),
   eventDateRange: z.object(
     {
-      start: calenderDateTimeSchema,
-      end: calenderDateTimeSchema,
+      start: DateTimeSchema,
+      end: DateTimeSchema,
     },
     "Must specify a date range.",
   ),
   applicationDateRange: z.object(
     {
-      start: calenderDateTimeSchema,
-      end: calenderDateTimeSchema,
+      start: DateTimeSchema,
+      end: DateTimeSchema,
     },
     "Must specify a date range.",
   ),
