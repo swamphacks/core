@@ -223,6 +223,9 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 		IsPublishedDoUpdate: req.IsPublished.Present,
 		IsPublished:         &req.IsPublished.Value,
 
+		BannerDoUpdate: false, // Banners are uploaded using a separate endpoint
+		Banner:         nil,
+
 		ID: eventId,
 	}
 

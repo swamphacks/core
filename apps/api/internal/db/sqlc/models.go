@@ -213,6 +213,7 @@ type Event struct {
 	IsPublished      *bool      `json:"is_published"`
 	CreatedAt        *time.Time `json:"created_at"`
 	UpdatedAt        *time.Time `json:"updated_at"`
+	Banner           *string    `json:"banner"`
 }
 
 type EventInterestSubmission struct {
