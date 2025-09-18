@@ -71,6 +71,19 @@ func (st CreateEventFields) ValidateTimeFields() bool {
 	return true
 }
 
+// Create a new event
+//
+//	@Summary		Create a new event
+//	@Description	Create a new event with the provided details
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		CreateEventFields		true	"Event creation data"
+//	@Success		201		{object}	sqlc.Event				"OK: Event created"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request"
+//	@Failure		409		{object}	response.ErrorResponse	"endTime is before startTime or applicationClose is before applicationOpen"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events [post]
 func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 	// Parse JSON body
@@ -121,6 +134,17 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	res.Send(w, http.StatusCreated, event)
 }
 
+// Get an event
+//
+//	@Summary		Get an event
+//	@Description	Get a specific event by ID
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path		string					true	"Event ID"	Format(uuid)
+//	@Success		201		{object}	sqlc.Event				"OK - Event received"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId} [get]
 func (h *EventHandler) GetEventByID(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -146,6 +170,17 @@ func (h *EventHandler) GetEventByID(w http.ResponseWriter, r *http.Request) {
 	res.Send(w, http.StatusOK, event)
 }
 
+// Update an event
+//
+//	@Summary		Update an event
+//	@Description	Update an existing event
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path	string	true	"Event ID"	Format(uuid)
+//	@Success		204		"OK - Event updated (patched)"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId} [patch]
 func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -206,6 +241,19 @@ type NullableEventRole struct {
 	AssignedAt *time.Time          `json:"assigned_at"`
 }
 
+// Get the current user's event role for an event
+//
+//	@Summary		Get the current user's event role for an event
+//	@Description	Get current user's role for a specific event
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path		string					true	"Event ID"	Format(uuid)
+//	@Success		200		{object}	NullableEventRole		"OK - Return role"
+//	@Failure		400		{object}	response.ErrorResponse	"Not Found - Role not found"
+//	@Failure		404		{object}	response.ErrorResponse	"Not Found - Role not found"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId}/role [get]
 func (h *EventHandler) GetEventRole(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -249,6 +297,17 @@ func (h *EventHandler) GetEventRole(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Delete an event
+//
+//	@Summary		Delete an event
+//	@Description	Delete an existing event
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path	string	true	"Event ID"	Format(uuid)
+//	@Success		204		"OK - Event deleted"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId} [delete]
 func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -274,6 +333,16 @@ func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// Get events
+//
+//	@Summary		Get events
+//	@Description	Gets events with a nullable event role for authenticated users.
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			include_published	query	boolean							false	"If true, include unpublished events as well. Superusers ONLY."	default(false)
+//	@Success		200					{array}	sqlc.GetEventsWithUserInfoRow	"OK: Events returned"
+//	@Router			/events [get]
 func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	// Parse query params
 	// include_unpublished="true,false", default: false
@@ -307,6 +376,17 @@ func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Get all staff users for an event
+//
+//	@Summary		Get all staff users for an event
+//	@Description	Gets all users with role STAFF or ADMIN
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path		string					true	"Event ID"	Format(uuid)
+//	@Success		200		{array}		sqlc.GetEventStaffRow	"OK - Return users"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId}/staff [get]
 func (h *EventHandler) GetEventStaffUsers(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -352,6 +432,19 @@ func (r *AssignRoleFields) Validate() error {
 	}
 }
 
+// Change or add event role of a user
+//
+//	@Summary		Change or add event role of a user
+//	@Description	Modify user's role for a specific event
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path	string				true	"Event ID"	Format(uuid)
+//	@Param			request	body	AssignRoleFields	true	"Event role data"
+//	@Success		200		"OK - Role updated"
+//	@Failure		404		{object}	response.ErrorResponse	"Not Found - User not found"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId}/roles [post]
 func (h *EventHandler) AssignEventRole(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {

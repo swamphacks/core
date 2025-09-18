@@ -28,6 +28,20 @@ func NewApplicationHandler(appService *services.ApplicationService) *Application
 	}
 }
 
+// Get Application By User and Event ID
+//
+//	@Summary		Get Application By User and Event ID
+//	@Description	Get the current user's application progress for an event. If this is their first time filling out the application, a new application will be created.
+//	@Tags			Application
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId		path		string					true	"Event ID"
+//	@Param			sh_session	cookie		string					true	"The authenticated session token/id"
+//	@Success		200			{object}	sqlc.Application		"OK: An application was found"
+//	@Success		200			{object}	map[string]any			"OK: An application was found"
+//	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving application"\
+//	@Router			/events/{eventId}/application [get]
 func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 
@@ -95,11 +109,23 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 	res.Send(w, http.StatusOK, application)
 }
 
+// Submit Application
+//
+//	@Summary		Submit Application
+//	@Description	Submit the application for an event.
+//	@Tags			Application
+//	@Accept			json
+//	@Produce		json
+//	@Param			formBody	formData	any	true	"Submission form data"
+//	@Success		200
+//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error submitting application"
+//	@Router			/events/{eventId}/application/submit [post]
 func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Request) {
 	// Parse multipart form (10 MB max memory)
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
+		res.SendError(w, http.StatusBadRequest, res.NewError("parse_form_invalid", "Failed to parse form: "+err.Error()))
 		return
 	}
 
@@ -198,6 +224,18 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusOK)
 }
 
+// Save Application
+//
+//	@Summary		Save Application
+//	@Description	Save user's progress on the application. File/Upload fields are not saved.
+//	@Tags			Application
+//	@Accept			json
+//	@Produce		json
+//	@Param			data	body	any	true	"Form data"
+//	@Success		200
+//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error saving application"
+//	@Router			/events/{eventId}/application/save [post]
 func (h *ApplicationHandler) SaveApplication(w http.ResponseWriter, r *http.Request) {
 	var data any
 
