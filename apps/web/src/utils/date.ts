@@ -1,18 +1,47 @@
 import { CalendarDate, CalendarDateTime } from "@internationalized/date";
 
-export function toCalendarDate(date: Date): CalendarDate {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  return new CalendarDate(year, month, day);
+/**
+ * Convert a string or Date to a CalendarDate.
+ */
+export function toCalendarDate(raw: string | Date): CalendarDate {
+  const date = raw instanceof Date ? raw : new Date(raw);
+  return new CalendarDate(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    date.getDate(),
+  );
 }
 
-export function toCalendarDateTime(date: Date): CalendarDateTime {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hour = date.getHours();
-  const minute = date.getMinutes();
-  const second = date.getSeconds();
-  return new CalendarDateTime(year, month, day, hour, minute, second);
+/**
+ * Convert a string or Date to a CalendarDateTime with optional timezone.
+ */
+export function toCalendarDateTime(
+  raw: string | Date,
+  timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone,
+): CalendarDateTime {
+  const date = raw instanceof Date ? raw : new Date(raw);
+
+  // Convert to the target timezone using Intl.DateTimeFormat
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  }).formatToParts(date);
+
+  const getPart = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0);
+
+  return new CalendarDateTime(
+    getPart("year"),
+    getPart("month"),
+    getPart("day"),
+    getPart("hour"),
+    getPart("minute"),
+    getPart("second"),
+  );
 }

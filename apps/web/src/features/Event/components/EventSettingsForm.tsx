@@ -1,82 +1,19 @@
 import { Form, useFormErrors } from "@/components/Form";
-import { useForm } from "@tanstack/react-form";
-import z from "zod";
-import { EventSchema, type Event } from "../schemas/event";
+import { type Event } from "../schemas/event";
 import { TextField } from "@/components/ui/TextField";
-import { CalendarDateTimeSchema } from "@/utils/customSchemas";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
-import { toCalendarDateTime } from "@/utils/date";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Group } from "react-aria-components";
-
-const UpdateEventSchema = EventSchema.omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-  start_time: true,
-  end_time: true,
-  application_open: true,
-  application_close: true,
-  rsvp_deadline: true,
-  decision_release: true,
-}).extend({
-  event_times: z.object({
-    start: CalendarDateTimeSchema,
-    end: CalendarDateTimeSchema,
-  }),
-  application_times: z.object({
-    start: CalendarDateTimeSchema,
-    end: CalendarDateTimeSchema,
-  }),
-  rsvp_deadline: CalendarDateTimeSchema.nullable(),
-  decision_release: CalendarDateTimeSchema.nullable(),
-});
+import { Switch } from "@/components/ui/Switch";
+import { Button } from "@/components/ui/Button";
+import { useUpdateEventForm } from "../hooks/useUpdateEventForm";
 
 interface Props {
   event: Event;
 }
 
 const EventSettingsForm = ({ event }: Props) => {
-  const {
-    id, // eslint-disable-line @typescript-eslint/no-unused-vars
-    created_at, // eslint-disable-line @typescript-eslint/no-unused-vars
-    updated_at, // eslint-disable-line @typescript-eslint/no-unused-vars
-    start_time,
-    end_time,
-    application_close,
-    application_open,
-    rsvp_deadline,
-    decision_release,
-    ...eventFields
-  } = event;
-
-  console.log("Event fields:", event);
-
-  const form = useForm({
-    defaultValues: {
-      ...eventFields,
-      event_times: {
-        start: toCalendarDateTime(start_time),
-        end: toCalendarDateTime(end_time),
-      },
-      application_times: {
-        start: toCalendarDateTime(application_open),
-        end: toCalendarDateTime(application_close),
-      },
-      rsvp_deadline: rsvp_deadline ? toCalendarDateTime(rsvp_deadline) : null,
-      decision_release: decision_release
-        ? toCalendarDateTime(decision_release)
-        : null,
-    },
-    onSubmit: async ({ value }) => {
-      const { data, success } = UpdateEventSchema.safeParse(value);
-      if (!success) return;
-      console.log("Form submitted:", data);
-    },
-    validators: {
-      onSubmit: UpdateEventSchema,
-    },
-  });
+  const form = useUpdateEventForm(event);
 
   const errors = useFormErrors(form);
 
@@ -91,6 +28,7 @@ const EventSettingsForm = ({ event }: Props) => {
         }}
       >
         <div className="flex flex-col gap-4">
+          {/* Event Title */}
           <form.Field name="name">
             {(field) => (
               <TextField
@@ -104,12 +42,13 @@ const EventSettingsForm = ({ event }: Props) => {
                   field.state.meta.errors.length === 0
                 }
                 value={field.state.value}
-                onChange={(value) => field.handleChange(value)}
+                onChange={field.handleChange}
                 validationBehavior="aria"
               />
             )}
           </form.Field>
 
+          {/* Description */}
           <form.Field name="description">
             {(field) => (
               <TextField
@@ -117,18 +56,19 @@ const EventSettingsForm = ({ event }: Props) => {
                 name={field.name}
                 placeholder="Ex. SwampHacks is Florida's largest student-run hackathon..."
                 className="flex-1"
+                textarea
                 isDisabled={
                   form.state.isSubmitting &&
                   field.state.meta.errors.length === 0
                 }
-                textarea
                 value={field.state.value ?? undefined}
-                onChange={(value) => field.handleChange(value)}
+                onChange={field.handleChange}
                 validationBehavior="aria"
               />
             )}
           </form.Field>
 
+          {/* Website URL */}
           <form.Field name="website_url">
             {(field) => (
               <TextField
@@ -141,42 +81,38 @@ const EventSettingsForm = ({ event }: Props) => {
                   field.state.meta.errors.length === 0
                 }
                 value={field.state.value ?? undefined}
-                onChange={(value) => field.handleChange(value)}
+                onChange={field.handleChange}
                 validationBehavior="aria"
               />
             )}
           </form.Field>
 
+          {/* Maximum Attendees */}
           <form.Field name="max_attendees">
             {(field) => (
               <TextField
                 label="Maximum Attendees"
                 name={field.name}
+                type="number"
                 placeholder="Enter the maximum number of attendees"
                 className="flex-1"
-                type="number"
                 isDisabled={
                   form.state.isSubmitting &&
                   field.state.meta.errors.length === 0
                 }
                 value={
-                  field.state.value !== null && field.state.value !== undefined
-                    ? String(field.state.value)
-                    : ""
+                  field.state.value != null ? String(field.state.value) : ""
                 }
                 onChange={(value) => {
-                  if (value === "" || value === null) {
-                    field.handleChange(null); // allow null
-                  } else {
-                    const parsed = parseInt(value, 10);
-                    field.handleChange(isNaN(parsed) ? null : parsed);
-                  }
+                  const parsed = value === "" ? null : parseInt(value, 10);
+                  field.handleChange(isNaN(parsed as number) ? null : parsed);
                 }}
                 validationBehavior="aria"
               />
             )}
           </form.Field>
 
+          {/* Venue */}
           <form.Field name="location">
             {(field) => (
               <TextField
@@ -189,7 +125,7 @@ const EventSettingsForm = ({ event }: Props) => {
                   field.state.meta.errors.length === 0
                 }
                 value={field.state.value ?? undefined}
-                onChange={(value) => field.handleChange(value)}
+                onChange={field.handleChange}
                 validationBehavior="aria"
               />
             )}
@@ -207,12 +143,13 @@ const EventSettingsForm = ({ event }: Props) => {
                   field.state.meta.errors.length === 0
                 }
                 value={field.state.value ?? undefined}
-                onChange={(value) => field.handleChange(value)}
+                onChange={field.handleChange}
                 validationBehavior="aria"
               />
             )}
           </form.Field>
 
+          {/* Event Times */}
           <form.Field name="event_times">
             {(field) => (
               <DateRangePicker
@@ -235,6 +172,7 @@ const EventSettingsForm = ({ event }: Props) => {
             )}
           </form.Field>
 
+          {/* Application Times */}
           <form.Field name="application_times">
             {(field) => (
               <DateRangePicker
@@ -257,6 +195,7 @@ const EventSettingsForm = ({ event }: Props) => {
             )}
           </form.Field>
 
+          {/* Decision Release & RSVP */}
           <Group className="flex flex-row flex-wrap gap-4">
             <form.Field name="decision_release">
               {(field) => (
@@ -269,7 +208,7 @@ const EventSettingsForm = ({ event }: Props) => {
                     field.state.meta.errors.length === 0
                   }
                   value={field.state.value ?? undefined}
-                  onChange={(value) => field.handleChange(value)}
+                  onChange={field.handleChange}
                   validationBehavior="aria"
                 />
               )}
@@ -286,12 +225,47 @@ const EventSettingsForm = ({ event }: Props) => {
                     field.state.meta.errors.length === 0
                   }
                   value={field.state.value ?? undefined}
-                  onChange={(value) => field.handleChange(value)}
+                  onChange={field.handleChange}
                   validationBehavior="aria"
                 />
               )}
             </form.Field>
           </Group>
+
+          {/* Published Switch */}
+          <form.Field name="is_published">
+            {(field) => (
+              <Switch
+                size="xl"
+                className="mt-4"
+                name={field.name}
+                isDisabled={
+                  form.state.isSubmitting &&
+                  field.state.meta.errors.length === 0
+                }
+                isSelected={field.state.value}
+                onChange={field.handleChange}
+              >
+                {field.state.value ? "Event is Public" : "Event is Private"}
+              </Switch>
+            )}
+          </form.Field>
+
+          {/* Save Button */}
+          <form.Subscribe selector={(state) => state.isDirty}>
+            {(isDirty) => (
+              <>
+                {isDirty && (
+                  <p className="text-sm text-orange-500 mt-2">
+                    You have unsaved changes
+                  </p>
+                )}
+                <Button type="submit" isDisabled={!isDirty} className="mt-2">
+                  Save
+                </Button>
+              </>
+            )}
+          </form.Subscribe>
         </div>
       </Form>
     </div>
