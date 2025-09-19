@@ -30,7 +30,7 @@ const EventBannerUploader = ({ bannerUrl, eventId }: Props) => {
     const selectedFile = files[0];
 
     const options = {
-      maxSizeMB: 0.5,
+      maxSizeMB: 0.07,
       maxWidthOrHeight: 1920,
       useWebWorker: true,
     } as Options;
@@ -154,8 +154,8 @@ const EventBannerUploader = ({ bannerUrl, eventId }: Props) => {
       )}
 
       <p className="text-sm text-neutral-500">
-        Recommended dimensions: 1200x300px. Max file size: 5MB. Supported
-        formats: JPG, JPEG, PNG.
+        Recommended dimensions: 1200×800px (3:2 aspect ratio). Images will be
+        compressed during upload. Supported formats: JPG, JPEG, PNG.{" "}
       </p>
 
       {/* Progress bar for uploads */}

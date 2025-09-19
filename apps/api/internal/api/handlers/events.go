@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
@@ -436,6 +438,14 @@ func (h *EventHandler) AssignEventRole(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func deferredCloser(c io.Closer, name string) func() {
+	return func() {
+		if err := c.Close(); err != nil {
+			log.Err(err).Msg("Failed to close " + name)
+		}
+	}
+}
+
 const maxBannerUploadSize = 5 << 20 // 5 Mb
 
 type EventBannerUploadResponse struct {
@@ -464,7 +474,7 @@ func (h *EventHandler) UploadEventBanner(w http.ResponseWriter, r *http.Request)
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "invalid resume file"))
 		return
 	}
-	defer bannerFile.Close()
+	defer deferredCloser(bannerFile, "banner file")
 
 	url, err := h.eventService.UploadBanner(r.Context(), eventId, bannerFile, header)
 	switch err {

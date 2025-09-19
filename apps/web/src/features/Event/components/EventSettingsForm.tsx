@@ -262,7 +262,11 @@ const EventSettingsForm = ({ event }: Props) => {
                     You have unsaved changes
                   </p>
                 )}
-                <Button type="submit" isDisabled={!isDirty} className="mt-2">
+                <Button
+                  type="submit"
+                  isDisabled={!isDirty}
+                  className="mt-2 md:mb-0 mb-10"
+                >
                   Save
                 </Button>
               </>
