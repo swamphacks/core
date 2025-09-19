@@ -28,7 +28,7 @@ class SupportThreadButtons(View):
 
 class CloseThreadButton(Button):
     """Button to close a support thread, archive it, and lock it."""
-    def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput):
+    def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput, threadID=None):
         """
         Initializes the CloseThreadButton with the given thread and description input.
 
@@ -38,6 +38,7 @@ class CloseThreadButton(Button):
         """
         super().__init__(label="Close Thread", style=ButtonStyle.primary, custom_id="close_thread", emoji="❌")
         self.thread = thread
+        self.threadID = threadID
         self.description_input = description_input
 
     async def callback(self, interaction: Interaction):
@@ -110,7 +111,7 @@ class CloseThreadButton(Button):
             # disable all buttons in the view
             for item in new_view.children:
                 item.disabled = True
-            # copy the original embed and update its description
+            # copy the original embed and update its title and description
             embed = message.embeds[0] if message.embeds else None
             
             # trim description
@@ -134,6 +135,21 @@ class CloseThreadButton(Button):
             )
         except Exception as e:
             await interaction.response.send_message(f"Failed to archive the support thread. Error: {e}", ephemeral=True)
+
+class JoinThreadButton(Button):
+    """Button to join a claimed support thread for additional mentor assistance."""
+    def __init__(self, thread: discord.Thread):
+        super().__init__(label="Join Thread", style=ButtonStyle.primary, custom_id="join_thread", emoji="➡️")
+        self.thread = thread
+
+    async def callback(self, interaction: Interaction):
+        try:
+            await self.thread.add_user(interaction.user)
+            await interaction.response.send_message(f"You've joined the thread {self.thread.mention}", ephemeral=True)
+        except NotFound:
+            await interaction.response.send_message("❌ This thread no longer exists.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Error joining thread: {str(e)}", ephemeral=True)
 
 class ClaimThreadButton(Button):
     """Button to claim a support thread and add the mentor to it."""
@@ -179,12 +195,20 @@ class ClaimThreadButton(Button):
             await set_busy_mentor(interaction.user, True)
             
             
-            # Edit the original message to disable the claim button
+            # Edit the original message to show disabled claim button, close button, and join button
             message = interaction.message
-            new_view = SupportThreadButtons(self.thread, self.description_input)
-            for item in new_view.children:
-                if isinstance(item, ClaimThreadButton):
-                    item.disabled = True
+            new_view = View(timeout=None)
+            
+            # Add disabled claim button
+            claim_button = ClaimThreadButton(self.thread, self.description_input)
+            claim_button.disabled = True
+            new_view.add_item(claim_button)
+            
+            # Add close button in the middle
+            new_view.add_item(CloseThreadButton(self.thread, self.description_input))
+            
+            # Add join button on the right
+            new_view.add_item(JoinThreadButton(self.thread))
 
             # Copy the original embed and update its description
             embed = message.embeds[0] if message.embeds else None
