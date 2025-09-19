@@ -17,6 +17,7 @@ export interface EventCardProps {
   description: string;
   date: string;
   location: string;
+  banner: string | null;
 }
 
 const EventCard = ({
@@ -26,13 +27,14 @@ const EventCard = ({
   description,
   date,
   location,
+  banner,
 }: EventCardProps) => {
   return (
     <Card className="border">
       <div className="w-full">
         <img
           className="w-full h-40 object-cover rounded-t-md"
-          src={imageFile}
+          src={banner ?? imageFile}
           alt={`${title} Image`}
         />
       </div>

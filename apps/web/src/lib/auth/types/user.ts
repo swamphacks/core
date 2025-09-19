@@ -1,12 +1,9 @@
 import { z } from "zod";
 
 export const userContextSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.uuid(),
   email: z.email(),
-  preferredEmail: z.preprocess(
-    (val: string) => (val === "" ? undefined : val),
-    z.email().optional(),
-  ),
+  preferredEmail: z.email().nullable().optional(),
   name: z.string(),
   onboarded: z.boolean(),
   image: z.string().nullable().optional(),
