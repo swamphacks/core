@@ -17,6 +17,7 @@ export const EventSchema = z.object({
   is_published: z.boolean(),
   created_at: z.coerce.date().nullable(),
   updated_at: z.coerce.date().nullable(),
+  banner: z.url().nullable(),
 });
 
 export type Event = z.infer<typeof EventSchema>;

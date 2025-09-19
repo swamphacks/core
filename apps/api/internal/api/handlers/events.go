@@ -435,3 +435,54 @@ func (h *EventHandler) AssignEventRole(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
+
+const maxBannerUploadSize = 5 << 20 // 5 Mb
+
+type EventBannerUploadResponse struct {
+	BannerUrl string `json:"banner_url"`
+}
+
+func (h *EventHandler) UploadEventBanner(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	if err := r.ParseMultipartForm(maxBannerUploadSize); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "could not parse multipart form"))
+		return
+	}
+
+	bannerFile, header, err := r.FormFile("image")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "invalid resume file"))
+		return
+	}
+	defer bannerFile.Close()
+
+	url, err := h.eventService.UploadBanner(r.Context(), eventId, bannerFile, header)
+	switch err {
+	case services.ErrFailedToUploadBanner:
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong on our end"))
+		return
+	case services.ErrUnexpectedFileType:
+		res.SendError(w, http.StatusBadRequest, res.NewError("file_error", err.Error()))
+		return
+	case nil:
+		// Continue
+	default:
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong on our end"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, EventBannerUploadResponse{
+		BannerUrl: *url,
+	})
+
+}

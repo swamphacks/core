@@ -1,3 +1,4 @@
+import EventBannerUploader from "@/features/Event/components/EventBannerUploader";
 import EventSettingsForm from "@/features/Event/components/EventSettingsForm";
 import { useEvent } from "@/features/Event/hooks/useEvent";
 import { createFileRoute } from "@tanstack/react-router";
@@ -74,11 +75,11 @@ function RouteComponent() {
     );
 
   return (
-    <div>
-      <Heading className="text-2xl lg:text-3xl font-semibold mb-6">
+    <div className="flex flex-col gap-6">
+      <Heading className="text-2xl lg:text-3xl font-semibold">
         Event Settings
       </Heading>
-
+      <EventBannerUploader bannerUrl={data.banner} eventId={data.id} />
       <EventSettingsForm event={data} />
     </div>
   );

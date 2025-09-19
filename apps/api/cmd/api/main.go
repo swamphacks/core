@@ -68,7 +68,7 @@ func main() {
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
 	userService := services.NewUserService(userRepo, logger)
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
-	eventService := services.NewEventService(eventRepo, userRepo, logger)
+	eventService := services.NewEventService(eventRepo, userRepo, r2Client, &cfg.CoreBuckets, logger)
 	emailService := services.NewEmailService(taskQueueClient, logger)
 	applicationService := services.NewApplicationService(applicationRepo, eventService, txm, r2Client, &cfg.CoreBuckets, logger)
 

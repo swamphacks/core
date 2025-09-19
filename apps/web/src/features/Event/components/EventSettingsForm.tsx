@@ -246,7 +246,7 @@ const EventSettingsForm = ({ event }: Props) => {
                 isSelected={field.state.value}
                 onChange={field.handleChange}
               >
-                {field.state.value ? "Event is Public" : "Event is Private"}
+                {field.state.value ? "Event is published" : "Event is unpublished"}
               </Switch>
             )}
           </form.Field>
