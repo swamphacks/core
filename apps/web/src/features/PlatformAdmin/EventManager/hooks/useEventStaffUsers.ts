@@ -6,7 +6,7 @@ export function getEventStaffUsersQueryKey(eventId: string) {
   return ["event", eventId, "staff-users"] as const;
 }
 
-type StaffUsers =
+export type StaffUsers =
   operations["get-event-staff"]["responses"]["200"]["content"]["application/json"];
 
 export function useEventStaffUsers(eventId: string) {
