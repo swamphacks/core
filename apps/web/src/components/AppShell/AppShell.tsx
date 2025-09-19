@@ -19,6 +19,7 @@ import { Profile } from "./Profile";
 import { MobileProfile } from "@/components/AppShell/MobileProfile";
 import { Link, useLocation } from "@tanstack/react-router";
 import TablerArrowRight from "~icons/tabler/arrow-right";
+import TablerArrowLeft from "~icons/tabler/arrow-left";
 
 interface AppShellComponent extends FC<PropsWithChildren> {
   Header: FC<PropsWithChildren>;
@@ -117,13 +118,23 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
                   <div className="flex flex-col gap-5">
                     {user.role === "superuser" && (
                       <div>
-                        <Link
-                          className="flex text-sm justify-center items-center rounded-sm px-3 py-2 gap-2 cursor-pointer select-none text-center w-full border border-input-border hover:bg-navlink-bg-active"
-                          to={isAdminPortal ? "/portal" : "/admin/overview"}
-                        >
-                          Go to {isAdminPortal ? "User" : "Admin"} Portal
-                          <TablerArrowRight />
-                        </Link>
+                        {isAdminPortal ? (
+                          <Link
+                            className="flex text-sm justify-center items-center rounded-sm px-3 py-2 gap-2 cursor-pointer select-none text-center w-full border border-orange-800 text-orange-600 hover:bg-navlink-bg-active"
+                            to="/portal"
+                          >
+                            <TablerArrowLeft />
+                            Go back to Portal
+                          </Link>
+                        ) : (
+                          <Link
+                            className="flex text-sm justify-center items-center rounded-sm px-3 py-2 gap-2 cursor-pointer select-none text-center w-full border border-input-border hover:bg-navlink-bg-active"
+                            to="/admin/overview"
+                          >
+                            Go to Admin Portal
+                            <TablerArrowRight />
+                          </Link>
+                        )}
                       </div>
                     )}
                     <Profile name={user.name} role={role} />
