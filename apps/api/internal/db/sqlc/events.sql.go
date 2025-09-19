@@ -34,7 +34,7 @@ INSERT INTO events (
     coalesce($12, NULL),
     coalesce($13, FALSE)
 ) 
-RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner
 `
 
 type CreateEventParams struct {
@@ -87,6 +87,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.IsPublished,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Banner,
 	)
 	return i, err
 }
@@ -107,7 +108,7 @@ func (q *Queries) DeleteEventById(ctx context.Context, id uuid.UUID) (int64, err
 
 const getAllEvents = `-- name: GetAllEvents :many
 SELECT
-    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at,
+    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at, e.banner,
     er.role AS event_role
 FROM events e
 LEFT JOIN event_roles AS er
@@ -133,6 +134,7 @@ type GetAllEventsRow struct {
 	IsPublished      *bool             `json:"is_published"`
 	CreatedAt        *time.Time        `json:"created_at"`
 	UpdatedAt        *time.Time        `json:"updated_at"`
+	Banner           *string           `json:"banner"`
 	EventRole        NullEventRoleType `json:"event_role"`
 }
 
@@ -162,6 +164,7 @@ func (q *Queries) GetAllEvents(ctx context.Context, userID uuid.UUID) ([]GetAllE
 			&i.IsPublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Banner,
 			&i.EventRole,
 		); err != nil {
 			return nil, err
@@ -175,7 +178,7 @@ func (q *Queries) GetAllEvents(ctx context.Context, userID uuid.UUID) ([]GetAllE
 }
 
 const getEventByID = `-- name: GetEventByID :one
-SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at FROM events
+SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner FROM events
 WHERE id = $1
 `
 
@@ -199,6 +202,7 @@ func (q *Queries) GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 		&i.IsPublished,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Banner,
 	)
 	return i, err
 }
@@ -227,7 +231,7 @@ func (q *Queries) GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsPa
 
 const getEventsWithUserInfo = `-- name: GetEventsWithUserInfo :many
 SELECT
-    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at,
+    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at, e.banner,
     er.role AS event_role,
     a.status AS application_status
 FROM events e
@@ -263,6 +267,7 @@ type GetEventsWithUserInfoRow struct {
 	IsPublished       *bool                 `json:"is_published"`
 	CreatedAt         *time.Time            `json:"created_at"`
 	UpdatedAt         *time.Time            `json:"updated_at"`
+	Banner            *string               `json:"banner"`
 	EventRole         NullEventRoleType     `json:"event_role"`
 	ApplicationStatus NullApplicationStatus `json:"application_status"`
 }
@@ -293,6 +298,7 @@ func (q *Queries) GetEventsWithUserInfo(ctx context.Context, arg GetEventsWithUs
 			&i.IsPublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Banner,
 			&i.EventRole,
 			&i.ApplicationStatus,
 		); err != nil {
@@ -308,7 +314,7 @@ func (q *Queries) GetEventsWithUserInfo(ctx context.Context, arg GetEventsWithUs
 
 const getPublishedEvents = `-- name: GetPublishedEvents :many
 SELECT
-    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at,
+    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at, e.banner,
     er.role AS event_role
 FROM events e
 LEFT JOIN event_roles AS er
@@ -335,6 +341,7 @@ type GetPublishedEventsRow struct {
 	IsPublished      *bool             `json:"is_published"`
 	CreatedAt        *time.Time        `json:"created_at"`
 	UpdatedAt        *time.Time        `json:"updated_at"`
+	Banner           *string           `json:"banner"`
 	EventRole        NullEventRoleType `json:"event_role"`
 }
 
@@ -364,6 +371,7 @@ func (q *Queries) GetPublishedEvents(ctx context.Context, userID uuid.UUID) ([]G
 			&i.IsPublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Banner,
 			&i.EventRole,
 		); err != nil {
 			return nil, err
@@ -391,10 +399,11 @@ SET
     start_time = CASE WHEN $19::boolean THEN $20 ELSE start_time END,
     end_time = CASE WHEN $21::boolean THEN $22 ELSE end_time END,
     website_url = CASE WHEN $23::boolean THEN $24 ELSE website_url END,
-    is_published = CASE WHEN $25::boolean THEN $26 ELSE is_published END
+    is_published = CASE WHEN $25::boolean THEN $26 ELSE is_published END,
+    banner = CASE WHEN $27::boolean THEN $28 ELSE banner END
 WHERE
-    id = $27::uuid
-RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at
+    id = $29::uuid
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner
 `
 
 type UpdateEventByIdParams struct {
@@ -424,6 +433,8 @@ type UpdateEventByIdParams struct {
 	WebsiteUrl               *string    `json:"website_url"`
 	IsPublishedDoUpdate      bool       `json:"is_published_do_update"`
 	IsPublished              *bool      `json:"is_published"`
+	BannerDoUpdate           bool       `json:"banner_do_update"`
+	Banner                   *string    `json:"banner"`
 	ID                       uuid.UUID  `json:"id"`
 }
 
@@ -455,6 +466,8 @@ func (q *Queries) UpdateEventById(ctx context.Context, arg UpdateEventByIdParams
 		arg.WebsiteUrl,
 		arg.IsPublishedDoUpdate,
 		arg.IsPublished,
+		arg.BannerDoUpdate,
+		arg.Banner,
 		arg.ID,
 	)
 	return err

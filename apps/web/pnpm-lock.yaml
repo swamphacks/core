@@ -38,6 +38,9 @@ importers:
       axios:
         specifier: ^1.9.0
         version: 1.10.0
+      browser-image-compression:
+        specifier: ^2.0.2
+        version: 2.0.2
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -2430,6 +2433,9 @@ packages:
   browser-assert@1.2.1:
     resolution: {integrity: sha512-nfulgvOR6S4gt9UKCeGJOuSGBPGiFT6oQ/2UBnvTY/5aQ1PnksW72fhZkM30DzoRRv2WpwZf1vHHEr3mtuXIWQ==}
 
+  browser-image-compression@2.0.2:
+    resolution: {integrity: sha512-pBLlQyUf6yB8SmmngrcOw3EoS4RpQ1BcylI3T9Yqn7+4nrQTXJD4sJDe5ODnJdrvNMaio5OicFo75rDyJD2Ucw==}
+
   browserslist@4.25.1:
     resolution: {integrity: sha512-KGj0KoOMXLpSNkkEI6Z6mShmQy0bc1I+T7K9N81k4WWMrfz+6fQ6es80B/YLAeRoKvjYE1YSHHOW1qe9xIVzHw==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
@@ -4257,6 +4263,9 @@ packages:
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
+
+  uzip@0.20201231.0:
+    resolution: {integrity: sha512-OZeJfZP+R0z9D6TmBgLq2LHzSSptGMGDGigGiEe0pr8UBe/7fdflgHlHBNDASTXB5jnFuxHpNaJywSg8YFeGng==}
 
   vite-node@3.2.4:
     resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
@@ -7310,6 +7319,10 @@ snapshots:
 
   browser-assert@1.2.1: {}
 
+  browser-image-compression@2.0.2:
+    dependencies:
+      uzip: 0.20201231.0
+
   browserslist@4.25.1:
     dependencies:
       caniuse-lite: 1.0.30001726
@@ -9152,6 +9165,8 @@ snapshots:
       which-typed-array: 1.1.19
 
   uuid@9.0.1: {}
+
+  uzip@0.20201231.0: {}
 
   vite-node@3.2.4(@types/node@22.15.34)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.0):
     dependencies:

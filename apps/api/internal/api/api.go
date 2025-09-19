@@ -105,6 +105,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 			// Admin-only
 			r.With(ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
+			r.With(ensureEventAdmin).Post("/banner", api.Handlers.Event.UploadEventBanner)
+			r.With(ensureEventAdmin).Delete("/banner", api.Handlers.Event.DeleteBanner)
 			r.With(ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
 			r.With(ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
 
