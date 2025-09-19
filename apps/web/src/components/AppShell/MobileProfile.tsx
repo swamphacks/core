@@ -1,9 +1,11 @@
-import { useRouter } from "@tanstack/react-router";
+import { useLocation, useRouter } from "@tanstack/react-router";
 import { Button, MenuTrigger } from "react-aria-components";
 import TablerSettings from "~icons/tabler/settings";
 import { Menu, MenuItem } from "@/components/ui/Menu";
 import TablerLogout from "~icons/tabler/logout";
 import { auth } from "@/lib/authClient";
+import TablerUserCog from "~icons/tabler/user-cog";
+import TablerUser from "~icons/tabler/user";
 
 export function MobileProfile({
   name,
@@ -17,6 +19,9 @@ export function MobileProfile({
   const router = useRouter();
   const { data } = auth.useUser();
   const { user } = data!;
+  const pathname = useLocation({ select: (loc) => loc.pathname });
+
+  const isAdminPortal = pathname.startsWith("/admin");
 
   return (
     <div className="flex items-center gap-2">
@@ -44,6 +49,17 @@ export function MobileProfile({
             </div>
           }
         >
+          <MenuItem
+            id="portal"
+            onAction={() =>
+              router.navigate({
+                to: isAdminPortal ? "/portal" : "/admin/overview",
+              })
+            }
+          >
+            {isAdminPortal ? <TablerUser /> : <TablerUserCog />}
+            {isAdminPortal ? "User" : "Admin"} Portal
+          </MenuItem>
           <MenuItem
             id="settings"
             onAction={() => router.navigate({ to: "/settings" })}
