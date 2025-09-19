@@ -8,6 +8,7 @@ export function getEventStaffUsersQueryKey(eventId: string) {
 
 export type StaffUsers =
   operations["get-event-staff"]["responses"]["200"]["content"]["application/json"];
+export type StaffUser = StaffUsers[number];
 
 export function useEventStaffUsers(eventId: string) {
   async function fetchEventStaffUsers(): Promise<StaffUsers> {
