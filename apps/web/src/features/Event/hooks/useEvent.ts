@@ -6,6 +6,8 @@ export function useEvent(eventId: string) {
   const fetchEvent = async () => {
     const data = await getEventById(eventId);
 
+    console.log("Fetched event data:", data);
+
     return EventSchema.parse(data);
   };
 

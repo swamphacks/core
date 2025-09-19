@@ -34,6 +34,7 @@ export function mapEventsAPIResponseToEventCardProps(
       description: data.description ?? "No description",
       date: formatDateRange(new Date(data.start_time), new Date(data.end_time)),
       location: data.location ?? "Unknown",
+      banner: data.banner,
     };
   }
 
@@ -100,5 +101,6 @@ export function mapEventsAPIResponseToEventCardProps(
     description: data.description ?? "No description",
     date: formatDateRange(new Date(data.start_time), new Date(data.end_time)),
     location: data.location ?? "Unknown",
+    banner: data.banner,
   };
 }

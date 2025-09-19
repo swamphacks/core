@@ -486,3 +486,24 @@ func (h *EventHandler) UploadEventBanner(w http.ResponseWriter, r *http.Request)
 	})
 
 }
+
+func (h *EventHandler) DeleteBanner(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	err = h.eventService.DeleteBanner(r.Context(), eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong on our end"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

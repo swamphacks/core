@@ -219,6 +219,8 @@ func (s *EventService) UploadBanner(ctx context.Context, eventId uuid.UUID, bann
 	fileName := header.Filename
 	fileExt := strings.ToLower(filepath.Ext(fileName))
 
+	s.logger.Info().Str("Filetype", fileExt).Msg("The file type")
+
 	switch fileExt {
 	case ".jpg", ".png", ".jpeg":
 		// Do nothing
@@ -243,8 +245,8 @@ func (s *EventService) UploadBanner(ctx context.Context, eventId uuid.UUID, bann
 		return nil, ErrFailedToUploadBanner
 	}
 
-	// Reconstrust URL
-	url := fmt.Sprintf("%s/%s", s.buckets.EventAssetsBaseUrl, uploadKey)
+	// Reconstrust URL with cache buster
+	url := fmt.Sprintf("%s/%s?t=%d", s.buckets.EventAssetsBaseUrl, uploadKey, time.Now().Unix())
 
 	err = s.eventRepo.UpdateEventById(ctx, sqlc.UpdateEventByIdParams{
 		ID:             eventId,
@@ -257,4 +259,13 @@ func (s *EventService) UploadBanner(ctx context.Context, eventId uuid.UUID, bann
 
 	return &url, nil
 
+}
+
+func (s *EventService) DeleteBanner(ctx context.Context, eventId uuid.UUID) error {
+	// For now its a soft delete, not actually deleting banner is easiest, just set to null
+	return s.eventRepo.UpdateEventById(ctx, sqlc.UpdateEventByIdParams{
+		ID:             eventId,
+		BannerDoUpdate: true,
+		Banner:         nil,
+	})
 }

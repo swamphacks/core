@@ -61,7 +61,7 @@ function RouteComponent() {
       </div>
     );
 
-  if (isError && !data)
+  if (isError || !data)
     return (
       <div>
         <Heading className="text-2xl lg:text-3xl font-semibold mb-6">
@@ -69,7 +69,8 @@ function RouteComponent() {
         </Heading>
 
         <div className="text-red-500">
-          Error: {error ?? "Something went wrong, try refreshing the page."}
+          Error:{" "}
+          {error.message ?? "Something went wrong, try refreshing the page."}
         </div>
       </div>
     );
