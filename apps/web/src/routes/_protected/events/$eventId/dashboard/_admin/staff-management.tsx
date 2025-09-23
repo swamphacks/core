@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/Button";
+import AddStaffModal from "@/features/EventAdmin/components/AddStaffModal";
 import StaffTable from "@/features/EventAdmin/components/StaffTable";
 import { useEventStaffUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
 import { createFileRoute } from "@tanstack/react-router";
-import { Heading } from "react-aria-components";
+import { DialogTrigger, Heading } from "react-aria-components";
 
 export const Route = createFileRoute(
   "/_protected/events/$eventId/dashboard/_admin/staff-management",
@@ -44,7 +45,13 @@ function RouteComponent() {
       </Heading>
 
       <div className="flex flex-row w-full justify-end">
-        {eventRole === "admin" && <Button variant="primary">Add Staff</Button>}
+        {eventRole === "admin" && (
+          <DialogTrigger>
+            <Button variant="primary">Add Staff</Button>
+
+            <AddStaffModal />
+          </DialogTrigger>
+        )}
       </div>
 
       <StaffTable data={data} />

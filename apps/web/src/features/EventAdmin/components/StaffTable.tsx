@@ -4,11 +4,19 @@ import TablerTrash from "~icons/tabler/trash";
 import {
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   useReactTable,
   type ColumnDef,
+  type FilterFn,
 } from "@tanstack/react-table";
 import RoleBadge from "./RoleBadge";
 import type { StaffUser } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
+import { TextField } from "@/components/ui/TextField";
+
+const fuzzyTextFilterFn: FilterFn<StaffUser> = (row, columnId, value) => {
+  const rowValue = row.getValue(columnId) as string;
+  return rowValue.toLowerCase().includes((value as string).toLowerCase());
+};
 
 const columns: ColumnDef<StaffUser>[] = [
   {
@@ -38,10 +46,13 @@ const columns: ColumnDef<StaffUser>[] = [
       const name = row.original.name;
       return name ? name : "Unknown";
     },
+    accessorKey: "name",
+    filterFn: fuzzyTextFilterFn,
   },
   {
     accessorKey: "email",
     header: "Email",
+    filterFn: fuzzyTextFilterFn,
   },
   {
     accessorKey: "event_role",
@@ -50,6 +61,7 @@ const columns: ColumnDef<StaffUser>[] = [
       const role = row.original.event_role;
       return <RoleBadge role={role} />;
     },
+    enableColumnFilter: false,
   },
   {
     id: "actions",
@@ -81,6 +93,7 @@ const StaffTable = ({ data }: Props) => {
     columns,
     data: data ?? fallbackData,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   });
 
   return (
@@ -91,12 +104,23 @@ const StaffTable = ({ data }: Props) => {
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <th key={header.id} className="text-left px-4 py-2">
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
+                  <div className="flex flex-col">
+                    <div className="font-medium">
+                      {flexRender(
                         header.column.columnDef.header,
                         header.getContext(),
                       )}
+                    </div>
+                    {header.column.getCanFilter() && (
+                      <TextField
+                        type="text"
+                        value={(header.column.getFilterValue() ?? "") as string}
+                        onChange={(e) => header.column.setFilterValue(e)}
+                        placeholder="Search..."
+                        className="mt-2"
+                      />
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>

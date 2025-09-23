@@ -41,6 +41,7 @@ type Querier interface {
 	GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]AuthSession, error)
 	GetUserByEmail(ctx context.Context, email *string) (AuthUser, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, error)
+	GetUsers(ctx context.Context, arg GetUsersParams) ([]AuthUser, error)
 	InvalidateSessionByID(ctx context.Context, id uuid.UUID) error
 	TouchSession(ctx context.Context, arg TouchSessionParams) error
 	UpdateApplication(ctx context.Context, arg UpdateApplicationParams) error

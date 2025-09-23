@@ -79,6 +79,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	// --- User routes ---
 	api.Router.Route("/users", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
+		r.Get("/", api.Handlers.User.GetUsers)
 		r.Get("/me", api.Handlers.User.GetProfile)
 		r.Patch("/me", api.Handlers.User.UpdateUser)
 		r.Patch("/me/email-consent", api.Handlers.User.UpdateEmailConsent)

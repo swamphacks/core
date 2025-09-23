@@ -100,6 +100,53 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, erro
 	return i, err
 }
 
+const getUsers = `-- name: GetUsers :many
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent
+FROM auth.users
+WHERE LOWER(name) LIKE LOWER('%' || COALESCE($1, '') || '%')
+   OR LOWER(email) LIKE LOWER('%' || COALESCE($1, '') || '%')
+ORDER BY name
+LIMIT $3 OFFSET $2
+`
+
+type GetUsersParams struct {
+	Search *string `json:"search"`
+	Offset int32   `json:"offset"`
+	Limit  int32   `json:"limit"`
+}
+
+func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]AuthUser, error) {
+	rows, err := q.db.Query(ctx, getUsers, arg.Search, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AuthUser{}
+	for rows.Next() {
+		var i AuthUser
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.EmailVerified,
+			&i.Onboarded,
+			&i.Image,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Role,
+			&i.PreferredEmail,
+			&i.EmailConsent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateUser = `-- name: UpdateUser :exec
 UPDATE auth.users
 SET
