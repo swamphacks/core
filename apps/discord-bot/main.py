@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import os
 import pathlib
 import asyncio
+import uvicorn
+from api_server import attach_bot
 from typing import Optional
 from discord.app_commands import CheckFailure, AppCommandError
 
@@ -117,7 +119,25 @@ async def main() -> None:
     This function calls functions to load cogs and start the bot given the api token from environment variables
     """
     await load_cogs()
-    await bot.start(token)
+
+    # Attach bot instance to API server module so endpoints can use it
+    try:
+        attach_bot(bot)
+    except Exception:
+        pass
+
+    # Run the FastAPI app in the same event loop using uvicorn's Server
+    config = uvicorn.Config("api_server:app", host="0.0.0.0", port=8000, loop="asyncio", log_level="info")
+    server = uvicorn.Server(config)
+
+    api_task = asyncio.create_task(server.serve())
+
+    # Start the bot (this will keep running until stopped)
+    try:
+        await bot.start(token)
+    finally:
+        # on shutdown, stop the API server
+        api_task.cancel()
 
 
 if __name__ == "__main__":
