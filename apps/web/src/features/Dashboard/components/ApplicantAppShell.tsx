@@ -42,7 +42,7 @@ export default function ApplicantAppShell({
           active={applicationStatusActive}
         />
         <NavLink
-          label="Team Formation"
+          label="My Team"
           href={`/events/${eventId}/dashboard/team-formation`}
           leftSection={
             <TablerTransformPointBottomLeft className="w-5 aspect-square" />
