@@ -1,15 +1,15 @@
-import type { components, operations } from "./schema";
+import type { components, paths } from "./schema";
 
-export type Session = components["schemas"]["Session"];
-export type ErrorResponse = components["schemas"]["ErrorResponse"];
-export type UserContext = components["schemas"]["UserContext"];
-export type PlatformRole = components["schemas"]["PlatformRole"];
-export type Event = components["schemas"]["Event"];
+export type ErrorResponse = components["schemas"]["response.ErrorResponse"];
+export type UserContext = components["schemas"]["middleware.UserContext"];
+export type PlatformRole = components["schemas"]["sqlc.AuthUserRole"];
+export type Event = components["schemas"]["sqlc.Event"];
 export type CreateEvent =
-  operations["post-event"]["requestBody"]["content"]["application/json"];
-export type User = components["schemas"]["User"];
+  paths["/events"]["post"]["requestBody"]["content"]["application/json"];
+export type User = components["schemas"]["middleware.UserContext"];
 
 //TODO: Remove extension once OpenAPI is updated
-export type EventWithUserInfo = components["schemas"]["EventWithUserInfo"] & {
-  banner: string | null;
-};
+export type EventWithUserInfo =
+  components["schemas"]["sqlc.GetEventsWithUserInfoRow"] & {
+    banner: string | null;
+  };
