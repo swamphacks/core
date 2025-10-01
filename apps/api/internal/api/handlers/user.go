@@ -26,6 +26,17 @@ func NewUserHandler(userService *services.UserService, logger zerolog.Logger) *U
 	}
 }
 
+// Get User Profile
+//
+//	@Summary		Get User Profile
+//	@Description	Get profile information of the currently authenticated user.
+//	@Tags			User
+//	@Param			sh_session	cookie		string	true	"The authenticated session token/id"
+//	@Success		200			{object}	sqlc.AuthUser
+//	@Failure		401			{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		404			{object}	response.ErrorResponse	"User profile not found."
+//	@Failure		500			{object}	response.ErrorResponse	"Something went seriously wrong."
+//	@Router			/users/me [get]
 func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	userId := ctxutils.GetUserIdFromCtx(r.Context())
 	if userId == nil {
@@ -56,6 +67,19 @@ type UpdateEmailConsentRequest struct {
 	EmailConsent bool `json:"email_consent"`
 }
 
+// Update Email Consent
+//
+//	@Summary		Update Email Consent
+//	@Description	Update the user's email consent setting
+//	@Tags			User
+//	@Param			sh_session	cookie	string						true	"The authenticated session token/id"
+//	@Param			request		body	UpdateEmailConsentRequest	true	"The update email consent request body"
+//	@Success		200
+//	@Failure		401	{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		400	{object}	response.ErrorResponse	"Invalid request body"
+//	@Failure		404	{object}	response.ErrorResponse	"User not found"
+//	@Failure		500	{object}	response.ErrorResponse	"Failed to update email consent"
+//	@Router			/users/email-consent [patch]
 func (h *UserHandler) UpdateEmailConsent(w http.ResponseWriter, r *http.Request) {
 	userId := ctxutils.GetUserIdFromCtx(r.Context())
 	if userId == nil {
@@ -90,6 +114,19 @@ func (h *UserHandler) UpdateEmailConsent(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
+// Update User
+//
+//	@Summary		Update User
+//	@Description	Update the user's information
+//	@Tags			User
+//	@Param			sh_session	cookie	string					true	"The authenticated session token/id"
+//	@Param			request		body	UpdateProfileRequest	true	"The update profile request body"
+//	@Success		200
+//	@Failure		401	{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		400	{object}	response.ErrorResponse	"Invalid request body"
+//	@Failure		404	{object}	response.ErrorResponse	"User not found"
+//	@Failure		500	{object}	response.ErrorResponse	"Failed to update user profile"
+//	@Router			/users/me [patch]
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userId := ctxutils.GetUserIdFromCtx(r.Context())
 	if userId == nil {
@@ -146,6 +183,19 @@ type CompleteOnboardingRequest struct {
 	PreferredEmail string `json:"preferred_email"`
 }
 
+// Complete Onboarding
+//
+//	@Summary		Complete Onboarding
+//	@Description	Onboard the user.
+//	@Tags			User
+//	@Param			sh_session	cookie	string						true	"The authenticated session token/id"
+//	@Param			request		body	CompleteOnboardingRequest	true	"The onboarding request body"
+//	@Success		200
+//	@Failure		401	{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		400	{object}	response.ErrorResponse	"Invalid request body"
+//	@Failure		404	{object}	response.ErrorResponse	"User not found"
+//	@Failure		500	{object}	response.ErrorResponse	"Failed to complete onboarding"
+//	@Router			/users/me/onboarding [patch]
 func (h *UserHandler) CompleteOnboarding(w http.ResponseWriter, r *http.Request) {
 	userId := ctxutils.GetUserIdFromCtx(r.Context())
 	if userId == nil {

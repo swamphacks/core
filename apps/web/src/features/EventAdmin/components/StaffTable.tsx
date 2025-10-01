@@ -59,6 +59,8 @@ const columns: ColumnDef<StaffUser>[] = [
     header: "Role",
     cell: ({ row }) => {
       const role = row.original.event_role;
+      if (!role) return "N/A";
+
       return <RoleBadge role={role} />;
     },
     enableColumnFilter: false,

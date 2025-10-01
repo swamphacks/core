@@ -1,3 +1,4 @@
+import { PageUnderConstruction } from "@/components/PageUnderConstruction";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/_user/resources/sponsors")({
@@ -5,5 +6,5 @@ export const Route = createFileRoute("/_protected/_user/resources/sponsors")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/_protected/resources/sponsors"!</div>;
+  return <PageUnderConstruction />;
 }
