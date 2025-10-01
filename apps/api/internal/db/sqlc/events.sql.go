@@ -241,13 +241,21 @@ LEFT JOIN event_roles er
 LEFT JOIN applications a
     ON a.event_id = e.id
     AND a.user_id = $1
-WHERE ($2::boolean IS TRUE OR e.is_published = TRUE)
+WHERE
+    CASE $2::text
+        WHEN 'all' THEN
+            TRUE
+        WHEN 'scoped' THEN
+            e.is_published = TRUE OR (e.is_published = FALSE AND (er.role = 'staff' or er.role = 'admin'))
+        ELSE
+            e.is_published = TRUE
+    END
 ORDER BY e.start_time ASC
 `
 
 type GetEventsWithUserInfoParams struct {
-	UserID             *uuid.UUID `json:"user_id"`
-	IncludeUnpublished bool       `json:"include_unpublished"`
+	UserID *uuid.UUID `json:"user_id"`
+	Scope  string     `json:"scope"`
 }
 
 type GetEventsWithUserInfoRow struct {
@@ -273,7 +281,7 @@ type GetEventsWithUserInfoRow struct {
 }
 
 func (q *Queries) GetEventsWithUserInfo(ctx context.Context, arg GetEventsWithUserInfoParams) ([]GetEventsWithUserInfoRow, error) {
-	rows, err := q.db.Query(ctx, getEventsWithUserInfo, arg.UserID, arg.IncludeUnpublished)
+	rows, err := q.db.Query(ctx, getEventsWithUserInfo, arg.UserID, arg.Scope)
 	if err != nil {
 		return nil, err
 	}

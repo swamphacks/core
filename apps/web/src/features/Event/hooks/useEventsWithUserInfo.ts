@@ -10,7 +10,8 @@ export type EventsWithUserInfo = EventWithUserInfo[];
 
 export async function fetchEvents(): Promise<EventsWithUserInfo> {
   const result = await api
-    .get<EventsWithUserInfo>("events?include_unpublished=false")
+    .get<EventsWithUserInfo>("events?include_unpublished=false") // ADD QUERY PARAMETER
+    // TODO, find other calls to events and change the query parameter accordingly
     .json();
 
   console.log("Fetched events:", result);

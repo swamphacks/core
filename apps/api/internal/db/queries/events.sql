@@ -89,5 +89,13 @@ LEFT JOIN event_roles er
 LEFT JOIN applications a
     ON a.event_id = e.id
     AND a.user_id = sqlc.narg(user_id)
-WHERE (sqlc.arg(include_unpublished)::boolean IS TRUE OR e.is_published = TRUE)
+WHERE
+    CASE sqlc.arg(scope)::text
+        WHEN 'all' THEN
+            TRUE
+        WHEN 'scoped' THEN
+            e.is_published = TRUE OR (e.is_published = FALSE AND (er.role = 'staff' or er.role = 'admin'))
+        ELSE
+            e.is_published = TRUE
+    END
 ORDER BY e.start_time ASC;
