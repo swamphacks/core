@@ -1,17 +1,19 @@
 import { api } from "@/lib/ky";
-import type { operations } from "@/lib/openapi/schema";
 import { useQuery } from "@tanstack/react-query";
 import { mapEventsAPIResponseToEventCardProps } from "../utils/mapper";
+import type { EventWithUserInfo } from "@/lib/openapi/types";
 
 export const eventsQueryKey = ["events", "published"] as const;
 
-export type EventsWithUserInfo =
-  operations["get-events"]["responses"]["200"]["content"]["application/json"];
+//TODO: Use the operations from openapi types when the schema is updated
+export type EventsWithUserInfo = EventWithUserInfo[];
 
 export async function fetchEvents(): Promise<EventsWithUserInfo> {
   const result = await api
     .get<EventsWithUserInfo>("events?include_unpublished=false")
     .json();
+
+  console.log("Fetched events:", result);
   return result;
 }
 

@@ -8,6 +8,7 @@ import { composeTailwindRenderProps } from "../utils";
 
 export interface SwitchProps extends Omit<AriaSwitchProps, "children"> {
   children: React.ReactNode;
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 const track = tv({
@@ -21,6 +22,15 @@ const track = tv({
     isDisabled: {
       true: "bg-gray-200 dark:bg-zinc-700 forced-colors:group-selected:bg-[GrayText]! forced-colors:border-[GrayText]",
     },
+    size: {
+      sm: "h-3 w-5",
+      md: "h-4 w-7",
+      lg: "h-5 w-9",
+      xl: "h-6 w-11",
+    },
+  },
+  defaultVariants: {
+    size: "md",
   },
 });
 
@@ -34,6 +44,15 @@ const handle = tv({
     isDisabled: {
       true: "forced-colors:outline-[GrayText]",
     },
+    size: {
+      sm: "h-2 w-2",
+      md: "h-3 w-3",
+      lg: "h-4 w-4",
+      xl: "h-5 w-5",
+    },
+  },
+  defaultVariants: {
+    size: "md",
   },
 });
 
@@ -48,8 +67,8 @@ export function Switch({ children, ...props }: SwitchProps) {
     >
       {(renderProps) => (
         <>
-          <div className={track(renderProps)}>
-            <span className={handle(renderProps)} />
+          <div className={track({ ...renderProps, size: props.size })}>
+            <span className={handle({ ...renderProps, size: props.size })} />
           </div>
           {children}
         </>

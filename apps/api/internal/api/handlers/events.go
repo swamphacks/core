@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"reflect"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
@@ -19,6 +20,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/parse"
+	. "github.com/swamphacks/core/apps/api/internal/parse"
 	"github.com/swamphacks/core/apps/api/internal/ptr"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/web"
@@ -170,6 +172,22 @@ func (h *EventHandler) GetEventByID(w http.ResponseWriter, r *http.Request) {
 	res.Send(w, http.StatusOK, event)
 }
 
+type UpdateEventFields struct {
+	Name             Optional[string]     `json:"name"`
+	Description      Optional[*string]    `json:"description"`
+	Location         Optional[*string]    `json:"location"`
+	LocationUrl      Optional[*string]    `json:"location_url"`
+	MaxAttendees     Optional[*int32]     `json:"max_attendees"`
+	ApplicationOpen  Optional[time.Time]  `json:"application_open"`
+	ApplicationClose Optional[time.Time]  `json:"application_close"`
+	RsvpDeadline     Optional[*time.Time] `json:"rsvp_deadline"`
+	DecisionRelease  Optional[*time.Time] `json:"decision_release"`
+	StartTime        Optional[time.Time]  `json:"start_time"`
+	EndTime          Optional[time.Time]  `json:"end_time"`
+	WebsiteUrl       Optional[*string]    `json:"website_url"`
+	IsPublished      Optional[bool]       `json:"is_published"`
+}
+
 // Update an event
 //
 //	@Summary		Update an event
@@ -193,7 +211,7 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req sqlc.UpdateEventByIdParams
+	var req UpdateEventFields
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
@@ -202,25 +220,53 @@ func (h *EventHandler) UpdateEventById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Refactorme: could be improved by unmarshalling values into a generic that can include nil information
-	// Todo: make sure that non nullable values can't be updated to null
-	// Todo: Time validation
-	req.NameDoUpdate = reflect.ValueOf(req.Name).IsValid()
-	req.DescriptionDoUpdate = reflect.ValueOf(req.Description).IsValid()
-	req.LocationDoUpdate = reflect.ValueOf(req.Location).IsValid()
-	req.LocationUrlDoUpdate = reflect.ValueOf(req.LocationUrl).IsValid()
-	req.MaxAttendeesDoUpdate = reflect.ValueOf(req.MaxAttendees).IsValid()
-	req.ApplicationOpenDoUpdate = reflect.ValueOf(req.ApplicationOpen).IsValid()
-	req.ApplicationCloseDoUpdate = reflect.ValueOf(req.ApplicationClose).IsValid()
-	req.RsvpDeadlineDoUpdate = reflect.ValueOf(req.RsvpDeadline).IsValid()
-	req.DecisionReleaseDoUpdate = reflect.ValueOf(req.DecisionRelease).IsValid()
-	req.StartTimeDoUpdate = reflect.ValueOf(req.StartTime).IsValid()
-	req.EndTimeDoUpdate = reflect.ValueOf(req.EndTime).IsValid()
-	req.WebsiteUrlDoUpdate = reflect.ValueOf(req.WebsiteUrl).IsValid()
-	req.IsPublishedDoUpdate = reflect.ValueOf(req.IsPublished).IsValid()
-	req.ID = eventId
+	var params = sqlc.UpdateEventByIdParams{
+		NameDoUpdate: req.Name.Present,
+		Name:         req.Name.Value,
 
-	event, err := h.eventService.UpdateEventById(r.Context(), req)
+		DescriptionDoUpdate: req.Description.Present,
+		Description:         req.Description.Value,
+
+		LocationDoUpdate: req.Location.Present,
+		Location:         req.Location.Value,
+
+		LocationUrlDoUpdate: req.LocationUrl.Present,
+		LocationUrl:         req.LocationUrl.Value,
+
+		MaxAttendeesDoUpdate: req.MaxAttendees.Present,
+		MaxAttendees:         req.MaxAttendees.Value,
+
+		ApplicationOpenDoUpdate: req.ApplicationOpen.Present,
+		ApplicationOpen:         req.ApplicationOpen.Value,
+
+		ApplicationCloseDoUpdate: req.ApplicationClose.Present,
+		ApplicationClose:         req.ApplicationClose.Value,
+
+		RsvpDeadlineDoUpdate: req.RsvpDeadline.Present,
+		RsvpDeadline:         req.RsvpDeadline.Value,
+
+		DecisionReleaseDoUpdate: req.DecisionRelease.Present,
+		DecisionRelease:         req.DecisionRelease.Value,
+
+		StartTimeDoUpdate: req.StartTime.Present,
+		StartTime:         req.StartTime.Value,
+
+		EndTimeDoUpdate: req.EndTime.Present,
+		EndTime:         req.EndTime.Value,
+
+		WebsiteUrlDoUpdate: req.WebsiteUrl.Present,
+		WebsiteUrl:         req.WebsiteUrl.Value,
+
+		IsPublishedDoUpdate: req.IsPublished.Present,
+		IsPublished:         &req.IsPublished.Value,
+
+		BannerDoUpdate: false, // Banners are uploaded using a separate endpoint
+		Banner:         nil,
+
+		ID: eventId,
+	}
+
+	event, err := h.eventService.UpdateEventById(r.Context(), params)
 
 	if err != nil {
 		switch err {
@@ -479,6 +525,86 @@ func (h *EventHandler) AssignEventRole(w http.ResponseWriter, r *http.Request) {
 		default:
 			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong on our end"))
 		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func deferredCloser(c io.Closer, name string) func() {
+	return func() {
+		if err := c.Close(); err != nil {
+			log.Err(err).Msg("Failed to close " + name)
+		}
+	}
+}
+
+const maxBannerUploadSize = 5 << 20 // 5 Mb
+
+type EventBannerUploadResponse struct {
+	BannerUrl string `json:"banner_url"`
+}
+
+func (h *EventHandler) UploadEventBanner(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	if err := r.ParseMultipartForm(maxBannerUploadSize); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "could not parse multipart form"))
+		return
+	}
+
+	bannerFile, header, err := r.FormFile("image")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "invalid resume file"))
+		return
+	}
+	defer deferredCloser(bannerFile, "banner file")
+
+	url, err := h.eventService.UploadBanner(r.Context(), eventId, bannerFile, header)
+	switch err {
+	case services.ErrFailedToUploadBanner:
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong on our end"))
+		return
+	case services.ErrUnexpectedFileType:
+		res.SendError(w, http.StatusBadRequest, res.NewError("file_error", err.Error()))
+		return
+	case nil:
+		// Continue
+	default:
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong on our end"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, EventBannerUploadResponse{
+		BannerUrl: *url,
+	})
+
+}
+
+func (h *EventHandler) DeleteBanner(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	err = h.eventService.DeleteBanner(r.Context(), eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong on our end"))
 		return
 	}
 

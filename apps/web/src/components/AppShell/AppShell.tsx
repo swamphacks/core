@@ -10,13 +10,16 @@ import {
 import { SlideoutNavbar } from "./MobileSidebar";
 import { AppShellContext } from "./AppShellContext";
 import { useToggleState } from "react-stately";
-import { Button } from "react-aria-components";
+import { Button as RACButton } from "react-aria-components";
 import TablerMenu2 from "~icons/tabler/menu-2";
 import IconX from "~icons/tabler/x";
 import { Logo } from "../Logo";
 import { auth } from "@/lib/authClient";
 import { Profile } from "./Profile";
 import { MobileProfile } from "@/components/AppShell/MobileProfile";
+import { Link, useLocation } from "@tanstack/react-router";
+import TablerArrowRight from "~icons/tabler/arrow-right";
+import TablerArrowLeft from "~icons/tabler/arrow-left";
 
 interface AppShellComponent extends FC<PropsWithChildren> {
   Header: FC<PropsWithChildren>;
@@ -48,6 +51,9 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
     [children],
   );
   const { data } = auth.useUser();
+  const pathname = useLocation({ select: (loc) => loc.pathname });
+
+  const isAdminPortal = pathname.startsWith("/admin");
 
   const user = data?.user;
   const role = user?.role === "user" ? "Hacker" : "Administrator";
@@ -68,13 +74,13 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
         {/* Topbar */}
         <header className="bg-surface md:hidden h-16 w-full flex items-center px-4 md:px-2 border-b-1 border-neutral-300 dark:border-neutral-800">
           {/* Mobile Burger menu */}
-          <Button onPress={toggle}>
+          <RACButton onPress={toggle}>
             {isSelected ? (
               <IconX className="w-8 h-8" />
             ) : (
               <TablerMenu2 className="w-8 h-8" />
             )}
-          </Button>
+          </RACButton>
           <div className="flex justify-between w-full items-center">
             <div>
               <div className="flex items-center gap-2 ml-3">
@@ -109,7 +115,30 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
                 </div>
                 <div className="flex flex-col justify-between h-full">
                   <div>{navbar}</div>
-                  <Profile name={user.name} role={role} />
+                  <div className="flex flex-col gap-5">
+                    {user.role === "superuser" && (
+                      <div>
+                        {isAdminPortal ? (
+                          <Link
+                            className="flex text-sm justify-center items-center rounded-sm px-3 py-2 gap-2 cursor-pointer select-none text-center w-full border border-orange-800 text-orange-600 hover:bg-navlink-bg-active"
+                            to="/portal"
+                          >
+                            <TablerArrowLeft />
+                            Go back to Portal
+                          </Link>
+                        ) : (
+                          <Link
+                            className="flex text-sm justify-center items-center rounded-sm px-3 py-2 gap-2 cursor-pointer select-none text-center w-full border border-input-border hover:bg-navlink-bg-active"
+                            to="/admin/overview"
+                          >
+                            Go to Admin Portal
+                            <TablerArrowRight />
+                          </Link>
+                        )}
+                      </div>
+                    )}
+                    <Profile name={user.name} role={role} />
+                  </div>
                 </div>
               </nav>
             </aside>

@@ -1,25 +1,36 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"mime"
+	"mime/multipart"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/config"
 	ctxu "github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/storage"
 )
 
 var (
-	ErrFailedToCreateEvent = errors.New("failed to create event")
-	ErrFailedToGetEvent    = errors.New("failed to get event")
-	ErrFailedToUpdateEvent = errors.New("failed to update event")
-	ErrFailedToDeleteEvent = errors.New("failed to delete event")
-	ErrFailedToParseUUID   = errors.New("failed to parse uuid")
-	ErrMissingFields       = errors.New("missing fields")
-	ErrMissingPerms        = errors.New("missing perms")
+	ErrFailedToCreateEvent  = errors.New("failed to create event")
+	ErrFailedToGetEvent     = errors.New("failed to get event")
+	ErrFailedToUpdateEvent  = errors.New("failed to update event")
+	ErrFailedToDeleteEvent  = errors.New("failed to delete event")
+	ErrFailedToParseUUID    = errors.New("failed to parse uuid")
+	ErrMissingFields        = errors.New("missing fields")
+	ErrMissingPerms         = errors.New("missing perms")
+	ErrFailedToUploadBanner = errors.New("failed to upload banner")
+	ErrUnexpectedFileType   = errors.New("did not expect this file type")
 
 	ErrFailedToSubmitApplication = errors.New("failed to submit application")
 )
@@ -27,13 +38,17 @@ var (
 type EventService struct {
 	eventRepo *repository.EventRepository
 	userRepo  *repository.UserRepository
+	storage   storage.Storage
+	buckets   *config.CoreBuckets
 	logger    zerolog.Logger
 }
 
-func NewEventService(eventRepo *repository.EventRepository, userRepo *repository.UserRepository, logger zerolog.Logger) *EventService {
+func NewEventService(eventRepo *repository.EventRepository, userRepo *repository.UserRepository, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *EventService {
 	return &EventService{
 		eventRepo: eventRepo,
 		userRepo:  userRepo,
+		storage:   storage,
+		buckets:   buckets,
 		logger:    logger.With().Str("service", "EventService").Str("component", "events").Logger(),
 	}
 }
@@ -196,4 +211,61 @@ func (s *EventService) IsApplicationsOpen(ctx context.Context, eventId uuid.UUID
 	now := time.Now()
 	open := now.After(event.ApplicationOpen) && now.Before(event.ApplicationClose)
 	return open, nil
+}
+
+func (s *EventService) UploadBanner(ctx context.Context, eventId uuid.UUID, banner multipart.File, header *multipart.FileHeader) (*string, error) {
+	bannerFileBuffer := bytes.NewBuffer(nil)
+
+	fileName := header.Filename
+	fileExt := strings.ToLower(filepath.Ext(fileName))
+
+	s.logger.Info().Str("Filetype", fileExt).Msg("The file type")
+
+	switch fileExt {
+	case ".jpg", ".png", ".jpeg":
+		// Do nothing
+	default:
+		return nil, ErrUnexpectedFileType
+	}
+
+	fileType := mime.TypeByExtension(fileExt)
+
+	if fileType == "" {
+		return nil, ErrFailedToUploadBanner
+	}
+
+	if _, err := io.Copy(bannerFileBuffer, banner); err != nil {
+		return nil, ErrFailedToUploadBanner
+	}
+
+	uploadKey := fmt.Sprintf("%s/banner%s", eventId, fileExt)
+
+	err := s.storage.Store(ctx, s.buckets.EventAssets, uploadKey, bannerFileBuffer.Bytes(), &fileType)
+	if err != nil {
+		return nil, ErrFailedToUploadBanner
+	}
+
+	// Reconstrust URL with cache buster
+	url := fmt.Sprintf("%s/%s?t=%d", s.buckets.EventAssetsBaseUrl, uploadKey, time.Now().Unix())
+
+	err = s.eventRepo.UpdateEventById(ctx, sqlc.UpdateEventByIdParams{
+		ID:             eventId,
+		BannerDoUpdate: true,
+		Banner:         &url,
+	})
+	if err != nil {
+		return nil, ErrFailedToUpdateEvent
+	}
+
+	return &url, nil
+
+}
+
+func (s *EventService) DeleteBanner(ctx context.Context, eventId uuid.UUID) error {
+	// For now its a soft delete, not actually deleting banner is easiest, just set to null
+	return s.eventRepo.UpdateEventById(ctx, sqlc.UpdateEventByIdParams{
+		ID:             eventId,
+		BannerDoUpdate: true,
+		Banner:         nil,
+	})
 }
