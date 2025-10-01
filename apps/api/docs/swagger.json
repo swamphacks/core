@@ -1,0 +1,1777 @@
+{
+    "components": {
+        "schemas": {
+            "handlers.AddEmailRequest": {
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "handlers.AssignRoleFields": {
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/sqlc.EventRoleType"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "handlers.CompleteOnboardingRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "preferred_email": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "handlers.CreateEventFields": {
+                "properties": {
+                    "application_close": {
+                        "type": "string"
+                    },
+                    "application_open": {
+                        "type": "string"
+                    },
+                    "decision_release": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "end_time": {
+                        "type": "string"
+                    },
+                    "is_published": {
+                        "type": "boolean"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "location_url": {
+                        "type": "string"
+                    },
+                    "max_attendees": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "maxLength": 30,
+                        "minLength": 5,
+                        "type": "string"
+                    },
+                    "rsvp_deadline": {
+                        "type": "string"
+                    },
+                    "start_time": {
+                        "type": "string"
+                    },
+                    "website_url": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "application_close",
+                    "application_open",
+                    "end_time",
+                    "name",
+                    "start_time"
+                ],
+                "type": "object"
+            },
+            "handlers.NullableEventRole": {
+                "properties": {
+                    "assigned_at": {
+                        "type": "string"
+                    },
+                    "event_id": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/sqlc.EventRoleType"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "handlers.QueueEmailRequest": {
+                "properties": {
+                    "body": {
+                        "type": "string"
+                    },
+                    "from": {
+                        "type": "string"
+                    },
+                    "to": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "handlers.UpdateEmailConsentRequest": {
+                "properties": {
+                    "email_consent": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "handlers.UpdateProfileRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "preferred_email": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "middleware.UserContext": {
+                "description": "Information about the current user session.",
+                "properties": {
+                    "email": {
+                        "description": "Primary email address (nullable)",
+                        "example": "user@example.com",
+                        "type": "string"
+                    },
+                    "emailConsent": {
+                        "description": "Whether the user agreed to receive emails",
+                        "example": false,
+                        "type": "boolean"
+                    },
+                    "image": {
+                        "description": "Optional profile image URL",
+                        "example": "https://cdn.example.com/avatar.png",
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Full display name",
+                        "example": "Jane Doe",
+                        "type": "string"
+                    },
+                    "onboarded": {
+                        "description": "Whether the user completed onboarding",
+                        "example": true,
+                        "type": "boolean"
+                    },
+                    "preferredEmail": {
+                        "description": "Preferred email address for communications",
+                        "example": "user.alt@example.com",
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/sqlc.AuthUserRole"
+                    },
+                    "userId": {
+                        "description": "Unique identifier for the user",
+                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                        "format": "uuid",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "response.ErrorResponse": {
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "sqlc.Application": {
+                "properties": {
+                    "application": {
+                        "items": {
+                            "type": "integer"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "event_id": {
+                        "type": "string"
+                    },
+                    "saved_at": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/sqlc.NullApplicationStatus"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "sqlc.ApplicationStatus": {
+                "enum": [
+                    "started",
+                    "submitted",
+                    "under_review",
+                    "accepted",
+                    "rejected",
+                    "waitlisted",
+                    "withdrawn"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "ApplicationStatusStarted",
+                    "ApplicationStatusSubmitted",
+                    "ApplicationStatusUnderReview",
+                    "ApplicationStatusAccepted",
+                    "ApplicationStatusRejected",
+                    "ApplicationStatusWaitlisted",
+                    "ApplicationStatusWithdrawn"
+                ]
+            },
+            "sqlc.AuthUser": {
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "email_consent": {
+                        "type": "boolean"
+                    },
+                    "email_verified": {
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "image": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "onboarded": {
+                        "type": "boolean"
+                    },
+                    "preferred_email": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/sqlc.AuthUserRole"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "sqlc.AuthUserRole": {
+                "description": "Role assigned to the user",
+                "enum": [
+                    "user",
+                    "superuser"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "AuthUserRoleUser",
+                    "AuthUserRoleSuperuser"
+                ]
+            },
+            "sqlc.Event": {
+                "properties": {
+                    "application_close": {
+                        "type": "string"
+                    },
+                    "application_open": {
+                        "type": "string"
+                    },
+                    "banner": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "decision_release": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "end_time": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "is_published": {
+                        "type": "boolean"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "location_url": {
+                        "type": "string"
+                    },
+                    "max_attendees": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "rsvp_deadline": {
+                        "type": "string"
+                    },
+                    "start_time": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "website_url": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "sqlc.EventRoleType": {
+                "enum": [
+                    "admin",
+                    "staff",
+                    "attendee",
+                    "applicant"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "EventRoleTypeAdmin",
+                    "EventRoleTypeStaff",
+                    "EventRoleTypeAttendee",
+                    "EventRoleTypeApplicant"
+                ]
+            },
+            "sqlc.GetEventStaffRow": {
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "email_consent": {
+                        "type": "boolean"
+                    },
+                    "email_verified": {
+                        "type": "boolean"
+                    },
+                    "event_role": {
+                        "$ref": "#/components/schemas/sqlc.EventRoleType"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "image": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "onboarded": {
+                        "type": "boolean"
+                    },
+                    "preferred_email": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/sqlc.AuthUserRole"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "sqlc.GetEventsWithUserInfoRow": {
+                "properties": {
+                    "application_close": {
+                        "type": "string"
+                    },
+                    "application_open": {
+                        "type": "string"
+                    },
+                    "application_status": {
+                        "$ref": "#/components/schemas/sqlc.NullApplicationStatus"
+                    },
+                    "banner": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "decision_release": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "end_time": {
+                        "type": "string"
+                    },
+                    "event_role": {
+                        "$ref": "#/components/schemas/sqlc.NullEventRoleType"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "is_published": {
+                        "type": "boolean"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "location_url": {
+                        "type": "string"
+                    },
+                    "max_attendees": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "rsvp_deadline": {
+                        "type": "string"
+                    },
+                    "start_time": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "website_url": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "sqlc.NullApplicationStatus": {
+                "properties": {
+                    "application_status": {
+                        "$ref": "#/components/schemas/sqlc.ApplicationStatus"
+                    },
+                    "valid": {
+                        "description": "Valid is true if ApplicationStatus is not NULL",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "sqlc.NullEventRoleType": {
+                "properties": {
+                    "event_role_type": {
+                        "$ref": "#/components/schemas/sqlc.EventRoleType"
+                    },
+                    "valid": {
+                        "description": "Valid is true if EventRoleType is not NULL",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "info": {
+        "contact": {
+            "email": "support@swagger.io",
+            "name": "API Support",
+            "url": "http://www.swagger.io/support"
+        },
+        "description": "This is SwampHacks' OpenAPI documentation.",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "termsOfService": "TODO",
+        "title": "SwampHacks Test API",
+        "version": "1.0"
+    },
+    "externalDocs": {
+        "description": "",
+        "url": ""
+    },
+    "paths": {
+        "/auth/callback": {
+            "post": {
+                "description": "This route is used for OAuth authentication methods to verify and login/create an account.",
+                "parameters": [
+                    {
+                        "description": "The OAuth code passed back from the provider. Part of the PKCE flow.",
+                        "in": "query",
+                        "name": "code",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The state containing a base64 encoded version of the nonce, provider, and redirect url.",
+                        "in": "query",
+                        "name": "state",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The nonce for comparing against the callback state decoded to prevent CSRF attacks.",
+                        "in": "header",
+                        "name": "sh_auth_nonce",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK: User is logged in successfully",
+                        "headers": {
+                            "Set-Cookie": {
+                                "description": "Sets a sh_session cookie to signify auth status",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "302": {
+                        "description": "Found: Logged in and redirected to a requested location",
+                        "headers": {
+                            "Set-Cookie": {
+                                "description": "Sets a sh_session cookie to signify auth status",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad Request: Something went wrong with the request queries or their properties"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Forbidden: Something went wrong verifying identity or authenticating."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal Server Error"
+                    },
+                    "502": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad Gateway: Authenticating OAuth server did not respond or user does not exist"
+                    }
+                },
+                "summary": "OAuth2 Auth Callback",
+                "tags": [
+                    "Authentication"
+                ]
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "description": "Get the currently authenticated user's information.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/middleware.UserContext"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal Server Error"
+                    }
+                },
+                "summary": "Get Current User​",
+                "tags": [
+                    "Authentication"
+                ]
+            }
+        },
+        "/email/queue": {
+            "post": {
+                "description": "Push an email request to the task queue",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/handlers.QueueEmailRequest",
+                                        "summary": "request",
+                                        "description": "Email data"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Email data",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "OK: Email request queued"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request. The email request is potentially invalid."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: The server went kaput while queueing email sending"
+                    }
+                },
+                "summary": "Queue an Email Request",
+                "tags": [
+                    "Email"
+                ]
+            }
+        },
+        "/events": {
+            "get": {
+                "description": "Gets events with a nullable event role for authenticated users.",
+                "parameters": [
+                    {
+                        "description": "If true, include unpublished events as well. Superusers ONLY.",
+                        "in": "query",
+                        "name": "include_published",
+                        "schema": {
+                            "default": false,
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/sqlc.GetEventsWithUserInfoRow"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK: Events returned"
+                    }
+                },
+                "summary": "Get events",
+                "tags": [
+                    "Event"
+                ]
+            },
+            "post": {
+                "description": "Create a new event with the provided details",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/handlers.CreateEventFields",
+                                        "summary": "request",
+                                        "description": "Event creation data"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Event creation data",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/sqlc.Event"
+                                }
+                            }
+                        },
+                        "description": "OK: Event created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "endTime is before startTime or applicationClose is before applicationOpen"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Create a new event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}": {
+            "delete": {
+                "description": "Delete an existing event",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "OK - Event deleted"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Delete an event",
+                "tags": [
+                    "Event"
+                ]
+            },
+            "get": {
+                "description": "Get a specific event by ID",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/sqlc.Event"
+                                }
+                            }
+                        },
+                        "description": "OK - Event received"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Get an event",
+                "tags": [
+                    "Event"
+                ]
+            },
+            "patch": {
+                "description": "Update an existing event",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "OK - Event updated (patched)"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Update an event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/application": {
+            "get": {
+                "description": "Get the current user's application progress for an event. If this is their first time filling out the application, a new application will be created.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/sqlc.Application"
+                                        },
+                                        {
+                                            "additionalProperties": {},
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "description": "OK: An application was found"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error retrieving application\"\\"
+                    }
+                },
+                "summary": "Get Application By User and Event ID",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/save": {
+            "post": {
+                "description": "Save user's progress on the application. File/Upload fields are not saved.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "title": "data",
+                                        "type": "object"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Form data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error saving application"
+                    }
+                },
+                "summary": "Save Application",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/submit": {
+            "post": {
+                "description": "Submit the application for an event.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "title": "formBody",
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "description": "Submission form data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error submitting application"
+                    }
+                },
+                "summary": "Submit Application",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/interest": {
+            "post": {
+                "description": "Submit email for event interest/mailing list",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/handlers.AddEmailRequest",
+                                        "summary": "request",
+                                        "description": "Interest submission data"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Interest submission data",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "OK: Interest email created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Duplicate email found in DB"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Make an interest submission for an event (email list)",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/role": {
+            "get": {
+                "description": "Get current user's role for a specific event",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handlers.NullableEventRole"
+                                }
+                            }
+                        },
+                        "description": "OK - Return role"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Not Found - Role not found"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Not Found - Role not found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Get the current user's event role for an event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/roles": {
+            "post": {
+                "description": "Modify user's role for a specific event",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/handlers.AssignRoleFields",
+                                        "summary": "request",
+                                        "description": "Event role data"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Event role data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK - Role updated"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Not Found - User not found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Change or add event role of a user",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/staff": {
+            "get": {
+                "description": "Gets all users with role STAFF or ADMIN",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/sqlc.GetEventStaffRow"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK - Return users"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Get all staff users for an event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/users/email-consent": {
+            "patch": {
+                "description": "Update the user's email consent setting",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handlers.UpdateEmailConsentRequest",
+                                "summary": "request",
+                                "description": "The update email consent request body"
+                            }
+                        }
+                    },
+                    "description": "The update email consent request body",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid request body"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "User not found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Failed to update email consent"
+                    }
+                },
+                "summary": "Update Email Consent",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
+        "/users/me": {
+            "get": {
+                "description": "Get profile information of the currently authenticated user.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/sqlc.AuthUser"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "User profile not found."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Something went seriously wrong."
+                    }
+                },
+                "summary": "Get User Profile",
+                "tags": [
+                    "User"
+                ]
+            },
+            "patch": {
+                "description": "Update the user's information",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handlers.UpdateProfileRequest",
+                                "summary": "request",
+                                "description": "The update profile request body"
+                            }
+                        }
+                    },
+                    "description": "The update profile request body",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid request body"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "User not found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Failed to update user profile"
+                    }
+                },
+                "summary": "Update User",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
+        "/users/me/onboarding": {
+            "patch": {
+                "description": "Onboard the user.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handlers.CompleteOnboardingRequest",
+                                "summary": "request",
+                                "description": "The onboarding request body"
+                            }
+                        }
+                    },
+                    "description": "The onboarding request body",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid request body"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "User not found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Failed to complete onboarding"
+                    }
+                },
+                "summary": "Complete Onboarding",
+                "tags": [
+                    "User"
+                ]
+            }
+        }
+    },
+    "openapi": "3.1.0"
+}

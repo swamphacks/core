@@ -26,6 +26,18 @@ export function mapEventsAPIResponseToEventCardProps(
 ): EventCardProps {
   let status: keyof typeof applicationStatus = "notApplied"; // Default
 
+  //TODO: Remove this guard once OpenAPI is updated
+  if (
+    !data.id ||
+    !data.name ||
+    !data.start_time ||
+    !data.end_time ||
+    !data.application_open ||
+    !data.application_close
+  ) {
+    throw new Error("Missing required event fields");
+  }
+
   if (!data.application_status) {
     return {
       eventId: data.id,

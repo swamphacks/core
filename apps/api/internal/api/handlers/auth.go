@@ -29,10 +29,21 @@ func NewAuthHandler(authService *services.AuthService, cfg *config.Config, logge
 	}
 }
 
+// GetMe
+//
+//	@Summary		Get Current User​
+//	@Description	Get the currently authenticated user's information.
+//	@Tags			Authentication
+//	@Produce		json
+//	@Param			sh_session	cookie		string	true	"The authenticated session token/id"
+//	@Success		200			{object}	middleware.UserContext
+//	@Failure		401			{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		500			{object}	response.ErrorResponse
+//	@Router			/auth/me 								[get]
 func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	user, err := h.authService.GetMe(r.Context())
 	if err != nil {
-		res.SendError(w, http.StatusNotFound, res.NewError("no_user", "Your profile could not be loaded."))
+		res.SendError(w, http.StatusUnauthorized, res.NewError("no_user", "Your profile could not be loaded."))
 		return
 	}
 
@@ -80,6 +91,25 @@ func isURL(s string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
+// OAuth2 Auth Callback
+//
+//	@Summary		OAuth2 Auth Callback
+//	@Description	This route is used for OAuth authentication methods to verify and login/create an account.
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			code			query	string	true	"The OAuth code passed back from the provider. Part of the PKCE flow."
+//	@Param			state			query	string	true	"The state containing a base64 encoded version of the nonce, provider, and redirect url."
+//	@Param			sh_auth_nonce	header	string	true	"The nonce for comparing against the callback state decoded to prevent CSRF attacks."
+//	@Success		200				"OK: User is logged in successfully"
+//	@Header			200				{string}	Set-Cookie	"Sets a sh_session cookie to signify auth status"
+//	@Success		302				"Found: Logged in and redirected to a requested location"
+//	@Header			302				{string}	Set-Cookie				"Sets a sh_session cookie to signify auth status"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Something went wrong with the request queries or their properties"
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden: Something went wrong verifying identity or authenticating."
+//	@Failure		500				{object}	response.ErrorResponse	"Internal Server Error"
+//	@Failure		502				{object}	response.ErrorResponse	"Bad Gateway: Authenticating OAuth server did not respond or user does not exist"
+//	@Router			/auth/callback [post]
 func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 

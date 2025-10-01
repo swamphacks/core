@@ -21,6 +21,11 @@ function DeleteEventDialog({ event }: DeleteEventDialogProps) {
   } = useAdminEventActions();
   const { name, id } = event;
 
+  //TODO: Remove this guard once OpenAPI is updated
+  if (!id || !name) {
+    return null;
+  }
+
   const deleteEvent = async () => {
     await mutateAsync(id, {
       // TODO: This state.close doesn't animate the fadeout correctly.

@@ -28,6 +28,18 @@ type QueueEmailRequest struct {
 	Body string `json:"body"`
 }
 
+// Queue an Email Request
+//
+//	@Summary		Queue an Email Request
+//	@Description	Push an email request to the task queue
+//	@Tags			Email
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		QueueEmailRequest		true	"Email data"
+//	@Success		201		{object}	string					"OK: Email request queued"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request. The email request is potentially invalid."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: The server went kaput while queueing email sending"
+//	@Router			/email/queue [post]
 func (h *EmailHandler) QueueEmail(w http.ResponseWriter, r *http.Request) {
 	var req QueueEmailRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

@@ -47,6 +47,18 @@ function EventDetailsCard({ event }: EventDetailsCardProps) {
     max_attendees,
   } = event;
 
+  //TODO: Remove this guard once OpenAPI is updated
+  if (
+    !id ||
+    !name ||
+    !start_time ||
+    !end_time ||
+    !application_open ||
+    !application_close
+  ) {
+    return null;
+  }
+
   return (
     <Card className="p-4 flex flex-col gap-6 justify-between border border-neutral-200 dark:border-neutral-800">
       <div className="flex flex-col gap-1">
