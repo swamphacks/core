@@ -49,7 +49,7 @@ function RouteComponent() {
           <DialogTrigger>
             <Button variant="primary">Add Staff</Button>
 
-            <AddStaffModal />
+            <AddStaffModal eventId={eventId} />
           </DialogTrigger>
         )}
       </div>

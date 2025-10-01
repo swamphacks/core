@@ -117,6 +117,7 @@ const StaffTable = ({ data }: Props) => {
                       <TextField
                         type="text"
                         value={(header.column.getFilterValue() ?? "") as string}
+                        aria-label="Search"
                         onChange={(e) => header.column.setFilterValue(e)}
                         placeholder="Search..."
                         className="mt-2"

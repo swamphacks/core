@@ -17,6 +17,10 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "email",
+                    "source"
+                ],
                 "type": "object"
             },
             "handlers.AssignRoleFields": {
@@ -31,6 +35,11 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "email",
+                    "role",
+                    "user_id"
+                ],
                 "type": "object"
             },
             "handlers.CompleteOnboardingRequest": {
@@ -42,6 +51,10 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "name",
+                    "preferred_email"
+                ],
                 "type": "object"
             },
             "handlers.CreateEventFields": {
@@ -91,9 +104,17 @@ const docTemplate = `{
                 "required": [
                     "application_close",
                     "application_open",
+                    "decision_release",
+                    "description",
                     "end_time",
+                    "is_published",
+                    "location",
+                    "location_url",
+                    "max_attendees",
                     "name",
-                    "start_time"
+                    "rsvp_deadline",
+                    "start_time",
+                    "website_url"
                 ],
                 "type": "object"
             },
@@ -112,6 +133,12 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "assigned_at",
+                    "event_id",
+                    "role",
+                    "user_id"
+                ],
                 "type": "object"
             },
             "handlers.QueueEmailRequest": {
@@ -126,6 +153,11 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "body",
+                    "from",
+                    "to"
+                ],
                 "type": "object"
             },
             "handlers.UpdateEmailConsentRequest": {
@@ -134,6 +166,9 @@ const docTemplate = `{
                         "type": "boolean"
                     }
                 },
+                "required": [
+                    "email_consent"
+                ],
                 "type": "object"
             },
             "handlers.UpdateProfileRequest": {
@@ -145,6 +180,10 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "name",
+                    "preferred_email"
+                ],
                 "type": "object"
             },
             "middleware.UserContext": {
@@ -191,6 +230,16 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "email",
+                    "emailConsent",
+                    "image",
+                    "name",
+                    "onboarded",
+                    "preferredEmail",
+                    "role",
+                    "userId"
+                ],
                 "type": "object"
             },
             "response.ErrorResponse": {
@@ -202,6 +251,10 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "error",
+                    "message"
+                ],
                 "type": "object"
             },
             "sqlc.Application": {
@@ -232,6 +285,15 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "application",
+                    "created_at",
+                    "event_id",
+                    "saved_at",
+                    "status",
+                    "updated_at",
+                    "user_id"
+                ],
                 "type": "object"
             },
             "sqlc.ApplicationStatus": {
@@ -291,6 +353,19 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "created_at",
+                    "email",
+                    "email_consent",
+                    "email_verified",
+                    "id",
+                    "image",
+                    "name",
+                    "onboarded",
+                    "preferred_email",
+                    "role",
+                    "updated_at"
+                ],
                 "type": "object"
             },
             "sqlc.AuthUserRole": {
@@ -359,6 +434,25 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "application_close",
+                    "application_open",
+                    "banner",
+                    "created_at",
+                    "decision_release",
+                    "description",
+                    "end_time",
+                    "id",
+                    "is_published",
+                    "location",
+                    "location_url",
+                    "max_attendees",
+                    "name",
+                    "rsvp_deadline",
+                    "start_time",
+                    "updated_at",
+                    "website_url"
+                ],
                 "type": "object"
             },
             "sqlc.EventRoleType": {
@@ -415,6 +509,20 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "created_at",
+                    "email",
+                    "email_consent",
+                    "email_verified",
+                    "event_role",
+                    "id",
+                    "image",
+                    "name",
+                    "onboarded",
+                    "preferred_email",
+                    "role",
+                    "updated_at"
+                ],
                 "type": "object"
             },
             "sqlc.GetEventsWithUserInfoRow": {
@@ -477,6 +585,27 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "application_close",
+                    "application_open",
+                    "application_status",
+                    "banner",
+                    "created_at",
+                    "decision_release",
+                    "description",
+                    "end_time",
+                    "event_role",
+                    "id",
+                    "is_published",
+                    "location",
+                    "location_url",
+                    "max_attendees",
+                    "name",
+                    "rsvp_deadline",
+                    "start_time",
+                    "updated_at",
+                    "website_url"
+                ],
                 "type": "object"
             },
             "sqlc.NullApplicationStatus": {
@@ -489,6 +618,10 @@ const docTemplate = `{
                         "type": "boolean"
                     }
                 },
+                "required": [
+                    "application_status",
+                    "valid"
+                ],
                 "type": "object"
             },
             "sqlc.NullEventRoleType": {
@@ -501,6 +634,10 @@ const docTemplate = `{
                         "type": "boolean"
                     }
                 },
+                "required": [
+                    "event_role_type",
+                    "valid"
+                ],
                 "type": "object"
             }
         }
@@ -1482,6 +1619,98 @@ const docTemplate = `{
                 "summary": "Get all staff users for an event",
                 "tags": [
                     "Event"
+                ]
+            }
+        },
+        "/users": {
+            "get": {
+                "description": "Get or search for users by name or email. If no search term is provided, returns all users with pagination.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Search term to filter users by name or email (optional)",
+                        "in": "query",
+                        "name": "search",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Maximum number of users to return (default is 50)",
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Number of users to skip for pagination (default is 0)",
+                        "in": "query",
+                        "name": "offset",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/sqlc.AuthUser"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK: Returns a list of users matching the search criteria, or all users if no search term is provided."
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid query parameter(s)"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Failed to retrieve users"
+                    }
+                },
+                "summary": "Get/Search for users",
+                "tags": [
+                    "User"
                 ]
             }
         },

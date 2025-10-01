@@ -120,7 +120,7 @@ export function Modal({
         {title && (
           <Heading className=" text-text-primary text-lg">{title}</Heading>
         )}
-        <Dialog className="outline-none relative overflow-y-auto">
+        <Dialog className="outline-none relative flex flex-col h-full">
           {children}
         </Dialog>
       </RAC_Modal>
