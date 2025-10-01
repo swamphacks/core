@@ -313,6 +313,9 @@ const docTemplate = `{
                     "application_open": {
                         "type": "string"
                     },
+                    "banner": {
+                        "type": "string"
+                    },
                     "created_at": {
                         "type": "string"
                     },
@@ -424,6 +427,9 @@ const docTemplate = `{
                     },
                     "application_status": {
                         "$ref": "#/components/schemas/sqlc.NullApplicationStatus"
+                    },
+                    "banner": {
+                        "type": "string"
                     },
                     "created_at": {
                         "type": "string"

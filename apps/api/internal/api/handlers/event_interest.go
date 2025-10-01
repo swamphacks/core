@@ -40,12 +40,12 @@ type AddEmailRequest struct {
 //	@Tags			Event
 //	@Accept			json
 //	@Produce		json
-//	@Param			eventId	path		string				true	"Event ID"
-//	@Param			request	body		AddEmailRequest		true	"Interest submission data"
-//	@Success		201		{object}	string				"OK: Interest email created"
-//	@Failure		400		{object}	response.ErrorResponse		"Bad request/Malformed request"
-//	@Failure		409		{object}	response.ErrorResponse		"Duplicate email found in DB"
-//	@Failure		500		{object}	response.ErrorResponse		"Server Error: Something went terribly wrong on our end."
+//	@Param			eventId	path		string					true	"Event ID"
+//	@Param			request	body		AddEmailRequest			true	"Interest submission data"
+//	@Success		201		{object}	string					"OK: Interest email created"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request"
+//	@Failure		409		{object}	response.ErrorResponse	"Duplicate email found in DB"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
 //	@Router			/events/{eventId}/interest [post]
 func (h *EventInterestHandler) AddEmailToEvent(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")

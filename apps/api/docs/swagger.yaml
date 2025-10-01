@@ -213,6 +213,8 @@ components:
           type: string
         application_open:
           type: string
+        banner:
+          type: string
         created_at:
           type: string
         decision_release:
@@ -289,6 +291,8 @@ components:
           type: string
         application_status:
           $ref: '#/components/schemas/sqlc.NullApplicationStatus'
+        banner:
+          type: string
         created_at:
           type: string
         decision_release:

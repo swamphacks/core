@@ -58,7 +58,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		MaxAge:           300,
 	}))
 
-	api.Router.Get("/openapi", func(w http.ResponseWriter, r *http.Request) {
+	api.Router.Get("/docs", func(w http.ResponseWriter, r *http.Request) {
 		htmlContent, err := scalar.ApiReferenceHTML(&scalar.Options{
 			// SpecURL: "https://generator3.swagger.io/openapi.json",// allow external URL or local path file
 			SpecURL: "./docs/swagger.json",
