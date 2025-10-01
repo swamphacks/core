@@ -17,7 +17,7 @@ import { Logo } from "../Logo";
 import { auth } from "@/lib/authClient";
 import { Profile } from "./Profile";
 import { MobileProfile } from "@/components/AppShell/MobileProfile";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useRouter } from "@tanstack/react-router";
 import TablerArrowRight from "~icons/tabler/arrow-right";
 import TablerArrowLeft from "~icons/tabler/arrow-left";
 
@@ -52,6 +52,7 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
   );
   const { data } = auth.useUser();
   const pathname = useLocation({ select: (loc) => loc.pathname });
+  const router = useRouter();
 
   const isAdminPortal = pathname.startsWith("/admin");
 
@@ -84,10 +85,10 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
           <div className="flex justify-between w-full items-center">
             <div>
               <div className="flex items-center gap-2 ml-3">
-                <div className="w-13">
-                  <Logo />
-                </div>
-                <h1 className="text-xl font-bold">SwampHacks</h1>
+                <Logo
+                  onClick={() => router.navigate({ to: "/portal" })}
+                  className="py-2 cursor-pointer"
+                />
               </div>
               {header}
             </div>
@@ -107,12 +108,10 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
           {navbar && (
             <aside className="w-64 h-full px-2 py-3 border-r bg-surface border-neutral-200 dark:border-neutral-800 hidden md:block">
               <nav className="flex flex-col gap-2 h-full">
-                <div className="flex items-center gap-2 mb-3 ml-2">
-                  <div className="w-13">
-                    <Logo className="py-2" />
-                  </div>
-                  <h1 className="text-xl font-bold">SwampHacks</h1>
-                </div>
+                <Logo
+                  onClick={() => router.navigate({ to: "/portal" })}
+                  className="py-2 cursor-pointer mb-3"
+                />
                 <div className="flex flex-col justify-between h-full">
                   <div>{navbar}</div>
                   <div className="flex flex-col gap-5">
