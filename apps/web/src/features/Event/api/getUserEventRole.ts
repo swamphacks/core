@@ -1,8 +1,10 @@
 import { api } from "@/lib/ky";
-import type { operations } from "@/lib/openapi/schema";
+import type { paths } from "@/lib/openapi/schema";
 
 type NullableEventRoleRow =
-  operations["get-user-event-role"]["responses"]["200"]["content"]["application/json"];
+  | paths["/events/{eventId}/role"]["get"]["responses"]["200"]["content"]["application/json"]
+  | undefined
+  | null;
 
 export async function getUserEventRole(
   eventId: string,

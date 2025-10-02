@@ -27,5 +27,7 @@ export const EventCard: Story = {
     description: "UF’s flagship hackathon celebrates its 11th iteration.",
     date: "Jan 25 - 26",
     location: "Newell Hall",
+    banner:
+      "https://media.istockphoto.com/id/974238866/photo/audience-listens-to-the-lecturer-at-the-conference.jpg?s=612x612&w=0&k=20&c=p_BQCJWRQQtZYnQlOtZMzTjeB_csic8OofTCAKLwT0M=",
   },
 };
