@@ -100,6 +100,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	// --- User routes ---
 	api.Router.Route("/users", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
+		r.Get("/", api.Handlers.User.GetUsers)
 		r.Get("/me", api.Handlers.User.GetProfile)
 		r.Patch("/me", api.Handlers.User.UpdateUser)
 		r.Patch("/me/email-consent", api.Handlers.User.UpdateEmailConsent)
@@ -130,6 +131,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventAdmin).Delete("/banner", api.Handlers.Event.DeleteBanner)
 			r.With(ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
 			r.With(ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
+			r.With(ensureEventAdmin).Delete("/roles/{userId}", api.Handlers.Event.RevokeEventRole)
+			r.With(ensureEventAdmin).Post("/roles/batch", api.Handlers.Event.BatchAssignEventRoles)
 
 			// Superuser-only
 			r.With(ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)

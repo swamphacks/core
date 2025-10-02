@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_protected/events/$eventId/dashboard")({
     }
 
     return {
-      eventRole: data.role,
+      eventRole: data?.role,
       roleAssignedAt: parsedAssignedAt ?? null,
     };
   },

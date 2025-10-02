@@ -33,3 +33,11 @@ WHERE
 -- name: DeleteUser :exec
 DELETE FROM auth.users
 WHERE id = $1;
+
+-- name: GetUsers :many
+SELECT *
+FROM auth.users
+WHERE LOWER(name) LIKE LOWER('%' || COALESCE(sqlc.arg('search'), '') || '%')
+   OR LOWER(email) LIKE LOWER('%' || COALESCE(sqlc.arg('search'), '') || '%')
+ORDER BY name
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');

@@ -6,8 +6,9 @@ export function getEventStaffUsersQueryKey(eventId: string) {
   return ["event", eventId, "staff-users"] as const;
 }
 
-type StaffUsers =
+export type StaffUsers =
   paths["/events/{eventId}/staff"]["get"]["responses"]["200"]["content"]["application/json"];
+export type StaffUser = StaffUsers[number];
 
 export function useEventStaffUsers(eventId: string) {
   async function fetchEventStaffUsers(): Promise<StaffUsers> {

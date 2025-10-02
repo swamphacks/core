@@ -9,7 +9,9 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/email"
+	"github.com/swamphacks/core/apps/api/internal/ptr"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
 type UserHandler struct {
@@ -233,4 +235,47 @@ func (h *UserHandler) CompleteOnboarding(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+// Get/Search for users
+//
+//	@Summary		Get/Search for users
+//	@Description	Get or search for users by name or email. If no search term is provided, returns all users with pagination.
+//	@Tags			User
+//	@Param			sh_session	cookie		string					true	"The authenticated session token/id"
+//	@Param			search		query		string					false	"Search term to filter users by name or email (optional)"
+//	@Param			limit		query		int32					false	"Maximum number of users to return (default is 50)"		minimum(1)	maximum(100)
+//	@Param			offset		query		int32					false	"Number of users to skip for pagination (default is 0)"	minimum(0)
+//	@Success		200			{array}		sqlc.AuthUser			"OK: Returns a list of users matching the search criteria, or all users if no search term is provided."
+//	@Failure		401			{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		400			{object}	response.ErrorResponse	"Invalid query parameter(s)"
+//	@Failure		500			{object}	response.ErrorResponse	"Failed to retrieve users"
+//	@Router			/users [get]
+func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+
+	// Parse search from query params, and limit, and offset
+	searchTerm := web.ParseParamString(queryParams, "search", nil)
+	limit, err := web.ParseParamInt32(queryParams, "limit", ptr.Int32ToPtr(50))
+	if err != nil {
+		h.logger.Err(err).Msg("Limit field was misconfigured. Please check your query parameters.")
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_query", "Your 'limit' query parameter was malformed."))
+		return
+	}
+	offset, err := web.ParseParamInt32(queryParams, "offset", ptr.Int32ToPtr(0))
+	if err != nil {
+
+		h.logger.Err(err).Msg("Offset field was misconfigured. Please check your query parameters.")
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_query", "Your 'offset' query parameter was malformed."))
+		return
+	}
+
+	users, err := h.userService.GetAllUsers(r.Context(), searchTerm, *limit, *offset)
+	if err != nil {
+		h.logger.Err(err).Msg("Failed to retrieve all users")
+		res.SendError(w, http.StatusInternalServerError, res.NewError("update_failed", "Failed to retrieve users"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, users)
 }

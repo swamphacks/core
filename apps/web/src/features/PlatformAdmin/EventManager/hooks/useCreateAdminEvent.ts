@@ -10,7 +10,14 @@ export function useCreateAdminEvent() {
   return useMutation({
     mutationFn: async (data: AddEvent) => {
       // Prep data shape
-      const body: CreateEvent = {
+      const body: Pick<
+        CreateEvent,
+        | "name"
+        | "start_time"
+        | "end_time"
+        | "application_close"
+        | "application_open"
+      > = {
         name: data.eventName,
         start_time: data.eventDateRange.start.toISOString(),
         end_time: data.eventDateRange.end.toISOString(),

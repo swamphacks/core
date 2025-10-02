@@ -6,7 +6,7 @@ export type PlatformRole = components["schemas"]["sqlc.AuthUserRole"];
 export type Event = components["schemas"]["sqlc.Event"];
 export type CreateEvent =
   paths["/events"]["post"]["requestBody"]["content"]["application/json"];
-export type User = components["schemas"]["middleware.UserContext"];
+export type User = components["schemas"]["sqlc.AuthUser"];
 
 //TODO: Remove extension once OpenAPI is updated
 export type EventWithUserInfo =

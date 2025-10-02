@@ -75,3 +75,7 @@ func (s *UserService) CompleteOnboarding(ctx context.Context, userId uuid.UUID, 
 
 	return s.UpdateUser(ctx, userId, params)
 }
+
+func (s *UserService) GetAllUsers(ctx context.Context, search *string, limit, offset int32) ([]sqlc.AuthUser, error) {
+	return s.userRepo.GetAllUsers(ctx, search, limit, offset)
+}

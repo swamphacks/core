@@ -74,3 +74,13 @@ func (r *UserRepository) UpdateUser(ctx context.Context, params sqlc.UpdateUserP
 	}
 	return err
 }
+
+func (r *UserRepository) GetAllUsers(ctx context.Context, search *string, limit, offset int32) ([]sqlc.AuthUser, error) {
+	params := sqlc.GetUsersParams{
+		Search: search,
+		Limit:  limit,
+		Offset: offset,
+	}
+
+	return r.db.Query.GetUsers(ctx, params)
+}

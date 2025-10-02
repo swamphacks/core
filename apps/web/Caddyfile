@@ -1,0 +1,27 @@
+app.swamphacks.com {
+	reverse_proxy: web:5173
+
+	tls /etc/caddy/certs/prod_origin.crt /etc/caddy/certs/prod_origin.key
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
+
+dev-app.swamphacks.com {
+	reverse_proxy: dev-web:5173
+
+	tls /etc/caddy/certs/dev_origin.crt /etc/caddy/certs/dev_origin.key
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
