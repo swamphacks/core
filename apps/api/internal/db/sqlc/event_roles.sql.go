@@ -84,3 +84,19 @@ func (q *Queries) GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEv
 	}
 	return items, nil
 }
+
+const removeRole = `-- name: RemoveRole :exec
+DELETE FROM event_roles
+WHERE event_id = $1
+  AND user_id = $2
+`
+
+type RemoveRoleParams struct {
+	EventID uuid.UUID `json:"event_id"`
+	UserID  uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) RemoveRole(ctx context.Context, arg RemoveRoleParams) error {
+	_, err := q.db.Exec(ctx, removeRole, arg.EventID, arg.UserID)
+	return err
+}

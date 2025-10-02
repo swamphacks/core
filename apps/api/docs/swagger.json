@@ -16,6 +16,21 @@
                 ],
                 "type": "object"
             },
+            "handlers.AssignRoleBatch": {
+                "properties": {
+                    "assignments": {
+                        "items": {
+                            "$ref": "#/components/schemas/handlers.AssignRoleFields"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    }
+                },
+                "required": [
+                    "assignments"
+                ],
+                "type": "object"
+            },
             "handlers.AssignRoleFields": {
                 "properties": {
                     "email": {
@@ -1555,6 +1570,142 @@
                     }
                 },
                 "summary": "Change or add event role of a user",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/roles/batch": {
+            "post": {
+                "description": "Modify users' role for a specific event",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/handlers.AssignRoleBatch",
+                                        "summary": "request",
+                                        "description": "Event roles data"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Event roles data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK - Roles updated"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Not Found - User not found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Change or add event role of a user in batch",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/roles/{userId}": {
+            "delete": {
+                "description": "Remove user's role for a specific event",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "User ID",
+                        "in": "path",
+                        "name": "userId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK - Role revoked"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Not Found - User not found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Revoke event role of a user",
                 "tags": [
                     "Event"
                 ]

@@ -54,7 +54,7 @@ function RouteComponent() {
         )}
       </div>
 
-      <StaffTable data={data} />
+      <StaffTable eventId={eventId} data={data} />
     </div>
   );
 }

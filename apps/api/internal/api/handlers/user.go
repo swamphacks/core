@@ -244,7 +244,7 @@ func (h *UserHandler) CompleteOnboarding(w http.ResponseWriter, r *http.Request)
 //	@Tags			User
 //	@Param			sh_session	cookie		string					true	"The authenticated session token/id"
 //	@Param			search		query		string					false	"Search term to filter users by name or email (optional)"
-//	@Param			limit		query		int32					false	"Maximum number of users to return (default is 50)"	minimum(1)	maximum(100)
+//	@Param			limit		query		int32					false	"Maximum number of users to return (default is 50)"		minimum(1)	maximum(100)
 //	@Param			offset		query		int32					false	"Number of users to skip for pagination (default is 0)"	minimum(0)
 //	@Success		200			{array}		sqlc.AuthUser			"OK: Returns a list of users matching the search criteria, or all users if no search term is provided."
 //	@Failure		401			{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."

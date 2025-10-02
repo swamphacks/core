@@ -70,12 +70,14 @@ export type ModalProps = {
   className?: string;
   minimumSheetHeight?: string;
   isDismissible?: boolean;
+  isOpen?: boolean;
 } & VariantProps<typeof modal>;
 
 export function Modal({
   title,
   children,
   isDismissible = true,
+  isOpen,
   minimumSheetHeight = "65vh",
   size,
   padding,
@@ -89,6 +91,7 @@ export function Modal({
   };
   return (
     <ModalOverlay
+      isOpen={isOpen}
       isDismissable={isDismissible}
       className={({ isEntering, isExiting }) => `
         ${overlay({ responsive })}

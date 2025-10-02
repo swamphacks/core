@@ -870,6 +870,135 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/roles/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke event role of a user
+     * @description Remove user's role for a specific event
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+          /** @description User ID */
+          userId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK - Role revoked */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": Record<string, never>;
+          };
+        };
+        /** @description Not Found - User not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: Something went terribly wrong on our end. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/roles/batch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Change or add event role of a user in batch
+     * @description Modify users' role for a specific event
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      /** @description Event roles data */
+      requestBody: {
+        content: {
+          "application/json":
+            | Record<string, never>
+            | components["schemas"]["handlers.AssignRoleBatch"];
+        };
+      };
+      responses: {
+        /** @description OK - Roles updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": Record<string, never>;
+          };
+        };
+        /** @description Not Found - User not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: Something went terribly wrong on our end. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/events/{eventId}/staff": {
     parameters: {
       query?: never;
@@ -1304,6 +1433,9 @@ export interface components {
     "handlers.AddEmailRequest": {
       email: string;
       source: string;
+    };
+    "handlers.AssignRoleBatch": {
+      assignments: components["schemas"]["handlers.AssignRoleFields"][];
     };
     "handlers.AssignRoleFields": {
       email: string;

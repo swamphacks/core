@@ -3,17 +3,27 @@ import { Modal } from "@/components/ui/Modal";
 import { TextField } from "@/components/ui/TextField";
 import { useEventStaffUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
 import { useUsers } from "@/features/Users/hooks/useUsers";
-import { useCallback, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import debounce from "lodash.debounce";
 import { cn } from "@/utils/cn";
+import type { User } from "@/lib/openapi/types";
+import { useStaffActions } from "../hooks/useStaffActions";
+import { toast } from "react-toastify";
+import { OverlayTriggerStateContext } from "react-aria-components";
 
 interface Props {
   eventId: string;
 }
 
 const AddStaffModal = ({ eventId }: Props) => {
+  const state = useContext(OverlayTriggerStateContext)!;
+
   const [query, setQuery] = useState<string | null>("");
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+
+  const {
+    addMany: { mutate: addManyMutate, isPending: isAddPending },
+  } = useStaffActions(eventId);
 
   const {
     data: users,
@@ -26,28 +36,53 @@ const AddStaffModal = ({ eventId }: Props) => {
     isError: isStaffUsersError,
   } = useEventStaffUsers(eventId);
 
-  // Tanstack Query can be used here to fetch users based on the search term
-
-  const handleSearch = useCallback(
-    debounce((value: string) => {
-      setQuery(value);
-    }, 500),
+  const handleSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        setQuery(value);
+      }, 500),
     [],
   );
 
-  const onSelectionChange = (userId: string) => {
-    setSelectedUserIds((prev) => {
-      if (prev.includes(userId)) {
-        return prev.filter((id) => id !== userId);
+  const onSelectionChange = (user: User) => {
+    setSelectedUsers((prev) => {
+      if (prev.some((u) => u.id === user.id)) {
+        return prev.filter((u) => u.id !== user.id);
       } else {
-        return [...prev, userId];
+        return [...prev, user];
       }
     });
   };
 
   const isAlreadyStaff = (userId: string) =>
     eventStaff?.some((staff) => staff.id === userId);
-  const isSelected = (userId: string) => selectedUserIds.includes(userId);
+
+  const isSelected = (userId: string) =>
+    selectedUsers.some((u) => u.id === userId);
+
+  const displayedUsers: User[] = [
+    ...selectedUsers,
+    ...(users?.filter((u) => !selectedUsers.some((s) => s.id === u.id)) || []),
+  ];
+
+  const onAddStaff = async () => {
+    if (selectedUsers.length === 0) return;
+
+    addManyMutate(
+      selectedUsers.map((u) => u.id),
+      {
+        onSuccess: () => {
+          state.close();
+          setSelectedUsers([]);
+          setQuery("");
+          toast.success("Staff members added successfully.");
+        },
+        onError: () => {
+          toast.error("Failed to add staff members. Please try again.");
+        },
+      },
+    );
+  };
 
   return (
     <Modal size="2xl" title="Add Staff" className="h-1/2">
@@ -60,59 +95,61 @@ const AddStaffModal = ({ eventId }: Props) => {
             onChange={(e) => handleSearch(e)}
           />
 
-          {query === "" ? (
-            <p className="text-muted-foreground">Type to search for users</p>
-          ) : isUsersLoading || isStaffUsersLoading ? (
+          {isUsersLoading || isStaffUsersLoading ? (
             <p>Loading...</p>
           ) : isUsersError || isStaffUsersError ? (
             <p>Error loading users.</p>
-          ) : users && users.length === 0 ? (
-            <p>No users found.</p>
+          ) : displayedUsers.length === 0 ? (
+            <p className="text-muted-foreground">No users found.</p>
           ) : (
-            users && (
-              <div className="flex flex-col gap-4 max-h-96 overflow-y-auto">
-                {users.map((user) => {
-                  const alreadyStaff = isAlreadyStaff(user.id);
-                  const selected = isSelected(user.id);
+            <div className="flex flex-col gap-4 max-h-96 overflow-y-auto">
+              {displayedUsers.map((user) => {
+                const alreadyStaff = isAlreadyStaff(user.id);
+                const selected = isSelected(user.id);
 
-                  return (
-                    <div
-                      onClick={() =>
-                        !alreadyStaff && onSelectionChange(user.id)
-                      }
-                      className={cn(
-                        "w-full bg-input-bg hover:cursor-pointer hover:bg-neutral-900 rounded-md p-4 flex flex-row items-center justify-between select-none",
-                        selected
-                          ? "border-1 border-green-700"
-                          : alreadyStaff
-                            ? "opacity-50 cursor-not-allowed hover:cursor-default hover:bg-input-bg"
-                            : "border-1 border-transparent",
-                      )}
-                    >
-                      <div className="flex flex-col">
-                        <p className="font-medium">{user.name}</p>
-                        <p className="text-sm text-text-secondary">
-                          {user.email}
-                        </p>
-                      </div>
-
-                      {alreadyStaff && (
-                        <p className="text-sm text-text-secondary font-medium">
-                          Already Staff
-                        </p>
-                      )}
+                return (
+                  <div
+                    key={user.id}
+                    onClick={() =>
+                      !alreadyStaff && !isAddPending && onSelectionChange(user)
+                    }
+                    className={cn(
+                      "w-full bg-input-bg hover:cursor-pointer hover:bg-neutral-900 rounded-md p-4 flex flex-row items-center justify-between select-none",
+                      selected
+                        ? "border-1 border-green-700"
+                        : alreadyStaff
+                          ? "opacity-50 cursor-not-allowed hover:cursor-default hover:bg-input-bg"
+                          : "border-1 border-transparent",
+                    )}
+                  >
+                    <div className="flex flex-col">
+                      <p className="font-medium">{user.name}</p>
+                      <p className="text-sm text-text-secondary">
+                        {user.email}
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
-            )
+
+                    {alreadyStaff && (
+                      <p className="text-sm text-text-secondary font-medium">
+                        Already Staff
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 
-        {selectedUserIds.length > 0 && (
-          <Button variant="primary">
-            Add {selectedUserIds.length} Staff Member
-            {selectedUserIds.length > 1 ? "s" : ""}
+        {selectedUsers.length > 0 && (
+          <Button
+            onClick={onAddStaff}
+            variant="primary"
+            isPending={isAddPending}
+            isDisabled={isAddPending}
+          >
+            Add {selectedUsers.length} Staff Member
+            {selectedUsers.length > 1 ? "s" : ""}
           </Button>
         )}
       </div>
