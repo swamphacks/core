@@ -116,3 +116,12 @@ func (r *EventRepository) GetEventStaff(ctx context.Context, eventId uuid.UUID) 
 func (r *EventRepository) AssignRole(ctx context.Context, params sqlc.AssignRoleParams) error {
 	return r.db.Query.AssignRole(ctx, params)
 }
+
+func (r *EventRepository) RevokeRole(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	params := sqlc.RemoveRoleParams{
+		UserID:  userId,
+		EventID: eventId,
+	}
+
+	return r.db.Query.RemoveRole(ctx, params)
+}

@@ -870,6 +870,135 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/roles/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke event role of a user
+     * @description Remove user's role for a specific event
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+          /** @description User ID */
+          userId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK - Role revoked */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": Record<string, never>;
+          };
+        };
+        /** @description Not Found - User not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: Something went terribly wrong on our end. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/roles/batch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Change or add event role of a user in batch
+     * @description Modify users' role for a specific event
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      /** @description Event roles data */
+      requestBody: {
+        content: {
+          "application/json":
+            | Record<string, never>
+            | components["schemas"]["handlers.AssignRoleBatch"];
+        };
+      };
+      responses: {
+        /** @description OK - Roles updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": Record<string, never>;
+          };
+        };
+        /** @description Not Found - User not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: Something went terribly wrong on our end. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/events/{eventId}/staff": {
     parameters: {
       query?: never;
@@ -907,6 +1036,82 @@ export interface paths {
           };
         };
         /** @description Server Error: Something went terribly wrong on our end. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get/Search for users
+     * @description Get or search for users by name or email. If no search term is provided, returns all users with pagination.
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Search term to filter users by name or email (optional) */
+          search?: string;
+          /** @description Maximum number of users to return (default is 50) */
+          limit?: number;
+          /** @description Number of users to skip for pagination (default is 0) */
+          offset?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK: Returns a list of users matching the search criteria, or all users if no search term is provided. */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.AuthUser"][];
+          };
+        };
+        /** @description Invalid query parameter(s) */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Failed to retrieve users */
         500: {
           headers: {
             [name: string]: unknown;
@@ -1226,50 +1431,53 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     "handlers.AddEmailRequest": {
-      email?: string;
-      source?: string;
+      email: string;
+      source: string;
+    };
+    "handlers.AssignRoleBatch": {
+      assignments: components["schemas"]["handlers.AssignRoleFields"][];
     };
     "handlers.AssignRoleFields": {
-      email?: string;
-      role?: components["schemas"]["sqlc.EventRoleType"];
-      user_id?: string;
+      email: string;
+      role: components["schemas"]["sqlc.EventRoleType"];
+      user_id: string;
     };
     "handlers.CompleteOnboardingRequest": {
-      name?: string;
-      preferred_email?: string;
+      name: string;
+      preferred_email: string;
     };
     "handlers.CreateEventFields": {
       application_close: string;
       application_open: string;
-      decision_release?: string;
-      description?: string;
+      decision_release: string;
+      description: string;
       end_time: string;
-      is_published?: boolean;
-      location?: string;
-      location_url?: string;
-      max_attendees?: number;
+      is_published: boolean;
+      location: string;
+      location_url: string;
+      max_attendees: number;
       name: string;
-      rsvp_deadline?: string;
+      rsvp_deadline: string;
       start_time: string;
-      website_url?: string;
+      website_url: string;
     };
     "handlers.NullableEventRole": {
-      assigned_at?: string;
-      event_id?: string;
-      role?: components["schemas"]["sqlc.EventRoleType"];
-      user_id?: string;
+      assigned_at: string;
+      event_id: string;
+      role: components["schemas"]["sqlc.EventRoleType"];
+      user_id: string;
     };
     "handlers.QueueEmailRequest": {
-      body?: string;
-      from?: string;
-      to?: string;
+      body: string;
+      from: string;
+      to: string;
     };
     "handlers.UpdateEmailConsentRequest": {
-      email_consent?: boolean;
+      email_consent: boolean;
     };
     "handlers.UpdateProfileRequest": {
-      name?: string;
-      preferred_email?: string;
+      name: string;
+      preferred_email: string;
     };
     /** @description Information about the current user session. */
     "middleware.UserContext": {
@@ -1277,52 +1485,52 @@ export interface components {
        * @description Primary email address (nullable)
        * @example user@example.com
        */
-      email?: string;
+      email: string;
       /**
        * @description Whether the user agreed to receive emails
        * @example false
        */
-      emailConsent?: boolean;
+      emailConsent: boolean;
       /**
        * @description Optional profile image URL
        * @example https://cdn.example.com/avatar.png
        */
-      image?: string | null;
+      image: string | null;
       /**
        * @description Full display name
        * @example Jane Doe
        */
-      name?: string;
+      name: string;
       /**
        * @description Whether the user completed onboarding
        * @example true
        */
-      onboarded?: boolean;
+      onboarded: boolean;
       /**
        * @description Preferred email address for communications
        * @example user.alt@example.com
        */
-      preferredEmail?: string;
-      role?: components["schemas"]["sqlc.AuthUserRole"];
+      preferredEmail: string;
+      role: components["schemas"]["sqlc.AuthUserRole"];
       /**
        * Format: uuid
        * @description Unique identifier for the user
        * @example 550e8400-e29b-41d4-a716-446655440000
        */
-      userId?: string;
+      userId: string;
     };
     "response.ErrorResponse": {
-      error?: string;
-      message?: string;
+      error: string;
+      message: string;
     };
     "sqlc.Application": {
-      application?: number[];
-      created_at?: string;
-      event_id?: string;
-      saved_at?: string;
-      status?: components["schemas"]["sqlc.NullApplicationStatus"];
-      updated_at?: string;
-      user_id?: string;
+      application: number[];
+      created_at: string;
+      event_id: string;
+      saved_at: string;
+      status: components["schemas"]["sqlc.NullApplicationStatus"];
+      updated_at: string;
+      user_id: string;
     };
     /** @enum {string} */
     "sqlc.ApplicationStatus":
@@ -1334,17 +1542,17 @@ export interface components {
       | "waitlisted"
       | "withdrawn";
     "sqlc.AuthUser": {
-      created_at?: string;
-      email?: string;
-      email_consent?: boolean;
-      email_verified?: boolean;
-      id?: string;
-      image?: string;
-      name?: string;
-      onboarded?: boolean;
-      preferred_email?: string;
-      role?: components["schemas"]["sqlc.AuthUserRole"];
-      updated_at?: string;
+      created_at: string;
+      email: string;
+      email_consent: boolean;
+      email_verified: boolean;
+      id: string;
+      image: string;
+      name: string;
+      onboarded: boolean;
+      preferred_email: string;
+      role: components["schemas"]["sqlc.AuthUserRole"];
+      updated_at: string;
     };
     /**
      * @description Role assigned to the user
@@ -1352,70 +1560,70 @@ export interface components {
      */
     "sqlc.AuthUserRole": "user" | "superuser";
     "sqlc.Event": {
-      application_close?: string;
-      application_open?: string;
-      banner?: string;
-      created_at?: string;
-      decision_release?: string;
-      description?: string;
-      end_time?: string;
-      id?: string;
-      is_published?: boolean;
-      location?: string;
-      location_url?: string;
-      max_attendees?: number;
-      name?: string;
-      rsvp_deadline?: string;
-      start_time?: string;
-      updated_at?: string;
-      website_url?: string;
+      application_close: string;
+      application_open: string;
+      banner: string;
+      created_at: string;
+      decision_release: string;
+      description: string;
+      end_time: string;
+      id: string;
+      is_published: boolean;
+      location: string;
+      location_url: string;
+      max_attendees: number;
+      name: string;
+      rsvp_deadline: string;
+      start_time: string;
+      updated_at: string;
+      website_url: string;
     };
     /** @enum {string} */
     "sqlc.EventRoleType": "admin" | "staff" | "attendee" | "applicant";
     "sqlc.GetEventStaffRow": {
-      created_at?: string;
-      email?: string;
-      email_consent?: boolean;
-      email_verified?: boolean;
-      event_role?: components["schemas"]["sqlc.EventRoleType"];
-      id?: string;
-      image?: string;
-      name?: string;
-      onboarded?: boolean;
-      preferred_email?: string;
-      role?: components["schemas"]["sqlc.AuthUserRole"];
-      updated_at?: string;
+      created_at: string;
+      email: string;
+      email_consent: boolean;
+      email_verified: boolean;
+      event_role: components["schemas"]["sqlc.EventRoleType"];
+      id: string;
+      image: string;
+      name: string;
+      onboarded: boolean;
+      preferred_email: string;
+      role: components["schemas"]["sqlc.AuthUserRole"];
+      updated_at: string;
     };
     "sqlc.GetEventsWithUserInfoRow": {
-      application_close?: string;
-      application_open?: string;
-      application_status?: components["schemas"]["sqlc.NullApplicationStatus"];
-      banner?: string;
-      created_at?: string;
-      decision_release?: string;
-      description?: string;
-      end_time?: string;
-      event_role?: components["schemas"]["sqlc.NullEventRoleType"];
-      id?: string;
-      is_published?: boolean;
-      location?: string;
-      location_url?: string;
-      max_attendees?: number;
-      name?: string;
-      rsvp_deadline?: string;
-      start_time?: string;
-      updated_at?: string;
-      website_url?: string;
+      application_close: string;
+      application_open: string;
+      application_status: components["schemas"]["sqlc.NullApplicationStatus"];
+      banner: string;
+      created_at: string;
+      decision_release: string;
+      description: string;
+      end_time: string;
+      event_role: components["schemas"]["sqlc.NullEventRoleType"];
+      id: string;
+      is_published: boolean;
+      location: string;
+      location_url: string;
+      max_attendees: number;
+      name: string;
+      rsvp_deadline: string;
+      start_time: string;
+      updated_at: string;
+      website_url: string;
     };
     "sqlc.NullApplicationStatus": {
-      application_status?: components["schemas"]["sqlc.ApplicationStatus"];
+      application_status: components["schemas"]["sqlc.ApplicationStatus"];
       /** @description Valid is true if ApplicationStatus is not NULL */
-      valid?: boolean;
+      valid: boolean;
     };
     "sqlc.NullEventRoleType": {
-      event_role_type?: components["schemas"]["sqlc.EventRoleType"];
+      event_role_type: components["schemas"]["sqlc.EventRoleType"];
       /** @description Valid is true if EventRoleType is not NULL */
-      valid?: boolean;
+      valid: boolean;
     };
   };
   responses: never;
