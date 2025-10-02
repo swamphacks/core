@@ -389,7 +389,7 @@ func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 //	@Router			/events [get]
 func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	// Parse query params
-	// scope="published,scoped,all", default: published
+	// include_unpublished="published,scoped,all", default: published
 	q := r.URL.Query()
 	scope, err := parse.ParseGetEventScopeType(q.Get("scope"))
 
