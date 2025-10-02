@@ -15,7 +15,7 @@ export default meta;
 
 export const Test = () => {
   const Form = build(data);
-  return <Form />;
+  return <Form.Form />;
 };
 
 export const ApplicationForm = () => {
@@ -23,7 +23,7 @@ export const ApplicationForm = () => {
   return (
     <div className="w-full h-screen bg-surface">
       <div className="w-full bg-surface transition-[background] sm:pl-[calc(100vw-100%)]">
-        <Form onSubmit={(data) => console.log(data)} />
+        <Form.Form onSubmit={async (data) => console.log(data)} />
       </div>
     </div>
   );
