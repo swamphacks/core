@@ -68,6 +68,7 @@ jobs:
             git reset --hard origin/dev
             git pull
 
+            sudo chmod +x ./fetch-web-secrets.sh
             # export secrets into .env files
             ./fetch-web-secrets.sh
 
