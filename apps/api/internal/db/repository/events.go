@@ -85,10 +85,10 @@ func (r *EventRepository) GetPublishedEvents(ctx context.Context, userId uuid.UU
 }
 
 // find a struct for valid roles to enforce type safety
-func (r *EventRepository) GetEventsWithRoles(ctx context.Context, userId *uuid.UUID, includeUnpublished string) (*[]sqlc.GetEventsWithUserInfoRow, error) {
+func (r *EventRepository) GetEventsWithRoles(ctx context.Context, userId *uuid.UUID, scope sqlc.GetEventScopeType) (*[]sqlc.GetEventsWithUserInfoRow, error) {
 	events, err := r.db.Query.GetEventsWithUserInfo(ctx, sqlc.GetEventsWithUserInfoParams{
-		UserID:             userId,
-		IncludeUnpublished: includeUnpublished,
+		UserID: userId,
+		Scope:  scope,
 	})
 	return &events, err
 }

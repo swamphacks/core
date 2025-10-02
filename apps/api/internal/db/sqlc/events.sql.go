@@ -242,7 +242,7 @@ LEFT JOIN applications a
     ON a.event_id = e.id
     AND a.user_id = $1
 WHERE
-    CASE $2::text
+    CASE $2::get_event_scope_type
         WHEN 'all' THEN
             TRUE
         WHEN 'scoped' THEN
@@ -254,8 +254,8 @@ ORDER BY e.start_time ASC
 `
 
 type GetEventsWithUserInfoParams struct {
-	UserID *uuid.UUID `json:"user_id"`
-	Scope  string     `json:"scope"`
+	UserID *uuid.UUID        `json:"user_id"`
+	Scope  GetEventScopeType `json:"scope"`
 }
 
 type GetEventsWithUserInfoRow struct {

@@ -21,9 +21,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/parse"
 	. "github.com/swamphacks/core/apps/api/internal/parse"
-	"github.com/swamphacks/core/apps/api/internal/ptr"
 	"github.com/swamphacks/core/apps/api/internal/services"
-	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
 type EventHandler struct {
@@ -386,22 +384,23 @@ func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Event
 //	@Accept			json
 //	@Produce		json
-//	@Param			include_published	query	boolean							false	"If true, include unpublished events as well. Superusers ONLY."	default(false)
+//	@Param			include_published	query	string							false	"published to only include published. scoped to also include unpublished where the user is a staff or admin. all includes everything (superusers ONLY)."	default("published")
 //	@Success		200					{array}	sqlc.GetEventsWithUserInfoRow	"OK: Events returned"
 //	@Router			/events [get]
 func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	// Parse query params
-	// include_unpublished="true,false", default: false
-	queryParams := r.URL.Query()
-	includeUnpublished, err := web.ParseParamBoolean(queryParams, "include_unpublished", ptr.BoolToPtr(false))
+	// include_unpublished="published,scoped,all", default: published
+	q := r.URL.Query()
+	scope, err := parse.ParseGetEventScopeType(q.Get("scope"))
+
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Missing/malformed query. Available parameters: include_unpublished=true,false"))
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Missing/malformed query. Available parameters: include_unpublished=published, scoped, all, or none (default to published)"))
 		return
 	}
 
-	events, err := h.eventService.GetEvents(r.Context(), *includeUnpublished)
+	events, err := h.eventService.GetEvents(r.Context(), scope)
 	if errors.Is(err, services.ErrMissingFields) {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Missing/malformed query. Available parameteres: status=all,published"))
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Missing/malformed query. Available parameters:  include_unpublished=published, scoped, all, or none (default to published)"))
 		return
 	}
 

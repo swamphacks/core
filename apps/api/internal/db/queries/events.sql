@@ -90,7 +90,7 @@ LEFT JOIN applications a
     ON a.event_id = e.id
     AND a.user_id = sqlc.narg(user_id)
 WHERE
-    CASE sqlc.arg(scope)::text
+    CASE sqlc.arg(scope)::get_event_scope_type
         WHEN 'all' THEN
             TRUE
         WHEN 'scoped' THEN
