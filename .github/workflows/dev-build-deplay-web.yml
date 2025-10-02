@@ -67,7 +67,14 @@ jobs:
             git checkout dev
             git reset --hard origin/dev
             git pull
-            infisical export --env=dev --format=dotenv --path="/web" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.dev.web
+
+            # export secrets into .env files
+            ./fetch-web-secrets.sh
+
             docker compose -f docker-compose.dev.yml pull dev-web
             docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate dev-web
-
+        env:
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          WORKSPACE_SLUG: swamphacks-core
+          ENVIRONMENT: dev
