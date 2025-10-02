@@ -96,7 +96,7 @@ const StaffTable = ({ data, eventId }: Props) => {
         },
       },
     ],
-    [],
+    [eventId],
   );
 
   const table = useReactTable({
