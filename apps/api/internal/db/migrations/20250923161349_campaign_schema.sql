@@ -27,7 +27,7 @@ CREATE TABLE campaign_emails (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE campaign_email_template (
+CREATE TABLE campaign_email_templates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT CONSTRAINT title_charlim CHECK (char_length(title) <= 200),
     html TEXT, 
@@ -46,13 +46,22 @@ CREATE TABLE campaign_email_statistics (
     PRIMARY KEY (email_id, role)
 );
 
-CREATE TABLE campaign_link (
+CREATE TABLE campaign_links (
     -- While the redirect is done by an api endpoint, both the role type and redirect_to could be passed as query params.
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     role event_role_type NOT NULL,
     redirect_to TEXT NOT NULL,
     api_endpoint TEXT NOT NULL
 );
+-- +goose StatementEnd
 
 -- +goose Down
+-- +goose StatementBegin
+
+DROP TABLE IF EXISTS campaigns
+DROP TABLE IF EXISTS campaign_emails
+DROP TABLE IF EXISTS campaign_email_templates
+DROP TABLE IF EXISTS campaign_email_statistics
+DROP TABLE IF EXISTS campaigns_links
+
 -- +goose StatementEnd
