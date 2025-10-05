@@ -7,7 +7,7 @@ import { OnboardingModal } from "@/features/Onboarding/components/OnboardingModa
 import Cookies from "js-cookie";
 import { auth } from "@/lib/authClient";
 
-export const Route = createFileRoute("/(protected)/(user)/portal")({
+export const Route = createFileRoute("/(protected)/portal")({
   beforeLoad: (context) => {
     const { user } = context.context;
     const hasSkippedCookie = Cookies.get("welcome-modal-skipped") === "true";

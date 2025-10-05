@@ -2,12 +2,18 @@ import { Button } from "@/components/ui/Button";
 import AddStaffModal from "@/features/EventAdmin/components/AddStaffModal";
 import StaffTable from "@/features/EventAdmin/components/StaffTable";
 import { useEventStaffUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { DialogTrigger, Heading } from "react-aria-components";
 
 export const Route = createFileRoute(
   "/(protected)/events/$eventId/dashboard/(admin)/staff-management",
 )({
+  beforeLoad: async ({ context }) => {
+    if (!context.eventRole || !["admin"].includes(context.eventRole)) {
+      return notFound();
+    }
+    return {};
+  },
   component: RouteComponent,
 });
 

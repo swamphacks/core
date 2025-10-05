@@ -1,12 +1,18 @@
 import EventBannerUploader from "@/features/Event/components/EventBannerUploader";
 import EventSettingsForm from "@/features/Event/components/EventSettingsForm";
 import { useEvent } from "@/features/Event/hooks/useEvent";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
 
 export const Route = createFileRoute(
   "/(protected)/events/$eventId/dashboard/(admin)/event-settings",
 )({
+  beforeLoad: async ({ context }) => {
+    if (!context.eventRole || !["admin"].includes(context.eventRole)) {
+      return notFound();
+    }
+    return {};
+  },
   component: RouteComponent,
 });
 

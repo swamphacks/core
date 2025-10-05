@@ -1,9 +1,18 @@
 import { PageUnderConstruction } from "@/components/PageUnderConstruction";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
 export const Route = createFileRoute(
   "/(protected)/events/$eventId/dashboard/(attendee)/my-team",
 )({
+  beforeLoad: async ({ context }) => {
+    if (
+      !context.eventRole ||
+      !["attendee", "admin"].includes(context.eventRole)
+    ) {
+      return notFound();
+    }
+    return {};
+  },
   component: RouteComponent,
 });
 

@@ -12,7 +12,7 @@ import TablerUsers from "~icons/tabler/users";
 import TablerListDetails from "~icons/tabler/list-details";
 import TablerSettings2 from "~icons/tabler/settings-2";
 
-export const Route = createFileRoute("/(protected)/admin/layout")({
+export const Route = createFileRoute("/(protected)/admin")({
   beforeLoad: async ({ context, location }) => {
     const { user } = context;
 

@@ -1,7 +1,7 @@
 import { PageUnderConstruction } from "@/components/PageUnderConstruction";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/(protected)/(user)/resources/sponsors")({
+export const Route = createFileRoute("/(protected)/community")({
   component: RouteComponent,
 });
 
