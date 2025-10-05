@@ -210,25 +210,29 @@ type Campaign struct {
 }
 
 type CampaignEmail struct {
-	ID                 uuid.UUID `json:"id"`
-	RecipientAddresses []string  `json:"recipient_addresses"`
-	RecipientRoles     []string  `json:"recipient_roles"`
-	SendFrom           string    `json:"send_from"`
-	Subject            *string   `json:"subject"`
-	Body               *string   `json:"body"`
-	Template           uuid.UUID `json:"template"`
-	SendOn             time.Time `json:"send_on"`
-	CreatedBy          uuid.UUID `json:"created_by"`
-	CreatedAt          time.Time `json:"created_at"`
-	UpdatedAt          time.Time `json:"updated_at"`
+	ID                 uuid.UUID   `json:"id"`
+	RecipientAddresses []string    `json:"recipient_addresses"`
+	RecipientRoles     []string    `json:"recipient_roles"`
+	SendFrom           string      `json:"send_from"`
+	Subject            *string     `json:"subject"`
+	Body               *string     `json:"body"`
+	Template           uuid.UUID   `json:"template"`
+	SendOn             time.Time   `json:"send_on"`
+	Links              []uuid.UUID `json:"links"`
+	CreatedBy          uuid.UUID   `json:"created_by"`
+	CreatedAt          time.Time   `json:"created_at"`
+	UpdatedAt          time.Time   `json:"updated_at"`
 }
 
-type CampaignEmailStatistic struct {
-	EmailID           uuid.UUID     `json:"email_id"`
+type CampaignEmailLink struct {
+	ID                uuid.UUID     `json:"id"`
 	Role              EventRoleType `json:"role"`
 	HitCount          *int32        `json:"hit_count"`
 	UnsubscribedCount *int32        `json:"unsubscribed_count"`
-	Link              []uuid.UUID   `json:"link"`
+	ApiEndpoint       string        `json:"api_endpoint"`
+	RedirectTo        string        `json:"redirect_to"`
+	CreatedAt         time.Time     `json:"created_at"`
+	UpdatedAt         time.Time     `json:"updated_at"`
 }
 
 type CampaignEmailTemplate struct {
@@ -237,13 +241,6 @@ type CampaignEmailTemplate struct {
 	Html      *string   `json:"html"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type CampaignLink struct {
-	ID          uuid.UUID     `json:"id"`
-	Role        EventRoleType `json:"role"`
-	RedirectTo  string        `json:"redirect_to"`
-	ApiEndpoint string        `json:"api_endpoint"`
 }
 
 type Event struct {
