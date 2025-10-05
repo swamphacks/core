@@ -68,14 +68,28 @@ jobs:
             git reset --hard origin/dev
             git pull
 
-            sudo chmod +x ./fetch-web-secrets.sh
-            # export secrets into .env files
-            ./fetch-web-secrets.sh
+            1. export access token to workflow file
+            export INFISICAL_TOKEN=$(infisical login \
+              --method=universal-auth \
+              --client-id=${INFISICAL_CLIENT_ID} \
+              --client-secret=${INFISICAL_CLIENT_SECRET} \
+              --silent \
+              --plain)
+
+            2. export secrets to .env.dev.web file in ./infra/secrets/
+            infisical export \
+              --token=$INFISICAL_TOKEN \
+              --env=dev \
+              --format=dotenv \
+              --path="/api" \
+              --projectId=$INFISICAL_PROJECT_ID_WEB \
+              > ./secrets/.env.dev.web
 
             docker compose -f docker-compose.dev.yml pull dev-web
             docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate dev-web
         env:
           INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
           INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          INFISICAL_PROJECT_ID_WEB: ${{ secrets.INFISICAL_PROJECT_ID_WEB }}
           WORKSPACE_SLUG: swamphacks-core
           ENVIRONMENT: dev
