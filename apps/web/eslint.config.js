@@ -22,6 +22,7 @@ export default tseslint.config(
       "react-refresh/only-export-components": "off",
       "@typescript-eslint/no-explicit-any": "warn", // TODO: remove
       "@typescript-eslint/ban-ts-comment": "warn",
+      "no-irregular-whitespace": "off",
     },
   },
 );

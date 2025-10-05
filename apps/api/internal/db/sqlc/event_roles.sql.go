@@ -30,7 +30,7 @@ func (q *Queries) AssignRole(ctx context.Context, arg AssignRoleParams) error {
 }
 
 const getEventStaff = `-- name: GetEventStaff :many
-SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, er.role AS event_role
+SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.role AS event_role
 FROM auth.users u
 JOIN event_roles er ON u.id = er.user_id
 WHERE er.event_id = $1
@@ -38,16 +38,18 @@ WHERE er.event_id = $1
 `
 
 type GetEventStaffRow struct {
-	ID            uuid.UUID     `json:"id"`
-	Name          string        `json:"name"`
-	Email         *string       `json:"email"`
-	EmailVerified bool          `json:"email_verified"`
-	Onboarded     bool          `json:"onboarded"`
-	Image         *string       `json:"image"`
-	CreatedAt     time.Time     `json:"created_at"`
-	UpdatedAt     time.Time     `json:"updated_at"`
-	Role          AuthUserRole  `json:"role"`
-	EventRole     EventRoleType `json:"event_role"`
+	ID             uuid.UUID     `json:"id"`
+	Name           string        `json:"name"`
+	Email          *string       `json:"email"`
+	EmailVerified  bool          `json:"email_verified"`
+	Onboarded      bool          `json:"onboarded"`
+	Image          *string       `json:"image"`
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
+	Role           AuthUserRole  `json:"role"`
+	PreferredEmail *string       `json:"preferred_email"`
+	EmailConsent   bool          `json:"email_consent"`
+	EventRole      EventRoleType `json:"event_role"`
 }
 
 func (q *Queries) GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEventStaffRow, error) {
@@ -69,6 +71,8 @@ func (q *Queries) GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEv
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Role,
+			&i.PreferredEmail,
+			&i.EmailConsent,
 			&i.EventRole,
 		); err != nil {
 			return nil, err
@@ -79,4 +83,20 @@ func (q *Queries) GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEv
 		return nil, err
 	}
 	return items, nil
+}
+
+const removeRole = `-- name: RemoveRole :exec
+DELETE FROM event_roles
+WHERE event_id = $1
+  AND user_id = $2
+`
+
+type RemoveRoleParams struct {
+	EventID uuid.UUID `json:"event_id"`
+	UserID  uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) RemoveRole(ctx context.Context, arg RemoveRoleParams) error {
+	_, err := q.db.Exec(ctx, removeRole, arg.EventID, arg.UserID)
+	return err
 }

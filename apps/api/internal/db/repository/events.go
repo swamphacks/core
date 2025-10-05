@@ -40,7 +40,7 @@ func (r *EventRepository) CreateEvent(ctx context.Context, params sqlc.CreateEve
 func (r *EventRepository) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc.Event, error) {
 	event, err := r.db.Query.GetEventByID(ctx, id)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrEventNotFound
 		}
 		return nil, err
@@ -51,7 +51,7 @@ func (r *EventRepository) GetEventByID(ctx context.Context, id uuid.UUID) (*sqlc
 func (r *EventRepository) UpdateEventById(ctx context.Context, params sqlc.UpdateEventByIdParams) error {
 	err := r.db.Query.UpdateEventById(ctx, params)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrEventNotFound
 		}
 	}
@@ -61,7 +61,7 @@ func (r *EventRepository) UpdateEventById(ctx context.Context, params sqlc.Updat
 func (r *EventRepository) DeleteEventById(ctx context.Context, id uuid.UUID) error {
 	affectedRows, err := r.db.Query.DeleteEventById(ctx, id)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrEventNotFound
 		}
 	}
@@ -100,7 +100,7 @@ func (r *EventRepository) GetEventRoleByIds(ctx context.Context, userId uuid.UUI
 
 	eventRole, err := r.db.Query.GetEventRoleByIds(ctx, params)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrEventRoleNotFound
 		}
 	}
@@ -115,4 +115,13 @@ func (r *EventRepository) GetEventStaff(ctx context.Context, eventId uuid.UUID) 
 
 func (r *EventRepository) AssignRole(ctx context.Context, params sqlc.AssignRoleParams) error {
 	return r.db.Query.AssignRole(ctx, params)
+}
+
+func (r *EventRepository) RevokeRole(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	params := sqlc.RemoveRoleParams{
+		UserID:  userId,
+		EventID: eventId,
+	}
+
+	return r.db.Query.RemoveRole(ctx, params)
 }

@@ -17,6 +17,17 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/storage"
 )
 
+//	@title			SwampHacks Test API
+//	@version		1.0
+//	@description	This is SwampHacks' OpenAPI documentation.
+//	@termsOfService	TODO
+
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+
+// @license.name	Apache 2.0
+// @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 func main() {
 	logger := logger.New()
 	cfg := config.Load()
@@ -66,13 +77,14 @@ func main() {
 
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
+	userService := services.NewUserService(userRepo, logger)
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
-	eventService := services.NewEventService(eventRepo, userRepo, logger)
+	eventService := services.NewEventService(eventRepo, userRepo, r2Client, &cfg.CoreBuckets, logger)
 	emailService := services.NewEmailService(taskQueueClient, logger)
 	applicationService := services.NewApplicationService(applicationRepo, eventService, txm, r2Client, &cfg.CoreBuckets, logger)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, eventInterestService, eventService, emailService, applicationService, cfg, logger)
+	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, cfg, logger)
 
 	api := api.NewAPI(&logger, apiHandlers, mw)
 

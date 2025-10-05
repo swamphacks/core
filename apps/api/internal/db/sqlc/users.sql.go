@@ -14,7 +14,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO auth.users (name, email, image)
 VALUES ($1, $2, $3)
-RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, role
+RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent
 `
 
 type CreateUserParams struct {
@@ -36,6 +36,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AuthUse
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Role,
+		&i.PreferredEmail,
+		&i.EmailConsent,
 	)
 	return i, err
 }
@@ -51,7 +53,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent FROM auth.users
 WHERE email = $1
 `
 
@@ -68,12 +70,14 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email *string) (AuthUser, 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Role,
+		&i.PreferredEmail,
+		&i.EmailConsent,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent FROM auth.users
 WHERE id = $1
 `
 
@@ -90,8 +94,57 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, erro
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Role,
+		&i.PreferredEmail,
+		&i.EmailConsent,
 	)
 	return i, err
+}
+
+const getUsers = `-- name: GetUsers :many
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent
+FROM auth.users
+WHERE LOWER(name) LIKE LOWER('%' || COALESCE($1, '') || '%')
+   OR LOWER(email) LIKE LOWER('%' || COALESCE($1, '') || '%')
+ORDER BY name
+LIMIT $3 OFFSET $2
+`
+
+type GetUsersParams struct {
+	Search *string `json:"search"`
+	Offset int32   `json:"offset"`
+	Limit  int32   `json:"limit"`
+}
+
+func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]AuthUser, error) {
+	rows, err := q.db.Query(ctx, getUsers, arg.Search, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AuthUser{}
+	for rows.Next() {
+		var i AuthUser
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.EmailVerified,
+			&i.Onboarded,
+			&i.Image,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Role,
+			&i.PreferredEmail,
+			&i.EmailConsent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateUser = `-- name: UpdateUser :exec
@@ -100,25 +153,31 @@ SET
     name = CASE WHEN $1::boolean THEN $2 ELSE name END,
     email = CASE WHEN $3::boolean THEN $4 ELSE email END,
     email_verified = CASE WHEN $5::boolean THEN $6 ELSE email_verified END,
-    onboarded = CASE WHEN $7::boolean THEN $8 ELSE onboarded END,
-    image = CASE WHEN $9::boolean THEN $10 ELSE image END,
+    preferred_email = CASE WHEN $7::boolean THEN $8 ELSE preferred_email END,
+    onboarded = CASE WHEN $9::boolean THEN $10 ELSE onboarded END,
+    image = CASE WHEN $11::boolean THEN $12 ELSE image END,
+    email_consent = CASE WHEN $13::boolean THEN $14 ELSE email_consent END,
     updated_at = NOW()
 WHERE
-    id = $11::uuid
+    id = $15::uuid
 `
 
 type UpdateUserParams struct {
-	NameDoUpdate          bool      `json:"name_do_update"`
-	Name                  string    `json:"name"`
-	EmailDoUpdate         bool      `json:"email_do_update"`
-	Email                 *string   `json:"email"`
-	EmailVerifiedDoUpdate bool      `json:"email_verified_do_update"`
-	EmailVerified         bool      `json:"email_verified"`
-	OnboardedDoUpdate     bool      `json:"onboarded_do_update"`
-	Onboarded             bool      `json:"onboarded"`
-	ImageDoUpdate         bool      `json:"image_do_update"`
-	Image                 *string   `json:"image"`
-	ID                    uuid.UUID `json:"id"`
+	NameDoUpdate           bool      `json:"name_do_update"`
+	Name                   string    `json:"name"`
+	EmailDoUpdate          bool      `json:"email_do_update"`
+	Email                  *string   `json:"email"`
+	EmailVerifiedDoUpdate  bool      `json:"email_verified_do_update"`
+	EmailVerified          bool      `json:"email_verified"`
+	PreferredEmailDoUpdate bool      `json:"preferred_email_do_update"`
+	PreferredEmail         *string   `json:"preferred_email"`
+	OnboardedDoUpdate      bool      `json:"onboarded_do_update"`
+	Onboarded              bool      `json:"onboarded"`
+	ImageDoUpdate          bool      `json:"image_do_update"`
+	Image                  *string   `json:"image"`
+	EmailConsentDoUpdate   bool      `json:"email_consent_do_update"`
+	EmailConsent           bool      `json:"email_consent"`
+	ID                     uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
@@ -129,10 +188,14 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.Email,
 		arg.EmailVerifiedDoUpdate,
 		arg.EmailVerified,
+		arg.PreferredEmailDoUpdate,
+		arg.PreferredEmail,
 		arg.OnboardedDoUpdate,
 		arg.Onboarded,
 		arg.ImageDoUpdate,
 		arg.Image,
+		arg.EmailConsentDoUpdate,
+		arg.EmailConsent,
 		arg.ID,
 	)
 	return err

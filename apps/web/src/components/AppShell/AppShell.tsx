@@ -10,9 +10,16 @@ import {
 import { SlideoutNavbar } from "./MobileSidebar";
 import { AppShellContext } from "./AppShellContext";
 import { useToggleState } from "react-stately";
-import { Button } from "react-aria-components";
+import { Button as RACButton } from "react-aria-components";
 import TablerMenu2 from "~icons/tabler/menu-2";
 import IconX from "~icons/tabler/x";
+import { Logo } from "../Logo";
+import { auth } from "@/lib/authClient";
+import { Profile } from "./Profile";
+import { MobileProfile } from "@/components/AppShell/MobileProfile";
+import { Link, useLocation, useRouter } from "@tanstack/react-router";
+import TablerArrowRight from "~icons/tabler/arrow-right";
+import TablerArrowLeft from "~icons/tabler/arrow-left";
 
 interface AppShellComponent extends FC<PropsWithChildren> {
   Header: FC<PropsWithChildren>;
@@ -38,10 +45,23 @@ function extractAppShellChildren(children: ReactNode) {
 
 const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
   const { toggle, isSelected, setSelected } = useToggleState();
+
   const { header, navbar, main } = useMemo(
     () => extractAppShellChildren(children),
     [children],
   );
+  const { data } = auth.useUser();
+  const pathname = useLocation({ select: (loc) => loc.pathname });
+  const router = useRouter();
+
+  const isAdminPortal = pathname.startsWith("/admin");
+
+  const user = data?.user;
+  const role = user?.role === "user" ? "Hacker" : "Administrator";
+
+  if (data?.error || !user) {
+    return <p>Something went wrong while loading user information.</p>;
+  }
 
   return (
     <AppShellContext.Provider
@@ -53,33 +73,89 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
     >
       <div className="flex h-screen w-screen flex-col relative overflow-hidden">
         {/* Topbar */}
-        {header && (
-          <header className="h-16 w-full flex items-center px-4 md:px-2 border-b-1 border-neutral-300 dark:border-neutral-800">
-            {/* Mobile Burger menu */}
-            <Button className="md:hidden" onPress={toggle}>
-              {isSelected ? (
-                <IconX className="w-8 h-8" />
-              ) : (
-                <TablerMenu2 className="w-8 h-8" />
-              )}
-            </Button>
-            {header}
-          </header>
-        )}
+        <header className="bg-surface md:hidden h-16 w-full flex items-center px-4 md:px-2 border-b-1 border-neutral-300 dark:border-neutral-800">
+          {/* Mobile Burger menu */}
+          <RACButton onPress={toggle}>
+            {isSelected ? (
+              <IconX className="w-8 h-8" />
+            ) : (
+              <TablerMenu2 className="w-8 h-8" />
+            )}
+          </RACButton>
+          <div className="flex justify-between w-full items-center">
+            <div>
+              <div className="flex items-center gap-2 ml-3">
+                <Logo
+                  onClick={() => router.navigate({ to: "/portal" })}
+                  className="py-2 cursor-pointer"
+                />
+              </div>
+              {header}
+            </div>
+            <MobileProfile
+              name={user.name}
+              role={role}
+              logout={async () => {
+                await auth.logOut();
+                window.location.href = "/";
+              }}
+            />
+          </div>
+        </header>
 
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 relative">
           {/* Desktop Sidebar */}
           {navbar && (
-            <aside className="w-64 px-2 py-4 border-r border-neutral-300 dark:border-neutral-800 hidden md:block">
-              <nav className="flex flex-col gap-2">{navbar}</nav>
+            <aside className="w-64 h-full px-2 py-3 border-r bg-surface border-neutral-200 dark:border-neutral-800 hidden md:block">
+              <nav className="flex flex-col gap-2 h-full">
+                <Logo
+                  onClick={() => router.navigate({ to: "/portal" })}
+                  className="py-2 cursor-pointer mb-3"
+                />
+                <div className="flex flex-col justify-between h-full">
+                  <div>{navbar}</div>
+                  <div className="flex flex-col gap-5">
+                    {user.role === "superuser" && (
+                      <div>
+                        {isAdminPortal ? (
+                          <Link
+                            className="flex text-sm justify-center items-center rounded-sm px-3 py-2 gap-2 cursor-pointer select-none text-center w-full border border-orange-800 text-orange-600 hover:bg-navlink-bg-active"
+                            to="/portal"
+                          >
+                            <TablerArrowLeft />
+                            Go back to Portal
+                          </Link>
+                        ) : (
+                          <Link
+                            className="flex text-sm justify-center items-center rounded-sm px-3 py-2 gap-2 cursor-pointer select-none text-center w-full border border-input-border hover:bg-navlink-bg-active"
+                            to="/admin/overview"
+                          >
+                            Go to Admin Portal
+                            <TablerArrowRight />
+                          </Link>
+                        )}
+                      </div>
+                    )}
+                    <Profile name={user.name} role={role} />
+                  </div>
+                </div>
+              </nav>
             </aside>
           )}
 
           {/* Slideout for Mobile */}
-          <SlideoutNavbar isOpen={isSelected}>{navbar}</SlideoutNavbar>
+          <SlideoutNavbar isOpen={isSelected}>
+            <div className="flex flex-col justify-between h-full">
+              <div>{navbar}</div>
+            </div>
+          </SlideoutNavbar>
 
           {/* Main content */}
-          {main && <main className="flex-1 p-6 overflow-y-auto">{main}</main>}
+          {main && (
+            <main className="flex-1 p-6 overflow-y-auto relative bg-background">
+              {main}
+            </main>
+          )}
         </div>
       </div>
     </AppShellContext.Provider>

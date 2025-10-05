@@ -15,6 +15,8 @@ const modal = tv({
       md: "max-w-md",
       lg: "max-w-lg",
       xl: "max-w-xl",
+      "2xl": "max-w-2xl",
+      "3xl": "max-w-3xl",
     },
     padding: {
       none: "p-0",
@@ -68,12 +70,14 @@ export type ModalProps = {
   className?: string;
   minimumSheetHeight?: string;
   isDismissible?: boolean;
+  isOpen?: boolean;
 } & VariantProps<typeof modal>;
 
 export function Modal({
   title,
   children,
   isDismissible = true,
+  isOpen,
   minimumSheetHeight = "65vh",
   size,
   padding,
@@ -87,6 +91,7 @@ export function Modal({
   };
   return (
     <ModalOverlay
+      isOpen={isOpen}
       isDismissable={isDismissible}
       className={({ isEntering, isExiting }) => `
         ${overlay({ responsive })}
@@ -118,7 +123,7 @@ export function Modal({
         {title && (
           <Heading className=" text-text-primary text-lg">{title}</Heading>
         )}
-        <Dialog className="outline-none relative overflow-y-auto">
+        <Dialog className="outline-none relative flex flex-col h-full">
           {children}
         </Dialog>
       </RAC_Modal>

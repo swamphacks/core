@@ -8,6 +8,7 @@ import (
 
 type Handlers struct {
 	Auth          *AuthHandler
+	User          *UserHandler
 	EventInterest *EventInterestHandler
 	Event         *EventHandler
 	Email         *EmailHandler
@@ -16,6 +17,7 @@ type Handlers struct {
 
 func NewHandlers(
 	authService *services.AuthService,
+	userService *services.UserService,
 	eventInterestService *services.EventInterestService,
 	eventService *services.EventService,
 	emailService *services.EmailService,
@@ -25,6 +27,7 @@ func NewHandlers(
 ) *Handlers {
 	return &Handlers{
 		Auth:          NewAuthHandler(authService, cfg, logger),
+		User:          NewUserHandler(userService, logger),
 		EventInterest: NewEventInterestHandler(eventInterestService, cfg, logger),
 		Event:         NewEventHandler(eventService, cfg, logger),
 		Email:         NewEmailHandler(emailService, logger),

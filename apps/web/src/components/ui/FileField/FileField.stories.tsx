@@ -13,5 +13,5 @@ const meta: Meta<typeof FileField> = {
 export default meta;
 
 export const Example = () => {
-  return <FileField label="Upload" />;
+  return <FileField name="Upload files" label="Upload" />;
 };

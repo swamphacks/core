@@ -1,26 +1,18 @@
+# ========== Base Stage ===========
 FROM node:22.16.0-slim AS base
 
-# Set working directory
 WORKDIR /app
 
-# Set environment variables
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-
-# Install pnpm globally
 RUN npm install -g pnpm
 
-# Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using pnpm
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
-# Copy the rest of the project files
 COPY . .
 
-# Expose port
-EXPOSE 5173
+# ========== Dev Stage ===========
+FROM base AS dev
 
-# Start the app
-CMD ["pnpm", "run", "dev"]
+EXPOSE 5173
+CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]

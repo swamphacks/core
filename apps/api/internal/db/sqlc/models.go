@@ -183,15 +183,17 @@ type AuthSession struct {
 }
 
 type AuthUser struct {
-	ID            uuid.UUID    `json:"id"`
-	Name          string       `json:"name"`
-	Email         *string      `json:"email"`
-	EmailVerified bool         `json:"email_verified"`
-	Onboarded     bool         `json:"onboarded"`
-	Image         *string      `json:"image"`
-	CreatedAt     time.Time    `json:"created_at"`
-	UpdatedAt     time.Time    `json:"updated_at"`
-	Role          AuthUserRole `json:"role"`
+	ID             uuid.UUID    `json:"id"`
+	Name           string       `json:"name"`
+	Email          *string      `json:"email"`
+	EmailVerified  bool         `json:"email_verified"`
+	Onboarded      bool         `json:"onboarded"`
+	Image          *string      `json:"image"`
+	CreatedAt      time.Time    `json:"created_at"`
+	UpdatedAt      time.Time    `json:"updated_at"`
+	Role           AuthUserRole `json:"role"`
+	PreferredEmail *string      `json:"preferred_email"`
+	EmailConsent   bool         `json:"email_consent"`
 }
 
 type Event struct {
@@ -211,6 +213,7 @@ type Event struct {
 	IsPublished      *bool      `json:"is_published"`
 	CreatedAt        *time.Time `json:"created_at"`
 	UpdatedAt        *time.Time `json:"updated_at"`
+	Banner           *string    `json:"banner"`
 }
 
 type EventInterestSubmission struct {
