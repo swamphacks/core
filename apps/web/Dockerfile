@@ -23,11 +23,17 @@ FROM base AS build
 RUN pnpm run build
 
 # ========== Production Stage ===========
-FROM caddy:2-alpine AS prod
+FROM node:22.16.0-slim AS prod
+WORKDIR /app
 
-COPY --from=build /app/dist .
+# Copy built React app
+COPY --from=build /app/dist ./dist
 
-COPY Caddyfile /etc/caddy/Caddyfile
+# Install serve to serve static files
+RUN npm install -g serve
 
+# Expose port for top-level Caddy to proxy
 EXPOSE 80
-CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+
+# Start serve
+CMD ["serve", "-s", "dist", "-l", "80"]

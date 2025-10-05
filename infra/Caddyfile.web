@@ -1,7 +1,13 @@
-app.swamphacks.com {
-	reverse_proxy: web:5173
+{
+	acme_dns cloudflare {env.CF_API_TOKEN}
+}
 
-	tls /etc/caddy/certs/prod_origin.crt /etc/caddy/certs/prod_origin.key
+dev-app.swamphacks.com {
+	reverse_proxy web-dev:80
+
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
 	encode gzip zstd
 
 	header {
@@ -12,10 +18,13 @@ app.swamphacks.com {
 	}
 }
 
-dev-app.swamphacks.com {
-	reverse_proxy: dev-web:5173
 
-	tls /etc/caddy/certs/dev_origin.crt /etc/caddy/certs/dev_origin.key
+app.swamphacks.com {
+	reverse_proxy web:80
+
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
 	encode gzip zstd
 
 	header {
