@@ -3,7 +3,7 @@ name: Deploy Web to Production
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'apps/web/**'
       - 'infra/docker-compose.web.yml'
