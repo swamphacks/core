@@ -15,6 +15,10 @@ window.ENV = {
 };
 EOF
 
+echo "Injecting BASE_API_URL = ${VITE_BASE_API_URL}"
+echo "Injecting discord oauth id = ${VITE_DISCORD_OAUTH_CLIENT_ID}"
+echo "Injecting allowed hosts = ${VITE_ALLOWED_HOSTS}"
+
 echo "Runtime configuration generation complete."
 
 # Execute the main command passed to the container (the 'serve' command from CMD)
