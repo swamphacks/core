@@ -12,7 +12,7 @@ INSERT INTO campaigns (
 )
 RETURNING *;
 
--- name: GetCampaignByID :one
+-- name: GetCampaignById :one
 SELECT * FROM campaigns 
 WHERE id = $1;
 

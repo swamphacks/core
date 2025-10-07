@@ -71,13 +71,13 @@ func (q *Queries) DeleteCampaignById(ctx context.Context, id uuid.UUID) (int64, 
 	return result.RowsAffected(), nil
 }
 
-const getCampaignByID = `-- name: GetCampaignByID :one
+const getCampaignById = `-- name: GetCampaignById :one
 SELECT id, event_id, title, description, recipient_roles, recipient_addresses, emails, created_by, created_at, updated_at FROM campaigns 
 WHERE id = $1
 `
 
-func (q *Queries) GetCampaignByID(ctx context.Context, id uuid.UUID) (Campaign, error) {
-	row := q.db.QueryRow(ctx, getCampaignByID, id)
+func (q *Queries) GetCampaignById(ctx context.Context, id uuid.UUID) (Campaign, error) {
+	row := q.db.QueryRow(ctx, getCampaignById, id)
 	var i Campaign
 	err := row.Scan(
 		&i.ID,

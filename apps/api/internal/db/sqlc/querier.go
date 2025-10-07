@@ -34,7 +34,7 @@ type Querier interface {
 	GetApplicationByUserAndEventID(ctx context.Context, arg GetApplicationByUserAndEventIDParams) (Application, error)
 	GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
-	GetCampaignByID(ctx context.Context, id uuid.UUID) (Campaign, error)
+	GetCampaignById(ctx context.Context, id uuid.UUID) (Campaign, error)
 	GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 	GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsParams) (EventRole, error)
 	GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEventStaffRow, error)

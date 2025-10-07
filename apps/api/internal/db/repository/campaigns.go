@@ -11,14 +11,18 @@ import (
 )
 
 var (
-	ErrCampaignNotFound = errors.New("campaign not found")
+	ErrCampaignNotFound         = errors.New("campaign not found")
 	ErrNoCampaignsDeleted       = errors.New("no campsigns deleted")
 	ErrMultipleCampaignsDeleted = errors.New("multiple campaigns affected by delete query while only expecting one to delete one")
 )
 
-type CampaignRepository(db *db.DB) *CampaignRepository {
+type CampaignRepository struct {
+	db *db.DB
+}
+
+func NewCampaignRepository(db *db.DB) *CampaignRepository {
 	return &CampaignRepository{
-		db: DB
+		db: db,
 	}
 }
 
@@ -31,8 +35,8 @@ func (r *CampaignRepository) CreateCampaign(ctx context.Context, params sqlc.Cre
 	return &campaign, nil
 }
 
-func (r *CampaignRepository) GetByID(ctx context.Context, id uuid.UUID) (*sqlc.Campaign, error) {
-	user, err := r.db.Query.GetCampaignByID(ctx, id)
+func (r *CampaignRepository) GetCampaignByID(ctx context.Context, id uuid.UUID) (*sqlc.Campaign, error) {
+	campaign, err := r.db.Query.GetCampaignById(ctx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrCampaignNotFound
 	} else if err != nil {
@@ -42,9 +46,9 @@ func (r *CampaignRepository) GetByID(ctx context.Context, id uuid.UUID) (*sqlc.C
 	return &campaign, nil
 }
 
-func (r *CampaignRepository) UpdateCampaignById(ctx context.Context, params sqlc.UpdateCampaignParams) error {
-	err := r.db.UpdateCampaignById(ctx, params)
-	if errors.Is(err, pgs.ErrNoRows) {
+func (r *CampaignRepository) UpdateCampaignById(ctx context.Context, params sqlc.UpdateCampaignByIdParams) error {
+	err := r.db.Query.UpdateCampaignById(ctx, params)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrCampaignNotFound
 	}
 	return err

@@ -127,6 +127,17 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Route("/email", func(r chi.Router) {
 		r.Post("/queue", api.Handlers.Email.QueueEmail)
 	})
+	
+	// Campaign routes
+	api.Router.Route("/campaigns", func(r chi.Router) {
+		r.Use(ensureEventAdmin)
+		
+		r.Post("/", api.Handlers.Campaign.CreateCampaign)
+		
+		r.Route("/{campaignId}", func(r chi.Router) {
+			
+		})
+	})
 
 	// Protected test routes
 	api.Router.Route("/protected", func(r chi.Router) {

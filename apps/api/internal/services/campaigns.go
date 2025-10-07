@@ -13,24 +13,25 @@ import (
 var (
 	ErrFailedToCreateCampaign = errors.New("failed to create campaign")
 	ErrCampaignNotFound       = errors.New("campaign not found")
-	ErrFailedToUpdateCampaign = errors.New("failed to update campaign")
 	ErrFailedToGetCampaign    = errors.New("failed to get campaign")
+	ErrFailedToUpdateCampaign = errors.New("failed to update campaign")
+	ErrFailedToDeleteCampaign = errors.New("failed to get campaign")
 )
 
 type CampaignService struct {
 	campaignRepo *repository.CampaignRepository
-	logger zerolog.Logger
+	logger       zerolog.Logger
 }
 
 func NewCampaignService(campaignRepo *repository.CampaignRepository, logger zerolog.Logger) *CampaignService {
 	return &CampaignService{
 		campaignRepo: campaignRepo,
-		logger:   logger.With().Str("service", "CampaignService").Str("component", "campaign").Logger(),
+		logger:       logger.With().Str("service", "CampaignService").Str("component", "campaign").Logger(),
 	}
 }
 
-func (s *CampaignService) CreateEvent(ctx context.Context, params sqlc.CreateCampaignParams) (*sqlc.Campaign, error) {
-	event, err := s.eventRepo.CreateCampaign(ctx, params)
+func (s *CampaignService) CreateCampaign(ctx context.Context, params sqlc.CreateCampaignParams) (*sqlc.Campaign, error) {
+	event, err := s.campaignRepo.CreateCampaign(ctx, params)
 	if err != nil {
 		if errors.Is(err, repository.ErrCampaignNotFound) {
 			s.logger.Err(err).Msg(repository.ErrCampaignNotFound.Error())
@@ -44,21 +45,21 @@ func (s *CampaignService) CreateEvent(ctx context.Context, params sqlc.CreateCam
 }
 
 func (s *CampaignService) GetCampaignByID(ctx context.Context, campaignId uuid.UUID) (*sqlc.Campaign, error) {
-	campaign, err := s.campaignRepo.GetByID(ctx, campaignId)
+	campaign, err := s.campaignRepo.GetCampaignByID(ctx, campaignId)
 	if err != nil {
 		if err == repository.ErrCampaignNotFound {
 			s.logger.Err(err).Msg(repository.ErrCampaignNotFound.Error())
 		} else {
 			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
 		}
-		return nil, ErrFailedToGetCampaign 
+		return nil, ErrFailedToGetCampaign
 	}
 
 	return campaign, nil
 }
 
 func (s *CampaignService) UpdateCampaignById(ctx context.Context, params sqlc.UpdateCampaignByIdParams) (*sqlc.Campaign, error) {
-	err := s.eventRepo.UpdateCampaignById(ctx, params)
+	err := s.campaignRepo.UpdateCampaignById(ctx, params)
 	if err != nil {
 		if errors.Is(err, repository.ErrCampaignNotFound) {
 			s.logger.Err(err).Msg(repository.ErrCampaignNotFound.Error())
@@ -68,7 +69,7 @@ func (s *CampaignService) UpdateCampaignById(ctx context.Context, params sqlc.Up
 		return nil, ErrFailedToUpdateCampaign
 	}
 
-	event, err := s.eventRepo.GetCampaignByID(ctx, params.ID)
+	event, err := s.campaignRepo.GetCampaignByID(ctx, params.ID)
 
 	return event, err
 }
