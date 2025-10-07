@@ -145,6 +145,49 @@ func (ns NullEventRoleType) Value() (driver.Value, error) {
 	return string(ns.EventRoleType), nil
 }
 
+type GetEventScopeType string
+
+const (
+	GetEventScopeTypePublished GetEventScopeType = "published"
+	GetEventScopeTypeScoped    GetEventScopeType = "scoped"
+	GetEventScopeTypeAll       GetEventScopeType = "all"
+)
+
+func (e *GetEventScopeType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = GetEventScopeType(s)
+	case string:
+		*e = GetEventScopeType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for GetEventScopeType: %T", src)
+	}
+	return nil
+}
+
+type NullGetEventScopeType struct {
+	GetEventScopeType GetEventScopeType `json:"get_event_scope_type"`
+	Valid             bool              `json:"valid"` // Valid is true if GetEventScopeType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullGetEventScopeType) Scan(value interface{}) error {
+	if value == nil {
+		ns.GetEventScopeType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.GetEventScopeType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullGetEventScopeType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.GetEventScopeType), nil
+}
+
 type Application struct {
 	UserID      uuid.UUID             `json:"user_id"`
 	EventID     uuid.UUID             `json:"event_id"`

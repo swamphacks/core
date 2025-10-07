@@ -116,16 +116,16 @@ func (s *EventService) DeleteEventById(ctx context.Context, id uuid.UUID) error 
 	return err
 }
 
-func (s *EventService) GetEvents(ctx context.Context, includeUnpublished bool) (*[]sqlc.GetEventsWithUserInfoRow, error) {
+func (s *EventService) GetEvents(ctx context.Context, scope sqlc.GetEventScopeType) (*[]sqlc.GetEventsWithUserInfoRow, error) {
 	isSuperuser := ctxu.IsSuperuser(ctx)
 	userId := ctxu.GetUserIdFromCtx(ctx)
 
-	// Non-superusers can't get unpublished events
-	if !isSuperuser && includeUnpublished {
+	// Non-superusers can't get all unpublished events
+	if !isSuperuser && scope == "all" {
 		return nil, ErrMissingPerms
 	}
 
-	return s.eventRepo.GetEventsWithRoles(ctx, userId, includeUnpublished)
+	return s.eventRepo.GetEventsWithRoles(ctx, userId, scope)
 
 }
 
