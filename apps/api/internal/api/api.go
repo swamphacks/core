@@ -118,7 +118,6 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 		// Event-specific routes
 		r.Route("/{eventId}", func(r chi.Router) {
-			r.Use(mw.Auth.RequireAuth)
 
 			// General access
 			r.Get("/", api.Handlers.Event.GetEventByID)
