@@ -761,12 +761,12 @@ const docTemplate = `{
                 "description": "Gets events with a nullable event role for authenticated users.",
                 "parameters": [
                     {
-                        "description": "If true, include unpublished events as well. Superusers ONLY.",
+                        "description": "Can be scoped to either published, scoped, or all. Scoped means admins and staff can see unpublished events",
                         "in": "query",
-                        "name": "include_published",
+                        "name": "scope",
                         "schema": {
-                            "default": false,
-                            "type": "boolean"
+                            "default": "\"published\"",
+                            "type": "string"
                         }
                     }
                 ],

@@ -384,12 +384,10 @@ func (h *EventHandler) DeleteEventById(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Event
 //	@Accept			json
 //	@Produce		json
-//	@Param			include_published	query	string							false	"published to only include published. scoped to also include unpublished where the user is a staff or admin. all includes everything (superusers ONLY)."	default("published")
-//	@Success		200					{array}	sqlc.GetEventsWithUserInfoRow	"OK: Events returned"
+//	@Param			scope	query	string							false	"Can be scoped to either published, scoped, or all. Scoped means admins and staff can see unpublished events"	default("published")
+//	@Success		200		{array}	sqlc.GetEventsWithUserInfoRow	"OK: Events returned"
 //	@Router			/events [get]
 func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
-	// Parse query params
-	// scope="published,scoped,all", default: published
 	q := r.URL.Query()
 	scope, err := parse.ParseGetEventScopeType(q.Get("scope"))
 
