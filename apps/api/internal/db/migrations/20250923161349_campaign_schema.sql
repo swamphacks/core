@@ -45,10 +45,10 @@ CREATE TABLE campaign_emails (
 CREATE TABLE campaigns (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-    title TEXT CONSTRAINT title_charlim CHECK (char_length(title) <= 200),
+    title TEXT CONSTRAINT title_charlim CHECK (char_length(title) <= 200) NOT NULL,
     description TEXT CONSTRAINT description_charlim CHECK (char_length(description) <= 1000),
+    recipient_roles event_role_type[] NOT NULL,
     recipient_addresses TEXT[],
-    recipient_roles TEXT[],
     emails UUID[],
 
     created_by UUID NOT NULL REFERENCES auth.users(id),

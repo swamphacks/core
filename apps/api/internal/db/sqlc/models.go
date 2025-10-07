@@ -197,16 +197,16 @@ type AuthUser struct {
 }
 
 type Campaign struct {
-	ID                 uuid.UUID   `json:"id"`
-	EventID            uuid.UUID   `json:"event_id"`
-	Title              *string     `json:"title"`
-	Description        *string     `json:"description"`
-	RecipientAddresses []string    `json:"recipient_addresses"`
-	RecipientRoles     []string    `json:"recipient_roles"`
-	Emails             []uuid.UUID `json:"emails"`
-	CreatedBy          uuid.UUID   `json:"created_by"`
-	CreatedAt          time.Time   `json:"created_at"`
-	UpdatedAt          time.Time   `json:"updated_at"`
+	ID                 uuid.UUID       `json:"id"`
+	EventID            uuid.UUID       `json:"event_id"`
+	Title              string          `json:"title"`
+	Description        *string         `json:"description"`
+	RecipientRoles     []EventRoleType `json:"recipient_roles"`
+	RecipientAddresses []string        `json:"recipient_addresses"`
+	Emails             []uuid.UUID     `json:"emails"`
+	CreatedBy          uuid.UUID       `json:"created_by"`
+	CreatedAt          time.Time       `json:"created_at"`
+	UpdatedAt          time.Time       `json:"updated_at"`
 }
 
 type CampaignEmail struct {

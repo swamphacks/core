@@ -18,11 +18,13 @@ type Querier interface {
 	AssignRole(ctx context.Context, arg AssignRoleParams) error
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (AuthAccount, error)
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (Application, error)
+	CreateCampaign(ctx context.Context, arg CreateCampaignParams) (Campaign, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (AuthSession, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (AuthUser, error)
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) error
 	DeleteApplication(ctx context.Context, arg DeleteApplicationParams) error
+	DeleteCampaignById(ctx context.Context, id uuid.UUID) (int64, error)
 	// execrows returns affect row count on top of an error
 	DeleteEventById(ctx context.Context, id uuid.UUID) (int64, error)
 	DeleteExpiredSession(ctx context.Context) error
@@ -32,6 +34,7 @@ type Querier interface {
 	GetApplicationByUserAndEventID(ctx context.Context, arg GetApplicationByUserAndEventIDParams) (Application, error)
 	GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error)
+	GetCampaignByID(ctx context.Context, id uuid.UUID) (Campaign, error)
 	GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 	GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsParams) (EventRole, error)
 	GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEventStaffRow, error)
@@ -44,6 +47,7 @@ type Querier interface {
 	InvalidateSessionByID(ctx context.Context, id uuid.UUID) error
 	TouchSession(ctx context.Context, arg TouchSessionParams) error
 	UpdateApplication(ctx context.Context, arg UpdateApplicationParams) error
+	UpdateCampaignById(ctx context.Context, arg UpdateCampaignByIdParams) error
 	UpdateEventById(ctx context.Context, arg UpdateEventByIdParams) error
 	UpdateSessionExpiration(ctx context.Context, arg UpdateSessionExpirationParams) error
 	UpdateTokens(ctx context.Context, arg UpdateTokensParams) error
