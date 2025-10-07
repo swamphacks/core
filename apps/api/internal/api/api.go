@@ -121,11 +121,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		// Event-specific routes
 		r.Route("/{eventId}", func(r chi.Router) {
 			r.Use(mw.Auth.RequireAuth) // routes below this are protected
-
-			r.Post("/interest", api.Handlers.EventInterest.AddEmailToEvent)
-
-			// General access
-			r.Use(mw.Auth.RequireAuth) // routes below this are protected
+			
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Get("/role", api.Handlers.Event.GetEventRole)
 
