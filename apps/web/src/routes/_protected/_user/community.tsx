@@ -1,3 +1,4 @@
+import { PageUnderConstruction } from "@/components/PageUnderConstruction";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/_user/community")({
@@ -5,5 +6,5 @@ export const Route = createFileRoute("/_protected/_user/community")({
 });
 
 function RouteComponent() {
-  return <div>Hello this is the community tab!</div>;
+  return <PageUnderConstruction />;
 }

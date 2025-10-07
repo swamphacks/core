@@ -1,3 +1,4 @@
+import { PageUnderConstruction } from "@/components/PageUnderConstruction";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/events/$eventId/rejected")({
@@ -5,5 +6,5 @@ export const Route = createFileRoute("/_protected/events/$eventId/rejected")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/events/$eventId/rejected"!</div>;
+  return <PageUnderConstruction />;
 }

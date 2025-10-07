@@ -10,6 +10,25 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "email",
+                    "source"
+                ],
+                "type": "object"
+            },
+            "handlers.AssignRoleBatch": {
+                "properties": {
+                    "assignments": {
+                        "items": {
+                            "$ref": "#/components/schemas/handlers.AssignRoleFields"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    }
+                },
+                "required": [
+                    "assignments"
+                ],
                 "type": "object"
             },
             "handlers.AssignRoleFields": {
@@ -24,6 +43,11 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "email",
+                    "role",
+                    "user_id"
+                ],
                 "type": "object"
             },
             "handlers.CompleteOnboardingRequest": {
@@ -35,6 +59,10 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "name",
+                    "preferred_email"
+                ],
                 "type": "object"
             },
             "handlers.CreateEventFields": {
@@ -84,9 +112,17 @@
                 "required": [
                     "application_close",
                     "application_open",
+                    "decision_release",
+                    "description",
                     "end_time",
+                    "is_published",
+                    "location",
+                    "location_url",
+                    "max_attendees",
                     "name",
-                    "start_time"
+                    "rsvp_deadline",
+                    "start_time",
+                    "website_url"
                 ],
                 "type": "object"
             },
@@ -105,6 +141,12 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "assigned_at",
+                    "event_id",
+                    "role",
+                    "user_id"
+                ],
                 "type": "object"
             },
             "handlers.QueueEmailRequest": {
@@ -119,6 +161,11 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "body",
+                    "from",
+                    "to"
+                ],
                 "type": "object"
             },
             "handlers.UpdateEmailConsentRequest": {
@@ -127,6 +174,9 @@
                         "type": "boolean"
                     }
                 },
+                "required": [
+                    "email_consent"
+                ],
                 "type": "object"
             },
             "handlers.UpdateProfileRequest": {
@@ -138,6 +188,10 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "name",
+                    "preferred_email"
+                ],
                 "type": "object"
             },
             "middleware.UserContext": {
@@ -184,6 +238,16 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "email",
+                    "emailConsent",
+                    "image",
+                    "name",
+                    "onboarded",
+                    "preferredEmail",
+                    "role",
+                    "userId"
+                ],
                 "type": "object"
             },
             "response.ErrorResponse": {
@@ -195,6 +259,10 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "error",
+                    "message"
+                ],
                 "type": "object"
             },
             "sqlc.Application": {
@@ -225,6 +293,15 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "application",
+                    "created_at",
+                    "event_id",
+                    "saved_at",
+                    "status",
+                    "updated_at",
+                    "user_id"
+                ],
                 "type": "object"
             },
             "sqlc.ApplicationStatus": {
@@ -284,6 +361,19 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "created_at",
+                    "email",
+                    "email_consent",
+                    "email_verified",
+                    "id",
+                    "image",
+                    "name",
+                    "onboarded",
+                    "preferred_email",
+                    "role",
+                    "updated_at"
+                ],
                 "type": "object"
             },
             "sqlc.AuthUserRole": {
@@ -352,6 +442,25 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "application_close",
+                    "application_open",
+                    "banner",
+                    "created_at",
+                    "decision_release",
+                    "description",
+                    "end_time",
+                    "id",
+                    "is_published",
+                    "location",
+                    "location_url",
+                    "max_attendees",
+                    "name",
+                    "rsvp_deadline",
+                    "start_time",
+                    "updated_at",
+                    "website_url"
+                ],
                 "type": "object"
             },
             "sqlc.EventRoleType": {
@@ -408,6 +517,20 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "created_at",
+                    "email",
+                    "email_consent",
+                    "email_verified",
+                    "event_role",
+                    "id",
+                    "image",
+                    "name",
+                    "onboarded",
+                    "preferred_email",
+                    "role",
+                    "updated_at"
+                ],
                 "type": "object"
             },
             "sqlc.GetEventsWithUserInfoRow": {
@@ -470,6 +593,27 @@
                         "type": "string"
                     }
                 },
+                "required": [
+                    "application_close",
+                    "application_open",
+                    "application_status",
+                    "banner",
+                    "created_at",
+                    "decision_release",
+                    "description",
+                    "end_time",
+                    "event_role",
+                    "id",
+                    "is_published",
+                    "location",
+                    "location_url",
+                    "max_attendees",
+                    "name",
+                    "rsvp_deadline",
+                    "start_time",
+                    "updated_at",
+                    "website_url"
+                ],
                 "type": "object"
             },
             "sqlc.NullApplicationStatus": {
@@ -482,6 +626,10 @@
                         "type": "boolean"
                     }
                 },
+                "required": [
+                    "application_status",
+                    "valid"
+                ],
                 "type": "object"
             },
             "sqlc.NullEventRoleType": {
@@ -494,6 +642,10 @@
                         "type": "boolean"
                     }
                 },
+                "required": [
+                    "event_role_type",
+                    "valid"
+                ],
                 "type": "object"
             }
         }
@@ -1423,6 +1575,142 @@
                 ]
             }
         },
+        "/events/{eventId}/roles/batch": {
+            "post": {
+                "description": "Modify users' role for a specific event",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/handlers.AssignRoleBatch",
+                                        "summary": "request",
+                                        "description": "Event roles data"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Event roles data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK - Roles updated"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Not Found - User not found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Change or add event role of a user in batch",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/roles/{userId}": {
+            "delete": {
+                "description": "Remove user's role for a specific event",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "User ID",
+                        "in": "path",
+                        "name": "userId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK - Role revoked"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Not Found - User not found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Revoke event role of a user",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
         "/events/{eventId}/staff": {
             "get": {
                 "description": "Gets all users with role STAFF or ADMIN",
@@ -1475,6 +1763,98 @@
                 "summary": "Get all staff users for an event",
                 "tags": [
                     "Event"
+                ]
+            }
+        },
+        "/users": {
+            "get": {
+                "description": "Get or search for users by name or email. If no search term is provided, returns all users with pagination.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Search term to filter users by name or email (optional)",
+                        "in": "query",
+                        "name": "search",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Maximum number of users to return (default is 50)",
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Number of users to skip for pagination (default is 0)",
+                        "in": "query",
+                        "name": "offset",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/sqlc.AuthUser"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK: Returns a list of users matching the search criteria, or all users if no search term is provided."
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid query parameter(s)"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Failed to retrieve users"
+                    }
+                },
+                "summary": "Get/Search for users",
+                "tags": [
+                    "User"
                 ]
             }
         },

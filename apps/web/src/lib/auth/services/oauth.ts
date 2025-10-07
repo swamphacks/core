@@ -38,6 +38,8 @@ export function _oauthSignIn<T extends AuthConfig>(config: T) {
       path: "/",
       sameSite: "lax",
       secure: import.meta.env.DEV ? false : true,
+      //TODO: change this to an env variable
+      domain: import.meta.env.DEV ? "localhost" : ".swamphacks.com",
     });
 
     const params = createOAuthRequestParams(

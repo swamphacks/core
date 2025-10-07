@@ -34,3 +34,28 @@ func ParseParamBoolean(queryParams url.Values, key string, defaultVal *bool) (*b
 
 	return &parsed, nil
 }
+
+func ParseParamInt32(queryParams url.Values, key string, defaultVal *int32) (*int32, error) {
+	v := queryParams.Get(key)
+	if v == "" {
+		return defaultVal, nil
+	}
+
+	parsed, err := strconv.ParseInt(v, 10, 32)
+	if err != nil {
+		return nil, ErrMalformedField
+	}
+
+	val := int32(parsed)
+
+	return &val, nil
+}
+
+func ParseParamString(queryParams url.Values, key string, defaultVal *string) *string {
+	v := queryParams.Get(key)
+	if v == "" {
+		return defaultVal
+	}
+
+	return &v
+}

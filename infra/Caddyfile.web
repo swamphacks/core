@@ -1,0 +1,36 @@
+{
+	acme_dns cloudflare {env.CF_API_TOKEN}
+}
+
+dev-app.swamphacks.com {
+	reverse_proxy web-dev:80
+
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
+
+
+app.swamphacks.com {
+	reverse_proxy web:80
+
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}

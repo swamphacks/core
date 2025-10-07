@@ -21,6 +21,19 @@ function formatDateRange(start: Date, end: Date): string {
   return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
 }
 
+const statusMap = {
+  accepted: "accepted",
+  rejected: "rejected",
+  waitlisted: "waitlisted",
+  submitted: "underReview",
+  under_review: "underReview",
+  started: "notApplied",
+  withdrawn: "notGoing",
+  staff: "staff",
+  admin: "admin",
+  attendee: "attending",
+};
+
 export function mapEventsAPIResponseToEventCardProps(
   data: EventWithUserInfo,
 ): EventCardProps {
@@ -51,40 +64,19 @@ export function mapEventsAPIResponseToEventCardProps(
   }
 
   // Handle roles cases
-  if (data.event_role?.event_role_type === "staff") {
-    status = "staff";
-  } else if (data.event_role?.event_role_type === "admin") {
-    status = "admin";
-  } else if (data.event_role?.event_role_type === "attendee") {
-    status = "attending";
-  } else if (data.event_role?.event_role_type === "applicant") {
-    // Handle application cases
-    switch (data.application_status.application_status) {
-      case "accepted":
-        status = "accepted";
-        break;
-      case "rejected":
-        status = "rejected";
-        break;
-      case "waitlisted":
-        status = "waitlisted";
-        break;
-      case "submitted":
-      case "under_review":
-        status = "underReview";
-        break;
-      case "started":
-        status = "notApplied";
-        break;
-      case "withdrawn":
-        status = "notGoing";
-        break;
-      default:
-        status = "notApplied"; // Default case
-        break;
-    }
+  if (data.event_role?.event_role_type === "applicant") {
+    // Handle applicant cases
+    status =
+      (statusMap[
+        data.application_status.application_status
+      ] as keyof typeof applicationStatus) || "notApplied";
+  } else if (data.event_role?.event_role_type != undefined) {
+    // Handle cases where user is staff/admin/attendee
+    status = statusMap[
+      data.event_role.event_role_type
+    ] as keyof typeof applicationStatus;
   } else {
-    // Check if applications are even open
+    // Handle cases where role type is undefined (applications may not be open)
     const now = new Date();
     const appStart = new Date(data.application_open);
     const appEnd = new Date(data.application_close);

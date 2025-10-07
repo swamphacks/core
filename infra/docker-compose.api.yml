@@ -1,0 +1,111 @@
+services:
+  # Caddy
+
+  caddy:
+    image: ghcr.io/caddybuilds/caddy-cloudflare:latest
+    container_name: caddy
+    env_file:
+      - ./secrets/.env.cf # This needs to be pulled first since Caddy needs to compelte DNS challenge!
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.api:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api-dev
+      - api
+  # ========================
+  # Development Services
+  # ========================
+  api-dev:
+    image: ghcr.io/swamphacks/core-api:dev
+    ports:
+      - "8081:8080"
+    restart: always
+    env_file:
+      - ./secrets/.env.dev.api
+    depends_on:
+      - redis-dev
+
+  email-worker-dev:
+    image: ghcr.io/swamphacks/core-email-worker:dev
+    restart: always
+    env_file:
+      - ./secrets/.env.dev.api
+    depends_on:
+      - redis-dev
+
+  redis-dev:
+    image: redis:8.2.1-alpine
+    container_name: redis-dev
+    restart: always
+    command: >
+      redis-server
+      --maxmemory 200mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data_dev:/data
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ========================
+  # Production Services
+  # ========================
+  api:
+    image: ghcr.io/swamphacks/core-api:latest
+    ports:
+      - "8080:8080"
+    restart: always
+    env_file:
+      - ./secrets/.env.api
+    depends_on:
+      - redis
+  
+  email-worker:
+    image: ghcr.io/swamphacks/core-email-worker:latest
+    restart: always
+    env_file:
+      - ./secrets/.env.api
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:8.2.1-alpine
+    container_name: redis
+    restart: always
+    command: >
+      redis-server
+      --maxmemory 500mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  redis_data:
+  redis_data_dev:
+  caddy_data:
+  caddy_config:

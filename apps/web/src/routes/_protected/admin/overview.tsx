@@ -1,3 +1,4 @@
+import { PageUnderConstruction } from "@/components/PageUnderConstruction";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/admin/overview")({
@@ -5,5 +6,5 @@ export const Route = createFileRoute("/_protected/admin/overview")({
 });
 
 function RouteComponent() {
-  return <div>Under construction...</div>;
+  return <PageUnderConstruction />;
 }

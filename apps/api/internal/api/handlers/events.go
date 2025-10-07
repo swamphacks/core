@@ -528,6 +528,128 @@ func (h *EventHandler) AssignEventRole(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+type AssignRoleBatch struct {
+	Assignments []AssignRoleFields `json:"assignments"`
+}
+
+func (b *AssignRoleBatch) Validate() error {
+	if len(b.Assignments) == 0 {
+		return fmt.Errorf("at least one assignment is required")
+	}
+	for i, a := range b.Assignments {
+		if err := a.Validate(); err != nil {
+			return fmt.Errorf("assignment[%d]: %w", i, err)
+		}
+	}
+	return nil
+}
+
+// Change or add event role of a user in batch
+//
+//	@Summary		Change or add event role of a user in batch
+//	@Description	Modify users' role for a specific event
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path	string			true	"Event ID"	Format(uuid)
+//	@Param			request	body	AssignRoleBatch	true	"Event roles data"
+//	@Success		200		"OK - Roles updated"
+//	@Failure		404		{object}	response.ErrorResponse	"Not Found - User not found"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId}/roles/batch [post]
+func (h *EventHandler) BatchAssignEventRoles(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	var input AssignRoleBatch
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_body", err.Error()))
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_body", err.Error()))
+		return
+	}
+
+	for _, assignment := range input.Assignments {
+		userId := parse.ParseUUIDOrNil(assignment.UserID)
+		email := parse.ParseStrToPtr(assignment.Email)
+
+		err = h.eventService.AssignEventRole(r.Context(), userId, email, eventId, assignment.Role)
+		if err != nil {
+			switch err {
+			case repository.ErrUserNotFound:
+				res.SendError(w, http.StatusNotFound, res.NewError("user_missing", fmt.Sprintf("The user %v does not exist", assignment.UserID)))
+			default:
+				res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong on our end"))
+			}
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// Revoke event role of a user
+//
+//	@Summary		Revoke event role of a user
+//	@Description	Remove user's role for a specific event
+//	@Tags			Event
+//	@Produce		json
+//	@Param			eventId	path	string	true	"Event ID"	Format(uuid)
+//	@Param			userId	path	string	true	"User ID"	Format(uuid)
+//	@Success		200		"OK - Role revoked"
+//	@Failure		404		{object}	response.ErrorResponse	"Not Found - User not found"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId}/roles/{userId} [delete]
+func (h *EventHandler) RevokeEventRole(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	userIdStr := chi.URLParam(r, "userId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	if userIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
+		return
+	}
+
+	userId, err := uuid.Parse(userIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID"))
+		return
+	}
+
+	err = h.eventService.RevokeEventRole(r.Context(), userId, eventId)
+	if err != nil {
+		switch err {
+		case repository.ErrUserNotFound:
+			res.SendError(w, http.StatusNotFound, res.NewError("user_missing", "The user does not exist"))
+		default:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong on our end"))
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func deferredCloser(c io.Closer, name string) func() {
 	return func() {
 		if err := c.Close(); err != nil {

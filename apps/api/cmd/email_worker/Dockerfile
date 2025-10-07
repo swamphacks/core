@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine AS base
+FROM golang:1.25-alpine AS base
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ RUN go install github.com/air-verse/air@latest
 CMD ["air"]
 
 # Production
-FROM base as prod
+FROM base AS prod
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o email_worker ./cmd/email_worker
 

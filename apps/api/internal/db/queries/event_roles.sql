@@ -9,3 +9,8 @@ WHERE er.event_id = $1
 INSERT INTO event_roles (event_id, user_id, role)
 VALUES ($1, $2, $3)
 ON CONFLICT DO NOTHING;
+
+-- name: RemoveRole :exec
+DELETE FROM event_roles
+WHERE event_id = $1
+  AND user_id = $2;

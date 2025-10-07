@@ -18,6 +18,5 @@ export const Default: Story = {
         <p>This is the card's description</p>
       </div>
     ),
-    size: "sm",
   },
 };

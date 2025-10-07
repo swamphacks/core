@@ -6,7 +6,7 @@ on:
       - dev
     paths:
       - 'apps/web/**'
-      - 'infra/docker-compose.dev.yml'
+      - 'infra/docker-compose.web.yml'
   workflow_dispatch:
 
 permissions:
@@ -22,12 +22,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up QEMU for cross-platform builds
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -35,15 +29,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push multi-arch image
+      - name: Build Docker image
         run: |
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
-            --push \
+          docker build \
+            --platform linux/amd64 \
             -t ghcr.io/${{ github.repository_owner }}/core-web:dev \
-            --file ./apps/web/Dockerfile.dev \
+            --file ./apps/web/Dockerfile \
+            --target prod \
             ./apps/web
 
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/core-web:dev
   deploy:
     name: Deploy to Development Server
     runs-on: ubuntu-latest
@@ -53,21 +50,16 @@ jobs:
       - name: SSH proxy commmand
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.SSH_HOST_SWAMPHACKS }}
-          username: ${{ secrets.SSH_USERNAME_SWAMPHACKS }}
-          key: ${{ secrets.SSH_KEY_SWAMPHACKS }}
-          port: ${{ secrets.SSH_PORT_SWAMPHACKS }}
-          proxy_host: ${{ secrets.SSH_HOST_JUMP }}
-          proxy_username: ${{ secrets.SSH_USERNAME_JUMP }}
-          proxy_key: ${{ secrets.SSH_KEY_JUMP }}
-          proxy_port: ${{ secrets.SSH_PORT_JUMP }}
+          host: ${{ secrets.WEB_HOST }}
+          username: root
+          password: ${{ secrets.WEB_PASSWORD }}
           script: |
-            cd /home/admin/core/infra
+            cd /root/core/infra
             git fetch
             git checkout dev
             git reset --hard origin/dev
             git pull
             infisical export --env=dev --format=dotenv --path="/web" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.dev.web
-            docker compose -f docker-compose.dev.yml pull dev-web
-            docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate dev-web
+            docker compose -f docker-compose.web.yml pull web-dev
+            docker compose -f docker-compose.web.yml up -d --no-deps --force-recreate web-dev
 
