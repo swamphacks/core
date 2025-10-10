@@ -1,9 +1,7 @@
-// Mapping event api reponse to usable structure for event card
-
-import type { EventWithUserInfo } from "@/lib/openapi/types";
 import type applicationStatus from "../applicationStatus";
 import type { EventCardProps } from "../components/EventCard";
 import { format } from "date-fns";
+import type { EventWithUserInfo } from "../hooks/useEventsWithUserInfo";
 
 function formatDateRange(start: Date, end: Date): string {
   const startDay = format(start, "d");
@@ -21,7 +19,7 @@ function formatDateRange(start: Date, end: Date): string {
   return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
 }
 
-const statusMap = {
+const statusMap: Record<string, keyof typeof applicationStatus> = {
   accepted: "accepted",
   rejected: "rejected",
   waitlisted: "waitlisted",
@@ -39,18 +37,6 @@ export function mapEventsAPIResponseToEventCardProps(
 ): EventCardProps {
   let status: keyof typeof applicationStatus = "notApplied"; // Default
 
-  //TODO: Remove this guard once OpenAPI is updated
-  if (
-    !data.id ||
-    !data.name ||
-    !data.start_time ||
-    !data.end_time ||
-    !data.application_open ||
-    !data.application_close
-  ) {
-    throw new Error("Missing required event fields");
-  }
-
   if (!data.application_status) {
     return {
       eventId: data.id,
@@ -67,14 +53,10 @@ export function mapEventsAPIResponseToEventCardProps(
   if (data.event_role?.event_role_type === "applicant") {
     // Handle applicant cases
     status =
-      (statusMap[
-        data.application_status.application_status
-      ] as keyof typeof applicationStatus) || "notApplied";
-  } else if (data.event_role?.event_role_type != undefined) {
+      statusMap[data.application_status.application_status] ?? "notApplied";
+  } else if (data.event_role?.event_role_type) {
     // Handle cases where user is staff/admin/attendee
-    status = statusMap[
-      data.event_role.event_role_type
-    ] as keyof typeof applicationStatus;
+    status = statusMap[data.event_role.event_role_type] ?? "notApplied";
   } else {
     // Handle cases where role type is undefined (applications may not be open)
     const now = new Date();

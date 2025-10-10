@@ -240,8 +240,8 @@ export interface paths {
     get: {
       parameters: {
         query?: {
-          /** @description If true, include unpublished events as well. Superusers ONLY. */
-          include_published?: boolean;
+          /** @description Can be scoped to either published, scoped, or all. Scoped means admins and staff can see unpublished events */
+          scope?: string;
         };
         header?: never;
         path?: never;

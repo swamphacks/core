@@ -8,8 +8,5 @@ export type CreateEvent =
   paths["/events"]["post"]["requestBody"]["content"]["application/json"];
 export type User = components["schemas"]["sqlc.AuthUser"];
 
-//TODO: Remove extension once OpenAPI is updated
 export type EventWithUserInfo =
-  components["schemas"]["sqlc.GetEventsWithUserInfoRow"] & {
-    banner: string | null;
-  };
+  components["schemas"]["sqlc.GetEventsWithUserInfoRow"];
