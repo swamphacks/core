@@ -450,7 +450,7 @@
         {
           "name": "agreeToConduct",
           "questionType": "checkbox",
-          "label": "I have read and agree to the <a target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md\">MLH Code of Conduct</a>.",
+          "label": "I have read and agree to the <a className=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md\">MLH Code of Conduct</a>.",
           "renderLabelAsHTML": true,
           "required": true,
           "options": [{ "label": "I agree", "value": "agree" }]
@@ -458,7 +458,7 @@
         {
           "name": "infoShareAuthorization",
           "questionType": "checkbox",
-          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the <a target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>. I further agree to the terms of both the <a target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/contest-terms.md\">MLH Contest Terms and Conditions</a> and the <a target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>.",
+          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the <a className=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>. I further agree to the terms of both the <a className=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/contest-terms.md\">MLH Contest Terms and Conditions</a> and the <a className=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>.",
           "renderLabelAsHTML": true,
           "required": true,
           "options": [{ "label": "I agree", "value": "agree" }]

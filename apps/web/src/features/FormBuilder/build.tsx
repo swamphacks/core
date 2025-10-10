@@ -68,7 +68,10 @@ export function getFormValidationSchemaAndFields(
           if (item.hasOther) {
             fields.push(`${item.name}-other`);
             fieldsMeta[`${item.name}-other`] = QuestionTypes.shortAnswer;
-            schema[`${item.name}-other`] = getFormItemValidationSchema(item);
+            schema[`${item.name}-other`] = getFormItemValidationSchema({
+              ...item,
+              isRequired: false,
+            });
           }
         }
       } else {

@@ -25,7 +25,7 @@ body,
   color: var(--text-main);
 }
 
-a {
+.link {
   color: var(--color-text-link);
   text-decoration: underline;
 }
