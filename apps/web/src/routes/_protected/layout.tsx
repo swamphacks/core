@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { PageLoading } from "@/components/PageLoading";
 
 // This layout component performs authentication checks before the user can access protected pages
 export const Route = createFileRoute("/_protected")({
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/_protected")({
     return { user };
   },
   pendingMs: 1000,
-  pendingComponent: () => <p>Loading...</p>,
+  pendingComponent: () => PageLoading(),
   component: RouteComponent,
 });
 

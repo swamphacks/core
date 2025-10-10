@@ -4,9 +4,10 @@ import TablerLayoutCollage from "~icons/tabler/layout-collage";
 import TablerBooks from "~icons/tabler/books";
 import TablerSocial from "~icons/tabler/social";
 import { AppShell } from "@/components/AppShell/AppShell";
+import { PageLoading } from "@/components/PageLoading";
 
 export const Route = createFileRoute("/_protected/_user")({
-  pendingComponent: () => <p>Loading...</p>,
+  pendingComponent: () => PageLoading(),
   component: RouteComponent,
 });
 
