@@ -12,6 +12,8 @@ import { api } from "@/lib/ky";
 import { showToast } from "@/lib/toast/toast";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/Button";
+import { queryKey as authQueryKey } from "@/lib/auth/hooks/useUser";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ export function OnboardingModal({
   isOpen,
   onOpenChange,
 }: OnboardingModalProps) {
+  const queryClient = useQueryClient();
   const form = useForm({
     defaultValues: {
       preferredName: "",
@@ -44,7 +47,7 @@ export function OnboardingModal({
             name: value.preferredName,
           },
         });
-
+        await queryClient.invalidateQueries({ queryKey: authQueryKey });
         showToast({
           title: "Profile Updated",
           message: "Your profile has been updated successfully.",
