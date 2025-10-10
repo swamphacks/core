@@ -1,6 +1,6 @@
 import { useRouter } from "@tanstack/react-router";
 import { build } from "@/features/FormBuilder/build";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QuestionTypes } from "@/features/FormBuilder/types";
 import { showToast } from "@/lib/toast/toast";
 import TablerCircleCheck from "~icons/tabler/circle-check";
@@ -9,6 +9,7 @@ import TablerArrowLeft from "~icons/tabler/arrow-left";
 import { api } from "@/lib/ky";
 import { Spinner } from "@/components/ui/Spinner";
 import { useApplication } from "@/features/Application/hooks/useApplication";
+import { format, parseISO } from "date-fns";
 
 // TODO: dynamically fetch application json data from somewhere (backend, cdn?) instead of hardcoding it in the frontend
 import data from "@/forms/application.json";
@@ -24,9 +25,23 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   const { Form, fieldsMeta } = useMemo(() => build(data), []);
   const fileFields = useRef(new Set<string>());
   const [isInvalid, setIsInvalid] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const application = useApplication(eventId);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!application || application.isLoading) return;
+
+    if (application.data?.saved_at) {
+      const parsed = parseISO(application.data.saved_at);
+      setLastSavedAt(format(parsed, "yyyy-MM-dd h:mm a"));
+    } else {
+      setLastSavedAt(undefined);
+    }
+  }, [application?.data?.saved_at, application?.isLoading]);
 
   const onSubmit = useCallback(async (data: Record<string, any>) => {
     const formData = new FormData();
@@ -68,17 +83,22 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   }, []);
 
   const onChange = useCallback(
-    (formValues: Record<string, any>) => {
+    async (formValues: Record<string, any>) => {
       if (isSubmitted) return;
+
+      setIsSaving(true);
 
       // don't save the file uploads
       for (const field of fileFields.current) {
         delete formValues[field];
       }
 
-      api.post(`events/${eventId}/application/save`, {
+      await api.post(`events/${eventId}/application/save`, {
         json: formValues,
       });
+
+      setLastSavedAt(format(new Date(), "yyyy-MM-dd h:mm a"));
+      setIsSaving(false);
     },
     [isSubmitted],
   );
@@ -93,20 +113,36 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   }
 
   return (
-    <Form
-      defaultValues={
-        application.data["submitted"]
-          ? undefined
-          : JSON.parse(atob(application.data["application"]))
-      }
-      onSubmit={onSubmit}
-      onNewAttachments={onNewAttachments}
-      onChangeDelayMs={SAVE_DELAY_MS}
-      onChange={onChange}
-      SubmitSuccessComponent={SubmitSuccess}
-      isInvalid={isInvalid}
-      isSubmitted={isSubmitted || application.data["submitted"]}
-    />
+    <>
+      <div className="hidden fixed xl:inline-flex w-fit z-[999] bottom-3 left-3 text-xs">
+        {isSaving && <span>Autosaving...</span>}
+        {!isSaving && lastSavedAt && <span>Last saved at: {lastSavedAt}</span>}
+      </div>
+      <div className="flex-col">
+        <Form
+          defaultValues={
+            application.data["submitted"]
+              ? undefined
+              : JSON.parse(atob(application.data["application"]))
+          }
+          onSubmit={onSubmit}
+          onNewAttachments={onNewAttachments}
+          onChangeDelayMs={SAVE_DELAY_MS}
+          onChange={onChange}
+          SubmitSuccessComponent={SubmitSuccess}
+          isInvalid={isInvalid}
+          isSubmitted={isSubmitted || application.data["submitted"]}
+        />
+        <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 text-sm pb-20">
+          <div className="lg:hidden">
+            {isSaving && <span>Autosaving...</span>}
+            {!isSaving && lastSavedAt && (
+              <span>Last saved at: {lastSavedAt}</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

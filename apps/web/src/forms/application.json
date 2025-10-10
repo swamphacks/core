@@ -55,6 +55,7 @@
               "name": "phone",
               "questionType": "shortAnswer",
               "placeholder": "Enter a phone number",
+              "description": "Ex. 123456789, no dashes and parentheses",
               "label": "Phone",
               "required": true,
               "iconName": "phone",
@@ -101,13 +102,14 @@
               "questionType": "select",
               "placeholder": "Select your gender",
               "label": "Gender",
+              "hasOther": true,
               "options": [
                 { "label": "Man", "value": "man" },
                 { "label": "Woman", "value": "woman" },
                 { "label": "Non-Binary", "value": "non-binary" },
                 {
                   "label": "Prefer to self-describe",
-                  "value": "self-describe"
+                  "value": "other"
                 },
                 { "label": "Prefer Not to Answer", "value": "no-answer" }
               ]
@@ -386,6 +388,7 @@
           "placeholder": "Answer here...",
           "label": "What is your most memorable experience working in a group? What did you learn and accomplish? (max. 150 words)",
           "required": true,
+          "showWordCount": true,
           "validation": {
             "max": 150
           }
@@ -396,6 +399,7 @@
           "placeholder": "Answer here...",
           "label": "Tell us about a project you are most proud of. (max. 150 words)",
           "required": true,
+          "showWordCount": true,
           "validation": {
             "max": 150
           }
@@ -450,7 +454,7 @@
         {
           "name": "agreeToConduct",
           "questionType": "checkbox",
-          "label": "I have read and agree to the <a className=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md\">MLH Code of Conduct</a>.",
+          "label": "I have read and agree to the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md\">MLH Code of Conduct</a>.",
           "renderLabelAsHTML": true,
           "required": true,
           "options": [{ "label": "I agree", "value": "agree" }]
@@ -458,7 +462,7 @@
         {
           "name": "infoShareAuthorization",
           "questionType": "checkbox",
-          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the <a className=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>. I further agree to the terms of both the <a className=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/contest-terms.md\">MLH Contest Terms and Conditions</a> and the <a className=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>.",
+          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>. I further agree to the terms of both the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/contest-terms.md\">MLH Contest Terms and Conditions</a> and the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>.",
           "renderLabelAsHTML": true,
           "required": true,
           "options": [{ "label": "I agree", "value": "agree" }]

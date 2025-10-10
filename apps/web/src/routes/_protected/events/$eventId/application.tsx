@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ErrorBoundary } from "react-error-boundary";
 import { ApplicationForm } from "@/features/Application/components/ApplicationForm";
 import TablerAlertCircle from "~icons/tabler/alert-circle";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/_protected/events/$eventId/application")(
   {
@@ -11,6 +12,20 @@ export const Route = createFileRoute("/_protected/events/$eventId/application")(
 
 function RouteComponent() {
   const { eventId } = Route.useParams();
+
+  // Show a confirmation dialog when the user closes the tab
+  useEffect(() => {
+    function beforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+    }
+
+    window.addEventListener("beforeunload", beforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", beforeUnload);
+    };
+  }, []);
+
   return (
     <ErrorBoundary FallbackComponent={Fallback}>
       <div className="w-full h-screen bg-white dark:bg-background">
