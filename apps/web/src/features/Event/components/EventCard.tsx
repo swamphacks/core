@@ -45,8 +45,10 @@ const EventCard = ({
           </p>
           <EventBadge status={status} />
         </div>
-        <div className="mt-2 w-96">
-          <p className="text-text-secondary text-sm text-wrap">{description}</p>
+        <div className="mt-2 w-90">
+          <p className="text-text-secondary text-sm text-wrap wrap-break-word ">
+            {description}
+          </p>
         </div>
         <div className="flex text-sm justify-around items-center text-text-main pt-4">
           <div className="flex flex-col items-center gap-1">
