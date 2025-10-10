@@ -9,6 +9,7 @@ export const ParagraphQuestion = createQuestionItem({
 
   schema: BaseQuestion.extend({
     questionType: z.literal(QuestionTypes.paragraph),
+    showWordCount: z.boolean().default(false),
     validation: z
       .object({
         min: z.number(),
@@ -24,19 +25,30 @@ export const ParagraphQuestion = createQuestionItem({
 
     let schema = z.string(requiredMessage);
 
+    const countWords = (text: string) => {
+      const words = text.trim().split(/\s+/);
+      return words.filter((word) => word !== "").length;
+    };
+
     if (item.isRequired) {
-      schema = schema.min(1, requiredMessage);
+      schema = schema.refine((val) => countWords(val) >= 1, {
+        message: requiredMessage,
+      });
     }
 
     const { validation } = item;
     if (!validation) return schema;
 
-    if (typeof validation.max === "number") {
-      schema = schema.max(validation.max, error.tooLong);
+    if (typeof validation.max === "number" && validation.max !== undefined) {
+      schema = schema.refine((val) => countWords(val) <= validation.max!, {
+        message: error.tooLong,
+      });
     }
 
-    if (typeof validation.min === "number") {
-      schema = schema.min(validation.min, error.tooShort);
+    if (typeof validation.min === "number" && validation.min !== undefined) {
+      schema = schema.refine((val) => countWords(val) >= validation.min!, {
+        message: error.tooShort,
+      });
     }
 
     return schema;

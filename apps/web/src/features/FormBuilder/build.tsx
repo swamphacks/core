@@ -240,6 +240,7 @@ export function build(formObject: FormObject): {
                         children={(field) => {
                           return (
                             <field.TextField
+                              placeholder="Enter value"
                               aria-label={`${item.name}-other`}
                               name={field.name}
                               defaultValue={field.state.value}
