@@ -94,6 +94,101 @@
           ]
         },
         {
+          "type": "layout",
+          "content": [
+            {
+              "name": "gender",
+              "questionType": "select",
+              "placeholder": "Select your gender",
+              "label": "Gender",
+              "options": [
+                { "label": "Man", "value": "man" },
+                { "label": "Woman", "value": "woman" },
+                { "label": "Non-Binary", "value": "non-binary" },
+                {
+                  "label": "Prefer to self-describe",
+                  "value": "self-describe"
+                },
+                { "label": "Prefer Not to Answer", "value": "no-answer" }
+              ]
+            },
+
+            {
+              "name": "pronouns",
+              "questionType": "select",
+              "placeholder": "Select your pronouns",
+              "label": "Pronouns",
+              "options": [
+                { "label": "She/Her", "value": "she/her" },
+                { "label": "He/Him", "value": "he/him" },
+                { "label": "They/Them", "value": "they/them" },
+                { "label": "She/They", "value": "she/they" },
+                { "label": "He/They", "value": "he/they" },
+                { "label": "Not represented here", "value": "not-represented" },
+                { "label": "Prefer Not to Answer", "value": "no-answer" }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "race",
+          "questionType": "select",
+          "placeholder": "Select your race",
+          "label": "Race/Ethnicity",
+          "hasOther": true,
+          "options": [
+            { "label": "Asian Indian", "value": "asian-indian" },
+            { "label": "Black or African", "value": "black-or-african" },
+            { "label": "Chinese", "value": "chinese" },
+            { "label": "Filipino", "value": "filipino" },
+            {
+              "label": "Guamanian or Chamorro",
+              "value": "guamanian-or-chamorro"
+            },
+            {
+              "label": "Hispanic / Latino / Spanish Origin",
+              "value": "hispanic"
+            },
+            { "label": "Japanese", "value": "japanese" },
+            { "label": "Korean", "value": "korean" },
+            { "label": "Middle Eastern", "value": "middle-eastern" },
+            {
+              "label": "Native American or Alaskan Native",
+              "value": "native-american-or-alaskan-native"
+            },
+            { "label": "Native Hawaiian", "value": "native-hawaiian" },
+            { "label": "Samoan", "value": "samoan" },
+            { "label": "Vietnamese", "value": "vietnamese" },
+            { "label": "White", "value": "white" },
+            {
+              "label": "Other Asian (Thai, Cambodian, etc.)",
+              "value": "other-asian"
+            },
+            {
+              "label": "Other Pacific Islander",
+              "value": "other-pacific-islander"
+            },
+            { "label": "Other (Please Specify)", "value": "other" },
+            { "label": "Prefer Not to Answer", "value": "no-answer" }
+          ]
+        },
+        {
+          "name": "orientation",
+          "questionType": "select",
+          "placeholder": "Select",
+          "label": "Do you consider yourself to be any of the following?",
+          "options": [
+            {
+              "label": "Heterosexual or straight",
+              "value": "heterosexual-or-straight"
+            },
+            { "label": "Gay or lesbian", "value": "gay-or-lesbian" },
+            { "label": "Bisexual", "value": "bisexual" },
+            { "label": "Not represented here", "value": "not-represented" },
+            { "label": "Prefer Not to Answer", "value": "no-answer" }
+          ]
+        },
+        {
           "name": "linkedin",
           "questionType": "url",
           "placeholder": "Enter link",
@@ -148,6 +243,7 @@
               "placeholder": "Select your level",
               "label": "Level of Study",
               "required": true,
+              "hasOther": true,
               "options": [
                 { "label": "High School", "value": "high_school" },
                 { "label": "Undergraduate", "value": "undergraduate" },
@@ -172,6 +268,7 @@
               "placeholder": "Select your year",
               "label": "Year in College",
               "required": true,
+              "hasOther": true,
               "options": [
                 { "label": "1st Year", "value": "first_year" },
                 { "label": "2nd Year", "value": "second_year" },
@@ -190,7 +287,7 @@
               "options": {
                 "data": "year",
                 "min": 2023,
-                "max": 2030
+                "max": 2050
               }
             }
           ]
@@ -271,6 +368,7 @@
           "name": "resume",
           "questionType": "upload",
           "label": "Upload your resume",
+          "description": "By uploading your resume, you consent to us sharing it with our company sponsors.",
           "required": true,
           "validation": {
             "validMimeTypes": ["application/pdf"]
@@ -280,13 +378,13 @@
     },
     {
       "type": "section",
-      "label": "Miscellaneous",
+      "label": "Get To Know You",
       "content": [
         {
           "name": "essay1",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
-          "label": "[150 words] What is your most memorable experience working in a group? What did you learn and accomplish?",
+          "label": "What is your most memorable experience working in a group? What did you learn and accomplish? (max. 150 words)",
           "required": true,
           "validation": {
             "max": 150
@@ -296,7 +394,7 @@
           "name": "essay2",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
-          "label": "[150 words] Tell us about a project you are most proud of.",
+          "label": "Tell us about a project you are most proud of. (max. 150 words)",
           "required": true,
           "validation": {
             "max": 150
@@ -314,7 +412,7 @@
             { "label": "LinkedIn", "value": "linkedin" },
             { "label": "Word of Mouth", "value": "word_of_mouth" },
             { "label": "Website", "value": "website" },
-            { "label": "Class Announcement", "value": "class_announcement" },
+            { "label": "Class Shoutout", "value": "class_shoutout" },
             { "label": "Other", "value": "other" }
           ]
         }
@@ -346,20 +444,22 @@
     {
       "type": "section",
       "label": "MLH Consent & Agreements",
-      "description": "We are currently in the process of partnering with MLH. The following 3 checkboxes are for this partnership. If we do not end up partnering with MLH, your information will not be shared",
+      "description": "We are currently in the process of partnering with MLH. The following 3 checkboxes are for this partnership. If we do not end up partnering with MLH, your information will not be shared.",
 
       "content": [
         {
           "name": "agreeToConduct",
           "questionType": "checkbox",
-          "label": "I have read and agree to the MLH Code of Conduct.",
+          "label": "I have read and agree to the <a target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md\">MLH Code of Conduct</a>.",
+          "renderLabelAsHTML": true,
           "required": true,
           "options": [{ "label": "I agree", "value": "agree" }]
         },
         {
           "name": "infoShareAuthorization",
           "questionType": "checkbox",
-          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the MLH Privacy Policy. I have read and agree to the MLH Code of Conduct.",
+          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the <a target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>. I further agree to the terms of both the <a target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/contest-terms.md\">MLH Contest Terms and Conditions</a> and the <a target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>.",
+          "renderLabelAsHTML": true,
           "required": true,
           "options": [{ "label": "I agree", "value": "agree" }]
         },

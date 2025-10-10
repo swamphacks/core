@@ -25,6 +25,11 @@ body,
   color: var(--text-main);
 }
 
+a {
+  color: var(--color-text-link);
+  text-decoration: underline;
+}
+
 /* https://stackoverflow.com/questions/68400074/how-to-apply-transition-effects-when-switching-from-light-mode-to-dark-in-tailwi */
 /* #root {
   @apply transition-bg duration-300;
