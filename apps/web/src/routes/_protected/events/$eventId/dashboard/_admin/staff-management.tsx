@@ -4,6 +4,7 @@ import StaffTable from "@/features/EventAdmin/components/StaffTable";
 import { useEventStaffUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
 import { createFileRoute } from "@tanstack/react-router";
 import { DialogTrigger, Heading } from "react-aria-components";
+import { PageLoading } from "@/components/PageLoading";
 
 export const Route = createFileRoute(
   "/_protected/events/$eventId/dashboard/_admin/staff-management",
@@ -18,12 +19,13 @@ function RouteComponent() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 h-full">
         <Heading className="text-2xl lg:text-3xl font-semibold">
           Staff Management
         </Heading>
-
-        <div>Loading...</div>
+        <div className="flex flex-1 justify-center items-center">
+          <PageLoading />
+        </div>
       </div>
     );
   }
