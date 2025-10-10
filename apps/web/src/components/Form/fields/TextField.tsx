@@ -11,6 +11,8 @@ export default function TextField(
 
   if (props.textarea && props.showWordCount) {
     const countWords = (text: string) => {
+      if (text === undefined || text === null) return 0;
+
       // Remove leading/trailing whitespace and split by one or more spaces
       const words = text.trim().split(/\s+/);
       // Filter out empty strings that might result from multiple spaces
