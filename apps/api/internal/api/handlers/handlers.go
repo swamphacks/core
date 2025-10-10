@@ -13,6 +13,7 @@ type Handlers struct {
 	Event         *EventHandler
 	Email         *EmailHandler
 	Application   *ApplicationHandler
+	Campaign      *CampaignHandler
 }
 
 func NewHandlers(
@@ -22,6 +23,7 @@ func NewHandlers(
 	eventService *services.EventService,
 	emailService *services.EmailService,
 	appService *services.ApplicationService,
+	campaignService *services.CampaignService,
 	cfg *config.Config,
 	logger zerolog.Logger,
 ) *Handlers {
@@ -31,6 +33,7 @@ func NewHandlers(
 		EventInterest: NewEventInterestHandler(eventInterestService, cfg, logger),
 		Event:         NewEventHandler(eventService, cfg, logger),
 		Email:         NewEmailHandler(emailService, logger),
+		Campaign:      NewCampaignHandler(campaignService, logger),
 		Application:   NewApplicationHandler(appService),
 	}
 }
