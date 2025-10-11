@@ -20,9 +20,14 @@ export interface CheckboxGroupProps
   children?: ReactNode;
   description?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
+  renderLabelAsHTML?: boolean;
 }
 
-export function CheckboxGroup({ label = "", ...props }: CheckboxGroupProps) {
+export function CheckboxGroup({
+  label = "",
+  renderLabelAsHTML,
+  ...props
+}: CheckboxGroupProps) {
   return (
     <AriaCheckboxGroup
       {...props}
@@ -31,7 +36,13 @@ export function CheckboxGroup({ label = "", ...props }: CheckboxGroupProps) {
         "flex flex-col gap-2",
       )}
     >
-      <Label isRequired={props.isRequired}>{label}</Label>
+      <Label isRequired={props.isRequired}>
+        {renderLabelAsHTML ? (
+          <span dangerouslySetInnerHTML={{ __html: label }} />
+        ) : (
+          label
+        )}
+      </Label>
       {props.children}
       {props.description && <Description>{props.description}</Description>}
       <FieldError>{props.errorMessage}</FieldError>
