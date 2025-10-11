@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Login } from "@/features/Auth/components/Login";
+import { PageLoading } from "@/components/PageLoading";
 import { z } from "zod";
 
 export const Route = createFileRoute("/")({
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/")({
   },
   pendingMs: 50,
   // TODO: Use skeleton components to display a loading state
-  pendingComponent: () => <p>Loading...</p>,
+  pendingComponent: () => PageLoading(),
   component: Index,
 });
 
