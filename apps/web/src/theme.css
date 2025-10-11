@@ -151,7 +151,7 @@
   /* TEXT */
   --text-main: var(--color-zinc-200);
   --text-secondary: var(--color-zinc-400);
-  --text-link: var(--color-blue-500);
+  --text-link: var(--color-blue-300);
 
   /* NAVBAR */
   --navlink-bg-inactive: transparent;

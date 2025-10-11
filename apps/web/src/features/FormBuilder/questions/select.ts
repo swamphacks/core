@@ -10,6 +10,7 @@ export const SelectQuestion = createQuestionItem({
   schema: BaseQuestion.extend({
     questionType: z.literal(QuestionTypes.select),
     searchable: z.boolean().default(false),
+    hasOther: z.boolean().default(false),
     options: z
       .array(
         z

@@ -24,12 +24,20 @@ type ApplicationSubmissionFields struct {
 	Phone                   string `json:"phone" validate:"required,len=10"`
 	PreferredEmail          string `json:"preferredEmail" validate:"required,email"`
 	UniversityEmail         string `json:"universityEmail" validate:"required,email"`
+	Gender                  string `json:"gender"`
+	GenderOther             string `json:"gender-other"`
+	Pronouns                string `json:"pronouns"`
+	Race                    string `json:"race"`
+	RaceOther               string `json:"race-other"`
+	Orientation             string `json:"orientation"`
 	Linkedin                string `json:"linkedin" validate:"required,url"`
 	Github                  string `json:"github" validate:"required,url"`
 	AgeCertification        bool   `json:"ageCertification" validate:"required,boolean"`
 	School                  string `json:"school" validate:"required"`
 	Level                   string `json:"level" validate:"required"`
+	LevelOther              string `json:"level-other"`
 	Year                    string `json:"year" validate:"required"`
+	YearOther               string `json:"year-other"`
 	GraduationYear          string `json:"graduationYear" validate:"required"`
 	Majors                  string `json:"majors" validate:"required"`
 	Minors                  string `json:"minors"`

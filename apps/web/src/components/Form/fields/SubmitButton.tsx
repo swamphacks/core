@@ -8,7 +8,7 @@ export function SubmitButton({ label = "Submit" }: { label?: string }) {
       selector={(state) => [state.canSubmit, state.isSubmitting]}
       children={([canSubmit, isSubmitting]) => {
         return (
-          <div className="flex justify-start mb-20">
+          <div className="flex justify-start">
             <Button type="submit" isDisabled={!canSubmit || isSubmitting}>
               {isSubmitting ? "Submitting..." : label}
             </Button>

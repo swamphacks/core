@@ -144,6 +144,14 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 	submission.Phone = r.FormValue("phone")
 	submission.PreferredEmail = r.FormValue("preferredEmail")
 	submission.UniversityEmail = r.FormValue("universityEmail")
+
+	submission.Gender = r.FormValue("gender")
+	submission.GenderOther = r.FormValue("gender-other")
+	submission.Pronouns = r.FormValue("pronouns")
+	submission.Race = r.FormValue("race")
+	submission.RaceOther = r.FormValue("race-other")
+	submission.Orientation = r.FormValue("orientation")
+
 	submission.Linkedin = r.FormValue("linkedin")
 	submission.Github = r.FormValue("github")
 
@@ -153,7 +161,9 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 
 	submission.School = r.FormValue("school")
 	submission.Level = r.FormValue("level")
+	submission.LevelOther = r.FormValue("level-other")
 	submission.Year = r.FormValue("year")
+	submission.YearOther = r.FormValue("year-other")
 	submission.GraduationYear = r.FormValue("graduationYear")
 	submission.Majors = r.FormValue("majors")
 	submission.Minors = r.FormValue("minors")

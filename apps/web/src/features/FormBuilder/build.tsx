@@ -23,6 +23,7 @@ import { useStore } from "@tanstack/react-form";
 import { questionTypeItemMap } from "./questions/createQuestionItem";
 import { parseDate } from "@internationalized/date";
 import { useDebounce } from "@uidotdev/usehooks";
+import TablerCornerDownRight from "~icons/tabler/corner-down-right";
 import TablerCircleCheck from "~icons/tabler/circle-check";
 
 export function getFormItemValidationSchema(
@@ -62,6 +63,17 @@ export function getFormValidationSchemaAndFields(
         schema[item.name] = getFormItemValidationSchema(item);
         fields.push(item.name);
         fieldsMeta[item.name] = item.questionType;
+
+        if (item.questionType === QuestionTypes.select) {
+          if (item.hasOther) {
+            fields.push(`${item.name}-other`);
+            fieldsMeta[`${item.name}-other`] = QuestionTypes.shortAnswer;
+            schema[`${item.name}-other`] = getFormItemValidationSchema({
+              ...item,
+              isRequired: false,
+            });
+          }
+        }
       } else {
         traverseFormContent(item.content);
       }
@@ -146,8 +158,7 @@ export function build(formObject: FormObject): {
       isSubmitted: isSubmittedProp = false,
       SubmitSuccessComponent = FallbackSubmitSuccessComponent,
     }) {
-      // const [, rerender] = useState({});
-      // useEffect(() => rerender({}), [defaultValues]);
+      const [otherFields, setOtherFields] = useState<string[]>([]);
 
       const transformedDefaultValues = useMemo(
         () => transformDefaultValues(defaultValues, fieldsMeta),
@@ -180,6 +191,25 @@ export function build(formObject: FormObject): {
         }
       }, [isDirty, formValues]);
 
+      useEffect(() => {
+        const newOtherFields = [];
+        for (const field in form.state.values) {
+          if (
+            form.state.values[field] === "other" &&
+            fieldsMeta[field] === QuestionTypes.select
+          ) {
+            newOtherFields.push(field);
+          }
+        }
+        // Only update if arrays differ
+        if (
+          newOtherFields.length !== otherFields.length ||
+          !newOtherFields.every((field) => otherFields.includes(field))
+        ) {
+          setOtherFields(newOtherFields);
+        }
+      }, [form.state.isDirty, form.state.values]);
+
       const formRef = useRef<HTMLFormElement>(null);
 
       const formErrors = useFormErrors(form);
@@ -188,6 +218,54 @@ export function build(formObject: FormObject): {
       const buildFormContent = (content: FormItemSchemaType[]) => {
         return content.map((item) => {
           if (item.type === "question") {
+            if (item.questionType === QuestionTypes.select) {
+              if (otherFields.includes(item.name)) {
+                return (
+                  <div
+                    key={`${item.name}-1`}
+                    className="flex-1 flex flex-col gap-1"
+                  >
+                    <form.AppField
+                      key={item.name}
+                      name={item.name}
+                      children={(field) => {
+                        return <SelectField item={item} field={field} />;
+                      }}
+                    />
+                    <div className="flex items-center gap-2">
+                      <TablerCornerDownRight className="opacity-20 text-xl mb-2" />
+                      <form.AppField
+                        key={`${item.name}-other`}
+                        name={`${item.name}-other`}
+                        children={(field) => {
+                          return (
+                            <field.TextField
+                              placeholder="Enter value"
+                              aria-label={`${item.name}-other`}
+                              name={field.name}
+                              defaultValue={field.state.value}
+                              type="text"
+                              className="flex-1"
+                              validationBehavior="aria"
+                            />
+                          );
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <form.AppField
+                  key={item.name}
+                  name={item.name}
+                  children={(field) => {
+                    return <SelectField item={item} field={field} />;
+                  }}
+                />
+              );
+            }
             return (
               <form.AppField
                 key={item.name}
@@ -253,8 +331,6 @@ export function build(formObject: FormObject): {
                       );
                     case QuestionTypes.checkbox:
                       return <CheckboxField item={item} field={field} />;
-                    case QuestionTypes.select:
-                      return <SelectField item={item} field={field} />;
                     case QuestionTypes.multiselect:
                       return <MultiSelectField item={item} field={field} />;
                     case QuestionTypes.date:
@@ -321,7 +397,10 @@ export function build(formObject: FormObject): {
       };
 
       // Cache result so buildFormContent doesn't invoke on rerender
-      const formContent = useMemo(() => buildFormContent(data.content), []);
+      const formContent = useMemo(
+        () => buildFormContent(data.content),
+        [otherFields],
+      );
 
       const errors = useStore(form.store, (state) => {
         return state.errors;
@@ -370,6 +449,28 @@ export function build(formObject: FormObject): {
 
       const isSubmitted = (isSubmittedState || isSubmittedProp) && !isInvalid;
 
+      // TODO: find a better way to handle this, maybe just let the parent component handle the form component instead of doing it in here
+      const formContainer = useMemo(() => {
+        return (
+          <Form
+            className="mt-5 space-y-10"
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
+            }}
+            validationErrors={formErrors}
+            validationBehavior="aria"
+            ref={formRef}
+          >
+            <div className="space-y-6">{formContent}</div>
+            <form.AppForm>
+              <form.SubmitButton label="Submit" />
+            </form.AppForm>
+          </Form>
+        );
+      }, [formErrors, formContent]);
+
       return (
         <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">
           <div className="space-y-3 py-5 border-b-1 border-border">
@@ -383,22 +484,7 @@ export function build(formObject: FormObject): {
               <SubmitSuccessComponent />
             </div>
           ) : (
-            <Form
-              className="mt-5 space-y-10"
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                form.handleSubmit();
-              }}
-              validationErrors={formErrors}
-              validationBehavior="aria"
-              ref={formRef}
-            >
-              <div className="space-y-6">{formContent}</div>
-              <form.AppForm>
-                <form.SubmitButton label="Submit" />
-              </form.AppForm>
-            </Form>
+            formContainer
           )}
         </div>
       );

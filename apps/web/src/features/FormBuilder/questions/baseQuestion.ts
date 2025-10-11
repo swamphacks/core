@@ -11,6 +11,7 @@ export const BaseQuestion = z.object({
     .string()
     .min(1, "Question must have a unique name for form submissions."),
   label: z.string().optional(),
+  renderLabelAsHTML: z.boolean().default(false),
   required: z.boolean().optional().default(false), // this prop will be transformed to `isRequired` after form parsing
   requiredMessage: z.string().optional(),
   placeholder: z.string().optional(),
