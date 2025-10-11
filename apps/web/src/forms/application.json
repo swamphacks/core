@@ -140,12 +140,12 @@
           "hasOther": true,
           "options": [
             { "label": "Asian Indian", "value": "asian-indian" },
-            { "label": "Black or African", "value": "black-or-african" },
+            { "label": "Black or African", "value": "black" },
             { "label": "Chinese", "value": "chinese" },
             { "label": "Filipino", "value": "filipino" },
             {
               "label": "Guamanian or Chamorro",
-              "value": "guamanian-or-chamorro"
+              "value": "guamanian"
             },
             {
               "label": "Hispanic / Latino / Spanish Origin",
@@ -175,16 +175,16 @@
           ]
         },
         {
-          "name": "orientation",
+          "name": "sexualOrientation",
           "questionType": "select",
           "placeholder": "Select",
           "label": "Do you consider yourself to be any of the following?",
           "options": [
             {
               "label": "Heterosexual or straight",
-              "value": "heterosexual-or-straight"
+              "value": "heterosexual"
             },
-            { "label": "Gay or lesbian", "value": "gay-or-lesbian" },
+            { "label": "Gay or lesbian", "value": "gay" },
             { "label": "Bisexual", "value": "bisexual" },
             { "label": "Not represented here", "value": "not-represented" },
             { "label": "Prefer Not to Answer", "value": "no-answer" }
