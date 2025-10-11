@@ -49,17 +49,19 @@ export function MobileProfile({
             </div>
           }
         >
-          <MenuItem
-            id="portal"
-            onAction={() =>
-              router.navigate({
-                to: isAdminPortal ? "/portal" : "/admin/overview",
-              })
-            }
-          >
-            {isAdminPortal ? <TablerUser /> : <TablerUserCog />}
-            {isAdminPortal ? "User" : "Admin"} Portal
-          </MenuItem>
+          {role === "superuser" && (
+            <MenuItem
+              id="portal"
+              onAction={() =>
+                router.navigate({
+                  to: isAdminPortal ? "/portal" : "/admin/overview",
+                })
+              }
+            >
+              {isAdminPortal ? <TablerUser /> : <TablerUserCog />}
+              {isAdminPortal ? "User" : "Admin"} Portal
+            </MenuItem>
+          )}
           <MenuItem
             id="settings"
             onAction={() => router.navigate({ to: "/settings" })}
