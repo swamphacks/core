@@ -23,9 +23,9 @@ func NewEmailHandler(emailService *services.EmailService, logger zerolog.Logger)
 }
 
 type QueueEmailRequest struct {
-	To   string `json:"to"`
-	From string `json:"from"`
-	Body string `json:"body"`
+	To   []string `json:"to"`
+	From string   `json:"from"`
+	Body string   `json:"body"`
 }
 
 // Queue an Email Request
@@ -41,15 +41,22 @@ type QueueEmailRequest struct {
 //	@Failure		500		{object}	response.ErrorResponse	"Server Error: The server went kaput while queueing email sending"
 //	@Router			/email/queue [post]
 func (h *EmailHandler) QueueEmail(w http.ResponseWriter, r *http.Request) {
+	// TODO: remove "from" field as this will be from an env var
 	var req QueueEmailRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Could not parse request body"))
 		return
 	}
 
-	if !email.IsValidEmail(req.To) || !email.IsValidEmail(req.From) {
-		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_email", "To and/or From email is malformed or missing"))
+	if !email.IsValidEmail(req.From) {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_email", "'From' email is malformed or missing"))
 		return
+	}
+	for _, to := range req.To {
+		if !email.IsValidEmail(to) {
+			res.SendError(w, http.StatusBadRequest, res.NewError("malformed_email", "'To' email is malformed or missing"))
+			return
+		}
 	}
 
 	if req.Body == "" {

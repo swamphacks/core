@@ -31,6 +31,14 @@ type CloudflareConfig struct {
 	AccessKeySecret string `env:"ACCESS_KEY_SECRET"`
 }
 
+type SmtpConfig struct {
+	Identity  string `env:"IDENTITY"`
+	Username  string `env:"USERNAME"`
+	Password  string `env:"PASSWORD"`
+	Hostname  string `env:"HOSTNAME"`
+	ServerUrl string `env:SERVER_URL`
+}
+
 type CoreBuckets struct {
 	Avatars            string `env:"USER_AVATARS" envDefault:"core-user-avatars-dev"`
 	ApplicationResumes string `env:"APPLICATION_RESUMES" envDefault:"core-application-resumes-dev"`
@@ -52,6 +60,7 @@ type Config struct {
 
 	CF          CloudflareConfig `envPrefix:"CF_"`
 	CoreBuckets CoreBuckets      `envPrefix:"CORE_BUCKETS_"`
+	Smtp        SmtpConfig       `envPrefix:"SMTP_"`
 }
 
 func Load() *Config {

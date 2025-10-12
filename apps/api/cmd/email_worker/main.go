@@ -11,6 +11,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 	"github.com/swamphacks/core/apps/api/internal/workers"
+	"net/smtp"
 )
 
 func main() {
@@ -37,7 +38,9 @@ func main() {
 		},
 	)
 
-	emailService := services.NewEmailService(nil, logger)
+	smtpAuth := smtp.PlainAuth(cfg.Smtp.Identity, cfg.Smtp.Username, cfg.Smtp.Password, cfg.Smtp.Hostname)
+
+	emailService := services.NewEmailService(nil, &smtpAuth, logger)
 	emailWorker := workers.NewEmailWorker(emailService, logger)
 
 	mux := asynq.NewServeMux()

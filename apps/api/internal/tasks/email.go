@@ -11,7 +11,7 @@ const (
 )
 
 type SendEmailPayload struct {
-	To   string
+	To   []string
 	From string
 	Body string
 }
