@@ -23,15 +23,27 @@ func NewEmailWorker(emailService *services.EmailService, logger zerolog.Logger) 
 	}
 }
 
-func (w *EmailWorker) HandleSendEmailTask(ctx context.Context, t *asynq.Task) error {
-	var p tasks.SendEmailPayload
+func (w *EmailWorker) HandleSendTextEmailTask(ctx context.Context, t *asynq.Task) error {
+	var p tasks.SendTextEmailPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
 		w.logger.Err(err)
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+		return fmt.Errorf("HandleSendTextEmailTask: json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
 
-	if err := w.emailService.SendEmail(p.To, p.Subject, p.Body); err != nil {
+	if err := w.emailService.SendTextEmail(p.To, p.Subject, p.Body); err != nil {
 		w.logger.Err(err).Msg("Failed to send email from worker")
+	}
+	return nil
+}
+func (w *EmailWorker) HandleSendConfirmationEmailTask(ctx context.Context, t *asynq.Task) error {
+	var p tasks.SendConfirmationEmailPayload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		w.logger.Err(err)
+		return fmt.Errorf("HandleSendConfirmationEmailTask: json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+	}
+
+	if err := w.emailService.SendConfirmationEmail(p.To, p.Name); err != nil {
+		w.logger.Err(err).Msg("Failed to send ConfirmationEmail from worker")
 	}
 	return nil
 }

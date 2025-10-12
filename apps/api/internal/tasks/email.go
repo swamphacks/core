@@ -7,20 +7,35 @@ import (
 )
 
 const (
-	TypeSendEmail = "email:send"
+	TypeSendTextEmail         = "textemail:send"
+	TypeSendConfirmationEmail = "confirmationemail:send"
 )
 
-type SendEmailPayload struct {
+type SendTextEmailPayload struct {
 	To      []string
 	Subject string
 	Body    string
 }
 
-func NewTaskSendEmail(payload SendEmailPayload) (*asynq.Task, error) {
+type SendConfirmationEmailPayload struct {
+	To   string
+	Name string
+}
+
+func NewTaskSendTextEmail(payload SendTextEmailPayload) (*asynq.Task, error) {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
 
-	return asynq.NewTask(TypeSendEmail, data), nil
+	return asynq.NewTask(TypeSendTextEmail, data), nil
+}
+
+func NewTaskSendConfirmationEmail(payload SendConfirmationEmailPayload) (*asynq.Task, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return asynq.NewTask(TypeSendConfirmationEmail, data), nil
 }

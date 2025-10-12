@@ -150,7 +150,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// Email routes
 	api.Router.Route("/email", func(r chi.Router) {
-		r.Post("/queue", api.Handlers.Email.QueueEmail)
+		r.Post("/queue", api.Handlers.Email.QueueTextEmail)
+		r.Post("/queueConfirmation", api.Handlers.Email.QueueConfirmationEmail)
 	})
 
 	// Protected test routes
