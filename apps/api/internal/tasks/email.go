@@ -11,9 +11,9 @@ const (
 )
 
 type SendEmailPayload struct {
-	To   []string
-	From string
-	Body string
+	To      []string
+	Subject string
+	Body    string
 }
 
 func NewTaskSendEmail(payload SendEmailPayload) (*asynq.Task, error) {

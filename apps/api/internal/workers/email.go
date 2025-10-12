@@ -30,7 +30,7 @@ func (w *EmailWorker) HandleSendEmailTask(ctx context.Context, t *asynq.Task) er
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
 
-	if err := w.emailService.SendEmail(p.To, p.From, p.Body); err != nil {
+	if err := w.emailService.SendEmail(p.To, p.Subject, p.Body); err != nil {
 		w.logger.Err(err).Msg("Failed to send email from worker")
 	}
 	return nil
