@@ -85,7 +85,8 @@ func (s *EmailService) SendConfirmationEmail(recipient string, name string) erro
 
 	var body bytes.Buffer
 
-	template, err := template.ParseFiles("../../internal/email/templates/ConfirmationEmail.html")
+	// file path changes to "../../internal/email/templates/ConfirmationEmail.html" if you're testing via web api
+	template, err := template.ParseFiles("./internal/email/templates/ConfirmationEmail.html")
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to parse email template for recipient")
 	}
