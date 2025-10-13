@@ -87,17 +87,17 @@ func (s *EmailService) SendConfirmationEmail(recipient string, name string) erro
 
 	template, err := template.ParseFiles("../../internal/email/templates/ConfirmationEmail.html")
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to parse email template.")
+		s.logger.Err(err).Msg(fmt.Sprintf("Failed to parse email template for recipient '%s'.", recipient))
 	}
 
 	err = template.Execute(&body, struct{ Name string }{Name: name})
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to inject template variables.")
+		s.logger.Err(err).Msg(fmt.Sprintf("Failed to inject template variables for recipient '%s'.", recipient))
 	}
 
-	err = s.SendHTMLEmail([]string{recipient}, "Confirmation email", body.String())
+	err = s.SendHTMLEmail([]string{recipient}, "SwampHacks XI: we have recieved your application!", body.String())
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to send confirmation email.")
+		s.logger.Err(err).Msg(fmt.Sprintf("Failed to send confirmation email for recipient '%s'", recipient))
 	}
 
 	return nil

@@ -54,16 +54,18 @@ var (
 type ApplicationService struct {
 	appRepo       *repository.ApplicationRepository
 	eventsService *EventService
+	emailService  *EmailService
 	storage       storage.Storage
 	buckets       *config.CoreBuckets
 	txm           *db.TransactionManager
 	logger        zerolog.Logger
 }
 
-func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
+func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
 	return &ApplicationService{
 		appRepo:       appRepo,
 		eventsService: eventsService,
+		emailService:  emailService,
 		storage:       storage,
 		buckets:       buckets,
 		txm:           txm,
@@ -134,6 +136,12 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		}
 
 		err = s.eventsService.AssignEventRole(ctx, ptr.UUIDToPtr(userId), nil, eventId, sqlc.EventRoleTypeApplicant)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		err = s.emailService.SendConfirmationEmail(data.PreferredEmail, data.FirstName)
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
 			return err
