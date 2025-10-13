@@ -26,6 +26,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   const fileFields = useRef(new Set<string>());
   const [isInvalid, setIsInvalid] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const application = useApplication(eventId);
 
@@ -44,6 +45,8 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   }, [application?.data?.saved_at, application?.isLoading]);
 
   const onSubmit = useCallback(async (data: Record<string, any>) => {
+    setIsSubmitting(true);
+
     const formData = new FormData();
 
     for (const key in data) {
@@ -74,6 +77,8 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
       setIsSubmitted(true);
       setIsInvalid(false);
     }
+
+    setIsSubmitting(false);
   }, []);
 
   const onNewAttachments = useCallback((newFiles: Record<string, File[]>) => {
@@ -84,7 +89,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
 
   const onChange = useCallback(
     async (formValues: Record<string, any>) => {
-      if (isSubmitted) return;
+      if (isSubmitted || isSubmitting) return;
 
       setIsSaving(true);
 
@@ -100,7 +105,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
       setLastSavedAt(format(new Date(), "yyyy-MM-dd h:mm a"));
       setIsSaving(false);
     },
-    [isSubmitted],
+    [isSubmitted, isSubmitting],
   );
 
   if (application.isLoading) {
@@ -112,11 +117,19 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
     );
   }
 
+  const saveStatus = (
+    <>
+      {isSaving && !isSubmitted && <span>Autosaving...</span>}
+      {!isSaving && lastSavedAt && !isSubmitted && (
+        <span>Last saved at: {lastSavedAt}</span>
+      )}
+    </>
+  );
+
   return (
     <>
       <div className="hidden fixed xl:inline-flex w-fit z-[999] bottom-3 left-3 text-xs">
-        {isSaving && <span>Autosaving...</span>}
-        {!isSaving && lastSavedAt && <span>Last saved at: {lastSavedAt}</span>}
+        {saveStatus}
       </div>
       <div className="flex-col">
         <Form
@@ -134,12 +147,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
           isSubmitted={isSubmitted || application.data["submitted"]}
         />
         <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 text-sm pb-20">
-          <div className="lg:hidden">
-            {isSaving && <span>Autosaving...</span>}
-            {!isSaving && lastSavedAt && (
-              <span>Last saved at: {lastSavedAt}</span>
-            )}
-          </div>
+          <div className="lg:hidden">{saveStatus}</div>
         </div>
       </div>
     </>
