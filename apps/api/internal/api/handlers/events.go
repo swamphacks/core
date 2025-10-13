@@ -62,12 +62,6 @@ func (st CreateEventFields) ValidateTimeFields() bool {
 	if st.EndTime.Before(st.StartTime) || st.EndTime.Equal(st.StartTime) {
 		return false
 	}
-	if st.ApplicationOpen.Before(time.Now()) ||
-		st.ApplicationClose.Before(time.Now()) ||
-		st.StartTime.Before(time.Now()) ||
-		st.EndTime.Before(time.Now()) {
-		return false
-	}
 	return true
 }
 
