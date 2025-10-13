@@ -57,6 +57,8 @@ type ApplicationSubmissionFields struct {
 var (
 	ErrApplicationDeadlinePassed = errors.New("the application deadline has passed")
 	ErrApplicationUnavailable    = errors.New("unable to access the application")
+	ErrApplicationCannotSave     = errors.New("unable to save the application")
+	ErrApplicationPastSubmitted  = errors.New("application has already been submitted and cannot be modified")
 )
 
 type ApplicationService struct {
@@ -159,7 +161,36 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 }
 
 func (s *ApplicationService) SaveApplication(ctx context.Context, data any, userId, eventId uuid.UUID) error {
-	err := s.appRepo.SaveApplication(ctx, data, userId, eventId)
+	// Guard clauses to ensure application can be saved
+	// 1) Check if applications are open for the event
+	// 2) Ensure application status is "started" (Reject all other statuses)
+	canSaveApplication, err := s.eventsService.IsApplicationsOpen(ctx, eventId)
+	if err != nil {
+		return err
+	}
+
+	if !canSaveApplication {
+		return ErrApplicationCannotSave
+	}
+
+	application, err := s.GetApplicationByUserAndEventID(ctx, sqlc.GetApplicationByUserAndEventIDParams{
+		UserID:  userId,
+		EventID: eventId,
+	})
+	if err != nil {
+		return err
+	}
+
+	// This check should almost never fail, but just in case
+	if application == nil {
+		return ErrApplicationUnavailable
+	}
+
+	if application.Status.ApplicationStatus != sqlc.ApplicationStatusStarted {
+		return ErrApplicationPastSubmitted
+	}
+
+	err = s.appRepo.SaveApplication(ctx, data, userId, eventId)
 
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())
