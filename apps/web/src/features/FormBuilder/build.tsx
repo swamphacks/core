@@ -119,6 +119,7 @@ export interface FormProps {
   defaultValues?: Record<string, any>;
   isInvalid?: boolean;
   isSubmitted?: boolean;
+  isSubmitting?: boolean;
   SubmitSuccessComponent?: React.ComponentType;
 }
 
@@ -156,6 +157,7 @@ export function build(formObject: FormObject): {
       onChangeDelayMs = 5000,
       isInvalid = false,
       isSubmitted: isSubmittedProp = false,
+      isSubmitting = false,
       SubmitSuccessComponent = FallbackSubmitSuccessComponent,
     }) {
       const [otherFields, setOtherFields] = useState<string[]>([]);
@@ -183,13 +185,15 @@ export function build(formObject: FormObject): {
       ) as Record<string, any>;
 
       useEffect(() => {
+        if (isSubmitting || isSubmittedProp) return;
+
         if (isDirty && Object.keys(formValues).length >= 1) {
           onChange?.({
             ...defaultFieldValues,
             ...formValues,
           });
         }
-      }, [isDirty, formValues]);
+      }, [isDirty, formValues, isSubmitting, isSubmittedProp]);
 
       useEffect(() => {
         const newOtherFields = [];
