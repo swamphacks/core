@@ -145,6 +145,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
           SubmitSuccessComponent={SubmitSuccess}
           isInvalid={isInvalid}
           isSubmitted={isSubmitted || application.data["submitted"]}
+          isSubmitting={isSubmitting}
         />
         <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 text-sm pb-20">
           <div className="lg:hidden">{saveStatus}</div>
