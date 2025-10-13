@@ -32,10 +32,11 @@ type CloudflareConfig struct {
 }
 
 type SmtpConfig struct {
-	Username  string `env:"USERNAME"`
-	Password  string `env:"PASSWORD"`
-	Hostname  string `env:"HOSTNAME"`
-	ServerUrl string `env:"SERVER_URL"`
+	Username    string `env:"USERNAME"`
+	Password    string `env:"PASSWORD"`
+	Host        string `env:"HOST"`
+	Port        string `env:"PORT"`
+	SourceEmail string `env:"SOURCE_EMAIL"`
 }
 
 type CoreBuckets struct {

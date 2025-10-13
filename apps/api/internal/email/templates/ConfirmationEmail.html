@@ -1,27 +1,139 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Gelasio:ital,wght@0,400..700;1,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
 
-<body>
-  <h2>Hi {{ .Name }}, thank you for applying to SwampHacks XI!</h2>
+  <body>
+    <div class="container">
+      <div class="row">
+        <img
+          src="https://static.swamphacks.com/email/Postcard_SwampHacks_email_header.png"
+          alt="Thank you postcard header"
+        />
+      </div>
+      <h1>Hi {{ .Name }},</h1>
+      <p>Thank you for applying to <b id="sh">SwampHacks XI!</b></p>
 
-  <p>Next steps</p>
-  <ul>
-    <li>Keep an eye on your inbox!</li>
-    <li><a href="https://discord.com/invite/NfRPv9JtAG">Join our Discord!</a></li>
-    <li><a href="https://www.instagram.com/ufswamphacks/">Follow our instagram!</a></li>
-  </ul>
+      <p>
+        We're thrilled to see you interested in joining a weekend of building,
+        exploring, and discovering this January 25-26.
+      </p>
 
-  <p>Questions?</p>
-  <p>Send an email to contact@swamphacks.com</p>
+      <h2>Next steps</h2>
+      <ul>
+        <li>Keep an eye on your inbox!</li>
+        <li>
+          Join our
+          <a href="https://discord.com/invite/NfRPv9JtAG"
+            ><b id="discord">Discord!</b></a
+          >
+        </li>
+        <li>
+          Follow our
+          <a href="https://www.instagram.com/ufswamphacks/"
+            ><b id="insta">Instagram!</b></a
+          >
+        </li>
+      </ul>
 
-  <p>Unsubscribe from marketing emails</p>
+      <h2>When will I hear back?</h2>
+      <p>Application updates will be sent out in November.</p>
 
-</body>
+      <h2>Questions?</h2>
+      <p>Reach out to us at contact@swamphacks.com</p>
+    </div>
 
+    <style>
+      body {
+        font-family: Inter;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #fff;
+      }
+      h1 {
+        font-family: Gelasio;
+        font-size: 1.5rem;
+      }
+      h2 {
+        margin: 0;
+        font-family: Gelasio;
+        font-size: 1.25rem;
+      }
+      ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        margin-bottom: 2lvh;
+      }
+      p {
+        margin: 0;
+        margin-bottom: 2lvh;
+      }
+      a:link {
+          text-decoration: inherit;
+          color: inherit;
+          cursor: pointer;
+      }
+
+      a:visited {
+          text-decoration: inherit;
+          color: inherit;
+          cursor: pointer;
+      }
+      .row {
+        display: flex;
+        flex: 1 1 auto;
+        justify-content: center;
+        height: 100%;
+        img {
+          transform: rotate(-3deg);
+          object-fit: contain;
+          max-width: 70lvh;
+          min-width: 20lvh;
+        }
+      }
+      .container {
+        width: 50lvw;
+        background-color: #fff6db;
+        border: 2px solid #928e6e;
+        border-radius: 5px;
+        padding: 2lvh;
+      }
+      b#sh {
+        color: #a0bb7e;
+        paint-order: stroke fill;
+        -webkit-text-stroke: 3px #4c5c3a;
+      }
+      b#discord {
+        color: #7289da;
+      }
+      b#discord:hover {
+        color: #5B6FB0;
+      }
+      b#insta {
+        color: #E1306C;
+      }
+      b#insta:hover {
+        color: #BD285A;
+      }
+      @media only screen and (max-width: 600px) {
+      .container{
+        width: 80lvw;
+        background-color: #fff6db;
+        border: 2px solid #928e6e;
+        border-radius: 5px;
+        padding: 2lvh;
+      }
+    </style>
+  </body>
 </html>

@@ -28,11 +28,11 @@ func NewEmailService(taskQueue *asynq.Client, logger zerolog.Logger) *EmailServi
 func (s *EmailService) SendEmail(recipient string, subject string, body []byte) error {
 	cfg := config.Load()
 
-	s.logger.Info().Msgf("Sending from %s to %s with subject '%s'", cfg.Smtp.Username, recipient, subject)
+	s.logger.Info().Msgf("Sending from %s with subject '%s'", cfg.Smtp.SourceEmail, subject)
 
-	smtpAuth := smtp.PlainAuth("", cfg.Smtp.Username, cfg.Smtp.Password, cfg.Smtp.Hostname)
+	smtpAuth := smtp.PlainAuth("", cfg.Smtp.Username, cfg.Smtp.Password, cfg.Smtp.Host)
 
-	err := smtp.SendMail(cfg.Smtp.ServerUrl, smtpAuth, cfg.Smtp.Username, []string{recipient}, body)
+	err := smtp.SendMail(fmt.Sprintf("%s:%s", cfg.Smtp.Host, cfg.Smtp.Port), smtpAuth, cfg.Smtp.SourceEmail, []string{recipient}, body)
 
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to send email")
@@ -85,7 +85,7 @@ func (s *EmailService) SendConfirmationEmail(recipient string, name string) erro
 
 	var body bytes.Buffer
 
-	template, err := template.ParseFiles("./internal/email/templates/ConfirmationEmail.html")
+	template, err := template.ParseFiles("../../internal/email/templates/ConfirmationEmail.html")
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to parse email template for recipient")
 	}
@@ -129,12 +129,6 @@ func (s *EmailService) QueueSendConfirmationEmail(to string, name string) (*asyn
 		To:   to,
 		Name: name,
 	})
-
-	pwd, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("pwd: " + pwd)
 
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create SendConfirmationEmail task")

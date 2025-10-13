@@ -149,10 +149,11 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	})
 
 	// Email routes
-	api.Router.Route("/email", func(r chi.Router) {
-		r.Post("/queue", api.Handlers.Email.QueueTextEmail)
-		r.Post("/queueConfirmation", api.Handlers.Email.QueueConfirmationEmail)
-	})
+	// TODO MAKE SURE THESE ARE TURNED OFF UNLESS ABSOLUTELY NECESSARY
+	// api.Router.Route("/email", func(r chi.Router) {
+	// 	r.Post("/queue", api.Handlers.Email.QueueTextEmail)
+	// 	r.Post("/queueConfirmation", api.Handlers.Email.QueueConfirmationEmail)
+	// })
 
 	// Protected test routes
 	api.Router.Route("/protected", func(r chi.Router) {
