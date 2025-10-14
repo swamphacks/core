@@ -19,17 +19,24 @@
         <img
           src="https://static.swamphacks.com/email/Postcard_SwampHacks_email_header.png"
           alt="Thank you postcard header"
+          id="header"
         />
       </div>
       <h1>Hi {{ .Name }},</h1>
       <p>Thank you for applying to <b id="sh">SwampHacks XI!</b></p>
-
       <p>
-        We're thrilled to see you interested in joining a weekend of building,
-        exploring, and discovering this January 25-26.
+        We're thrilled to have you join us for a weekend filled with innovation,
+        collaboration, and learning.
       </p>
 
-      <h2>Next steps</h2>
+      <h2>Important Info</h2>
+      <p>
+        Application decisions will release <b>December 1st</b>, and team
+        formation will become available the week of <b>October 20th</b>. Please
+        make sure to watch for updates.
+      </p>
+
+      <h2>Next Steps</h2>
       <ul>
         <li>Keep an eye on your inbox!</li>
         <li>
@@ -46,11 +53,29 @@
         </li>
       </ul>
 
-      <h2>When will I hear back?</h2>
-      <p>Application updates will be sent out in November.</p>
-
       <h2>Questions?</h2>
       <p>Reach out to us at contact@swamphacks.com</p>
+
+      <div class="icons">
+        <a href="https://discord.com/invite/NfRPv9JtAG">
+          <img
+            src="https://static.swamphacks.com/email/Discord_Icon.svg"
+            alt="Discord icon"
+          />
+        </a>
+        <a href="https://www.instagram.com/ufswamphacks/">
+          <img
+            src="https://static.swamphacks.com/email/Instagram_Icon.svg"
+            alt="Instagram icon"
+          />
+        </a>
+        <a href="https://www.linkedin.com/company/swamphacks/">
+          <img
+            src="https://static.swamphacks.com/email/Linkedin_Icon.svg"
+            alt="Linkedin icon"
+          />
+        </a>
+      </div>
     </div>
 
     <style>
@@ -69,6 +94,7 @@
         margin: 0;
         font-family: Gelasio;
         font-size: 1.25rem;
+        color: #353535;
       }
       ul {
         margin: 0;
@@ -104,35 +130,56 @@
       }
       .container {
         width: 50lvw;
-        background-color: #fff6db;
-        border: 2px solid #928e6e;
+        color: #353535;
         border-radius: 5px;
         padding: 2lvh;
       }
-      b#sh {
-        color: #a0bb7e;
-        paint-order: stroke fill;
-        -webkit-text-stroke: 3px #4c5c3a;
+      .icons {
+        display: flex;
+        flex: 1 1 auto;
+        justify-content: center;
+        padding-top: 2lvh;
+        img {
+          width: 1.5rem;
+          height: 1.5rem;
+          padding: 0 1lvw;
+        }
+        img:hover {
+          filter: brightness(80%);
+        }
       }
       b#discord {
-        color: #7289da;
+        color: #5865F2;
       }
       b#discord:hover {
-        color: #5B6FB0;
+          filter: brightness(80%);
       }
       b#insta {
         color: #E1306C;
       }
       b#insta:hover {
-        color: #BD285A;
+          filter: brightness(80%);
       }
       @media only screen and (max-width: 600px) {
       .container{
         width: 80lvw;
-        background-color: #fff6db;
-        border: 2px solid #928e6e;
+        color: #353535;
         border-radius: 5px;
         padding: 2lvh;
+      }
+      .icons {
+        display: flex;
+        flex: 1 1 auto;
+        justify-content: center;
+        padding-top: 2lvh;
+        img {
+          width: 2rem;
+          height: 2rem;
+          padding: 0 2lvw;
+        }
+        img:hover {
+          filter: brightness(80%);
+        }
       }
     </style>
   </body>
