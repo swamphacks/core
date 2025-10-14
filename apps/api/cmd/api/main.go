@@ -12,6 +12,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
+	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/storage"
@@ -51,6 +52,9 @@ func main() {
 		},
 	}
 
+	// Create SES Client for email service
+	sesClient := email.NewSESClient(cfg.AWS.AccountId, cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
+
 	// Create asynq client
 	redisOpt, err := asynq.ParseRedisURI(cfg.RedisURL)
 	if err != nil {
@@ -80,7 +84,7 @@ func main() {
 	userService := services.NewUserService(userRepo, logger)
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
 	eventService := services.NewEventService(eventRepo, userRepo, r2Client, &cfg.CoreBuckets, logger)
-	emailService := services.NewEmailService(taskQueueClient, logger)
+	emailService := services.NewEmailService(taskQueueClient, sesClient, logger)
 	applicationService := services.NewApplicationService(applicationRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, logger)
 
 	// Injections into handlers
