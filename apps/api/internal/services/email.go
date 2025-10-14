@@ -94,7 +94,7 @@ func (s *EmailService) SendConfirmationEmail(recipient string, name string) erro
 		s.logger.Err(err).Msg("Failed to inject template variables for recipient '%s'.")
 	}
 
-	err = s.SendHTMLEmail([]string{recipient}, "SwampHacks XI: we have recieved your application!", body.String())
+	err = s.SendHTMLEmail([]string{recipient}, "SwampHacks XI: we recieved your application!", body.String())
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to send confirmation email for recipient '%s'")
 	}
