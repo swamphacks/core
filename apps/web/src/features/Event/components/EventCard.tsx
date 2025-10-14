@@ -1,6 +1,6 @@
 import TablerCalendarDue from "~icons/tabler/calendar-due";
+import TablerLocation from "~icons/tabler/location";
 import TablerInfoCircle from "~icons/tabler/info-circle";
-import TablerMapPin from "~icons/tabler/map-pin";
 import { EventBadge } from "./EventBadge";
 import { EventButton } from "./EventButton";
 import { DialogTrigger, Link } from "react-aria-components";

@@ -27,6 +27,10 @@ export const EventCard: Story = {
     description: "UF’s flagship hackathon celebrates its 11th iteration.",
     date: "Jan 25 - 26",
     location: "Newell Hall",
+    application_close: new Date("2024-01-15T23:59:59"),
+    application_open: new Date("2023-11-01T00:00:00"),
+    end_time: new Date("2024-01-26T20:00:00"),
+    start_time: new Date("2024-01-25T09:00:00"),
     banner:
       "https://media.istockphoto.com/id/974238866/photo/audience-listens-to-the-lecturer-at-the-conference.jpg?s=612x612&w=0&k=20&c=p_BQCJWRQQtZYnQlOtZMzTjeB_csic8OofTCAKLwT0M=",
   },
