@@ -20,6 +20,7 @@ import {
 import TablerLogout from "~icons/tabler/logout";
 import { useRouter, useCanGoBack } from "@tanstack/react-router";
 import TablerHome from "~icons/tabler/home";
+import { ThemeSwitch } from "@/components/ThemeProvider";
 
 export function SettingsPage({ logout }: { logout: () => void }) {
   const router = useRouter();
@@ -198,6 +199,11 @@ export function SettingsPage({ logout }: { logout: () => void }) {
               >
                 I consent to receive promotional communications via email.
               </Switch>
+            </div>
+
+            <div>
+              <Text className="text-lg font-medium">Theme</Text>
+              <ThemeSwitch />
             </div>
 
             <div>

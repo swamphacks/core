@@ -118,7 +118,7 @@
             {
               "name": "pronouns",
               "questionType": "select",
-              "placeholder": "Select your pronouns",
+              "placeholder": "Select",
               "label": "Pronouns",
               "options": [
                 { "label": "She/Her", "value": "she/her" },
@@ -139,6 +139,28 @@
           "label": "Race/Ethnicity",
           "hasOther": true,
           "options": [
+            { "label": "Asian Indian", "value": "asian-indian" },
+            { "label": "Black or African", "value": "black-or-african" },
+            { "label": "Chinese", "value": "chinese" },
+            { "label": "Filipino", "value": "filipino" },
+            {
+              "label": "Guamanian or Chamorro",
+              "value": "guamanian-or-chamorro"
+            },
+            {
+              "label": "Hispanic / Latino / Spanish Origin",
+              "value": "hispanic-latino"
+            },
+            { "label": "Japanese", "value": "japanese" },
+            { "label": "Korean", "value": "korean" },
+            { "label": "Middle Eastern", "value": "middle-eastern" },
+            {
+              "label": "Native American or Alaskan Native",
+              "value": "native-american-or-alaskan-native"
+            },
+            { "label": "Native Hawaiian", "value": "native-hawaiian" },
+            { "label": "Samoan", "value": "samoan" },
+            { "label": "Vietnamese", "value": "vietnamese" },
             { "label": "White", "value": "white" },
             { "label": "Black or African American", "value": "black" },
             { "label": "Asian", "value": "asian" },

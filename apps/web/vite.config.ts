@@ -5,6 +5,7 @@ import tanstackRouter from "@tanstack/router-plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import Icons from "unplugin-icons/vite";
+import svgr from "vite-plugin-svgr";
 
 // https://vitejs.dev/config/
 export default ({ mode }: { mode: string }) => {
@@ -24,6 +25,7 @@ export default ({ mode }: { mode: string }) => {
         compiler: "jsx",
         jsx: "react",
       }),
+      svgr(),
     ],
     test: {
       environment: "jsdom",

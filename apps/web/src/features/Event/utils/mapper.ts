@@ -38,15 +38,7 @@ export function mapEventsAPIResponseToEventCardProps(
   let status: keyof typeof applicationStatus = "notApplied"; // Default
 
   if (!data.application_status) {
-    return {
-      eventId: data.id,
-      status,
-      title: data.name,
-      description: data.description ?? "No description",
-      date: formatDateRange(new Date(data.start_time), new Date(data.end_time)),
-      location: data.location ?? "Unknown",
-      banner: data.banner,
-    };
+    return buildEventCardProps(data, status);
   }
 
   // Handle roles cases
@@ -80,13 +72,39 @@ export function mapEventsAPIResponseToEventCardProps(
     status = "completed";
   }
 
+  return buildEventCardProps(data, status);
+}
+
+/**
+ *
+ * @param event - Event data from API
+ * @param status - Mapped application status
+ * @returns An object conforming to EventCardProps
+ */
+function buildEventCardProps(
+  event: EventWithUserInfo,
+  status: keyof typeof applicationStatus,
+): EventCardProps {
   return {
-    eventId: data.id,
+    eventId: event.id,
     status,
-    title: data.name,
-    description: data.description ?? "No description",
-    date: formatDateRange(new Date(data.start_time), new Date(data.end_time)),
-    location: data.location ?? "Unknown",
-    banner: data.banner,
+    title: event.name,
+    description: event.description ?? "No description",
+    date: formatDateRange(new Date(event.start_time), new Date(event.end_time)),
+    location: event.location ?? "Unknown",
+    banner: event.banner,
+
+    application_close: new Date(event.application_close),
+    application_open: new Date(event.application_open),
+    end_time: new Date(event.end_time),
+    start_time: new Date(event.start_time),
+    location_url: event.location_url ?? undefined,
+    decision_release: event.decision_release
+      ? new Date(event.decision_release)
+      : undefined,
+    rsvp_deadline: event.rsvp_deadline
+      ? new Date(event.rsvp_deadline)
+      : undefined,
+    website_url: event.website_url ?? undefined,
   };
 }
