@@ -140,16 +140,16 @@
           "hasOther": true,
           "options": [
             { "label": "Asian Indian", "value": "asian-indian" },
-            { "label": "Black or African", "value": "black" },
+            { "label": "Black or African", "value": "black-or-african" },
             { "label": "Chinese", "value": "chinese" },
             { "label": "Filipino", "value": "filipino" },
             {
               "label": "Guamanian or Chamorro",
-              "value": "guamanian"
+              "value": "guamanian-or-chamorro"
             },
             {
               "label": "Hispanic / Latino / Spanish Origin",
-              "value": "hispanic"
+              "value": "hispanic-latino"
             },
             { "label": "Japanese", "value": "japanese" },
             { "label": "Korean", "value": "korean" },
@@ -181,12 +181,15 @@
           "label": "Do you consider yourself to be any of the following?",
           "options": [
             {
-              "label": "Heterosexual or straight",
+              "label": "Heterosexual / Straight",
               "value": "heterosexual"
             },
-            { "label": "Gay or lesbian", "value": "gay" },
+            { "label": "Gay / Lesbian", "value": "gay" },
             { "label": "Bisexual", "value": "bisexual" },
-            { "label": "Not represented here", "value": "not-represented" },
+            {
+              "label": "Other / Not Represented Here",
+              "value": "not-represented"
+            },
             { "label": "Prefer Not to Answer", "value": "no-answer" }
           ]
         },
