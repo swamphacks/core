@@ -1,6 +1,6 @@
 import TablerCalendarDue from "~icons/tabler/calendar-due";
-import TablerLocation from "~icons/tabler/location";
 import TablerInfoCircle from "~icons/tabler/info-circle";
+import TablerMapPin from "~icons/tabler/map-pin";
 import { EventBadge } from "./EventBadge";
 import { EventButton } from "./EventButton";
 import { Link } from "react-aria-components";
@@ -45,7 +45,7 @@ const EventCard = ({
           </p>
           <EventBadge status={status} />
         </div>
-        <div className="mt-2 w-96">
+        <div className="mt-2 w-full">
           <p className="text-text-secondary text-sm text-wrap">{description}</p>
         </div>
         <div className="flex text-sm justify-around items-center text-text-main pt-4">
@@ -55,7 +55,7 @@ const EventCard = ({
           </div>
           <Separator />
           <div className="flex flex-col items-center gap-1">
-            <TablerLocation />
+            <TablerMapPin />
             <p>{location}</p>
           </div>
           <Separator />
