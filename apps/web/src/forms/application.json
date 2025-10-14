@@ -118,7 +118,7 @@
             {
               "name": "pronouns",
               "questionType": "select",
-              "placeholder": "Select your pronouns",
+              "placeholder": "Select",
               "label": "Pronouns",
               "options": [
                 { "label": "She/Her", "value": "she/her" },
