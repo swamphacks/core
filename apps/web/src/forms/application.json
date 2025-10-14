@@ -139,38 +139,21 @@
           "label": "Race/Ethnicity",
           "hasOther": true,
           "options": [
-            { "label": "Asian Indian", "value": "asian-indian" },
-            { "label": "Black or African", "value": "black-or-african" },
-            { "label": "Chinese", "value": "chinese" },
-            { "label": "Filipino", "value": "filipino" },
-            {
-              "label": "Guamanian or Chamorro",
-              "value": "guamanian-or-chamorro"
-            },
-            {
-              "label": "Hispanic / Latino / Spanish Origin",
-              "value": "hispanic-latino"
-            },
-            { "label": "Japanese", "value": "japanese" },
-            { "label": "Korean", "value": "korean" },
-            { "label": "Middle Eastern", "value": "middle-eastern" },
-            {
-              "label": "Native American or Alaskan Native",
-              "value": "native-american-or-alaskan-native"
-            },
-            { "label": "Native Hawaiian", "value": "native-hawaiian" },
-            { "label": "Samoan", "value": "samoan" },
-            { "label": "Vietnamese", "value": "vietnamese" },
             { "label": "White", "value": "white" },
+            { "label": "Black or African American", "value": "black" },
+            { "label": "Asian", "value": "asian" },
             {
-              "label": "Other Asian (Thai, Cambodian, etc.)",
-              "value": "other-asian"
+              "label": "Native Hawaiian or Other Pacific Islander",
+              "value": "pacific-islander"
             },
             {
-              "label": "Other Pacific Islander",
-              "value": "other-pacific-islander"
+              "label": "American Indian or Alaska Native",
+              "value": "native-american"
             },
-            { "label": "Other (Please Specify)", "value": "other" },
+            { "label": "Middle Eastern or North African", "value": "mena" },
+            { "label": "Hispanic or Latino", "value": "hispanic" },
+            { "label": "Two or More Races", "value": "multiracial" },
+            { "label": "Other", "value": "other" },
             { "label": "Prefer Not to Answer", "value": "no-answer" }
           ]
         },
