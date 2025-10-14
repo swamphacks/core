@@ -64,16 +64,18 @@ var (
 type ApplicationService struct {
 	appRepo       *repository.ApplicationRepository
 	eventsService *EventService
+	emailService  *EmailService
 	storage       storage.Storage
 	buckets       *config.CoreBuckets
 	txm           *db.TransactionManager
 	logger        zerolog.Logger
 }
 
-func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
+func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
 	return &ApplicationService{
 		appRepo:       appRepo,
 		eventsService: eventsService,
+		emailService:  emailService,
 		storage:       storage,
 		buckets:       buckets,
 		txm:           txm,
@@ -151,6 +153,9 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 
 		return nil
 	})
+
+	taskInfo, err := s.emailService.QueueSendConfirmationEmail(data.PreferredEmail, data.FirstName)
+	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendConfirmationEmail task!")
 
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())

@@ -42,7 +42,8 @@ func main() {
 
 	mux := asynq.NewServeMux()
 
-	mux.HandleFunc(tasks.TypeSendEmail, emailWorker.HandleSendEmailTask)
+	mux.HandleFunc(tasks.TypeSendTextEmail, emailWorker.HandleSendTextEmailTask)
+	mux.HandleFunc(tasks.TypeSendConfirmationEmail, emailWorker.HandleSendConfirmationEmailTask)
 	fmt.Println("Starting email worker")
 
 	if err := srv.Run(mux); err != nil {
