@@ -64,26 +64,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
-    # image: redis:8.0
-    # container_name: redis
-    # ports:
-    #   - 6379:6379
-    # attach: false
-
     image: redis:8.2.1-alpine
     container_name: redis
-    # command: >
-    #   redis-server
-    #   --maxmemory 200mb
-    #   --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
-    # volumes:
-    #   - redis_data_dev:/data
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 200M
     healthcheck:
       test: ["CMD", "redis-cli", "-p", "6379", "ping"]
       interval: 10s

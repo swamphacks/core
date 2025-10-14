@@ -141,14 +141,11 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 			return err
 		}
 
-		err = s.emailService.SendConfirmationEmail(data.PreferredEmail, data.FirstName)
-		if err != nil {
-			s.logger.Err(err).Msg(err.Error())
-			return err
-		}
-
 		return nil
 	})
+
+	taskInfo, err := s.emailService.QueueSendConfirmationEmail(data.PreferredEmail, data.FirstName)
+	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendConfirmationEmail task!")
 
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())

@@ -79,32 +79,3 @@ func (h *EmailHandler) QueueTextEmail(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
-
-func (h *EmailHandler) QueueConfirmationEmail(w http.ResponseWriter, r *http.Request) {
-	var req QueueConfirmationEmailRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Could not parse request body"))
-		return
-	}
-
-	if !email.IsValidEmail(req.To) {
-		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_email", "'To' email is malformed or missing"))
-		return
-	}
-
-	if req.Name == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_subject", "Subject is missing or is an empty string."))
-		return
-	}
-
-	taskInfo, err := h.emailService.QueueSendConfirmationEmail(req.To, req.Name)
-	if err != nil {
-		h.logger.Err(err).Msg("Failed to queue SendConfirmationEmail from EmailHandler")
-		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "The server went kaput while queueing email sending"))
-		return
-	}
-
-	h.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendConfirmationEmail task!")
-
-	w.WriteHeader(http.StatusCreated)
-}

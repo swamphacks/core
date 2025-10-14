@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/smtp"
-	"os"
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
