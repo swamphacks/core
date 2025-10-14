@@ -11,6 +11,14 @@ import { Spinner } from "@/components/ui/Spinner";
 import { useApplication } from "@/features/Application/hooks/useApplication";
 import { format, parseISO } from "date-fns";
 
+// TODO: can we put these in the assets folder?
+import Cloud from "./cloud.svg?react";
+import Cloud2 from "./cloud2.svg?react";
+import Cloud3 from "./cloud3.svg?react";
+import Cloud4 from "./cloud4.svg?react";
+import Tower from "./tower.svg?react";
+import Bell from "./bell.svg?react";
+
 // TODO: dynamically fetch application json data from somewhere (backend, cdn?) instead of hardcoding it in the frontend
 import data from "@/forms/application.json";
 
@@ -26,6 +34,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   const fileFields = useRef(new Set<string>());
   const [isInvalid, setIsInvalid] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const application = useApplication(eventId);
 
@@ -44,6 +53,8 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   }, [application?.data?.saved_at, application?.isLoading]);
 
   const onSubmit = useCallback(async (data: Record<string, any>) => {
+    setIsSubmitting(true);
+
     const formData = new FormData();
 
     for (const key in data) {
@@ -74,6 +85,8 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
       setIsSubmitted(true);
       setIsInvalid(false);
     }
+
+    setIsSubmitting(false);
   }, []);
 
   const onNewAttachments = useCallback((newFiles: Record<string, File[]>) => {
@@ -84,7 +97,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
 
   const onChange = useCallback(
     async (formValues: Record<string, any>) => {
-      if (isSubmitted) return;
+      if (isSubmitted || isSubmitting) return;
 
       setIsSaving(true);
 
@@ -100,7 +113,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
       setLastSavedAt(format(new Date(), "yyyy-MM-dd h:mm a"));
       setIsSaving(false);
     },
-    [isSubmitted],
+    [isSubmitted, isSubmitting],
   );
 
   if (application.isLoading) {
@@ -112,11 +125,19 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
     );
   }
 
+  const saveStatus = (
+    <>
+      {isSaving && !isSubmitted && <span>Autosaving...</span>}
+      {!isSaving && lastSavedAt && !isSubmitted && (
+        <span>Last saved at: {lastSavedAt}</span>
+      )}
+    </>
+  );
+
   return (
     <>
       <div className="hidden fixed xl:inline-flex w-fit z-[999] bottom-3 left-3 text-xs">
-        {isSaving && <span>Autosaving...</span>}
-        {!isSaving && lastSavedAt && <span>Last saved at: {lastSavedAt}</span>}
+        {saveStatus}
       </div>
       <div className="flex-col">
         <Form
@@ -132,14 +153,40 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
           SubmitSuccessComponent={SubmitSuccess}
           isInvalid={isInvalid}
           isSubmitted={isSubmitted || application.data["submitted"]}
+          isSubmitting={isSubmitting}
+          // TODO: figure out how to handle this through the JSON file, including how to import the SVG files there as well
+          renderFormHeader={(metadata) => {
+            return (
+              <div className="space-y-3 py-3 rounded-md relative overflow-hidden bg-[#f6fafc] dark:bg-gray-700 px-4 mt-1">
+                <div className="opacity-85">
+                  <div className="absolute -bottom-50 -right-33 z-10">
+                    <div className="relative inline-block">
+                      <Tower
+                        className="relative size-90 [transform:rotateX(25deg)_scale(1,0.9)]
+               [transform-origin:bottom_center] z-20"
+                      />
+                      <Bell className="absolute top-20 right-39 z-10 size-8" />
+
+                      <Cloud className="absolute -top-4 right-20 z-10 size-20 opacity-70 sm:opacity-100" />
+                      <Cloud2 className="absolute top-10 right-47 z-10 size-20 opacity-50 sm:opacity-100" />
+                      <Cloud3 className="absolute top-1 right-32 z-10 size-20 opacity-50 sm:opacity-100" />
+                      <Cloud4 className="absolute -top-5 right-55 z-10 size-20 opacity-30 sm:opacity-100" />
+                    </div>
+                  </div>
+                </div>
+
+                <p className="relative text-2xl text-text-main font-medium z-50 -top-1">
+                  {metadata.title}
+                </p>
+                <p className="relative text-text-main z-50 w-[85%] -top-1 font-medium sm:font-normal">
+                  {metadata.description}
+                </p>
+              </div>
+            );
+          }}
         />
         <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 text-sm pb-20">
-          <div className="lg:hidden">
-            {isSaving && <span>Autosaving...</span>}
-            {!isSaving && lastSavedAt && (
-              <span>Last saved at: {lastSavedAt}</span>
-            )}
-          </div>
+          <div className="lg:hidden">{saveStatus}</div>
         </div>
       </div>
     </>

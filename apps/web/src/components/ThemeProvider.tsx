@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { cn } from "@/utils/cn";
+import TablerSun from "~icons/tabler/sun";
+import TablerMoon from "~icons/tabler/moon";
 
 type Theme = "dark" | "light" | "system";
 
@@ -73,28 +75,32 @@ export function ThemeProvider({
   );
 }
 
-export const DevThemeSwitch = () => {
+export const ThemeSwitch = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="flex gap-2 text-text-main">
+    <div className="flex gap-2 text-text-main mt-2 border border-input-border rounded-md w-fit">
       <button
         className={cn(
-          theme === "light" && "underline font-bold",
-          "cursor-pointer",
+          theme === "light" &&
+            "bg-button-secondary border-r-1 border-input-border",
+          "cursor-pointer py-1 px-2 rounded-md flex items-center gap-1",
         )}
         onClick={() => setTheme("light")}
       >
         Light
+        <TablerSun />
       </button>
       <button
         className={cn(
-          theme === "dark" && "underline font-bold",
-          "cursor-pointer",
+          theme === "dark" &&
+            "bg-button-secondary border-l-1 border-input-border",
+          "cursor-pointer py-1 px-2 rounded-md flex items-center gap-1",
         )}
         onClick={() => setTheme("dark")}
       >
         Dark
+        <TablerMoon />
       </button>
     </div>
   );
