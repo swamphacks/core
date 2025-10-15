@@ -13,6 +13,7 @@ export const URLQuestion = createQuestionItem({
     iconName: z
       .enum(Object.keys(textFieldIcons) as Array<keyof typeof textFieldIcons>)
       .optional(),
+    regex: z.string().optional(),
     validation: z
       .object({
         maxLength: z.number(),
@@ -30,6 +31,13 @@ export const URLQuestion = createQuestionItem({
     // if (item.isRequired) {
     //   schema = schema.min(1, requiredMessage);
     // }
+
+    if (item.regex) {
+      schema = schema.regex(
+        new RegExp(item.regex as unknown as RegExp),
+        "Invalid value",
+      );
+    }
 
     const { validation } = item;
     if (!validation) return schema;
