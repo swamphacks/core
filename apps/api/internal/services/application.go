@@ -42,8 +42,10 @@ type ApplicationSubmissionFields struct {
 	Majors                  string `json:"majors" validate:"required"`
 	Minors                  string `json:"minors"`
 	Experience              string `json:"experience" validate:"required"`
+	UfHackathonExp          string `json:"ufHackathonExp" validate:"required"`
 	ProjectExperience       string `json:"projectExperience" validate:"required"`
 	ShirtSize               string `json:"shirtSize" validate:"required"`
+	Diet                    string `json:"diet"`
 	Essay1                  string `json:"essay1" validate:"required"`
 	Essay2                  string `json:"essay2" validate:"required"`
 	Referral                string `json:"referral" validate:"required"`
