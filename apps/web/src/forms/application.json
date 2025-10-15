@@ -385,7 +385,7 @@
           "description": "By uploading your resume, you consent to us sharing it with our company sponsors.",
           "required": true,
           "validation": {
-            "validMimeTypes": ["application/pdf"]
+            "validMimeTypes": "application/pdf"
           }
         }
       ]

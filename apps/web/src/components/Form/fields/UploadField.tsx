@@ -9,6 +9,9 @@ export default function UploadField(props: FileFieldProps) {
       onChange={(files) =>
         field.handleChange(files.length === 0 ? undefined : files)
       }
+      // TODO: fix the FileFieldProps type to handle "accept" prop
+      // @ts-ignore
+      accept={props.validation.validMimeTypes}
       {...props}
     />
   );
