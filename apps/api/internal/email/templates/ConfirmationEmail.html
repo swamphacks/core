@@ -3,184 +3,250 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Gelasio:ital,wght@0,400..700;1,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-      rel="stylesheet"
-    />
+    <title>SwampHacks XI Email</title>
   </head>
 
-  <body>
-    <div class="container">
-      <div class="row">
-        <img
-          src="https://static.swamphacks.com/email/Postcard_SwampHacks_email_header_20251013.png"
-          alt="Thank you postcard header"
-        />
-      </div>
-      <h1>Hi {{ .Name }},</h1>
-      <p>Thank you for applying to <b id="sh">SwampHacks XI!</b></p>
-      <p>
-        We're thrilled to have you join us for a weekend filled with innovation,
-        collaboration, and learning.
-      </p>
-
-      <h2>Important Info</h2>
-      <ul>
-        <li>Application decisions release <strong>December 1st</strong>.</li>
-        <li>Team formation will be available soon in the portal.</li>
-        <li>Sponsors to be annouced soon!</li>
-      </ul>
-
-      <h2>Next Steps</h2>
-      <ul>
-        <li>Keep an eye on your inbox and/or the portal.</li>
-        <li>
-          Join our
-          <a href="https://discord.com/invite/NfRPv9JtAG"
-            ><b id="discord">Discord!</b></a
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      font-family: &quot;Inter&quot;, sans-serif;
+      background-color: #fff;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="
+              width: 100%;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 40px;
+              color: #353535;
+              border-radius: 5px;
+              box-sizing: border-box;
+            "
           >
-        </li>
-        <li>
-          Follow our
-          <a href="https://www.instagram.com/ufswamphacks/"
-            ><b id="insta">Instagram!</b></a
-          >
-        </li>
-      </ul>
+            <!-- Header Image -->
+            <tr>
+              <td align="center" style="padding-bottom: 20px">
+                <img
+                  src="https://static.swamphacks.com/email/Postcard_SwampHacks_email_header_20251013.png"
+                  alt="Thank you postcard header"
+                  style="
+                    max-width: 100%;
+                    height: auto;
+                    display: block;
+                    margin: 0 auto;
+                    transform: rotate(-3deg);
+                    padding-top: 20px;
+                    padding-bottom: 20px;
+                  "
+                />
+              </td>
+            </tr>
 
-      <h2>Questions?</h2>
-      <p>Reach out to us at contact@swamphacks.com</p>
+            <!-- Greeting -->
+            <tr>
+              <td
+                style="
+                  text-align: left;
+                  font-family: &quot;Gelasio&quot;, serif;
+                  font-size: 24px;
+                  padding-bottom: 20px;
+                "
+              >
+                Hi {{ .Name }},
+              </td>
+            </tr>
 
-      <div class="icons">
-        <a href="https://discord.com/invite/NfRPv9JtAG">
-          <img
-            src="https://static.swamphacks.com/email/Discord_Icon.svg"
-            alt="Discord icon"
-          />
-        </a>
-        <a href="https://www.instagram.com/ufswamphacks/">
-          <img
-            src="https://static.swamphacks.com/email/Instagram_Icon.svg"
-            alt="Instagram icon"
-          />
-        </a>
-        <a href="https://www.linkedin.com/company/swamphacks/">
-          <img
-            src="https://static.swamphacks.com/email/Linkedin_Icon_20251013.svg"
-            alt="Linkedin icon"
-          />
-        </a>
-      </div>
-    </div>
+            <tr>
+              <td
+                style="
+                  text-align: left;
+                  font-size: 16px;
+                  line-height: 1.5;
+                  padding-bottom: 20px;
+                "
+              >
+                Thank you for applying to <strong>SwampHacks XI!</strong>
+              </td>
+            </tr>
 
-    <style>
-      body {
-        font-family: Inter;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background-color: #fff;
-      }
-      h1 {
-        font-family: Gelasio;
-        font-size: 1.5rem;
-      }
-      h2 {
-        margin: 0;
-        font-family: Gelasio;
-        font-size: 1.25rem;
-        color: #353535;
-      }
-      ul {
-        margin: 0;
-        padding-left: 1.5rem;
-        margin-bottom: 2lvh;
-      }
-      p {
-        margin: 0;
-        margin-bottom: 2lvh;
-      }
-      a:link {
-          text-decoration: inherit;
-          color: inherit;
-          cursor: pointer;
-      }
+            <tr>
+              <td
+                style="
+                  text-align: left;
+                  font-size: 16px;
+                  line-height: 1.5;
+                  padding-bottom: 20px;
+                "
+              >
+                We're thrilled to have you join us for a weekend filled with
+                innovation, collaboration, and learning.
+              </td>
+            </tr>
 
-      a:visited {
-          text-decoration: inherit;
-          color: inherit;
-          cursor: pointer;
-      }
-      .row {
-        display: flex;
-        flex: 1 1 auto;
-        justify-content: center;
-        height: 100%;
-        padding: 1.5rem;
-        img {
-          transform: rotate(-3deg);
-          object-fit: contain;
-          max-width: 70lvh;
-          min-width: 40lvh;
-        }
-      }
-      .container {
-        width: 75lvw;
-        color: #353535;
-        border-radius: 5px;
-        padding: 2lvh;
-      }
-      .icons {
-        display: flex;
-        flex: 1 1 auto;
-        justify-content: center;
-        padding-top: 2lvh;
-        img {
-          width: 1.5rem;
-          height: 1.5rem;
-          padding: 0 1lvw;
-        }
-        img:hover {
-          filter: brightness(80%);
-        }
-      }
-      b#discord {
-        color: #5865F2;
-      }
-      b#discord:hover {
-          filter: brightness(80%);
-      }
-      b#insta {
-        color: #E1306C;
-      }
-      b#insta:hover {
-          filter: brightness(80%);
-      }
-      @media only screen and (max-width: 600px) {
-      .container{
-        width: 80lvw;
-        color: #353535;
-        border-radius: 5px;
-        padding: 2lvh;
-      }
-      .icons {
-        display: flex;
-        flex: 1 1 auto;
-        justify-content: center;
-        padding-top: 2lvh;
-        img {
-          width: 2rem;
-          height: 2rem;
-          padding: 0 2lvw;
-        }
-        img:hover {
-          filter: brightness(80%);
-        }
-      }
-    </style>
+            <!-- Important Info -->
+            <tr>
+              <td
+                style="
+                  text-align: left;
+                  font-family: &quot;Gelasio&quot;, serif;
+                  font-size: 20px;
+                  padding-bottom: 10px;
+                "
+              >
+                Important Info
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  text-align: left;
+                  font-size: 16px;
+                  line-height: 1.5;
+                  padding-bottom: 20px;
+                "
+              >
+                <ul style="margin: 0; padding-left: 20px">
+                  <li>
+                    Application decisions release <strong>December 1st</strong>.
+                  </li>
+                  <li>Team formation will be available soon in the portal.</li>
+                  <li>Sponsors to be announced soon!</li>
+                </ul>
+              </td>
+            </tr>
+
+            <!-- Next Steps -->
+            <tr>
+              <td
+                style="
+                  text-align: left;
+                  font-family: &quot;Gelasio&quot;, serif;
+                  font-size: 20px;
+                  padding-bottom: 10px;
+                "
+              >
+                Next Steps
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  text-align: left;
+                  font-size: 16px;
+                  line-height: 1.5;
+                  padding-bottom: 20px;
+                "
+              >
+                <ul style="margin: 0; padding-left: 20px">
+                  <li>Keep an eye on your inbox and/or the portal.</li>
+                  <li>
+                    Join our
+                    <a
+                      href="https://discord.com/invite/NfRPv9JtAG"
+                      style="color: #5865f2; text-decoration: none"
+                      >Discord!</a
+                    >
+                  </li>
+                  <li>
+                    Follow our
+                    <a
+                      href="https://www.instagram.com/ufswamphacks/"
+                      style="color: #e1306c; text-decoration: none"
+                      >Instagram!</a
+                    >
+                  </li>
+                </ul>
+              </td>
+            </tr>
+
+            <!-- Questions -->
+            <tr>
+              <td
+                style="
+                  text-align: left;
+                  font-family: &quot;Gelasio&quot;, serif;
+                  font-size: 20px;
+                  padding-bottom: 10px;
+                "
+              >
+                Questions?
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  text-align: left;
+                  font-size: 16px;
+                  line-height: 1.5;
+                  padding-bottom: 20px;
+                "
+              >
+                Reach out to us at
+                <a
+                  href="mailto:contact@swamphacks.com"
+                  style="color: #353535; text-decoration: none"
+                  >contact@swamphacks.com</a
+                >
+              </td>
+            </tr>
+
+            <!-- Social Icons -->
+            <tr>
+              <td align="center" style="padding-top: 20px">
+                <a
+                  href="https://discord.com/invite/NfRPv9JtAG"
+                  style="margin: 0 10px; display: inline-block"
+                >
+                  <img
+                    src="https://static.swamphacks.com/email/Discord_Icon.svg"
+                    alt="Discord icon"
+                    style="width: 32px; height: 32px"
+                  />
+                </a>
+                <a
+                  href="https://www.instagram.com/ufswamphacks/"
+                  style="margin: 0 10px; display: inline-block"
+                >
+                  <img
+                    src="https://static.swamphacks.com/email/Instagram_Icon.svg"
+                    alt="Instagram icon"
+                    style="width: 32px; height: 32px"
+                  />
+                </a>
+                <a
+                  href="https://www.linkedin.com/company/swamphacks/"
+                  style="margin: 0 10px; display: inline-block"
+                >
+                  <img
+                    src="https://static.swamphacks.com/email/Linkedin_Icon_20251013.svg"
+                    alt="Linkedin icon"
+                    style="width: 32px; height: 32px"
+                  />
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
