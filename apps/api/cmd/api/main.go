@@ -53,7 +53,7 @@ func main() {
 	}
 
 	// Create SES Client for email service
-	sesClient := email.NewSESClient(cfg.AWS.AccountId, cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
+	sesClient := email.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
 
 	// Create asynq client
 	redisOpt, err := asynq.ParseRedisURI(cfg.RedisURL)

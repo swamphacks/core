@@ -38,7 +38,7 @@ func main() {
 	)
 
 	// Create ses client
-	sesClient := email.NewSESClient(cfg.AWS.AccountId, cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
+	sesClient := email.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
 
 	emailService := services.NewEmailService(nil, sesClient, logger)
 	emailWorker := workers.NewEmailWorker(emailService, logger)

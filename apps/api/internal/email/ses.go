@@ -15,7 +15,7 @@ type SESClient struct {
 	logger zerolog.Logger
 }
 
-func NewSESClient(accountId, accessKey, secretkey, region string, logger zerolog.Logger) *SESClient {
+func NewSESClient(accessKey, secretkey, region string, logger zerolog.Logger) *SESClient {
 	// Initialize the SES client here with appropriate configuration
 	cfg, err := awsConfig.LoadDefaultConfig(context.TODO(),
 		awsConfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretkey, "")),

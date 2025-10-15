@@ -40,7 +40,6 @@ type SmtpConfig struct {
 }
 
 type AWSConfig struct {
-	AccountId       string `env:"ACCOUNT_ID"`
 	AccessKey       string `env:"ACCESS_KEY"`
 	AccessKeySecret string `env:"ACCESS_KEY_SECRET"`
 	Region          string `env:"REGION"`
