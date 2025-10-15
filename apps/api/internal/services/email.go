@@ -2,82 +2,26 @@ package services
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
-	"net/smtp"
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
-	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 )
 
 type EmailService struct {
 	logger    zerolog.Logger
+	SESClient *email.SESClient
 	taskQueue *asynq.Client
 }
 
-func NewEmailService(taskQueue *asynq.Client, logger zerolog.Logger) *EmailService {
+func NewEmailService(taskQueue *asynq.Client, SESClient *email.SESClient, logger zerolog.Logger) *EmailService {
 	return &EmailService{
 		logger:    logger.With().Str("service", "EmailService").Str("component", "email").Logger(),
 		taskQueue: taskQueue,
+		SESClient: SESClient,
 	}
-}
-
-func (s *EmailService) SendEmail(recipient string, subject string, body []byte) error {
-	cfg := config.Load()
-
-	s.logger.Info().Msgf("Sending from %s with subject '%s'", cfg.Smtp.SourceEmail, subject)
-
-	smtpAuth := smtp.PlainAuth("", cfg.Smtp.Username, cfg.Smtp.Password, cfg.Smtp.Host)
-
-	err := smtp.SendMail(fmt.Sprintf("%s:%s", cfg.Smtp.Host, cfg.Smtp.Port), smtpAuth, cfg.Smtp.SourceEmail, []string{recipient}, body)
-
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to send email")
-		return err
-	}
-
-	return nil
-}
-
-func (s *EmailService) SendTextEmail(to []string, subject string, msg string) error {
-
-	for _, recipient := range to {
-		msg := fmt.Appendf(nil, "To: %s\r\n"+
-			"Subject: %s\r\n"+
-			"\r\n"+
-			"%s\r\n",
-			recipient, subject, msg)
-
-		err := s.SendEmail(recipient, subject, msg)
-
-		if err != nil {
-			s.logger.Err(err).Msg("Failed to send text email")
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *EmailService) SendHTMLEmail(to []string, subject string, html string) error {
-
-	for _, recipient := range to {
-		msg := fmt.Appendf(nil, "To: %s\r\n"+
-			"Subject: %s\r\n"+
-			"MIME-Version: 1.0 \r\nContent-type: text/html; charset=\"UTF-8\"\r\n"+
-			"\r\n"+
-			"%s\r\n",
-			recipient, subject, html)
-
-		err := s.SendEmail(recipient, subject, msg)
-
-		if err != nil {
-			s.logger.Err(err).Msg("Failed to send html email")
-			return err
-		}
-	}
-	return nil
 }
 
 func (s *EmailService) SendConfirmationEmail(recipient string, name string) error {
@@ -93,10 +37,10 @@ func (s *EmailService) SendConfirmationEmail(recipient string, name string) erro
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to inject template variables for recipient '%s'.")
 	}
-
-	err = s.SendHTMLEmail([]string{recipient}, "SwampHacks XI: we recieved your application!", body.String())
+	err = s.SESClient.SendHTMLEmail([]string{recipient}, "noreply@swamphacks.com", "SwampHacks XI: we recieved your application!", body.String())
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to send confirmation email for recipient '%s'")
+		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
+		return err
 	}
 
 	return nil
