@@ -29,8 +29,8 @@ func main() {
 			Queues: map[string]int{
 				"email": 1,
 			},
-			TaskCheckInterval:        60 * time.Second,
-			DelayedTaskCheckInterval: 2 * time.Minute,
+			TaskCheckInterval:        5 * time.Second,
+			DelayedTaskCheckInterval: time.Minute,
 			HealthCheckInterval:      2 * time.Minute,
 			JanitorInterval:          time.Hour,
 			JanitorBatchSize:         100,
