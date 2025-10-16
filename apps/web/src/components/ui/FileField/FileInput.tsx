@@ -199,6 +199,7 @@ export const FileInput = ({
           type="file"
           ref={inputRef}
           onChange={onChange}
+          accept={props.accept}
         />
       </DropZone>
 

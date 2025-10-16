@@ -202,7 +202,9 @@
           "name": "linkedin",
           "questionType": "url",
           "placeholder": "Enter link",
+          "description": "Must be a full URL. Example: https://www.linkedin.com/in/my-profile",
           "label": "Linkedin URL",
+          "regex": "^(https?:\\/\\/)?(www\\.)?linkedin\\.com\\/in\\/[A-Za-z0-9_-]+\\/?$",
           "required": true,
           "iconName": "linkedin"
         },
@@ -210,6 +212,8 @@
           "name": "github",
           "questionType": "url",
           "placeholder": "Enter link",
+          "description": "Must be a full URL. Example: https://www.github.com/my-profile",
+          "regex": "^(https?:\\/\\/)?(www\\.)?github\\.com\\/[A-Za-z0-9-]+\\/?$",
           "label": "Github URL",
           "required": true,
           "iconName": "github"
@@ -381,7 +385,7 @@
           "description": "By uploading your resume, you consent to us sharing it with our company sponsors.",
           "required": true,
           "validation": {
-            "validMimeTypes": ["application/pdf"]
+            "validMimeTypes": "application/pdf"
           }
         }
       ]

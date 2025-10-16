@@ -14,8 +14,8 @@ export const UploadQuestion = createQuestionItem({
         // Size are in megabytes
         minSize: z.number(),
         maxSize: z.number(),
-        validMimeTypes: z.array(z.string()),
-        invalidMimeTypes: z.array(z.string()),
+        validMimeTypes: z.string(),
+        invalidMimeTypes: z.string(),
       })
       .partial()
       .refine(
