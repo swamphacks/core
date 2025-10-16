@@ -59,7 +59,22 @@ jobs:
             git checkout dev
             git reset --hard origin/dev
             git pull
-            infisical export --env=dev --format=dotenv --path="/web" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.dev.web
+
+            export INFISICAL_TOKEN=$(infisical login \
+              --method=universal-auth \
+              --client-id='${{ secrets.INFISICAL_CLIENT_ID }}' \
+              --client-secret='${{ secrets.INFISICAL_CLIENT_SECRET }}' \
+              --silent \
+              --plain)
+
+            infisical export \
+              --token=$INFISICAL_TOKEN \
+              --env=dev \
+              --format=dotenv \
+              --path="/web" \
+              --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
+              > ./secrets/.env.dev.web      
+            
             docker compose -f docker-compose.web.yml pull web-dev
             docker compose -f docker-compose.web.yml up -d --no-deps --force-recreate web-dev
 
