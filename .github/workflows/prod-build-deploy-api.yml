@@ -62,6 +62,10 @@ jobs:
 
     steps:
       - name: SSH proxy commmand
+        env:
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.API_HOST }}
@@ -73,6 +77,21 @@ jobs:
             git checkout master
             git reset --hard origin/master
             git pull
-            infisical export --env=prod --format=dotenv --path="/api" --projectId=${{ secrets.INFISICAL_PROJECT_ID }} > ./secrets/.env.api
+
+            export INFISICAL_TOKEN=$(infisical login \
+              --method=universal-auth \
+              --client-id=${INFISICAL_CLIENT_ID} \
+              --client-secret=${INFISICAL_CLIENT_SECRET} \
+              --silent \
+              --plain)
+
+            infisical export \
+              --token=$INFISICAL_TOKEN \
+              --env=prod \
+              --format=dotenv \
+              --path="/api" \
+              --projectId=$INFISICAL_PROJECT_ID \
+              > ./secrets/.env.api
+                        
             docker compose -f docker-compose.api.yml pull api
             docker compose -f docker-compose.api.yml up -d --no-deps --force-recreate api
