@@ -24,6 +24,7 @@ func NewEmailService(taskQueue *asynq.Client, SESClient *email.SESClient, logger
 	}
 }
 
+// TODO: Make this generic for any event
 func (s *EmailService) SendConfirmationEmail(recipient string, name string) error {
 
 	var body bytes.Buffer
@@ -37,7 +38,7 @@ func (s *EmailService) SendConfirmationEmail(recipient string, name string) erro
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to inject template variables for recipient '%s'.")
 	}
-	err = s.SESClient.SendHTMLEmail([]string{recipient}, "noreply@swamphacks.com", "SwampHacks XI: we recieved your application!", body.String())
+	err = s.SESClient.SendHTMLEmail([]string{recipient}, "noreply@swamphacks.com", "SwampHacks XI: we received your application!", body.String())
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
 		return err
