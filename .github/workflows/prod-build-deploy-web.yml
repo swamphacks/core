@@ -49,10 +49,6 @@ jobs:
 
     steps:
       - name: SSH proxy commmand
-        env:
-          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
-          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
-          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.WEB_HOST }}
