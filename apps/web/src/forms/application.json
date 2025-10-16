@@ -80,12 +80,14 @@
               "name": "universityEmail",
               "questionType": "shortAnswer",
               "placeholder": "Enter your school email",
+              "description": "Must be an EDU email. Example: alberta@ufl.edu",
               "label": "University Email",
               "required": true,
               "iconName": "at",
               "validation": {
                 "email": true
-              }
+              },
+              "regex": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.edu$"
             }
           ]
         },
@@ -216,7 +218,7 @@
             },
             {
               "label": "Gay / Lesbian",
-              "value": "gay"
+              "value": "homosexual"
             },
             {
               "label": "Bisexual",
@@ -565,15 +567,15 @@
           "required": true,
           "options": [
             {
-              "label": "Instagram",
+              "label": "Our Instagram",
               "value": "instagram"
             },
             {
-              "label": "Discord",
+              "label": "Our Discord",
               "value": "discord"
             },
             {
-              "label": "LinkedIn",
+              "label": "Our LinkedIn",
               "value": "linkedin"
             },
             {
@@ -581,12 +583,16 @@
               "value": "word_of_mouth"
             },
             {
-              "label": "Website",
+              "label": "Our Website",
               "value": "website"
             },
             {
               "label": "Class Shoutout",
               "value": "class_shoutout"
+            },
+            {
+              "label": "Other Florida Hackathon",
+              "value": "other_fl_hackathon"
             },
             {
               "label": "Other",
