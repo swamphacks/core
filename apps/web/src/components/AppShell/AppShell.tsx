@@ -94,7 +94,7 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
             </div>
             <MobileProfile
               name={user.name}
-              role={role}
+              role={user.role}
               logout={async () => {
                 await auth.logOut();
                 window.location.href = "/";

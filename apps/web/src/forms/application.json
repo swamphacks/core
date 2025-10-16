@@ -524,7 +524,7 @@
           "type": "question",
           "name": "resume",
           "questionType": "upload",
-          "label": "Upload your resume",
+          "label": "Upload your resume (PDF files only)",
           "description": "By uploading your resume, you consent to us sharing it with our company sponsors.",
           "required": true,
           "validation": {
