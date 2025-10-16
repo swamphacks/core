@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { useLocation, useRouter } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell/AppShell";
 import { NavLink } from "@/components/AppShell/NavLink";
 import TablerLayoutDashboard from "~icons/tabler/layout-dashboard";
@@ -15,6 +15,7 @@ import TablerTicket from "~icons/tabler/ticket";
 import TablerAdjustmentsHorizontal from "~icons/tabler/adjustments-horizontal";
 import TablerShieldHalfFilled from "~icons/tabler/shield-half-filled";
 import { type PropsWithChildren } from "react";
+import { Logo } from "@/components/Logo";
 
 interface DashboardAppShellProps {
   eventId: string;
@@ -26,7 +27,9 @@ export default function StaffDashboardShell({
   eventRole,
   children,
 }: PropsWithChildren<DashboardAppShellProps>) {
+  const router = useRouter();
   const pathname = useLocation({ select: (loc) => loc.pathname });
+
   const dashboardOverviewActive = /^\/events\/[^/]+\/dashboard\/?$/.test(
     pathname,
   );
@@ -56,14 +59,12 @@ export default function StaffDashboardShell({
   return (
     <AppShell>
       <AppShell.Header>
-        <div className="w-full px-4 flex flex-row justify-between h-full items-center">
-          <h1 className="text-2xl font-bold">Staff Dashboard</h1>
-          <Link
-            to="/portal"
-            className="text-blue-500 underline underline-offset-4"
-          >
-            Back to portal
-          </Link>
+        <div className="items-center gap-2 ml-3 flex">
+          <Logo
+            onClick={() => router.navigate({ to: "/portal" })}
+            className="py-2 cursor-pointer"
+            label={eventRole === "admin" ? "Admin Portal" : "Staff Portal"}
+          />
         </div>
       </AppShell.Header>
 
