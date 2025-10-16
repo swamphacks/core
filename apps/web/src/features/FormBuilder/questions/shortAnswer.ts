@@ -46,6 +46,13 @@ export const ShortAnswerQuestion = createQuestionItem({
     if (validation.email) {
       let schema = z.email("Invalid email");
 
+      if (item.regex) {
+        schema = schema.regex(
+          new RegExp(item.regex as unknown as RegExp),
+          "Invalid value",
+        );
+      }
+
       if (typeof validation.maxLength === "number") {
         schema = schema.max(validation.maxLength, error.tooLong);
       }
