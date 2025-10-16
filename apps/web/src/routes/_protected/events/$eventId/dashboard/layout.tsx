@@ -4,6 +4,7 @@ import StaffAppShell from "@/features/Dashboard/components/StaffAppShell";
 import { getUserEventRole } from "@/features/Event/api/getUserEventRole";
 import NotFoundPage from "@/features/NotFound/NotFoundPage";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { fetchEvent, getEventQueryKey } from "@/features/Event/hooks/useEvent";
 
 export const Route = createFileRoute("/_protected/events/$eventId/dashboard")({
   component: RouteComponent,
@@ -26,11 +27,20 @@ export const Route = createFileRoute("/_protected/events/$eventId/dashboard")({
       roleAssignedAt: parsedAssignedAt ?? null,
     };
   },
+  loader: async ({ context, params }) => {
+    const data = await context.queryClient.fetchQuery({
+      queryKey: getEventQueryKey(params.eventId),
+      queryFn: () => fetchEvent(params.eventId),
+    });
+
+    return data;
+  },
 });
 
 function RouteComponent() {
   const { eventRole } = Route.useRouteContext();
   const { eventId } = Route.useParams();
+  const { name } = Route.useLoaderData();
 
   if (!eventRole) {
     return <NotFoundPage />;
@@ -51,13 +61,13 @@ function RouteComponent() {
       );
     case "attendee":
       return (
-        <AttendeeAppShell eventId={eventId}>
+        <AttendeeAppShell eventId={eventId} eventName={name}>
           <Outlet />
         </AttendeeAppShell>
       );
     case "applicant":
       return (
-        <ApplicantAppShell eventId={eventId}>
+        <ApplicantAppShell eventId={eventId} eventName={name}>
           <Outlet />
         </ApplicantAppShell>
       );
