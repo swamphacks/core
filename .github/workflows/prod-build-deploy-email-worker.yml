@@ -80,8 +80,8 @@ jobs:
 
             export INFISICAL_TOKEN=$(infisical login \
               --method=universal-auth \
-              --client-id=${INFISICAL_CLIENT_ID} \
-              --client-secret=${INFISICAL_CLIENT_SECRET} \
+              --client-id='${{ secrets.INFISICAL_CLIENT_ID }}' \
+              --client-secret='${{ secrets.INFISICAL_CLIENT_SECRET }}' \
               --silent \
               --plain)
 
@@ -90,7 +90,7 @@ jobs:
               --env=prod \
               --format=dotenv \
               --path="/api" \
-              --projectId=$INFISICAL_PROJECT_ID \
+              --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
               > ./secrets/.env.api
                         
             docker compose -f docker-compose.api.yml pull email-worker
