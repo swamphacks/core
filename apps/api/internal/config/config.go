@@ -31,6 +31,20 @@ type CloudflareConfig struct {
 	AccessKeySecret string `env:"ACCESS_KEY_SECRET"`
 }
 
+type SmtpConfig struct {
+	Username    string `env:"USERNAME"`
+	Password    string `env:"PASSWORD"`
+	Host        string `env:"HOST"`
+	Port        string `env:"PORT"`
+	SourceEmail string `env:"SOURCE_EMAIL"`
+}
+
+type AWSConfig struct {
+	AccessKey       string `env:"ACCESS_KEY"`
+	AccessKeySecret string `env:"ACCESS_KEY_SECRET"`
+	Region          string `env:"REGION"`
+}
+
 type CoreBuckets struct {
 	Avatars            string `env:"USER_AVATARS" envDefault:"core-user-avatars-dev"`
 	ApplicationResumes string `env:"APPLICATION_RESUMES" envDefault:"core-application-resumes-dev"`
@@ -52,6 +66,8 @@ type Config struct {
 
 	CF          CloudflareConfig `envPrefix:"CF_"`
 	CoreBuckets CoreBuckets      `envPrefix:"CORE_BUCKETS_"`
+	Smtp        SmtpConfig       `envPrefix:"SMTP_"`
+	AWS         AWSConfig        `envPrefix:"AWS_"`
 }
 
 func Load() *Config {

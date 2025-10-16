@@ -42,8 +42,10 @@ type ApplicationSubmissionFields struct {
 	Majors                  string `json:"majors" validate:"required"`
 	Minors                  string `json:"minors"`
 	Experience              string `json:"experience" validate:"required"`
+	UfHackathonExp          string `json:"ufHackathonExp" validate:"required"`
 	ProjectExperience       string `json:"projectExperience" validate:"required"`
 	ShirtSize               string `json:"shirtSize" validate:"required"`
+	Diet                    string `json:"diet"`
 	Essay1                  string `json:"essay1" validate:"required"`
 	Essay2                  string `json:"essay2" validate:"required"`
 	Referral                string `json:"referral" validate:"required"`
@@ -57,21 +59,25 @@ type ApplicationSubmissionFields struct {
 var (
 	ErrApplicationDeadlinePassed = errors.New("the application deadline has passed")
 	ErrApplicationUnavailable    = errors.New("unable to access the application")
+	ErrApplicationCannotSave     = errors.New("unable to save the application")
+	ErrApplicationPastSubmitted  = errors.New("application has already been submitted and cannot be modified")
 )
 
 type ApplicationService struct {
 	appRepo       *repository.ApplicationRepository
 	eventsService *EventService
+	emailService  *EmailService
 	storage       storage.Storage
 	buckets       *config.CoreBuckets
 	txm           *db.TransactionManager
 	logger        zerolog.Logger
 }
 
-func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
+func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
 	return &ApplicationService{
 		appRepo:       appRepo,
 		eventsService: eventsService,
+		emailService:  emailService,
 		storage:       storage,
 		buckets:       buckets,
 		txm:           txm,
@@ -150,6 +156,9 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		return nil
 	})
 
+	taskInfo, err := s.emailService.QueueSendConfirmationEmail(data.PreferredEmail, data.FirstName)
+	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendConfirmationEmail task!")
+
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())
 		return err
@@ -159,7 +168,36 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 }
 
 func (s *ApplicationService) SaveApplication(ctx context.Context, data any, userId, eventId uuid.UUID) error {
-	err := s.appRepo.SaveApplication(ctx, data, userId, eventId)
+	// Guard clauses to ensure application can be saved
+	// 1) Check if applications are open for the event
+	// 2) Ensure application status is "started" (Reject all other statuses)
+	canSaveApplication, err := s.eventsService.IsApplicationsOpen(ctx, eventId)
+	if err != nil {
+		return err
+	}
+
+	if !canSaveApplication {
+		return ErrApplicationCannotSave
+	}
+
+	application, err := s.GetApplicationByUserAndEventID(ctx, sqlc.GetApplicationByUserAndEventIDParams{
+		UserID:  userId,
+		EventID: eventId,
+	})
+	if err != nil {
+		return err
+	}
+
+	// This check should almost never fail, but just in case
+	if application == nil {
+		return ErrApplicationUnavailable
+	}
+
+	if application.Status.ApplicationStatus != sqlc.ApplicationStatusStarted {
+		return ErrApplicationPastSubmitted
+	}
+
+	err = s.appRepo.SaveApplication(ctx, data, userId, eventId)
 
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())

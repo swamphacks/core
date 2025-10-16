@@ -13,6 +13,7 @@ export const URLQuestion = createQuestionItem({
     iconName: z
       .enum(Object.keys(textFieldIcons) as Array<keyof typeof textFieldIcons>)
       .optional(),
+    regex: z.string().optional(),
     validation: z
       .object({
         maxLength: z.number(),
@@ -23,20 +24,42 @@ export const URLQuestion = createQuestionItem({
 
   extractValidationSchemaFromItem: (item) => {
     const error = errorMessage[QuestionTypes.url];
-    // const requiredMessage = item.requiredMessage ?? error.required;
-
-    let schema = z.url(error.invalidURL);
-
-    // if (item.isRequired) {
-    //   schema = schema.min(1, requiredMessage);
-    // }
-
     const { validation } = item;
-    if (!validation) return schema;
 
-    if (typeof validation.maxLength === "number") {
-      schema = schema.max(validation.maxLength, error.tooLong);
-    }
+    const schema = z.string().check((ctx) => {
+      const urlCheck = z.url(error.invalidURL).safeParse(ctx.value);
+      if (!urlCheck.success) {
+        ctx.issues.push({
+          code: "custom",
+          message: error.invalidURL,
+          input: ctx.value,
+        });
+        return;
+      }
+
+      if (item.regex) {
+        const re = new RegExp(item.regex);
+        if (!re.test(ctx.value)) {
+          ctx.issues.push({
+            code: "custom",
+            message: "Invalid value",
+            input: ctx.value,
+          });
+          return;
+        }
+      }
+
+      if (validation && typeof validation.maxLength === "number") {
+        if (ctx.value.length > validation.maxLength) {
+          ctx.issues.push({
+            code: "custom",
+            message: error.tooLong,
+            input: ctx.value,
+          });
+          return;
+        }
+      }
+    });
 
     return schema;
   },

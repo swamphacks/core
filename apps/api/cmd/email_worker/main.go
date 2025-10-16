@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
@@ -37,13 +37,17 @@ func main() {
 		},
 	)
 
-	emailService := services.NewEmailService(nil, logger)
+	// Create ses client
+	sesClient := email.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
+
+	emailService := services.NewEmailService(nil, sesClient, logger)
 	emailWorker := workers.NewEmailWorker(emailService, logger)
 
 	mux := asynq.NewServeMux()
 
-	mux.HandleFunc(tasks.TypeSendEmail, emailWorker.HandleSendEmailTask)
-	fmt.Println("Starting email worker")
+	mux.HandleFunc(tasks.TypeSendConfirmationEmail, emailWorker.HandleSendConfirmationEmailTask)
+
+	logger.Info().Msg("Starting email worker")
 
 	if err := srv.Run(mux); err != nil {
 		log.Fatalf("Failed to run email worker")

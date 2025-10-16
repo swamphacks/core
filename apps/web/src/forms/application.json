@@ -1,14 +1,12 @@
 {
   "metadata": {
     "title": "SwampHacks XI Application",
-    "description": "SwampHacks is the University of Florida’s largest annual hackathon. A 36-hour tech event where students from across the country come together to build projects, learn new skills, and connect with fellow innovators."
+    "description": "SwampHacks is the University of Florida’s largest annual hackathon. A 36-hour tech event where students from across the country come together to build projects, learn new skills, and connect with fellow innovators. For questions, please email contact@swamphacks.com."
   },
-
   "content": [
     {
       "type": "section",
       "label": "Personal Information",
-
       "content": [
         {
           "type": "layout",
@@ -23,7 +21,6 @@
                 "maxLength": 50
               }
             },
-
             {
               "name": "lastName",
               "questionType": "shortAnswer",
@@ -50,7 +47,6 @@
                 "max": 99
               }
             },
-
             {
               "name": "phone",
               "questionType": "shortAnswer",
@@ -80,7 +76,6 @@
                 "email": true
               }
             },
-
             {
               "name": "universityEmail",
               "questionType": "shortAnswer",
@@ -104,30 +99,62 @@
               "label": "Gender",
               "hasOther": true,
               "options": [
-                { "label": "Man", "value": "man" },
-                { "label": "Woman", "value": "woman" },
-                { "label": "Non-Binary", "value": "non-binary" },
+                {
+                  "label": "Man",
+                  "value": "man"
+                },
+                {
+                  "label": "Woman",
+                  "value": "woman"
+                },
+                {
+                  "label": "Non-Binary",
+                  "value": "non-binary"
+                },
                 {
                   "label": "Prefer to self-describe",
                   "value": "other"
                 },
-                { "label": "Prefer Not to Answer", "value": "no-answer" }
+                {
+                  "label": "Prefer Not to Answer",
+                  "value": "no-answer"
+                }
               ]
             },
-
             {
               "name": "pronouns",
               "questionType": "select",
-              "placeholder": "Select your pronouns",
+              "placeholder": "Select",
               "label": "Pronouns",
               "options": [
-                { "label": "She/Her", "value": "she/her" },
-                { "label": "He/Him", "value": "he/him" },
-                { "label": "They/Them", "value": "they/them" },
-                { "label": "She/They", "value": "she/they" },
-                { "label": "He/They", "value": "he/they" },
-                { "label": "Not represented here", "value": "not-represented" },
-                { "label": "Prefer Not to Answer", "value": "no-answer" }
+                {
+                  "label": "She/Her",
+                  "value": "she/her"
+                },
+                {
+                  "label": "He/Him",
+                  "value": "he/him"
+                },
+                {
+                  "label": "They/Them",
+                  "value": "they/them"
+                },
+                {
+                  "label": "She/They",
+                  "value": "she/they"
+                },
+                {
+                  "label": "He/They",
+                  "value": "he/they"
+                },
+                {
+                  "label": "Not represented here",
+                  "value": "not-represented"
+                },
+                {
+                  "label": "Prefer Not to Answer",
+                  "value": "no-answer"
+                }
               ]
             }
           ]
@@ -139,39 +166,42 @@
           "label": "Race/Ethnicity",
           "hasOther": true,
           "options": [
-            { "label": "Asian Indian", "value": "asian-indian" },
-            { "label": "Black or African", "value": "black" },
-            { "label": "Chinese", "value": "chinese" },
-            { "label": "Filipino", "value": "filipino" },
             {
-              "label": "Guamanian or Chamorro",
-              "value": "guamanian"
+              "label": "Native American or Alaska Native",
+              "value": "native-american-alaska-native"
             },
             {
-              "label": "Hispanic / Latino / Spanish Origin",
-              "value": "hispanic"
-            },
-            { "label": "Japanese", "value": "japanese" },
-            { "label": "Korean", "value": "korean" },
-            { "label": "Middle Eastern", "value": "middle-eastern" },
-            {
-              "label": "Native American or Alaskan Native",
-              "value": "native-american-or-alaskan-native"
-            },
-            { "label": "Native Hawaiian", "value": "native-hawaiian" },
-            { "label": "Samoan", "value": "samoan" },
-            { "label": "Vietnamese", "value": "vietnamese" },
-            { "label": "White", "value": "white" },
-            {
-              "label": "Other Asian (Thai, Cambodian, etc.)",
-              "value": "other-asian"
+              "label": "Asian or Pacific Islander",
+              "value": "asian-pacific-islander"
             },
             {
-              "label": "Other Pacific Islander",
-              "value": "other-pacific-islander"
+              "label": "Black or African American",
+              "value": "black-african-american"
             },
-            { "label": "Other (Please Specify)", "value": "other" },
-            { "label": "Prefer Not to Answer", "value": "no-answer" }
+            {
+              "label": "Hispanic or Latino",
+              "value": "hispanic-latino"
+            },
+            {
+              "label": "White",
+              "value": "white"
+            },
+            {
+              "label": "Middle Eastern",
+              "value": "middle-eastern"
+            },
+            {
+              "label": "Mixed race",
+              "value": "multiracial"
+            },
+            {
+              "label": "Other",
+              "value": "other"
+            },
+            {
+              "label": "Prefer Not to Answer",
+              "value": "no-answer"
+            }
           ]
         },
         {
@@ -181,20 +211,34 @@
           "label": "Do you consider yourself to be any of the following?",
           "options": [
             {
-              "label": "Heterosexual or straight",
+              "label": "Heterosexual / Straight",
               "value": "heterosexual"
             },
-            { "label": "Gay or lesbian", "value": "gay" },
-            { "label": "Bisexual", "value": "bisexual" },
-            { "label": "Not represented here", "value": "not-represented" },
-            { "label": "Prefer Not to Answer", "value": "no-answer" }
+            {
+              "label": "Gay / Lesbian",
+              "value": "gay"
+            },
+            {
+              "label": "Bisexual",
+              "value": "bisexual"
+            },
+            {
+              "label": "Other / Not Represented Here",
+              "value": "not-represented"
+            },
+            {
+              "label": "Prefer Not to Answer",
+              "value": "no-answer"
+            }
           ]
         },
         {
           "name": "linkedin",
           "questionType": "url",
           "placeholder": "Enter link",
+          "description": "Must be a full URL. Example: https://www.linkedin.com/in/my-profile",
           "label": "Linkedin URL",
+          "regex": "^(https?:\\/\\/)?(www\\.)?linkedin\\.com\\/in\\/[A-Za-z0-9_-]+\\/?$",
           "required": true,
           "iconName": "linkedin"
         },
@@ -202,6 +246,8 @@
           "name": "github",
           "questionType": "url",
           "placeholder": "Enter link",
+          "description": "Must be a full URL. Example: https://www.github.com/my-profile",
+          "regex": "^(https?:\\/\\/)?(www\\.)?github\\.com\\/[A-Za-z0-9-]+\\/?$",
           "label": "Github URL",
           "required": true,
           "iconName": "github"
@@ -219,11 +265,9 @@
         }
       ]
     },
-
     {
       "type": "section",
       "label": "Education",
-
       "content": [
         {
           "type": "layout",
@@ -247,22 +291,32 @@
               "required": true,
               "hasOther": true,
               "options": [
-                { "label": "High School", "value": "high_school" },
-                { "label": "Undergraduate", "value": "undergraduate" },
-                { "label": "Graduate", "value": "graduate" },
+                {
+                  "label": "High School",
+                  "value": "high_school"
+                },
+                {
+                  "label": "Undergraduate",
+                  "value": "undergraduate"
+                },
+                {
+                  "label": "Graduate",
+                  "value": "graduate"
+                },
                 {
                   "label": "Professional / Continuing Education",
                   "value": "professional"
                 },
-                { "label": "Other", "value": "other" }
+                {
+                  "label": "Other",
+                  "value": "other"
+                }
               ]
             }
           ]
         },
-
         {
           "type": "layout",
-
           "content": [
             {
               "name": "year",
@@ -272,12 +326,30 @@
               "required": true,
               "hasOther": true,
               "options": [
-                { "label": "1st Year", "value": "first_year" },
-                { "label": "2nd Year", "value": "second_year" },
-                { "label": "3rd Year", "value": "third_year" },
-                { "label": "4th Year", "value": "fourth_year" },
-                { "label": "Graduate Student", "value": "graduate" },
-                { "label": "Other", "value": "other" }
+                {
+                  "label": "1st Year",
+                  "value": "first_year"
+                },
+                {
+                  "label": "2nd Year",
+                  "value": "second_year"
+                },
+                {
+                  "label": "3rd Year",
+                  "value": "third_year"
+                },
+                {
+                  "label": "4th Year",
+                  "value": "fourth_year"
+                },
+                {
+                  "label": "Graduate Student",
+                  "value": "graduate"
+                },
+                {
+                  "label": "Other",
+                  "value": "other"
+                }
               ]
             },
             {
@@ -294,7 +366,6 @@
             }
           ]
         },
-
         {
           "name": "majors",
           "questionType": "multiselect",
@@ -305,7 +376,6 @@
             "data": "majors"
           }
         },
-
         {
           "name": "minors",
           "questionType": "shortAnswer",
@@ -315,11 +385,9 @@
         }
       ]
     },
-
     {
       "type": "section",
       "label": "Experience & Preferences",
-
       "content": [
         {
           "name": "experience",
@@ -327,11 +395,42 @@
           "label": "How many hackathons have you participated in?",
           "required": true,
           "options": [
-            { "label": "Swamphacks would be my first!", "value": "first_time" },
-            { "label": "1", "value": "one" },
-            { "label": "2", "value": "two" },
-            { "label": "3", "value": "three" },
-            { "label": "4+", "value": "four_or_more" }
+            {
+              "label": "Swamphacks would be my first!",
+              "value": "first_time"
+            },
+            {
+              "label": "1",
+              "value": "one"
+            },
+            {
+              "label": "2",
+              "value": "two"
+            },
+            {
+              "label": "3",
+              "value": "three"
+            },
+            {
+              "label": "4+",
+              "value": "four_or_more"
+            }
+          ]
+        },
+        {
+          "name": "ufHackathonExp",
+          "questionType": "multipleChoice",
+          "label": "Have you attended SwampHacks or any other UF hackathon before?",
+          "required": true,
+          "options": [
+            {
+              "label": "Yes, I have.",
+              "value": "yes"
+            },
+            {
+              "label": "No, I haven't.",
+              "value": "no"
+            }
           ]
         },
         {
@@ -348,7 +447,10 @@
               "label": "No, but I have experience programming in my courses",
               "value": "course_experience"
             },
-            { "label": "Yes", "value": "independent_project" }
+            {
+              "label": "Yes",
+              "value": "independent_project"
+            }
           ]
         },
         {
@@ -358,11 +460,62 @@
           "placeholder": "Select your size",
           "required": true,
           "options": [
-            { "label": "Small", "value": "S" },
-            { "label": "Medium", "value": "M" },
-            { "label": "Large", "value": "L" },
-            { "label": "X-Large", "value": "XL" },
-            { "label": "XX-Large", "value": "XXL" }
+            {
+              "label": "Small",
+              "value": "S"
+            },
+            {
+              "label": "Medium",
+              "value": "M"
+            },
+            {
+              "label": "Large",
+              "value": "L"
+            },
+            {
+              "label": "X-Large",
+              "value": "XL"
+            },
+            {
+              "label": "XX-Large",
+              "value": "XXL"
+            }
+          ]
+        },
+        {
+          "name": "diet",
+          "questionType": "multiselect",
+          "placeholder": "Select",
+          "label": "Dietary Restrictions",
+          "options": [
+            {
+              "label": "Vegetarian",
+              "value": "vegetarian"
+            },
+            {
+              "label": "Vegan",
+              "value": "vegan"
+            },
+            {
+              "label": "Celiac Disease",
+              "value": "celiac-disease"
+            },
+            {
+              "label": "Allergies",
+              "value": "allergies"
+            },
+            {
+              "label": "Kosher",
+              "value": "kosher"
+            },
+            {
+              "label": "Halal",
+              "value": "halal"
+            },
+            {
+              "label": "Other",
+              "value": "other"
+            }
           ]
         },
         {
@@ -373,7 +526,7 @@
           "description": "By uploading your resume, you consent to us sharing it with our company sponsors.",
           "required": true,
           "validation": {
-            "validMimeTypes": ["application/pdf"]
+            "validMimeTypes": "application/pdf"
           }
         }
       ]
@@ -411,45 +564,72 @@
           "label": "How did you learn about SwampHacks?",
           "required": true,
           "options": [
-            { "label": "Instagram", "value": "instagram" },
-            { "label": "Discord", "value": "discord" },
-            { "label": "LinkedIn", "value": "linkedin" },
-            { "label": "Word of Mouth", "value": "word_of_mouth" },
-            { "label": "Website", "value": "website" },
-            { "label": "Class Shoutout", "value": "class_shoutout" },
-            { "label": "Other", "value": "other" }
+            {
+              "label": "Instagram",
+              "value": "instagram"
+            },
+            {
+              "label": "Discord",
+              "value": "discord"
+            },
+            {
+              "label": "LinkedIn",
+              "value": "linkedin"
+            },
+            {
+              "label": "Word of Mouth",
+              "value": "word_of_mouth"
+            },
+            {
+              "label": "Website",
+              "value": "website"
+            },
+            {
+              "label": "Class Shoutout",
+              "value": "class_shoutout"
+            },
+            {
+              "label": "Other",
+              "value": "other"
+            }
           ]
         }
       ]
     },
-
     {
       "type": "section",
       "label": "SwampHacks Consent & Agreements",
-
       "content": [
         {
           "name": "pictureConsent",
           "questionType": "checkbox",
           "label": "I consent to SwampHacks photo and video policy. We will be taking pictures and recording videos throughout the events for promotional use.",
           "required": true,
-          "options": [{ "label": "I agree", "value": "agree" }]
+          "options": [
+            {
+              "label": "I agree",
+              "value": "agree"
+            }
+          ]
         },
         {
           "name": "inpersonAcknowledgement",
           "questionType": "checkbox",
           "label": "By submitting this application, I recognize that SwampHacks is an in-person only event and my in-person attendance is expected if I am offered acceptance. I also recognize that SwampHacks will be providing free meals but will not be covering transportation costs. ",
           "required": true,
-          "options": [{ "label": "I agree", "value": "agree" }]
+          "options": [
+            {
+              "label": "I agree",
+              "value": "agree"
+            }
+          ]
         }
       ]
     },
-
     {
       "type": "section",
       "label": "MLH Consent & Agreements",
       "description": "We are currently in the process of partnering with MLH. The following 3 checkboxes are for this partnership. If we do not end up partnering with MLH, your information will not be shared.",
-
       "content": [
         {
           "name": "agreeToConduct",
@@ -457,7 +637,12 @@
           "label": "I have read and agree to the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md\">MLH Code of Conduct</a>.",
           "renderLabelAsHTML": true,
           "required": true,
-          "options": [{ "label": "I agree", "value": "agree" }]
+          "options": [
+            {
+              "label": "I agree",
+              "value": "agree"
+            }
+          ]
         },
         {
           "name": "infoShareAuthorization",
@@ -465,14 +650,24 @@
           "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>. I further agree to the terms of both the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/contest-terms.md\">MLH Contest Terms and Conditions</a> and the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>.",
           "renderLabelAsHTML": true,
           "required": true,
-          "options": [{ "label": "I agree", "value": "agree" }]
+          "options": [
+            {
+              "label": "I agree",
+              "value": "agree"
+            }
+          ]
         },
         {
           "name": "agreeToMLHEmails",
           "questionType": "checkbox",
           "label": "I authorize MLH to send me occasional emails about relevant events, career opportunities, and community announcements.",
           "required": false,
-          "options": [{ "label": "I agree", "value": "agree" }]
+          "options": [
+            {
+              "label": "I agree",
+              "value": "agree"
+            }
+          ]
         }
       ]
     }

@@ -119,7 +119,12 @@ export interface FormProps {
   defaultValues?: Record<string, any>;
   isInvalid?: boolean;
   isSubmitted?: boolean;
+  isSubmitting?: boolean;
   SubmitSuccessComponent?: React.ComponentType;
+  renderFormHeader?: (metadata: {
+    title: string;
+    description?: string | undefined;
+  }) => React.ReactNode;
 }
 
 export function build(formObject: FormObject): {
@@ -156,7 +161,9 @@ export function build(formObject: FormObject): {
       onChangeDelayMs = 5000,
       isInvalid = false,
       isSubmitted: isSubmittedProp = false,
+      isSubmitting = false,
       SubmitSuccessComponent = FallbackSubmitSuccessComponent,
+      renderFormHeader,
     }) {
       const [otherFields, setOtherFields] = useState<string[]>([]);
 
@@ -183,13 +190,15 @@ export function build(formObject: FormObject): {
       ) as Record<string, any>;
 
       useEffect(() => {
+        if (isSubmitting || isSubmittedProp) return;
+
         if (isDirty && Object.keys(formValues).length >= 1) {
           onChange?.({
             ...defaultFieldValues,
             ...formValues,
           });
         }
-      }, [isDirty, formValues]);
+      }, [isDirty, formValues, isSubmitting, isSubmittedProp]);
 
       useEffect(() => {
         const newOtherFields = [];
@@ -471,14 +480,24 @@ export function build(formObject: FormObject): {
         );
       }, [formErrors, formContent]);
 
+      const formHeader = useMemo(() => {
+        if (renderFormHeader) {
+          return renderFormHeader(data.metadata);
+        } else {
+          return (
+            <div className="space-y-3 py-5 border-b-1 border-border">
+              <p className="text-2xl text-text-main font-medium">
+                {data.metadata.title}
+              </p>
+              <p className="text-text-main">{data.metadata.description}</p>
+            </div>
+          );
+        }
+      }, []);
+
       return (
         <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">
-          <div className="space-y-3 py-5 border-b-1 border-border">
-            <p className="text-2xl text-text-main font-medium">
-              {data.metadata.title}
-            </p>
-            <p className="text-text-main">{data.metadata.description}</p>
-          </div>
+          {formHeader}
           {isSubmitted ? (
             <div className="mt-3">
               <SubmitSuccessComponent />

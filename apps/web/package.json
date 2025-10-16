@@ -55,6 +55,7 @@
     "tailwind-variants": "^1.0.0",
     "tailwindcss": "^4.1.5",
     "tailwindcss-react-aria-components": "^2.0.0",
+    "vite-plugin-svgr": "^4.5.0",
     "zod": "^4.0.5"
   },
   "devDependencies": {
