@@ -9,7 +9,7 @@ import TablerArrowLeft from "~icons/tabler/arrow-left";
 import { api } from "@/lib/ky";
 import { Spinner } from "@/components/ui/Spinner";
 import { useApplication } from "@/features/Application/hooks/useApplication";
-import { format, parseISO } from "date-fns";
+import { formatDistanceToNowStrict, parseISO } from "date-fns";
 
 // TODO: can we put these in the assets folder?
 import Cloud from "./cloud.svg?react";
@@ -39,14 +39,28 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   const application = useApplication(eventId);
 
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSavedAt, setLastSavedAt] = useState<string | undefined>(undefined);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>(undefined);
+  const [savedText, setSavedText] = useState<string | undefined>("");
+
+  // Update saved text every second. Restart interval when lastSavedAt changes.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (lastSavedAt) {
+        setSavedText(
+          `Saved ${formatDistanceToNowStrict(lastSavedAt, { addSuffix: true })}`,
+        );
+      }
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, [lastSavedAt]);
 
   useEffect(() => {
     if (!application || application.isLoading) return;
 
     if (application.data?.saved_at) {
       const parsed = parseISO(application.data.saved_at);
-      setLastSavedAt(format(parsed, "yyyy-MM-dd h:mm a"));
+      setLastSavedAt(parsed);
     } else {
       setLastSavedAt(undefined);
     }
@@ -110,7 +124,13 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
         json: formValues,
       });
 
-      setLastSavedAt(format(new Date(), "yyyy-MM-dd h:mm a"));
+      const now = new Date();
+
+      setLastSavedAt(now);
+      // Set text immediately to avoid text flash
+      setSavedText(
+        `Saved ${formatDistanceToNowStrict(now, { addSuffix: true })}`,
+      );
       setIsSaving(false);
     },
     [isSubmitted, isSubmitting],
@@ -128,9 +148,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   const saveStatus = (
     <>
       {isSaving && !isSubmitted && <span>Autosaving...</span>}
-      {!isSaving && lastSavedAt && !isSubmitted && (
-        <span>Last saved at: {lastSavedAt}</span>
-      )}
+      {!isSaving && savedText && !isSubmitted && <span>{savedText}</span>}
     </>
   );
 
