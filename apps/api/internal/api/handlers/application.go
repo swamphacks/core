@@ -285,3 +285,35 @@ func (h *ApplicationHandler) SaveApplication(w http.ResponseWriter, r *http.Requ
 
 	w.WriteHeader(http.StatusOK)
 }
+
+// Get Application Statistics
+//
+//	@Summary		Gets an event's submitted application statistics
+//	@Description	This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.
+//	@Tags			Application
+//	@Produce		json
+//	@Success		200 {object}    services.ApplicationStatistics
+//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error getting statistics"
+//	@Router			/events/{eventId}/application/stats [get]
+func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID."))
+		return
+	}
+
+	appStats, err := h.appService.GetApplicationStatistics(r.Context(), eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("application_stats_err", "Something went wrong while aggregating application statistics."))
+		return
+	}
+
+	res.Send(w, http.StatusOK, appStats)
+}

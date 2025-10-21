@@ -85,6 +85,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		}
 	})
 
+	api.Router.Get("/events/{eventId}/application/stats", api.Handlers.Application.GetApplicationStatistics)
+
 	// --- Auth routes ---
 	api.Router.Route("/auth", func(r chi.Router) {
 		r.Get("/callback", api.Handlers.Auth.OAuthCallback)
@@ -121,7 +123,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		// Event-specific routes
 		r.Route("/{eventId}", func(r chi.Router) {
 			r.Use(mw.Auth.RequireAuth) // routes below this are protected
-			
+
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Get("/role", api.Handlers.Event.GetEventRole)
 
