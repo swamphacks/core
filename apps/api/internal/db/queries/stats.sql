@@ -62,3 +62,15 @@ WHERE status = 'submitted'
   AND event_id = $1
 GROUP BY trim(major)
 ORDER BY count DESC;
+
+-- name: GetApplicationStatusSplit :one
+SELECT
+    COUNT(*) FILTER (WHERE status = 'started')       AS started,
+    COUNT(*) FILTER (WHERE status = 'submitted')     AS submitted,
+    COUNT(*) FILTER (WHERE status = 'under_review')  AS under_review,
+    COUNT(*) FILTER (WHERE status = 'accepted')      AS accepted,
+    COUNT(*) FILTER (WHERE status = 'rejected')      AS rejected,
+    COUNT(*) FILTER (WHERE status = 'waitlisted')    AS waitlisted,
+    COUNT(*) FILTER (WHERE status = 'withdrawn')     AS withdrawn
+FROM applications
+WHERE event_id = $1;

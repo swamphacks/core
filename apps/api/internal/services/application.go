@@ -218,6 +218,7 @@ type ApplicationStatistics struct {
 	RaceStatistics   []sqlc.GetApplicationRaceSplitRow   `json:"race_stats"`
 	MajorStatistics  []sqlc.GetApplicationMajorSplitRow  `json:"major_stats"`
 	SchoolStatistics []sqlc.GetApplicationSchoolSplitRow `json:"school_stats"`
+	StatusStatistics sqlc.GetApplicationStatusSplitRow   `json:"status_stats"`
 }
 
 func (s *ApplicationService) GetApplicationStatistics(ctx context.Context, eventId uuid.UUID) (*ApplicationStatistics, error) {
@@ -228,6 +229,7 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context, event
 	var raceStats []sqlc.GetApplicationRaceSplitRow
 	var majorStats []sqlc.GetApplicationMajorSplitRow
 	var schoolStats []sqlc.GetApplicationSchoolSplitRow
+	var statusStats sqlc.GetApplicationStatusSplitRow
 
 	g.Go(func() error {
 		var err error
@@ -259,6 +261,12 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context, event
 		return err
 	})
 
+	g.Go(func() error {
+		var err error
+		statusStats, err = s.appRepo.GetApplicationStatuses(ctx, eventId)
+		return err
+	})
+
 	if err := g.Wait(); err != nil {
 		s.logger.Err(err).Msg("Something went wrong while getting application statistics")
 		return nil, ErrGetApplicationStatistics
@@ -270,6 +278,7 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context, event
 		RaceStatistics:   raceStats,
 		MajorStatistics:  majorStats,
 		SchoolStatistics: schoolStats,
+		StatusStatistics: statusStats,
 	}, nil
 
 }

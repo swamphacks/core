@@ -199,3 +199,41 @@ func (q *Queries) GetApplicationSchoolSplit(ctx context.Context, eventID uuid.UU
 	}
 	return items, nil
 }
+
+const getApplicationStatusSplit = `-- name: GetApplicationStatusSplit :one
+SELECT
+    COUNT(*) FILTER (WHERE status = 'started')       AS started,
+    COUNT(*) FILTER (WHERE status = 'submitted')     AS submitted,
+    COUNT(*) FILTER (WHERE status = 'under_review')  AS under_review,
+    COUNT(*) FILTER (WHERE status = 'accepted')      AS accepted,
+    COUNT(*) FILTER (WHERE status = 'rejected')      AS rejected,
+    COUNT(*) FILTER (WHERE status = 'waitlisted')    AS waitlisted,
+    COUNT(*) FILTER (WHERE status = 'withdrawn')     AS withdrawn
+FROM applications
+WHERE event_id = $1
+`
+
+type GetApplicationStatusSplitRow struct {
+	Started     int64 `json:"started"`
+	Submitted   int64 `json:"submitted"`
+	UnderReview int64 `json:"under_review"`
+	Accepted    int64 `json:"accepted"`
+	Rejected    int64 `json:"rejected"`
+	Waitlisted  int64 `json:"waitlisted"`
+	Withdrawn   int64 `json:"withdrawn"`
+}
+
+func (q *Queries) GetApplicationStatusSplit(ctx context.Context, eventID uuid.UUID) (GetApplicationStatusSplitRow, error) {
+	row := q.db.QueryRow(ctx, getApplicationStatusSplit, eventID)
+	var i GetApplicationStatusSplitRow
+	err := row.Scan(
+		&i.Started,
+		&i.Submitted,
+		&i.UnderReview,
+		&i.Accepted,
+		&i.Rejected,
+		&i.Waitlisted,
+		&i.Withdrawn,
+	)
+	return i, err
+}

@@ -131,3 +131,7 @@ func (r *ApplicationRepository) GetSubmittedApplicationMajors(ctx context.Contex
 func (r *ApplicationRepository) GetSubmittedApplicationSchools(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetApplicationSchoolSplitRow, error) {
 	return r.db.Query.GetApplicationSchoolSplit(ctx, eventId)
 }
+
+func (r *ApplicationRepository) GetApplicationStatuses(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationStatusSplitRow, error) {
+	return r.db.Query.GetApplicationStatusSplit(ctx, eventId)
+}
