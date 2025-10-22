@@ -1,55 +1,10 @@
 import { Heading } from "react-aria-components";
 import { useApplicationStatistics } from "../hooks/useApplicationStatistics";
 import { Card } from "@/components/ui/Card";
-import * as echarts from "echarts/core";
-
-import type { ComposeOption } from "echarts/core";
-
-import { PieChart } from "echarts/charts";
-
-import {
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  DatasetComponent,
-  TransformComponent,
-} from "echarts/components";
-
-import type {
-  // The component option types are defined with the ComponentOption suffix
-  TitleComponentOption,
-  TooltipComponentOption,
-  GridComponentOption,
-  DatasetComponentOption,
-} from "echarts/components";
-
-import type {
-  // The series option types are defined with the SeriesOption suffix
-  PieSeriesOption,
-} from "echarts/charts";
-
-import { LabelLayout, UniversalTransition } from "echarts/features";
-import { SVGRenderer } from "echarts/renderers";
-
-echarts.use([
-  PieChart,
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  DatasetComponent,
-  TransformComponent,
-  LabelLayout,
-  UniversalTransition,
-  SVGRenderer,
-]);
-
-type ECOption = ComposeOption<
-  | PieSeriesOption
-  | TitleComponentOption
-  | TooltipComponentOption
-  | GridComponentOption
-  | DatasetComponentOption
->;
+import ApplicationGenderChart from "./ApplicationGenderChart";
+import ApplicationAgeChart from "./ApplicationAgeChart";
+import ApplicationRaceChart from "./ApplicationRaceChart";
+import ApplicationMajorsChart from "./ApplicationMajorsChart";
 
 interface Props {
   eventId: string;
@@ -58,46 +13,18 @@ interface Props {
 export default function StaffOverview({ eventId }: Props) {
   const { data, isLoading, isError, error } = useApplicationStatistics(eventId);
 
-  let myChart = echarts.init(document.getElementById("chart"), {
-    width: 600,
-    height: 400,
-  });
-
-  const option: ECOption = {
-    title: {
-      text: "Application Status Overview",
-      left: "center",
-    },
-    tooltip: {
-      trigger: "item",
-    },
-    legend: {
-      orient: "vertical",
-      left: "left",
-    },
-    series: [
-      {
-        name: "Applications",
-        type: "pie",
-        radius: "50%",
-        data: [
-          { value: 100, name: "Total Applications" },
-          { value: 30, name: "Accepted Applications" },
-          { value: 50, name: "Rejected Applications" },
-          { value: 20, name: "Pending Applications" },
-        ],
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: "rgba(0, 0, 0, 0.5)",
-          },
-        },
-      },
-    ],
-  };
-
-  myChart.setOption(option);
+  if (isError && error) {
+    return (
+      <main>
+        <Heading className="text-2xl lg:text-3xl font-semibold mb-6">
+          Overview
+        </Heading>
+        <Card className="p-6 bg-red-100 text-red-800">
+          <p>Error loading application statistics: {error.message}</p>
+        </Card>
+      </main>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -112,7 +39,7 @@ export default function StaffOverview({ eventId }: Props) {
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="w-96 h-64 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded"
+                className="md:w-96 h-64 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded"
               />
             ))}
           </div>
@@ -128,8 +55,11 @@ export default function StaffOverview({ eventId }: Props) {
       </Heading>
 
       {/* Stat cards for applications */}
-      <section>
-        <Card className="w-96 h-80" id="chart"></Card>
+      <section className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+        <ApplicationGenderChart data={data?.gender_stats} />
+        <ApplicationAgeChart data={data?.age_stats} />
+        <ApplicationRaceChart data={data?.race_stats} />
+        <ApplicationMajorsChart data={data?.major_stats} />
       </section>
     </main>
   );
