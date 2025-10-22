@@ -1,4 +1,5 @@
-import { PageUnderConstruction } from "@/components/PageUnderConstruction";
+import AttendeeOverview from "@/features/EventOverview/components/AttendeeOverview";
+import StaffOverview from "@/features/EventOverview/components/StaffOverview";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/events/$eventId/dashboard/")({
@@ -16,5 +17,23 @@ export const Route = createFileRoute("/_protected/events/$eventId/dashboard/")({
 });
 
 function RouteComponent() {
-  return <PageUnderConstruction />;
+  const { eventRole } = Route.useRouteContext();
+
+  // Both staff and admin are technically "staff" for dashboard purposes
+  const isStaff = eventRole === "staff" || eventRole === "admin";
+
+  if (isStaff) {
+    return <StaffOverview />;
+  }
+
+  if (eventRole === "attendee") {
+    return <AttendeeOverview />;
+  }
+
+  // Should never reach here due to the redirect in beforeLoad
+  return (
+    <div>
+      <p>Are you sure you&apos;re supposed to be here?</p>
+    </div>
+  );
 }

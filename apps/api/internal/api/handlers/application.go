@@ -292,7 +292,7 @@ func (h *ApplicationHandler) SaveApplication(w http.ResponseWriter, r *http.Requ
 //	@Description	This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.
 //	@Tags			Application
 //	@Produce		json
-//	@Success		200 {object}    services.ApplicationStatistics
+//	@Success		200	{object}	services.ApplicationStatistics
 //	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500	{object}	response.ErrorResponse	"Server Error: error getting statistics"
 //	@Router			/events/{eventId}/application/stats [get]
