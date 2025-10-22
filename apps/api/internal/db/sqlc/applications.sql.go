@@ -7,6 +7,7 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -17,7 +18,7 @@ INSERT INTO applications (
 ) VALUES (
     $1, $2
 )
-RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at
+RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at
 `
 
 type CreateApplicationParams struct {
@@ -36,6 +37,7 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.CreatedAt,
 		&i.SavedAt,
 		&i.UpdatedAt,
+		&i.SubmittedAt,
 	)
 	return i, err
 }
@@ -56,7 +58,7 @@ func (q *Queries) DeleteApplication(ctx context.Context, arg DeleteApplicationPa
 }
 
 const getApplicationByUserAndEventID = `-- name: GetApplicationByUserAndEventID :one
-SELECT user_id, event_id, status, application, created_at, saved_at, updated_at FROM applications
+SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at FROM applications
 WHERE user_id = $1 AND event_id = $2
 `
 
@@ -76,6 +78,7 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 		&i.CreatedAt,
 		&i.SavedAt,
 		&i.UpdatedAt,
+		&i.SubmittedAt,
 	)
 	return i, err
 }
@@ -84,9 +87,10 @@ const updateApplication = `-- name: UpdateApplication :exec
 UPDATE applications
 SET
     status = CASE WHEN $1::boolean THEN $2::application_status ELSE status END,
-    application = CASE WHEN $3::boolean THEN $4::JSONB ELSE application END
+    application = CASE WHEN $3::boolean THEN $4::JSONB ELSE application END,
+    submitted_at = CASE WHEN $5::boolean THEN $6::timestamptz ELSE submitted_at END
 WHERE
-    user_id = $5 AND event_id = $6
+    user_id = $7 AND event_id = $8
 `
 
 type UpdateApplicationParams struct {
@@ -94,6 +98,8 @@ type UpdateApplicationParams struct {
 	Status              ApplicationStatus `json:"status"`
 	ApplicationDoUpdate bool              `json:"application_do_update"`
 	Application         []byte            `json:"application"`
+	SubmittedAtDoUpdate bool              `json:"submitted_at_do_update"`
+	SubmittedAt         time.Time         `json:"submitted_at"`
 	UserID              uuid.UUID         `json:"user_id"`
 	EventID             uuid.UUID         `json:"event_id"`
 }
@@ -104,6 +110,8 @@ func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationPa
 		arg.Status,
 		arg.ApplicationDoUpdate,
 		arg.Application,
+		arg.SubmittedAtDoUpdate,
+		arg.SubmittedAt,
 		arg.UserID,
 		arg.EventID,
 	)

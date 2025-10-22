@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -77,6 +78,8 @@ func (r *ApplicationRepository) SubmitApplication(ctx context.Context, data any,
 		Status:              sqlc.ApplicationStatusSubmitted,
 		ApplicationDoUpdate: true,
 		Application:         jsonBytes,
+		SubmittedAtDoUpdate: true,
+		SubmittedAt:         time.Now(),
 		UserID:              userId,
 		EventID:             eventId,
 	})
