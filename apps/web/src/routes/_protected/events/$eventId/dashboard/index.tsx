@@ -18,12 +18,13 @@ export const Route = createFileRoute("/_protected/events/$eventId/dashboard/")({
 
 function RouteComponent() {
   const { eventRole } = Route.useRouteContext();
+  const { eventId } = Route.useParams()
 
   // Both staff and admin are technically "staff" for dashboard purposes
   const isStaff = eventRole === "staff" || eventRole === "admin";
 
   if (isStaff) {
-    return <StaffOverview />;
+    return <StaffOverview eventId={eventId} />;
   }
 
   if (eventRole === "attendee") {
