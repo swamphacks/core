@@ -629,7 +629,9 @@ const docTemplate = `{
                     "count": {
                         "type": "integer"
                     },
-                    "school": {}
+                    "school": {
+                        "type": "string"
+                    }
                 },
                 "required": [
                     "count",

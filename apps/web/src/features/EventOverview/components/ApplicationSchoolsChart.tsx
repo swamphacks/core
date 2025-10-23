@@ -4,10 +4,10 @@ import { Card } from "@/components/ui/Card";
 import type { components } from "@/lib/openapi/schema";
 
 interface Props {
-  data?: components["schemas"]["sqlc.GetApplicationGenderSplitRow"];
+  data?: components["schemas"]["sqlc.GetApplicationSchoolSplitRow"][];
 }
 
-export default function ApplicationGenderChart({ data }: Props) {
+export default function ApplicationSchoolsChart({ data }: Props) {
   const { theme } = useTheme();
 
   const isDark =
@@ -28,8 +28,17 @@ export default function ApplicationGenderChart({ data }: Props) {
       <ECharts
         className=" w-full h-full"
         option={{
+          color: [
+            "#00B894", // mint
+            "#55EFC4", // light teal
+            "#0984E3", // vivid blue
+            "#6C5CE7", // violet
+            "#E84393", // pink
+            "#D63031", // red
+            "#FDCB6E", // warm yellow
+          ],
           title: {
-            text: "Application Genders",
+            text: "Application Schools",
             textStyle: {
               color: isDark ? "#FFFFFF" : "#000000",
               fontFamily: "Figtree",
@@ -59,36 +68,10 @@ export default function ApplicationGenderChart({ data }: Props) {
                 show: true,
                 color: isDark ? "#FFFFFF" : "#000000",
               },
-              data: [
-                {
-                  value: 83,
-                  name: "Male",
-                  itemStyle: {
-                    color: "#4ECDC4",
-                  },
-                },
-                {
-                  value: 76,
-                  name: "Female",
-                  itemStyle: {
-                    color: "#FF6B6B",
-                  },
-                },
-                {
-                  value: 12,
-                  name: "Non-binary",
-                  itemStyle: {
-                    color: "#F7B801",
-                  },
-                },
-                {
-                  value: 5,
-                  name: "Other",
-                  itemStyle: {
-                    color: "#9B59B6",
-                  },
-                },
-              ].filter((item) => item.value > 0),
+              data: data?.map((item) => ({
+                value: item.count,
+                name: item.school,
+              })),
             },
           ],
         }}

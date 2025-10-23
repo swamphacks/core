@@ -1671,7 +1671,7 @@ export interface components {
     };
     "sqlc.GetApplicationSchoolSplitRow": {
       count: number;
-      school: unknown;
+      school: string;
     };
     "sqlc.GetApplicationStatusSplitRow": {
       accepted: number;

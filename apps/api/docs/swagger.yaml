@@ -450,7 +450,8 @@ components:
       properties:
         count:
           type: integer
-        school: {}
+        school:
+          type: string
       required:
       - count
       - school

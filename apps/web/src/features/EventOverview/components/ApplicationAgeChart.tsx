@@ -53,6 +53,12 @@ export default function ApplicationAgeChart({ data }: Props) {
             textStyle: {
               color: isDark ? "#FFFFFF" : "#000000",
             },
+            formatter: (params) => {
+              const p = Array.isArray(params) ? params[0] : params;
+              const percent = p.percent?.toFixed(1);
+
+              return `${p.marker} ${p.value} (${percent}%)`;
+            },
           },
           series: [
             {

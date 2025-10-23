@@ -44,12 +44,12 @@ ORDER BY count DESC;
 
 -- name: GetApplicationSchoolSplit :many
 SELECT
-    application->>'school' AS school,
+    (application->>'school')::text AS school,
     COUNT(*) AS count
 FROM applications
 WHERE status = 'submitted'
   AND event_id = $1
-GROUP BY application->>'school'
+GROUP BY (application->>'school')::text
 ORDER BY count DESC;
 
 -- name: GetApplicationMajorSplit :many

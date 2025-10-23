@@ -166,18 +166,18 @@ func (q *Queries) GetApplicationRaceSplit(ctx context.Context, eventID uuid.UUID
 
 const getApplicationSchoolSplit = `-- name: GetApplicationSchoolSplit :many
 SELECT
-    application->>'school' AS school,
+    (application->>'school')::text AS school,
     COUNT(*) AS count
 FROM applications
 WHERE status = 'submitted'
   AND event_id = $1
-GROUP BY application->>'school'
+GROUP BY (application->>'school')::text
 ORDER BY count DESC
 `
 
 type GetApplicationSchoolSplitRow struct {
-	School interface{} `json:"school"`
-	Count  int64       `json:"count"`
+	School string `json:"school"`
+	Count  int64  `json:"count"`
 }
 
 func (q *Queries) GetApplicationSchoolSplit(ctx context.Context, eventID uuid.UUID) ([]GetApplicationSchoolSplitRow, error) {

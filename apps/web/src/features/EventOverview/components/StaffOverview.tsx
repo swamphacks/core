@@ -5,6 +5,7 @@ import ApplicationGenderChart from "./ApplicationGenderChart";
 import ApplicationAgeChart from "./ApplicationAgeChart";
 import ApplicationRaceChart from "./ApplicationRaceChart";
 import ApplicationMajorsChart from "./ApplicationMajorsChart";
+import ApplicationSchoolsChart from "./ApplicationSchoolsChart";
 
 interface Props {
   eventId: string;
@@ -60,6 +61,7 @@ export default function StaffOverview({ eventId }: Props) {
         <ApplicationAgeChart data={data?.age_stats} />
         <ApplicationRaceChart data={data?.race_stats} />
         <ApplicationMajorsChart data={data?.major_stats} />
+        <ApplicationSchoolsChart data={data?.school_stats} />
       </section>
     </main>
   );
