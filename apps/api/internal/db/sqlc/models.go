@@ -196,6 +196,7 @@ type Application struct {
 	CreatedAt   time.Time             `json:"created_at"`
 	SavedAt     time.Time             `json:"saved_at"`
 	UpdatedAt   time.Time             `json:"updated_at"`
+	SubmittedAt *time.Time            `json:"submitted_at"`
 }
 
 type AuthAccount struct {
