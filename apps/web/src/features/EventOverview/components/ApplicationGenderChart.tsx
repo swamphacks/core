@@ -48,7 +48,7 @@ export default function ApplicationGenderChart({ data }: Props) {
               const p = Array.isArray(params) ? params[0] : params;
               const percent = p.percent?.toFixed(1);
 
-              return `${p.marker} ${p.value} (${percent}%)`;
+              return `${p.marker} ${p.name}: ${p.value} (${percent}%)`;
             },
           },
           series: [
@@ -61,28 +61,28 @@ export default function ApplicationGenderChart({ data }: Props) {
               },
               data: [
                 {
-                  value: 83,
+                  value: data.male,
                   name: "Male",
                   itemStyle: {
                     color: "#4ECDC4",
                   },
                 },
                 {
-                  value: 76,
+                  value: data.female,
                   name: "Female",
                   itemStyle: {
                     color: "#FF6B6B",
                   },
                 },
                 {
-                  value: 12,
+                  value: data.non_binary,
                   name: "Non-binary",
                   itemStyle: {
                     color: "#F7B801",
                   },
                 },
                 {
-                  value: 5,
+                  value: data.other,
                   name: "Other",
                   itemStyle: {
                     color: "#9B59B6",

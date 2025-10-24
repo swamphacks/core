@@ -1,6 +1,5 @@
 import ECharts from "@/components/ECharts";
 import { useTheme } from "@/components/ThemeProvider";
-import { Card } from "@/components/ui/Card";
 import type { components } from "@/lib/openapi/schema";
 
 interface Props {
@@ -24,7 +23,7 @@ export default function ApplicationSchoolsChart({ data }: Props) {
   }
 
   return (
-    <Card className="w-full h-72 md:h-80 bg-input-bg">
+    <div className="inline-block bg-input-bg rounded-md w-full h-full shadow-xs border-neutral-200 dark:border-neutral-800">
       <ECharts
         className=" w-full h-full"
         option={{
@@ -57,7 +56,7 @@ export default function ApplicationSchoolsChart({ data }: Props) {
               const p = Array.isArray(params) ? params[0] : params;
               const percent = p.percent?.toFixed(1);
 
-              return `${p.marker} ${p.value} (${percent}%)`;
+              return `${p.marker} ${p.name}: ${p.value} (${percent}%)`;
             },
           },
           series: [
@@ -76,6 +75,6 @@ export default function ApplicationSchoolsChart({ data }: Props) {
           ],
         }}
       />
-    </Card>
+    </div>
   );
 }

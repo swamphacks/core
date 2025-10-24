@@ -57,7 +57,7 @@ export default function ApplicationAgeChart({ data }: Props) {
               const p = Array.isArray(params) ? params[0] : params;
               const percent = p.percent?.toFixed(1);
 
-              return `${p.marker} ${p.value} (${percent}%)`;
+              return `${p.marker} ${p.name}: ${p.value} (${percent}%)`;
             },
           },
           series: [
@@ -70,31 +70,31 @@ export default function ApplicationAgeChart({ data }: Props) {
               },
               data: [
                 {
-                  value: 1,
+                  value: data.underage,
                   name: "<18 yrs",
                 },
                 {
-                  value: 30,
+                  value: data.age_18,
                   name: "18 yrs",
                 },
                 {
-                  value: 20,
+                  value: data.age_19,
                   name: "19 yrs",
                 },
                 {
-                  value: 15,
+                  value: data.age_20,
                   name: "20 yrs",
                 },
                 {
-                  value: 13,
+                  value: data.age_21,
                   name: "21 yrs",
                 },
                 {
-                  value: 5,
+                  value: data.age_22,
                   name: "22 yrs",
                 },
                 {
-                  value: 2,
+                  value: data.age_23_plus,
                   name: "23+ yrs",
                 },
               ].filter((item) => item.value > 0),

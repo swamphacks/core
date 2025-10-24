@@ -57,7 +57,7 @@ export default function ApplicationRaceChart({ data }: Props) {
               const p = Array.isArray(params) ? params[0] : params;
               const percent = p.percent?.toFixed(1);
 
-              return `${p.marker} ${p.value} (${percent}%)`;
+              return `${p.marker} ${p.name}: ${p.value} (${percent}%)`;
             },
           },
           series: [
