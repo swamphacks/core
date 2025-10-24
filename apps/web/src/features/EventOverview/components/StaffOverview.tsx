@@ -51,17 +51,34 @@ export default function StaffOverview({ eventId }: Props) {
 
   return (
     <main>
-      <Heading className="text-2xl lg:text-3xl font-semibold mb-6">
+      <Heading className="text-2xl lg:text-3xl font-semibold mb-6 flex flex-col gap-2">
         Overview
+        <p className="text-lg text-text-secondary">
+          Pssst, we look better on Laptops/Desktops...
+        </p>
       </Heading>
 
-      {/* Stat cards for applications */}
-      <section className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
-        <ApplicationGenderChart data={data?.gender_stats} />
-        <ApplicationAgeChart data={data?.age_stats} />
-        <ApplicationRaceChart data={data?.race_stats} />
-        <ApplicationMajorsChart data={data?.major_stats} />
-        <ApplicationSchoolsChart data={data?.school_stats} />
+      <section className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4 auto-rows-fr">
+        {/* Row 1: small charts */}
+        <div className="w-full">
+          <ApplicationGenderChart data={data?.gender_stats} />
+        </div>
+        <div className="w-full">
+          <ApplicationAgeChart data={data?.age_stats} />
+        </div>
+        <div className="w-full">
+          <ApplicationRaceChart data={data?.race_stats} />
+        </div>
+
+        {/* Row 2 & 3: Majors chart spans 2 columns and 2 rows on md+ */}
+        <div className="w-full md:col-span-2 md:row-span-2">
+          <ApplicationMajorsChart data={data?.major_stats} />
+        </div>
+
+        {/* Row 2 & 3: Schools chart spans 2 columns and 2 rows on md+ */}
+        <div className="w-full md:col-span-2 md:row-span-2">
+          <ApplicationSchoolsChart data={data?.school_stats} />
+        </div>
       </section>
     </main>
   );
