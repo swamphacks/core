@@ -156,21 +156,25 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
-            "handlers.QueueEmailRequest": {
+            "handlers.QueueTextEmailRequest": {
                 "properties": {
                     "body": {
                         "type": "string"
                     },
-                    "from": {
+                    "subject": {
                         "type": "string"
                     },
                     "to": {
-                        "type": "string"
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
                     }
                 },
                 "required": [
                     "body",
-                    "from",
+                    "subject",
                     "to"
                 ],
                 "type": "object"
@@ -272,6 +276,49 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "services.ApplicationStatistics": {
+                "properties": {
+                    "age_stats": {
+                        "$ref": "#/components/schemas/sqlc.GetApplicationAgeSplitRow"
+                    },
+                    "gender_stats": {
+                        "$ref": "#/components/schemas/sqlc.GetApplicationGenderSplitRow"
+                    },
+                    "major_stats": {
+                        "items": {
+                            "$ref": "#/components/schemas/sqlc.GetApplicationMajorSplitRow"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "race_stats": {
+                        "items": {
+                            "$ref": "#/components/schemas/sqlc.GetApplicationRaceSplitRow"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "school_stats": {
+                        "items": {
+                            "$ref": "#/components/schemas/sqlc.GetApplicationSchoolSplitRow"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "status_stats": {
+                        "$ref": "#/components/schemas/sqlc.GetApplicationStatusSplitRow"
+                    }
+                },
+                "required": [
+                    "age_stats",
+                    "gender_stats",
+                    "major_stats",
+                    "race_stats",
+                    "school_stats",
+                    "status_stats"
+                ],
+                "type": "object"
+            },
             "sqlc.Application": {
                 "properties": {
                     "application": {
@@ -293,6 +340,9 @@ const docTemplate = `{
                     "status": {
                         "$ref": "#/components/schemas/sqlc.NullApplicationStatus"
                     },
+                    "submitted_at": {
+                        "type": "string"
+                    },
                     "updated_at": {
                         "type": "string"
                     },
@@ -306,6 +356,7 @@ const docTemplate = `{
                     "event_id",
                     "saved_at",
                     "status",
+                    "submitted_at",
                     "updated_at",
                     "user_id"
                 ],
@@ -484,6 +535,144 @@ const docTemplate = `{
                     "EventRoleTypeAttendee",
                     "EventRoleTypeApplicant"
                 ]
+            },
+            "sqlc.GetApplicationAgeSplitRow": {
+                "properties": {
+                    "age_18": {
+                        "type": "integer"
+                    },
+                    "age_19": {
+                        "type": "integer"
+                    },
+                    "age_20": {
+                        "type": "integer"
+                    },
+                    "age_21": {
+                        "type": "integer"
+                    },
+                    "age_22": {
+                        "type": "integer"
+                    },
+                    "age_23_plus": {
+                        "type": "integer"
+                    },
+                    "underage": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "age_18",
+                    "age_19",
+                    "age_20",
+                    "age_21",
+                    "age_22",
+                    "age_23_plus",
+                    "underage"
+                ],
+                "type": "object"
+            },
+            "sqlc.GetApplicationGenderSplitRow": {
+                "properties": {
+                    "female": {
+                        "type": "integer"
+                    },
+                    "male": {
+                        "type": "integer"
+                    },
+                    "non_binary": {
+                        "type": "integer"
+                    },
+                    "other": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "female",
+                    "male",
+                    "non_binary",
+                    "other"
+                ],
+                "type": "object"
+            },
+            "sqlc.GetApplicationMajorSplitRow": {
+                "properties": {
+                    "count": {
+                        "type": "integer"
+                    },
+                    "major": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "count",
+                    "major"
+                ],
+                "type": "object"
+            },
+            "sqlc.GetApplicationRaceSplitRow": {
+                "properties": {
+                    "count": {
+                        "type": "integer"
+                    },
+                    "race_group": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "count",
+                    "race_group"
+                ],
+                "type": "object"
+            },
+            "sqlc.GetApplicationSchoolSplitRow": {
+                "properties": {
+                    "count": {
+                        "type": "integer"
+                    },
+                    "school": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "count",
+                    "school"
+                ],
+                "type": "object"
+            },
+            "sqlc.GetApplicationStatusSplitRow": {
+                "properties": {
+                    "accepted": {
+                        "type": "integer"
+                    },
+                    "rejected": {
+                        "type": "integer"
+                    },
+                    "started": {
+                        "type": "integer"
+                    },
+                    "submitted": {
+                        "type": "integer"
+                    },
+                    "under_review": {
+                        "type": "integer"
+                    },
+                    "waitlisted": {
+                        "type": "integer"
+                    },
+                    "withdrawn": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "accepted",
+                    "rejected",
+                    "started",
+                    "submitted",
+                    "under_review",
+                    "waitlisted",
+                    "withdrawn"
+                ],
+                "type": "object"
             },
             "sqlc.GetEventStaffRow": {
                 "properties": {
@@ -859,7 +1048,7 @@ const docTemplate = `{
                                         "type": "object"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/handlers.QueueEmailRequest",
+                                        "$ref": "#/components/schemas/handlers.QueueTextEmailRequest",
                                         "summary": "request",
                                         "description": "Email data"
                                     }
@@ -1292,6 +1481,47 @@ const docTemplate = `{
                     }
                 },
                 "summary": "Save Application",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/stats": {
+            "get": {
+                "description": "This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/services.ApplicationStatistics"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error getting statistics"
+                    }
+                },
+                "summary": "Gets an event's submitted application statistics",
                 "tags": [
                     "Application"
                 ]

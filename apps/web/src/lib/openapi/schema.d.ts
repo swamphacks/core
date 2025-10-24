@@ -187,7 +187,7 @@ export interface paths {
         content: {
           "application/json":
             | Record<string, never>
-            | components["schemas"]["handlers.QueueEmailRequest"];
+            | components["schemas"]["handlers.QueueTextEmailRequest"];
         };
       };
       responses: {
@@ -585,6 +585,63 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/application/stats": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Gets an event's submitted application statistics
+     * @description This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["services.ApplicationStatistics"];
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error getting statistics */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -1467,10 +1524,10 @@ export interface components {
       role: components["schemas"]["sqlc.EventRoleType"];
       user_id: string;
     };
-    "handlers.QueueEmailRequest": {
+    "handlers.QueueTextEmailRequest": {
       body: string;
-      from: string;
-      to: string;
+      subject: string;
+      to: string[];
     };
     "handlers.UpdateEmailConsentRequest": {
       email_consent: boolean;
@@ -1523,12 +1580,21 @@ export interface components {
       error: string;
       message: string;
     };
+    "services.ApplicationStatistics": {
+      age_stats: components["schemas"]["sqlc.GetApplicationAgeSplitRow"];
+      gender_stats: components["schemas"]["sqlc.GetApplicationGenderSplitRow"];
+      major_stats: components["schemas"]["sqlc.GetApplicationMajorSplitRow"][];
+      race_stats: components["schemas"]["sqlc.GetApplicationRaceSplitRow"][];
+      school_stats: components["schemas"]["sqlc.GetApplicationSchoolSplitRow"][];
+      status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
+    };
     "sqlc.Application": {
       application: number[];
       created_at: string;
       event_id: string;
       saved_at: string;
       status: components["schemas"]["sqlc.NullApplicationStatus"];
+      submitted_at: string;
       updated_at: string;
       user_id: string;
     };
@@ -1580,6 +1646,42 @@ export interface components {
     };
     /** @enum {string} */
     "sqlc.EventRoleType": "admin" | "staff" | "attendee" | "applicant";
+    "sqlc.GetApplicationAgeSplitRow": {
+      age_18: number;
+      age_19: number;
+      age_20: number;
+      age_21: number;
+      age_22: number;
+      age_23_plus: number;
+      underage: number;
+    };
+    "sqlc.GetApplicationGenderSplitRow": {
+      female: number;
+      male: number;
+      non_binary: number;
+      other: number;
+    };
+    "sqlc.GetApplicationMajorSplitRow": {
+      count: number;
+      major: string;
+    };
+    "sqlc.GetApplicationRaceSplitRow": {
+      count: number;
+      race_group: string;
+    };
+    "sqlc.GetApplicationSchoolSplitRow": {
+      count: number;
+      school: string;
+    };
+    "sqlc.GetApplicationStatusSplitRow": {
+      accepted: number;
+      rejected: number;
+      started: number;
+      submitted: number;
+      under_review: number;
+      waitlisted: number;
+      withdrawn: number;
+    };
     "sqlc.GetEventStaffRow": {
       created_at: string;
       email: string;
