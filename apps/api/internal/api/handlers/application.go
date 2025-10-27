@@ -100,12 +100,6 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 		return
 	}
 
-	// If the application status is not "started", then it means the user has submitted the application
-	if application.Status.ApplicationStatus != sqlc.ApplicationStatusStarted {
-		res.Send(w, http.StatusOK, map[string]any{"submitted": true})
-		return
-	}
-
 	res.Send(w, http.StatusOK, application)
 }
 
