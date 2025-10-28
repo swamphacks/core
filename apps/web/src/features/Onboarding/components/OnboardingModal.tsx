@@ -132,7 +132,7 @@ export function OnboardingModal({
                       onChange={(value) => field.handleChange(value)}
                       placeholder="Ex: albert.gator@ufl.edu"
                       validationBehavior="aria"
-                      tooltip="Your default email is pulled from Discord. Provide us an email you check often!"
+                      tooltip="We will send future communications to this email."
                     />
                   </div>
                 )}
