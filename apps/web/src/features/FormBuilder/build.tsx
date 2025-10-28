@@ -521,20 +521,28 @@ function useJSONData(
       if (typeof item.options === "object" && "data" in item.options) {
         const data = item.options.data;
 
-        if (data === "schools") {
-          fetch(`/assets/schools.json`)
-            .then((res) => res.json())
-            .then((schools) => {
-              setData(
-                schools.map((item: string) => ({ id: item, name: item })),
-              );
-            });
-        } else if (data === "majors") {
-          fetch(`/assets/majors.json`)
-            .then((res) => res.json())
-            .then((majors) => {
-              setData(majors.map((item: string) => ({ id: item, name: item })));
-            });
+        switch (data) {
+          case "schools":
+            const schoolsRes = await fetch(`/assets/schools.json`);
+            const schools = await schoolsRes.json();
+            setData(
+              schools.map((item: string) => ({ id: item, name: item })),
+            );
+            break;
+          case "majors":
+            const majorsRes = await fetch(`/assets/majors.json`);
+            const majors = await majorsRes.json();
+            setData(majors.map((item: string) => ({ id: item, name: item })));
+            break;
+          case "countries":
+            const countriesRes = await fetch(`/assets/countries.json`);
+            const countries = await countriesRes.json();
+            setData(
+              countries.map(({ name, code }: { name: string, code: string }) => ({ id: code, name })),
+            );
+            break;
+          default:
+            break;
         }
       }
     }
