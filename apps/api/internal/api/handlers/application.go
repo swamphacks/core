@@ -145,6 +145,7 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 	submission.PreferredEmail = r.FormValue("preferredEmail")
 	submission.UniversityEmail = r.FormValue("universityEmail")
 
+	submission.Country = r.FormValue("country")
 	submission.Gender = r.FormValue("gender")
 	submission.GenderOther = r.FormValue("gender-other")
 	submission.Pronouns = r.FormValue("pronouns")

@@ -29,6 +29,7 @@ type ApplicationSubmissionFields struct {
 	Phone                   string `json:"phone" validate:"required,len=10"`
 	PreferredEmail          string `json:"preferredEmail" validate:"required,email"`
 	UniversityEmail         string `json:"universityEmail" validate:"required,email"`
+	Country                 string `json:"country" validate:"required"`
 	Gender                  string `json:"gender"`
 	GenderOther             string `json:"gender-other"`
 	Pronouns                string `json:"pronouns"`
