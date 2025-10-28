@@ -13,6 +13,11 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/ptr"
 	"github.com/swamphacks/core/apps/api/internal/storage"
+	"golang.org/x/sync/errgroup"
+)
+
+var (
+	ErrGetApplicationStatistics = errors.New("failed to aggregate application stats")
 )
 
 // TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
@@ -24,6 +29,7 @@ type ApplicationSubmissionFields struct {
 	Phone                   string `json:"phone" validate:"required,len=10"`
 	PreferredEmail          string `json:"preferredEmail" validate:"required,email"`
 	UniversityEmail         string `json:"universityEmail" validate:"required,email"`
+	Country                 string `json:"country" validate:"required"`
 	Gender                  string `json:"gender"`
 	GenderOther             string `json:"gender-other"`
 	Pronouns                string `json:"pronouns"`
@@ -205,4 +211,75 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 	}
 
 	return nil
+}
+
+type ApplicationStatistics struct {
+	GenderStatistics sqlc.GetApplicationGenderSplitRow   `json:"gender_stats"`
+	AgeStatistics    sqlc.GetApplicationAgeSplitRow      `json:"age_stats"`
+	RaceStatistics   []sqlc.GetApplicationRaceSplitRow   `json:"race_stats"`
+	MajorStatistics  []sqlc.GetApplicationMajorSplitRow  `json:"major_stats"`
+	SchoolStatistics []sqlc.GetApplicationSchoolSplitRow `json:"school_stats"`
+	StatusStatistics sqlc.GetApplicationStatusSplitRow   `json:"status_stats"`
+}
+
+func (s *ApplicationService) GetApplicationStatistics(ctx context.Context, eventId uuid.UUID) (*ApplicationStatistics, error) {
+	g, ctx := errgroup.WithContext(ctx)
+
+	var genderStats sqlc.GetApplicationGenderSplitRow
+	var ageStats sqlc.GetApplicationAgeSplitRow
+	var raceStats []sqlc.GetApplicationRaceSplitRow
+	var majorStats []sqlc.GetApplicationMajorSplitRow
+	var schoolStats []sqlc.GetApplicationSchoolSplitRow
+	var statusStats sqlc.GetApplicationStatusSplitRow
+
+	g.Go(func() error {
+		var err error
+		genderStats, err = s.appRepo.GetSubmittedApplicationGenders(ctx, eventId)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		ageStats, err = s.appRepo.GetSubmittedApplicationAges(ctx, eventId)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		majorStats, err = s.appRepo.GetSubmittedApplicationMajors(ctx, eventId)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		raceStats, err = s.appRepo.GetSubmittedApplicationRaces(ctx, eventId)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		schoolStats, err = s.appRepo.GetSubmittedApplicationSchools(ctx, eventId)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		statusStats, err = s.appRepo.GetApplicationStatuses(ctx, eventId)
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
+		s.logger.Err(err).Msg("Something went wrong while getting application statistics")
+		return nil, ErrGetApplicationStatistics
+	}
+
+	return &ApplicationStatistics{
+		GenderStatistics: genderStats,
+		AgeStatistics:    ageStats,
+		RaceStatistics:   raceStats,
+		MajorStatistics:  majorStats,
+		SchoolStatistics: schoolStats,
+		StatusStatistics: statusStats,
+	}, nil
+
 }

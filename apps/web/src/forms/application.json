@@ -92,6 +92,17 @@
           ]
         },
         {
+          "name": "country",
+          "questionType": "select",
+          "placeholder": "Select your country",
+          "label": "Country",
+          "required": true,
+          "searchable": true,
+          "options": {
+            "data": "countries"
+          }
+        },
+        {
           "type": "layout",
           "content": [
             {
@@ -99,6 +110,7 @@
               "questionType": "select",
               "placeholder": "Select your gender",
               "label": "Gender",
+              "required": true,
               "hasOther": true,
               "options": [
                 {
@@ -126,6 +138,7 @@
             {
               "name": "pronouns",
               "questionType": "select",
+              "required": true,
               "placeholder": "Select",
               "label": "Pronouns",
               "options": [
@@ -164,6 +177,7 @@
         {
           "name": "race",
           "questionType": "select",
+          "required": true,
           "placeholder": "Select your race",
           "label": "Race/Ethnicity",
           "hasOther": true,
@@ -209,6 +223,7 @@
         {
           "name": "sexualOrientation",
           "questionType": "select",
+          "required": true,
           "placeholder": "Select",
           "label": "Do you consider yourself to be any of the following?",
           "options": [

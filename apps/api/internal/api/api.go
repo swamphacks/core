@@ -43,6 +43,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		// Both requireXXRole functions automatically allow superusers
 		ensureSuperuser  = mw.Auth.RequirePlatformRole([]sqlc.AuthUserRole{sqlc.AuthUserRoleSuperuser})
 		ensureEventAdmin = mw.Event.RequireEventRole([]sqlc.EventRoleType{sqlc.EventRoleTypeAdmin})
+		// Event Admins are technically Staff...
+		ensureEventStaff = mw.Event.RequireEventRole([]sqlc.EventRoleType{sqlc.EventRoleTypeAdmin, sqlc.EventRoleTypeStaff})
 	)
 
 	AllowedOrigins := config.Load().AllowedOrigins
@@ -121,7 +123,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		// Event-specific routes
 		r.Route("/{eventId}", func(r chi.Router) {
 			r.Use(mw.Auth.RequireAuth) // routes below this are protected
-			
+
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Get("/role", api.Handlers.Event.GetEventRole)
 
@@ -143,6 +145,9 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				r.Get("/", api.Handlers.Application.GetApplicationByUserAndEventID)
 				r.Post("/submit", api.Handlers.Application.SubmitApplication)
 				r.Post("/save", api.Handlers.Application.SaveApplication)
+
+				// For statistics (Staff ONLY)
+				r.With(ensureEventStaff).Get("/stats", api.Handlers.Application.GetApplicationStatistics)
 			})
 		})
 	})

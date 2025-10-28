@@ -113,3 +113,28 @@ func (r *ApplicationRepository) SaveApplication(ctx context.Context, data any, u
 
 	return nil
 }
+
+// Application statistics (Staff Dashboards)
+func (r *ApplicationRepository) GetSubmittedApplicationGenders(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationGenderSplitRow, error) {
+	return r.db.Query.GetApplicationGenderSplit(ctx, eventId)
+}
+
+func (r *ApplicationRepository) GetSubmittedApplicationRaces(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetApplicationRaceSplitRow, error) {
+	return r.db.Query.GetApplicationRaceSplit(ctx, eventId)
+}
+
+func (r *ApplicationRepository) GetSubmittedApplicationAges(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationAgeSplitRow, error) {
+	return r.db.Query.GetApplicationAgeSplit(ctx, eventId)
+}
+
+func (r *ApplicationRepository) GetSubmittedApplicationMajors(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetApplicationMajorSplitRow, error) {
+	return r.db.Query.GetApplicationMajorSplit(ctx, eventId)
+}
+
+func (r *ApplicationRepository) GetSubmittedApplicationSchools(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetApplicationSchoolSplitRow, error) {
+	return r.db.Query.GetApplicationSchoolSplit(ctx, eventId)
+}
+
+func (r *ApplicationRepository) GetApplicationStatuses(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationStatusSplitRow, error) {
+	return r.db.Query.GetApplicationStatusSplit(ctx, eventId)
+}
