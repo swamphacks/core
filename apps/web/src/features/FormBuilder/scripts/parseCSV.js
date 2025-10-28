@@ -74,3 +74,17 @@ if (csvFilePath === "schools.csv") {
       fs.writeFile("schools.json", JSON.stringify(results), errorCallback);
     });
 }
+
+if (csvFilePath === "countries.csv") {
+  stream
+    .on("data", (data) => {
+      const item = titleCase(Object.values(data)[0]);
+
+      if (!existInResult(item)) {
+        results.push(item);
+      }
+    })
+    .on("end", () => {
+      fs.writeFile("countries.json", JSON.stringify(results), errorCallback);
+    });
+}

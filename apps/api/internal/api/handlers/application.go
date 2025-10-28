@@ -151,6 +151,7 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 	submission.Race = r.FormValue("race")
 	submission.RaceOther = r.FormValue("race-other")
 	submission.Orientation = r.FormValue("orientation")
+	submission.CountryOfResidence = r.FormValue("countryOfResidence")
 
 	submission.Linkedin = r.FormValue("linkedin")
 	submission.Github = r.FormValue("github")

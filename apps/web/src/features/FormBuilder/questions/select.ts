@@ -32,7 +32,7 @@ export const SelectQuestion = createQuestionItem({
         z
           .object({
             data: z.enum(
-              ["schools", "majors", "minors", "year"],
+              ["schools", "majors", "minors", "countries", "year"],
               "Invalid data option for select question.",
             ),
             min: z.number().optional(),

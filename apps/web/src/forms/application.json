@@ -235,6 +235,22 @@
           ]
         },
         {
+          "type": "layout",
+          "content": [
+            {
+              "name": "countryOfResidence",
+              "questionType": "select",
+              "placeholder": "Start typing...",
+              "label": "Country of Residence",
+              "required": true,
+              "searchable": true,
+              "options": {
+                "data": "countries"
+              }
+            }
+          ]
+        },
+        {
           "name": "linkedin",
           "questionType": "url",
           "placeholder": "Enter link",

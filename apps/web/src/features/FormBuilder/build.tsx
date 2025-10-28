@@ -535,6 +535,14 @@ function useJSONData(
             .then((majors) => {
               setData(majors.map((item: string) => ({ id: item, name: item })));
             });
+        } else if (data === "countries") {
+          fetch(`/assets/countries.json`)
+            .then((res) => res.json())
+            .then((countries) => {
+              setData(
+                countries.map((item: string) => ({ id: item, name: item })),
+              );
+            });
         }
       }
     }

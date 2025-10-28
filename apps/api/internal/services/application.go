@@ -35,6 +35,7 @@ type ApplicationSubmissionFields struct {
 	Race                    string `json:"race"`
 	RaceOther               string `json:"race-other"`
 	Orientation             string `json:"orientation"`
+	CountryOfResidence      string `json:"countryOfResidence" validate:"required"`
 	Linkedin                string `json:"linkedin" validate:"required,url"`
 	Github                  string `json:"github" validate:"required,url"`
 	AgeCertification        bool   `json:"ageCertification" validate:"required,boolean"`
