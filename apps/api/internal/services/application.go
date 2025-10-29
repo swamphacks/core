@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
@@ -211,6 +212,17 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 	}
 
 	return nil
+}
+
+func (s *ApplicationService) DownloadResume(ctx context.Context, userId, eventId uuid.UUID) (*v4.PresignedHTTPRequest, error) {
+	request, err := s.storage.PresignGetObject(ctx, s.buckets.ApplicationResumes, eventId.String()+"/"+userId.String(), 60)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	return request, nil
 }
 
 type ApplicationStatistics struct {
