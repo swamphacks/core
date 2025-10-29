@@ -75,7 +75,7 @@ export default function ApplicationStatus({ eventId }: ApplicationStatusProps) {
 
       {application.data && application.data["application"] && (
         <div className="flex gap-3 flex-wrap">
-          <div className="max-w-100">
+          <div className="max-w-100 w-fit">
             <HackerProfile
               data={JSON.parse(atob(application.data["application"]))}
               eventId={eventId}
@@ -103,7 +103,7 @@ export default function ApplicationStatus({ eventId }: ApplicationStatusProps) {
 
 function HackerProfile({ data, eventId }: { data: any; eventId: string }) {
   return (
-    <div className="border border-input-border rounded-md p-3 w-fit max-w-150">
+    <div className="border border-input-border rounded-md p-3">
       <div className="mb-3">
         <p className="text-lg flex gap-2 items-center">
           <TablerUserCode /> Hacker Profile
@@ -140,9 +140,9 @@ function HackerProfile({ data, eventId }: { data: any; eventId: string }) {
           value={data["preferredEmail"]}
         />
 
-        <HackerProfileField label="Github" value={data["github"]} />
+        <HackerProfileField isUrl label="Github" value={data["github"]} />
 
-        <HackerProfileField label="LinkedIn" value={data["linkedin"]} />
+        <HackerProfileField isUrl label="LinkedIn" value={data["linkedin"]} />
 
         <div className="mt-8">
           <DownloadResume
@@ -158,14 +158,28 @@ function HackerProfile({ data, eventId }: { data: any; eventId: string }) {
 function HackerProfileField({
   label,
   value,
+  isUrl = false,
 }: {
   label: string;
   value: string;
+  isUrl?: boolean;
 }) {
   return (
     <div>
       <span>{label}:</span>
-      <p className="text-text-secondary">{value}</p>
+      {isUrl ? (
+        <p className="truncate">
+          <a
+            href={value}
+            target="_blank"
+            className="text-text-secondary underline"
+          >
+            {value}
+          </a>
+        </p>
+      ) : (
+        <p className="text-text-secondary text-wrap">{value}</p>
+      )}
     </div>
   );
 }
