@@ -100,12 +100,6 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 		return
 	}
 
-	// If the application status is not "started", then it means the user has submitted the application
-	if application.Status.ApplicationStatus != sqlc.ApplicationStatusStarted {
-		res.Send(w, http.StatusOK, map[string]any{"submitted": true})
-		return
-	}
-
 	res.Send(w, http.StatusOK, application)
 }
 
@@ -285,6 +279,47 @@ func (h *ApplicationHandler) SaveApplication(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+// Download Resume
+//
+//	@Summary		Download the user's uploaded resume from their event application
+//	@Description	This handler creates a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.
+//	@Tags			Application
+//	@Produce		json
+//	@Success		200	{object}	string
+//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error handling download resume request"
+//	@Router			/events/{eventId}/application/download-resume [get]
+func (h *ApplicationHandler) DownloadResume(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+
+	if userId == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
+		return
+	}
+
+	request, err := h.appService.DownloadResume(r.Context(), *userId, eventId)
+
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("resume_download_error", "unable to retrieve resume download url"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, request.URL)
 }
 
 // Get Application Statistics

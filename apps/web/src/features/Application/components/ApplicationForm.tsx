@@ -145,10 +145,16 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
     );
   }
 
+  const applicationStatusSubmitted =
+    application.data["status"]["application_status"] !== "started";
+
   const saveStatus = (
     <>
       {isSaving && !isSubmitted && <span>Autosaving...</span>}
-      {!isSaving && savedText && !isSubmitted && <span>{savedText}</span>}
+      {!isSaving &&
+        savedText &&
+        !isSubmitted &&
+        !applicationStatusSubmitted && <span>{savedText}</span>}
     </>
   );
 
@@ -160,7 +166,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
       <div className="flex-col">
         <Form
           defaultValues={
-            application.data["submitted"]
+            applicationStatusSubmitted
               ? undefined
               : JSON.parse(atob(application.data["application"]))
           }
@@ -170,7 +176,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
           onChange={onChange}
           SubmitSuccessComponent={SubmitSuccess}
           isInvalid={isInvalid}
-          isSubmitted={isSubmitted || application.data["submitted"]}
+          isSubmitted={isSubmitted || applicationStatusSubmitted}
           isSubmitting={isSubmitting}
           // TODO: figure out how to handle this through the JSON file, including how to import the SVG files there as well
           renderFormHeader={(metadata) => {
