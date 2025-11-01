@@ -274,3 +274,18 @@ type EventRole struct {
 	Role       EventRoleType `json:"role"`
 	AssignedAt *time.Time    `json:"assigned_at"`
 }
+
+type Team struct {
+	ID        uuid.UUID  `json:"id"`
+	Name      string     `json:"name"`
+	OwnerID   *uuid.UUID `json:"owner_id"`
+	EventID   *uuid.UUID `json:"event_id"`
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+type TeamMember struct {
+	UserID   uuid.UUID  `json:"user_id"`
+	TeamID   uuid.UUID  `json:"team_id"`
+	JoinedAt *time.Time `json:"joined_at"`
+}
