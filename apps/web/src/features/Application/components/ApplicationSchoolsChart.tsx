@@ -16,7 +16,7 @@ export default function ApplicationSchoolsChart({ data }: Props) {
 
   const chartData = data
     .map((d) => ({ name: d.school, value: d.count ?? 0 }))
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => a.value - b.value);
 
   const names = chartData.map((d) => d.name);
   const values = chartData.map((d) => d.value);
