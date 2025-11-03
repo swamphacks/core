@@ -1,18 +1,15 @@
 import { Heading } from "react-aria-components";
-import { useApplicationStatistics } from "../hooks/useApplicationStatistics";
 import { Card } from "@/components/ui/Card";
-import ApplicationGenderChart from "./ApplicationGenderChart";
-import ApplicationAgeChart from "./ApplicationAgeChart";
-import ApplicationRaceChart from "./ApplicationRaceChart";
-import ApplicationMajorsChart from "./ApplicationMajorsChart";
-import ApplicationSchoolsChart from "./ApplicationSchoolsChart";
+import ApplicationStats from "@/features/EventOverview/components/ApplicationStats";
+import EventDetails from "@/features/EventOverview/components/EventDetails";
+import { useEventOverview } from "@/features/EventOverview/hooks/useEventOverview";
 
 interface Props {
   eventId: string;
 }
 
 export default function StaffOverview({ eventId }: Props) {
-  const { data, isLoading, isError, error } = useApplicationStatistics(eventId);
+  const { data, isLoading, isError, error } = useEventOverview(eventId);
 
   if (isError && error) {
     return (
@@ -49,6 +46,10 @@ export default function StaffOverview({ eventId }: Props) {
     );
   }
 
+  if (!data) {
+    return <p>Something went wrong :(</p>;
+  }
+
   return (
     <main>
       <Heading className="text-2xl lg:text-3xl font-semibold mb-6 flex flex-col gap-2">
@@ -58,28 +59,10 @@ export default function StaffOverview({ eventId }: Props) {
         </p>
       </Heading>
 
-      <section className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4 auto-rows-fr">
-        {/* Row 1: small charts */}
-        <div className="w-full">
-          <ApplicationGenderChart data={data?.gender_stats} />
-        </div>
-        <div className="w-full">
-          <ApplicationAgeChart data={data?.age_stats} />
-        </div>
-        <div className="w-full">
-          <ApplicationRaceChart data={data?.race_stats} />
-        </div>
-
-        {/* Row 2 & 3: Majors chart spans 2 columns and 2 rows on md+ */}
-        <div className="w-full md:col-span-2 md:row-span-2">
-          <ApplicationMajorsChart data={data?.major_stats} />
-        </div>
-
-        {/* Row 2 & 3: Schools chart spans 2 columns and 2 rows on md+ */}
-        <div className="w-full md:col-span-2 md:row-span-2">
-          <ApplicationSchoolsChart data={data?.school_stats} />
-        </div>
-      </section>
+      <div className="flex flex-col space-y-3 max-w-150">
+        <EventDetails data={data} />
+        <ApplicationStats data={data} />
+      </div>
     </main>
   );
 }
