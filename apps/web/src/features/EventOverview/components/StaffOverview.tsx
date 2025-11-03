@@ -1,6 +1,6 @@
 import { Heading } from "react-aria-components";
 import { Card } from "@/components/ui/Card";
-import ApplicationStats from "@/features/EventOverview/components/ApplicationStats";
+import ApplicationOverview from "@/features/Application/components/ApplicationOverview";
 import EventDetails from "@/features/EventOverview/components/EventDetails";
 import { useEventOverview } from "@/features/EventOverview/hooks/useEventOverview";
 
@@ -54,14 +54,11 @@ export default function StaffOverview({ eventId }: Props) {
     <main>
       <Heading className="text-2xl lg:text-3xl font-semibold mb-6 flex flex-col gap-2">
         Overview
-        <p className="text-lg text-text-secondary">
-          Pssst, we look better on Laptops/Desktops...
-        </p>
       </Heading>
 
       <div className="flex flex-col space-y-3 max-w-150">
         <EventDetails data={data} />
-        <ApplicationStats data={data} />
+        <ApplicationOverview data={data} eventId={eventId} />
       </div>
     </main>
   );

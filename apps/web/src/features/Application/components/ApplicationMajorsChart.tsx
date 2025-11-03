@@ -59,7 +59,6 @@ export default function ApplicationMajorsChart({ data }: Props) {
             right: 24,
             top: 60,
             bottom: 24,
-            containLabel: true,
           },
           xAxis: {
             type: "value",

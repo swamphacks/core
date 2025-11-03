@@ -57,13 +57,16 @@ export default function ApplicationSchoolsChart({ data }: Props) {
             right: 24,
             top: 60,
             bottom: 24,
-            containLabel: true,
           },
           xAxis: {
             type: "value",
             axisLine: { lineStyle: { color: isDark ? "#888888" : "#666666" } },
             axisLabel: { color: isDark ? "#FFFFFF" : "#000000" },
-            splitLine: { show: false },
+            splitLine: {
+              lineStyle: {
+                color: isDark ? "#2b2b2b" : "#f1f1f1",
+              },
+            },
           },
           yAxis: {
             type: "category",
