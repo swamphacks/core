@@ -83,3 +83,13 @@ export default function ECharts({ option, className }: Props) {
 
   return <div ref={chartRef} className={className}></div>;
 }
+
+export const pieChartColors = [
+  "#00B894", // mint
+  "#55EFC4", // light teal
+  "#0984E3", // vivid blue
+  "#6C5CE7", // violet
+  "#E84393", // pink
+  "#D63031", // red
+  "#FDCB6E", // warm yellow
+];

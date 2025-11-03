@@ -61,25 +61,25 @@ export default function ApplicationStatistics({
         Application Statistics
       </Heading>
 
-      <section className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4 auto-rows-fr">
+      <section className="grid gap-3 grid-cols-1 md:grid-cols-4 auto-rows-[minmax(300px,auto)]">
         {/* Row 1: small charts */}
-        <div className="w-full">
+        <div className="md:col-span-1 h-full">
           <ApplicationGenderChart data={data.gender_stats} />
         </div>
-        <div className="w-full">
+        <div className="md:col-span-1">
           <ApplicationAgeChart data={data.age_stats} />
         </div>
-        <div className="w-full">
+        <div className="md:col-span-1">
           <ApplicationRaceChart data={data.race_stats} />
         </div>
 
         {/* Row 2 & 3: Majors chart spans 2 columns and 2 rows on md+ */}
-        <div className="w-full md:col-span-2 md:row-span-2">
+        <div className="w-full h-full md:col-span-2 md:row-span-2">
           <ApplicationMajorsChart data={data.major_stats} />
         </div>
 
         {/* Row 2 & 3: Schools chart spans 2 columns and 2 rows on md+ */}
-        <div className="w-full md:col-span-2 md:row-span-2">
+        <div className="w-full h-full md:col-span-2 md:row-span-2">
           <ApplicationSchoolsChart data={data.school_stats} />
         </div>
       </section>

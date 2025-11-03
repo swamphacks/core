@@ -23,6 +23,7 @@ export default function ApplicationStats({ data }: ApplicationStatsProps) {
     for (const submission of data.application_submission_stats) {
       labels.push(
         new Date(submission.day).toLocaleDateString(undefined, {
+          weekday: "narrow",
           month: "short",
           day: "numeric",
           timeZone: "UTC",

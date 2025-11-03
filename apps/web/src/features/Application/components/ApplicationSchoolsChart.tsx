@@ -3,7 +3,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import type { components } from "@/lib/openapi/schema";
 
 interface Props {
-  data?: components["schemas"]["sqlc.GetApplicationSchoolSplitRow"][];
+  data: components["schemas"]["sqlc.GetApplicationSchoolSplitRow"][];
 }
 
 export default function ApplicationSchoolsChart({ data }: Props) {
@@ -14,63 +14,81 @@ export default function ApplicationSchoolsChart({ data }: Props) {
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  if (!data) {
-    return (
-      <div>
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  const chartData = data
+    .map((d) => ({ name: d.school, value: d.count ?? 0 }))
+    .sort((a, b) => b.value - a.value);
+
+  const names = chartData.map((d) => d.name);
+  const values = chartData.map((d) => d.value);
 
   return (
     <div className="inline-block bg-input-bg rounded-md w-full h-full shadow-xs border-neutral-200 dark:border-neutral-800">
       <ECharts
-        className=" w-full h-full"
+        className="w-full h-full"
         option={{
-          color: [
-            "#00B894", // mint
-            "#55EFC4", // light teal
-            "#0984E3", // vivid blue
-            "#6C5CE7", // violet
-            "#E84393", // pink
-            "#D63031", // red
-            "#FDCB6E", // warm yellow
-          ],
           title: {
-            text: "Application Schools",
+            text: "Schools",
             textStyle: {
-              color: isDark ? "#FFFFFF" : "#000000",
+              color: isDark ? "#e4e4e7" : "#18181b",
               fontFamily: "Figtree",
-              fontSize: 22,
+              fontSize: 18,
             },
             padding: 15,
           },
           tooltip: {
-            show: true,
-            trigger: "item",
+            trigger: "axis",
+            axisPointer: {
+              type: "shadow",
+            },
             backgroundColor: isDark ? "#333333" : "#FFFFFF",
             textStyle: {
               color: isDark ? "#FFFFFF" : "#000000",
             },
             formatter: (params) => {
               const p = Array.isArray(params) ? params[0] : params;
-              const percent = p.percent?.toFixed(1);
-
-              return `${p.marker} ${p.name}: ${p.value} (${percent}%)`;
+              const value = p.value ?? 0;
+              const total = values.reduce((s, v) => s + v, 0) || 1;
+              const percent = (((value as number) / total) * 100).toFixed(1);
+              return `${p.marker} ${p.name}: ${value} (${percent}%)`;
             },
+          },
+          grid: {
+            left: 16,
+            right: 24,
+            top: 60,
+            bottom: 24,
+            containLabel: true,
+          },
+          xAxis: {
+            type: "value",
+            axisLine: { lineStyle: { color: isDark ? "#888888" : "#666666" } },
+            axisLabel: { color: isDark ? "#FFFFFF" : "#000000" },
+            splitLine: { show: false },
+          },
+          yAxis: {
+            type: "category",
+            data: names,
+            axisLine: { lineStyle: { color: isDark ? "#888888" : "#666666" } },
+            axisLabel: {
+              color: isDark ? "#FFFFFF" : "#000000",
+              formatter: (v: string) => v,
+            },
+            inverse: false,
           },
           series: [
             {
-              type: "pie",
-              center: ["50%", "55%"],
+              type: "bar",
+              data: values,
+              barCategoryGap: "40%",
+              itemStyle: {
+                color: isDark ? "#60a5fa" : "#2563eb",
+              },
               label: {
                 show: true,
+                position: "right",
                 color: isDark ? "#FFFFFF" : "#000000",
+                formatter: "{c}",
               },
-              data: data?.map((item) => ({
-                value: item.count,
-                name: item.school,
-              })),
             },
           ],
         }}

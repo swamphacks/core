@@ -1,10 +1,10 @@
-import ECharts from "@/components/ECharts";
+import ECharts, { pieChartColors } from "@/components/ECharts";
 import { useTheme } from "@/components/ThemeProvider";
 import { Card } from "@/components/ui/Card";
 import type { components } from "@/lib/openapi/schema";
 
 interface Props {
-  data?: components["schemas"]["sqlc.GetApplicationGenderSplitRow"];
+  data: components["schemas"]["sqlc.GetApplicationGenderSplitRow"];
 }
 
 export default function ApplicationGenderChart({ data }: Props) {
@@ -15,25 +15,18 @@ export default function ApplicationGenderChart({ data }: Props) {
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  if (!data) {
-    return (
-      <div>
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
   return (
     <Card className="w-full h-72 md:h-80 bg-input-bg">
       <ECharts
         className=" w-full h-full"
         option={{
+          color: pieChartColors,
           title: {
-            text: "Application Genders",
+            text: "Genders",
             textStyle: {
-              color: isDark ? "#FFFFFF" : "#000000",
+              color: isDark ? "#e4e4e7" : "#18181b",
               fontFamily: "Figtree",
-              fontSize: 22,
+              fontSize: 18,
             },
             padding: 15,
           },

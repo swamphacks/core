@@ -1,10 +1,10 @@
-import ECharts from "@/components/ECharts";
+import ECharts, { pieChartColors } from "@/components/ECharts";
 import { useTheme } from "@/components/ThemeProvider";
 import { Card } from "@/components/ui/Card";
 import type { components } from "@/lib/openapi/schema";
 
 interface Props {
-  data?: components["schemas"]["sqlc.GetApplicationAgeSplitRow"];
+  data: components["schemas"]["sqlc.GetApplicationAgeSplitRow"];
 }
 
 export default function ApplicationAgeChart({ data }: Props) {
@@ -15,34 +15,18 @@ export default function ApplicationAgeChart({ data }: Props) {
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  if (!data) {
-    return (
-      <div>
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
   return (
     <Card className="w-full h-72 md:h-80 bg-input-bg">
       <ECharts
         className=" w-full h-full"
         option={{
-          color: [
-            "#00B894", // mint
-            "#55EFC4", // light teal
-            "#0984E3", // vivid blue
-            "#6C5CE7", // violet
-            "#E84393", // pink
-            "#D63031", // red
-            "#FDCB6E", // warm yellow
-          ],
+          color: pieChartColors,
           title: {
-            text: "Application Ages",
+            text: "Ages",
             textStyle: {
-              color: isDark ? "#FFFFFF" : "#000000",
+              color: isDark ? "#e4e4e7" : "#18181b",
               fontFamily: "Figtree",
-              fontSize: 22,
+              fontSize: 18,
             },
             padding: 15,
           },
