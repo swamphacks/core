@@ -53,3 +53,63 @@ func (q *Queries) DeleteTeam(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteTeam, id)
 	return err
 }
+
+const getTeamById = `-- name: GetTeamById :one
+SELECT id, name, owner_id, event_id, created_at, updated_at
+FROM teams
+WHERE id = $1
+`
+
+func (q *Queries) GetTeamById(ctx context.Context, id uuid.UUID) (Team, error) {
+	row := q.db.QueryRow(ctx, getTeamById, id)
+	var i Team
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.EventID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserEventTeam = `-- name: GetUserEventTeam :one
+SELECT
+    t.id,
+    t.name,
+    t.owner_id,
+    t.event_id
+FROM
+    teams t
+JOIN
+    team_members tm ON t.id = tm.team_id
+WHERE
+    t.event_id = $1
+    AND tm.user_id = $2
+LIMIT 1
+`
+
+type GetUserEventTeamParams struct {
+	EventID *uuid.UUID `json:"event_id"`
+	UserID  uuid.UUID  `json:"user_id"`
+}
+
+type GetUserEventTeamRow struct {
+	ID      uuid.UUID  `json:"id"`
+	Name    string     `json:"name"`
+	OwnerID *uuid.UUID `json:"owner_id"`
+	EventID *uuid.UUID `json:"event_id"`
+}
+
+func (q *Queries) GetUserEventTeam(ctx context.Context, arg GetUserEventTeamParams) (GetUserEventTeamRow, error) {
+	row := q.db.QueryRow(ctx, getUserEventTeam, arg.EventID, arg.UserID)
+	var i GetUserEventTeamRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.EventID,
+	)
+	return i, err
+}

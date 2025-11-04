@@ -109,6 +109,12 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		r.Patch("/me/onboarding", api.Handlers.User.CompleteOnboarding)
 	})
 
+	// --- Team routes (non Event specific) ---
+	api.Router.Route("/teams", func(r chi.Router) {
+		r.Use(mw.Auth.RequireAuth)
+		r.Get("/{teamId}", api.Handlers.Teams.GetTeam)
+	})
+
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
 
@@ -148,6 +154,11 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 				// For statistics (Staff ONLY)
 				r.With(ensureEventStaff).Get("/stats", api.Handlers.Application.GetApplicationStatistics)
+			})
+
+			// Team routes
+			r.Route("/teams", func(r chi.Router) {
+				r.Get("/me", api.Handlers.Teams.GetMyTeam)
 			})
 		})
 	})

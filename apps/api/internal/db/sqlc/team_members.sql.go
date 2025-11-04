@@ -7,6 +7,7 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -32,6 +33,55 @@ func (q *Queries) AddTeamMember(ctx context.Context, arg AddTeamMemberParams) (T
 	var i TeamMember
 	err := row.Scan(&i.UserID, &i.TeamID, &i.JoinedAt)
 	return i, err
+}
+
+const getTeamMembers = `-- name: GetTeamMembers :many
+SELECT
+    u.id AS user_id,
+    u.email,
+    u.image,
+    u.name,
+    tm.joined_at
+FROM
+    team_members tm
+JOIN
+    auth.users u ON tm.user_id = u.id
+WHERE
+    tm.team_id = $1
+`
+
+type GetTeamMembersRow struct {
+	UserID   uuid.UUID  `json:"user_id"`
+	Email    *string    `json:"email"`
+	Image    *string    `json:"image"`
+	Name     string     `json:"name"`
+	JoinedAt *time.Time `json:"joined_at"`
+}
+
+func (q *Queries) GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]GetTeamMembersRow, error) {
+	rows, err := q.db.Query(ctx, getTeamMembers, teamID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetTeamMembersRow{}
+	for rows.Next() {
+		var i GetTeamMembersRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Email,
+			&i.Image,
+			&i.Name,
+			&i.JoinedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const removeTeamMember = `-- name: RemoveTeamMember :exec
