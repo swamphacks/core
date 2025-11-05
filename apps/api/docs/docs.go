@@ -2003,6 +2003,61 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/users": {
+            "get": {
+                "description": "Gets all users with any role for the event",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/sqlc.GetEventStaffRow"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK - Return users"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Get all users for an event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
         "/users": {
             "get": {
                 "description": "Get or search for users by name or email. If no search term is provided, returns all users with pagination.",
