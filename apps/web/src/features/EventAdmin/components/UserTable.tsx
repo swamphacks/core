@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-import TablerTrash from "~icons/tabler/trash";
+import TablerFolder from "~icons/tabler/folder-open";
 
 import {
   flexRender,
@@ -10,31 +10,84 @@ import {
   type FilterFn,
 } from "@tanstack/react-table";
 import RoleBadge from "./RoleBadge";
-import type { StaffUser } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
+import type { EventUser } from "@/features/PlatformAdmin/EventManager/hooks/useEventUsers";
 import { TextField } from "@/components/ui/TextField";
-import { useMemo } from "react";
-import { DialogTrigger } from "react-aria-components";
-import { DeleteStaffDialog } from "./DeleteStaffDialog";
-
-const fuzzyTextFilterFn: FilterFn<StaffUser> = (row, columnId, value) => {
+import { useMemo, useState, useEffect } from "react";
+import { DialogTrigger, TooltipTrigger, Tooltip } from "react-aria-components";
+import { UserSideDrawer } from "./UserSideDrawer";
+import debounce from "lodash.debounce";
+import { Route as EventUsersRoute } from "@/routes/_protected/events/$eventId/dashboard/_admin/user-management";
+const fuzzyTextFilterFn: FilterFn<EventUser> = (row, columnId, value) => {
   const rowValue = row.getValue(columnId) as string;
   return rowValue.toLowerCase().includes((value as string).toLowerCase());
 };
 
-// const dropdownTextFilterFn: FilterFn<StaffUser> = (row, columnId, value) => {
-//   const rowValue = row.getValue(columnId) as string;
-//   return rowValue === (value as string);
-// };
+interface ColumnFilter {
+  id: string;
+  value: unknown;
+}
+type ColumnFiltersState = ColumnFilter[];
 
-const fallbackData: StaffUser[] = [];
+const fallbackData: EventUser[] = [];
 
 interface Props {
   eventId: string;
-  data?: StaffUser[];
+  data?: EventUser[];
 }
 
-const StaffTable = ({ data, eventId }: Props) => {
-  const columns: ColumnDef<StaffUser>[] = useMemo(
+// TODO: move to utils
+function parseEncodedFilters(
+  encodedString: string | undefined,
+): ColumnFiltersState {
+  if (encodedString) {
+    try {
+      const decoded = atob(encodedString);
+      return JSON.parse(decoded);
+    } catch (e) {
+      /* fall through */
+      console.error("Failed to decode filters from URL:", e);
+    }
+  }
+  return [];
+}
+
+// TODO: move to utils
+function encodeFiltersForUrl(filters: ColumnFiltersState): string {
+  return btoa(JSON.stringify(filters));
+}
+
+const UserTable = ({ data, eventId }: Props) => {
+  const searchParams = EventUsersRoute.useSearch();
+  const navigate = EventUsersRoute.useNavigate();
+
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(() => {
+    return parseEncodedFilters(searchParams.filters);
+  });
+
+  const debouncedUrlUpdate = useMemo(
+    () =>
+      debounce((filters: ColumnFiltersState, search: typeof searchParams) => {
+        const newSearchFilter =
+          filters.length > 0 ? encodeFiltersForUrl(filters) : undefined;
+
+        if (newSearchFilter !== search.filters) {
+          navigate({
+            search: (prev) => ({
+              ...prev,
+              filters: newSearchFilter,
+            }),
+            replace: true,
+          });
+        }
+      }, 300),
+    [navigate],
+  );
+
+  useEffect(() => {
+    debouncedUrlUpdate(columnFilters, searchParams);
+  }, [columnFilters, searchParams, debouncedUrlUpdate]);
+
+  const columns: ColumnDef<EventUser>[] = useMemo(
     () => [
       {
         id: "avatar",
@@ -84,24 +137,26 @@ const StaffTable = ({ data, eventId }: Props) => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
-          const eventRole = row.original.event_role;
-
           return (
             <DialogTrigger>
-              <Button
-                isDisabled={eventRole === "admin"}
-                variant="danger"
-                className="aspect-square p-2"
-              >
-                <TablerTrash className="h-4 w-4" />
-              </Button>
-              <DeleteStaffDialog eventId={eventId} user={row.original} />
+              <TooltipTrigger delay={250} closeDelay={250}>
+                <Button variant="primary" className="aspect-square p-2">
+                  <TablerFolder className="h-4 w-4" />
+                </Button>
+                <Tooltip
+                  offset={5}
+                  className="bg-surface border-input-border border-2 flex justify-center items-center py-1 px-2 rounded-md"
+                >
+                  Open User Details
+                </Tooltip>
+              </TooltipTrigger>
+              <UserSideDrawer user={row.original} />
             </DialogTrigger>
           );
         },
       },
     ],
-    [eventId],
+    [],
   );
 
   const table = useReactTable({
@@ -109,10 +164,13 @@ const StaffTable = ({ data, eventId }: Props) => {
     data: data ?? fallbackData,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    state: { columnFilters },
+    onColumnFiltersChange: setColumnFilters,
   });
 
   return (
     <div>
+      <div>{eventId}</div>
       <table className="w-full">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -158,4 +216,4 @@ const StaffTable = ({ data, eventId }: Props) => {
   );
 };
 
-export default StaffTable;
+export default UserTable;

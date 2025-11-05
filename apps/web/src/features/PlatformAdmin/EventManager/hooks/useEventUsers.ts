@@ -8,13 +8,13 @@ export function getEventStaffUsersQueryKey(eventId: string) {
 
 // TODO: update this with correct API call when it is ready, for now just use staff users
 
-export type StaffUsers =
+export type EventUsers =
   paths["/events/{eventId}/users"]["get"]["responses"]["200"]["content"]["application/json"];
-export type StaffUser = StaffUsers[number];
+export type EventUser = EventUsers[number];
 
 export function useEventUsers(eventId: string) {
-  async function fetchEventStaffUsers(): Promise<StaffUsers> {
-    const result = await api.get<StaffUsers>(`events/${eventId}/users`).json();
+  async function fetchEventStaffUsers(): Promise<EventUsers> {
+    const result = await api.get<EventUsers>(`events/${eventId}/users`).json();
     return result;
   }
 

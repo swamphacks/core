@@ -1,15 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEventUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventUsers";
-import StaffTable from "@/features/EventAdmin/components/StaffTable";
-import { DialogTrigger, Heading } from "react-aria-components";
-import { Button } from "@/components/ui/Button";
-import AddStaffModal from "@/features/EventAdmin/components/AddStaffModal";
+import UserTable from "@/features/EventAdmin/components/UserTable";
+import { Heading } from "react-aria-components";
 import { PageLoading } from "@/components/PageLoading";
 
 export const Route = createFileRoute(
   "/_protected/events/$eventId/dashboard/_admin/user-management",
 )({
   component: RouteComponent,
+  validateSearch: (search) => {
+    return {
+      filters: search.filters ? String(search.filters) : undefined,
+    };
+  },
 });
 
 // TODO:
@@ -25,7 +28,7 @@ function RouteComponent() {
   // Make request to get user data
   const eventId = Route.useParams().eventId;
   const { data, isLoading, isError } = useEventUsers(eventId);
-  const { eventRole } = Route.useRouteContext();
+  //const { eventRole } = Route.useRouteContext();
 
   if (isLoading) {
     return (
@@ -56,17 +59,7 @@ function RouteComponent() {
         User Management
       </Heading>
 
-      <div className="flex flex-row w-full justify-end">
-        {eventRole === "admin" && (
-          <DialogTrigger>
-            <Button variant="primary">Actions</Button>
-
-            <AddStaffModal eventId={eventId} />
-          </DialogTrigger>
-        )}
-      </div>
-
-      <StaffTable eventId={eventId} data={data} />
+      <UserTable eventId={eventId} data={data} />
     </div>
   );
 }
