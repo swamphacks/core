@@ -128,3 +128,8 @@ func (s *TeamService) GetTeamWithMembers(ctx context.Context, teamId uuid.UUID) 
 
 	return &teamWithMembers, nil
 }
+
+func (s *TeamService) JoinTeam(ctx context.Context, userId, teamId uuid.UUID) error {
+	_, err := s.teamMemberRepo.Create(ctx, teamId, userId)
+	return err
+}
