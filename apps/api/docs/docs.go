@@ -133,6 +133,17 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "handlers.CreateTeamRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "type": "object"
+            },
             "handlers.NullableEventRole": {
                 "properties": {
                     "assigned_at": {
@@ -355,6 +366,37 @@ const docTemplate = `{
                 "required": [
                     "count",
                     "day"
+                ],
+                "type": "object"
+            },
+            "services.TeamWithMembers": {
+                "properties": {
+                    "event_id": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "members": {
+                        "items": {
+                            "$ref": "#/components/schemas/sqlc.GetTeamMembersRow"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "owner_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "event_id",
+                    "id",
+                    "members",
+                    "name",
+                    "owner_id"
                 ],
                 "type": "object"
             },
@@ -851,6 +893,33 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "sqlc.GetTeamMembersRow": {
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "image": {
+                        "type": "string"
+                    },
+                    "joined_at": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email",
+                    "image",
+                    "joined_at",
+                    "name",
+                    "user_id"
+                ],
+                "type": "object"
+            },
             "sqlc.NullApplicationStatus": {
                 "properties": {
                     "application_status": {
@@ -880,6 +949,37 @@ const docTemplate = `{
                 "required": [
                     "event_role_type",
                     "valid"
+                ],
+                "type": "object"
+            },
+            "sqlc.Team": {
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "event_id": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "owner_id": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "event_id",
+                    "id",
+                    "name",
+                    "owner_id",
+                    "updated_at"
                 ],
                 "type": "object"
             }
@@ -2080,6 +2180,249 @@ const docTemplate = `{
                 "summary": "Get all staff users for an event",
                 "tags": [
                     "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/teams": {
+            "post": {
+                "description": "Creates a new team for a specific event and assigns the creator as the owner.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The ID of the event",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/handlers.CreateTeamRequest",
+                                        "summary": "request",
+                                        "description": "Team Creation Payload"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Team Creation Payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/sqlc.Team"
+                                }
+                            }
+                        },
+                        "description": "A team object"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: you had request parameters needed for this method."
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Conflict: You already have a team."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Something went seriously wrong."
+                    }
+                },
+                "summary": "Create a new team",
+                "tags": [
+                    "Team"
+                ]
+            }
+        },
+        "/events/{eventId}/teams/me": {
+            "get": {
+                "description": "Retrieves the team information and the full list of team members for the currently authenticated user within a specified event.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The ID of the event",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/services.TeamWithMembers"
+                                }
+                            }
+                        },
+                        "description": "Team information and members successfully retrieved."
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Team not found for the user in this event."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Something went seriously wrong."
+                    }
+                },
+                "summary": "Get the authenticated user's team and its members for this specific event.",
+                "tags": [
+                    "Team"
+                ]
+            }
+        },
+        "/teams/{teamId}": {
+            "get": {
+                "description": "Retrieves the team information and the full list of team members by a team id.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The ID of the team",
+                        "in": "path",
+                        "name": "team_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/services.TeamWithMembers"
+                                }
+                            }
+                        },
+                        "description": "Team information and members successfully retrieved."
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Team not found for the user in this event."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Something went seriously wrong."
+                    }
+                },
+                "summary": "Get a team and its members by team id.",
+                "tags": [
+                    "Team"
                 ]
             }
         },
