@@ -26,3 +26,16 @@ JOIN
     auth.users u ON tm.user_id = u.id
 WHERE
     tm.team_id = $1;
+
+-- name: GetTeamMemberByUserAndEvent :one
+SELECT tm.*
+FROM team_members tm
+JOIN teams t on tm.team_id = t.id
+WHERE tm.user_id = $1
+    AND t.event_id = $2
+LIMIT 1;
+
+-- name: CreateTeamMember :one
+INSERT INTO team_members (team_id, user_id)
+VALUES ($1, $2)
+RETURNING *;

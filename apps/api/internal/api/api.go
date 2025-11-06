@@ -158,6 +158,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 			// Team routes
 			r.Route("/teams", func(r chi.Router) {
+				r.Post("/", api.Handlers.Teams.CreateTeam)
 				r.Get("/me", api.Handlers.Teams.GetMyTeam)
 			})
 		})

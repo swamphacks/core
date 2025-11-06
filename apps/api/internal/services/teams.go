@@ -5,23 +5,68 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+)
+
+var (
+	ErrTeamExists = errors.New("team already exists")
 )
 
 type TeamService struct {
 	teamRepo       *repository.TeamRepository
 	teamMemberRepo *repository.TeamMemberRepository
+	txm            *db.TransactionManager
 	logger         zerolog.Logger
 }
 
-func NewTeamService(teamRepo *repository.TeamRepository, teamMemberRepo *repository.TeamMemberRepository, logger zerolog.Logger) *TeamService {
+func NewTeamService(teamRepo *repository.TeamRepository, teamMemberRepo *repository.TeamMemberRepository, txm *db.TransactionManager, logger zerolog.Logger) *TeamService {
 	return &TeamService{
 		teamRepo:       teamRepo,
 		teamMemberRepo: teamMemberRepo,
+		txm:            txm,
 		logger:         logger.With().Str("service", "TeamService").Str("component", "team").Logger(),
 	}
+}
+
+func (s *TeamService) CreateTeam(ctx context.Context, name string, eventId, userId uuid.UUID) (*sqlc.Team, error) {
+	// Check if user already has a team for this event.
+	member, err := s.teamMemberRepo.GetTeamMemberByUserAndEvent(ctx, userId, eventId)
+	if err == nil && member != nil {
+		// User already has a team
+		return nil, ErrTeamExists
+	}
+	if err != nil && !errors.Is(err, repository.ErrTeamMemberNotFound) {
+		return nil, err
+	}
+
+	var newTeam sqlc.Team
+
+	// Transactionally create a new team and assign the user as the owner.
+	if err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txTeamRepo := s.teamRepo.NewTx(tx)
+		txTeamMemberRepo := s.teamMemberRepo.NewTx(tx)
+
+		team, err := txTeamRepo.Create(ctx, name, userId, eventId)
+		if err != nil {
+			return err
+		}
+
+		_, err = txTeamMemberRepo.Create(ctx, team.ID, userId)
+		if err != nil {
+			return err
+		}
+
+		newTeam = *team
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return &newTeam, nil
 }
 
 type TeamWithMembers struct {

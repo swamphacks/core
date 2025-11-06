@@ -133,6 +133,17 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "handlers.CreateTeamRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "type": "object"
+            },
             "handlers.NullableEventRole": {
                 "properties": {
                     "assigned_at": {
@@ -899,6 +910,37 @@ const docTemplate = `{
                 "required": [
                     "event_role_type",
                     "valid"
+                ],
+                "type": "object"
+            },
+            "sqlc.Team": {
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "event_id": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "owner_id": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "event_id",
+                    "id",
+                    "name",
+                    "owner_id",
+                    "updated_at"
                 ],
                 "type": "object"
             }
@@ -2061,6 +2103,107 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/teams": {
+            "post": {
+                "description": "Creates a new team for a specific event and assigns the creator as the owner.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The ID of the event",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/handlers.CreateTeamRequest",
+                                        "summary": "request",
+                                        "description": "Team Creation Payload"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Team Creation Payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/sqlc.Team"
+                                }
+                            }
+                        },
+                        "description": "A team object"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: you had request parameters needed for this method."
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Conflict: You already have a team."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Something went seriously wrong."
+                    }
+                },
+                "summary": "Create a new team",
+                "tags": [
+                    "Team"
+                ]
+            }
+        },
         "/events/{eventId}/teams/me": {
             "get": {
                 "description": "Retrieves the team information and the full list of team members for the currently authenticated user within a specified event.",
@@ -2068,7 +2211,7 @@ const docTemplate = `{
                     {
                         "description": "The authenticated session token/id",
                         "in": "cookie",
-                        "name": "sh_session",
+                        "name": "sh_session_id",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -2139,7 +2282,7 @@ const docTemplate = `{
                     {
                         "description": "The authenticated session token/id",
                         "in": "cookie",
-                        "name": "sh_session",
+                        "name": "sh_session_id",
                         "required": true,
                         "schema": {
                             "type": "string"

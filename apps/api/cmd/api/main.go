@@ -88,7 +88,7 @@ func main() {
 	eventService := services.NewEventService(eventRepo, userRepo, r2Client, &cfg.CoreBuckets, logger)
 	emailService := services.NewEmailService(taskQueueClient, sesClient, logger)
 	applicationService := services.NewApplicationService(applicationRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, logger)
-	teamService := services.NewTeamService(teamRepo, teamMemberRepo, logger)
+	teamService := services.NewTeamService(teamRepo, teamMemberRepo, txm, logger)
 
 	// Injections into handlers
 	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, cfg, logger)
