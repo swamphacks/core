@@ -14,11 +14,15 @@ import {
 
 import type { ComposeOption } from "echarts/core";
 
-import { PieChart } from "echarts/charts";
+import { PieChart, LineChart, BarChart } from "echarts/charts";
 
 import { LabelLayout, UniversalTransition } from "echarts/features";
 
-import type { PieSeriesOption } from "echarts/charts";
+import type {
+  PieSeriesOption,
+  LineSeriesOption,
+  BarSeriesOption,
+} from "echarts/charts";
 
 import type {
   // The component option types are defined with the ComponentOption suffix
@@ -35,6 +39,8 @@ type ECOption = ComposeOption<
   | TooltipComponentOption
   | GridComponentOption
   | DatasetComponentOption
+  | LineSeriesOption
+  | BarSeriesOption
 >;
 
 echarts.use([
@@ -44,6 +50,8 @@ echarts.use([
   DatasetComponent,
   TransformComponent,
   PieChart,
+  LineChart,
+  BarChart,
   LabelLayout,
   UniversalTransition,
   CanvasRenderer,
@@ -75,3 +83,13 @@ export default function ECharts({ option, className }: Props) {
 
   return <div ref={chartRef} className={className}></div>;
 }
+
+export const pieChartColors = [
+  "#00B894", // mint
+  "#55EFC4", // light teal
+  "#0984E3", // vivid blue
+  "#6C5CE7", // violet
+  "#E84393", // pink
+  "#D63031", // red
+  "#FDCB6E", // warm yellow
+];

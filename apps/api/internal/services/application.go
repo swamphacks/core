@@ -268,6 +268,12 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context, event
 		return err
 	})
 
+	g.Go(func() error {
+		var err error
+		statusStats, err = s.appRepo.GetApplicationStatuses(ctx, eventId)
+		return err
+	})
+
 	if err := g.Wait(); err != nil {
 		s.logger.Err(err).Msg("Something went wrong while getting application statistics")
 		return nil, ErrGetApplicationStatistics

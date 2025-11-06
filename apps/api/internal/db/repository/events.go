@@ -126,3 +126,11 @@ func (r *EventRepository) RevokeRole(ctx context.Context, userId uuid.UUID, even
 
 	return r.db.Query.RemoveRole(ctx, params)
 }
+
+func (r *EventRepository) GetApplicationStatuses(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationStatusSplitRow, error) {
+	return r.db.Query.GetApplicationStatusSplit(ctx, eventId)
+}
+
+func (r *EventRepository) GetSubmissionTimes(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetSubmissionTimesRow, error) {
+	return r.db.Query.GetSubmissionTimes(ctx, eventId)
+}

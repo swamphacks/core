@@ -787,6 +787,63 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/overview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieves general information about the event
+     * @description Returns data such as event details (name, description, location, dates, etc..) and basic application statistics
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["services.EventOverview"];
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error getting statistics */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/events/{eventId}/role": {
     parameters: {
       query?: never;
@@ -1587,6 +1644,16 @@ export interface components {
       race_stats: components["schemas"]["sqlc.GetApplicationRaceSplitRow"][];
       school_stats: components["schemas"]["sqlc.GetApplicationSchoolSplitRow"][];
       status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
+    };
+    "services.EventOverview": {
+      application_status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
+      application_submission_stats: components["schemas"]["services.SubmissionTimesStatistics"][];
+      event_details: components["schemas"]["sqlc.Event"];
+    };
+    "services.SubmissionTimesStatistics": {
+      count: number;
+      /** Format: date-time */
+      day: string;
     };
     "sqlc.Application": {
       application: number[];

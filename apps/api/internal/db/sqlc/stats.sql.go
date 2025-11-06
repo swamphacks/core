@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getApplicationAgeSplit = `-- name: GetApplicationAgeSplit :one
@@ -236,4 +237,39 @@ func (q *Queries) GetApplicationStatusSplit(ctx context.Context, eventID uuid.UU
 		&i.Withdrawn,
 	)
 	return i, err
+}
+
+const getSubmissionTimes = `-- name: GetSubmissionTimes :many
+SELECT
+  date_trunc('day', submitted_at AT TIME ZONE 'US/Eastern')::date AS day,
+  COUNT(*) AS count
+FROM applications
+WHERE event_id = $1 AND submitted_at IS NOT NULL
+GROUP BY day
+ORDER By day
+`
+
+type GetSubmissionTimesRow struct {
+	Day   pgtype.Date `json:"day"`
+	Count int64       `json:"count"`
+}
+
+func (q *Queries) GetSubmissionTimes(ctx context.Context, eventID uuid.UUID) ([]GetSubmissionTimesRow, error) {
+	rows, err := q.db.Query(ctx, getSubmissionTimes, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetSubmissionTimesRow{}
+	for rows.Next() {
+		var i GetSubmissionTimesRow
+		if err := rows.Scan(&i.Day, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
