@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ReactNode } from "react";
+import { useEffect, type PropsWithChildren, type ReactNode } from "react";
 import TablerChevronRight from "~icons/tabler/chevron-right";
 import { tv } from "tailwind-variants";
 import { useToggleState } from "react-stately";
@@ -46,6 +46,18 @@ const NavLink = ({
 
   // Handle mobile navigation state in tangent with the AppShell context
   const { setMobileNavOpen } = useAppShell();
+
+  useEffect(() => {
+    // if the navlink was previously expanded, don't automatically close it whenever `initialExpanded` change to false
+    // only the user can manually close the navlink
+
+    const prevInitialExpanded = !initialExpanded;
+
+    // if it was previously closed (false), then open it (set toggle state to true)
+    if (!prevInitialExpanded) {
+      toggleState.setSelected(true);
+    }
+  }, [initialExpanded]);
 
   return (
     <div>

@@ -330,6 +330,45 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "services.EventOverview": {
+                "properties": {
+                    "application_status_stats": {
+                        "$ref": "#/components/schemas/sqlc.GetApplicationStatusSplitRow"
+                    },
+                    "application_submission_stats": {
+                        "items": {
+                            "$ref": "#/components/schemas/services.SubmissionTimesStatistics"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "event_details": {
+                        "$ref": "#/components/schemas/sqlc.Event"
+                    }
+                },
+                "required": [
+                    "application_status_stats",
+                    "application_submission_stats",
+                    "event_details"
+                ],
+                "type": "object"
+            },
+            "services.SubmissionTimesStatistics": {
+                "properties": {
+                    "count": {
+                        "type": "integer"
+                    },
+                    "day": {
+                        "format": "date-time",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "count",
+                    "day"
+                ],
+                "type": "object"
+            },
             "services.TeamWithMembers": {
                 "properties": {
                     "event_id": {
@@ -1762,6 +1801,47 @@ const docTemplate = `{
                     }
                 },
                 "summary": "Make an interest submission for an event (email list)",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/overview": {
+            "get": {
+                "description": "Returns data such as event details (name, description, location, dates, etc..) and basic application statistics",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/services.EventOverview"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error getting statistics"
+                    }
+                },
+                "summary": "Retrieves general information about the event",
                 "tags": [
                     "Event"
                 ]

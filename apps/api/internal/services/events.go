@@ -19,6 +19,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/storage"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -33,6 +34,7 @@ var (
 	ErrUnexpectedFileType   = errors.New("did not expect this file type")
 
 	ErrFailedToSubmitApplication = errors.New("failed to submit application")
+	ErrGetEventOverview          = errors.New("failed to aggregate event stats")
 )
 
 type EventService struct {
@@ -272,4 +274,61 @@ func (s *EventService) DeleteBanner(ctx context.Context, eventId uuid.UUID) erro
 		BannerDoUpdate: true,
 		Banner:         nil,
 	})
+}
+
+type SubmissionTimesStatistics struct {
+	Day   time.Time `json:"day" format:"date-time"`
+	Count int64     `json:"count"`
+}
+
+type EventOverview struct {
+	EventDetails                sqlc.Event                        `json:"event_details"`
+	ApplicationStatusStatistics sqlc.GetApplicationStatusSplitRow `json:"application_status_stats"`
+	SubmissionTimesStatistics   []SubmissionTimesStatistics       `json:"application_submission_stats"`
+}
+
+func (s *EventService) GetEventOverview(ctx context.Context, eventId uuid.UUID) (*EventOverview, error) {
+	g, ctx := errgroup.WithContext(ctx)
+
+	var eventDetails *sqlc.Event
+	var statusStats sqlc.GetApplicationStatusSplitRow
+	var submissionTimesStats []SubmissionTimesStatistics
+
+	g.Go(func() error {
+		var err error
+		eventDetails, err = s.GetEventByID(ctx, eventId)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		statusStats, err = s.eventRepo.GetApplicationStatuses(ctx, eventId)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		temp, err := s.eventRepo.GetSubmissionTimes(ctx, eventId)
+
+		for _, v := range temp {
+			submissionTimesStats = append(submissionTimesStats, SubmissionTimesStatistics{
+				Count: v.Count,
+				Day:   v.Day.Time,
+			})
+		}
+
+		fmt.Println(submissionTimesStats)
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
+		s.logger.Err(err).Msg("Something went wrong while getting event overview stats")
+		return nil, ErrGetEventOverview
+	}
+
+	return &EventOverview{
+		EventDetails:                *eventDetails,
+		ApplicationStatusStatistics: statusStats,
+		SubmissionTimesStatistics:   submissionTimesStats,
+	}, nil
 }

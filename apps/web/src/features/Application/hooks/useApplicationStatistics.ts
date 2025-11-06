@@ -2,7 +2,7 @@ import { api } from "@/lib/ky";
 import type { paths } from "@/lib/openapi/schema";
 import { useQuery } from "@tanstack/react-query";
 
-type ApplicationStatistics =
+export type ApplicationStatistics =
   paths["/events/{eventId}/application/stats"]["get"]["responses"]["200"]["content"]["application/json"];
 
 const fetchApplicationStatistics = async (eventId: string) => {
