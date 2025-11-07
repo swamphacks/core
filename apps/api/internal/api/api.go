@@ -113,6 +113,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Route("/teams", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
 		r.Get("/{teamId}", api.Handlers.Teams.GetTeam)
+		r.Delete("/{teamId}/members/me", api.Handlers.Teams.LeaveTeam)
 	})
 
 	// --- Event routes ---

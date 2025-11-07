@@ -1,9 +1,10 @@
 import { AvatarStack } from "@/components/ui/AvatarStack";
+import { Button } from "@/components/ui/Button";
 import { useMyTeam } from "@/features/Team/hooks/useMyTeam";
+import { useTeamActions } from "@/features/Team/hooks/useTeamActions";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
-import TablerUsersGroup from "~icons/tabler/users-group";
-
+import TablerUsers from "~icons/tabler/users";
 export const Route = createFileRoute(
   "/_protected/events/$eventId/dashboard/_applicant/team-formation",
 )({
@@ -13,6 +14,7 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const eventId = Route.useParams().eventId;
   const team = useMyTeam(eventId);
+  const { leave } = useTeamActions(eventId);
 
   const relativeExploreTeamsPath = `/events/${eventId}/dashboard/teams-explorer`;
 
@@ -56,29 +58,28 @@ function RouteComponent() {
       </Heading>
 
       {team.data ? (
-        <div className="border border-input-border rounded-md px-4 py-3 w-fit min-w-128 flex flex-col gap-4">
+        <div className="border border-input-border rounded-md px-4 py-3 w-full md:w-fit md:min-w-120 flex flex-col gap-4">
           <h3 className="text-text-main text-2xl">{team.data.name}</h3>
 
           <div className="flex flex-row text-text-secondary items-center gap-2">
-            <TablerUsersGroup className="h-6 w-6" />
-            <p className="text-lg">{team.data.members.length} / 4 Members</p>
-
             <AvatarStack
-              avatars={[
-                {
-                  src: "https://i.pinimg.com/1200x/b3/33/b9/b333b9da782cb6874da5002f185a80ce.jpg",
-                },
-                {
-                  src: "https://i.pinimg.com/736x/d9/fa/c3/d9fac3d552659e888bbecbd20b12f160.jpg",
-                },
-                { fallback: "Alexander Wang" },
-                { fallback: "Anders Swenson" },
-                { fallback: "Hello" },
-              ]}
+              avatars={team.data.members.map((member) => ({
+                src: member?.image,
+                fallback: member?.name,
+              }))}
               max={2}
               size="sm"
             />
+            <TablerUsers className="h-6 w-6" />
+            <p className="text-lg">{team.data.members.length} / 4 Members</p>
           </div>
+
+          <Button
+            variant="danger"
+            onPress={() => team.data && leave.mutate(team.data.id)}
+          >
+            Leave
+          </Button>
         </div>
       ) : (
         <div>

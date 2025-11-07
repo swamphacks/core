@@ -86,12 +86,12 @@ func (h *TeamHandler) GetMyTeam(w http.ResponseWriter, r *http.Request) {
 func (h *TeamHandler) GetTeam(w http.ResponseWriter, r *http.Request) {
 	teamIdStr := chi.URLParam(r, "teamId")
 	if teamIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_team_id", "The team ID is missing from the URL!"))
 		return
 	}
 	teamId, err := uuid.Parse(teamIdStr)
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_team_id", "The team ID is not a valid UUID"))
 		return
 	}
 
@@ -174,4 +174,42 @@ func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res.Send(w, http.StatusOK, team)
+}
+
+// Leave a team
+//
+//	@Summary		Leave a team
+//	@Description	Leaves a team if the requester is on the team. Depends on cookies for user retrieval.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie	string	true	"The authenticated session token/id"
+//	@Param			team_id			path	string	true	"The ID of the team"
+//	@Success		204				"Successfully left the team"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		500				{object}	response.ErrorResponse	"Something went seriously wrong."
+//
+//	@Router			/teams/{teamId}/members/me [delete]
+func (h *TeamHandler) LeaveTeam(w http.ResponseWriter, r *http.Request) {
+	teamIdStr := chi.URLParam(r, "teamId")
+	if teamIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The team ID is missing from the URL!"))
+		return
+	}
+	teamId, err := uuid.Parse(teamIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The team ID is not a valid UUID"))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	err = h.teamService.LeaveTeam(r.Context(), *userId, teamId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+
+	}
 }

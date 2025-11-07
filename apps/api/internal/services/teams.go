@@ -133,3 +133,7 @@ func (s *TeamService) JoinTeam(ctx context.Context, userId, teamId uuid.UUID) er
 	_, err := s.teamMemberRepo.Create(ctx, teamId, userId)
 	return err
 }
+
+func (s *TeamService) LeaveTeam(ctx context.Context, userId, teamId uuid.UUID) error {
+	return s.teamMemberRepo.Delete(ctx, teamId, userId)
+}
