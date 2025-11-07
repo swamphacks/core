@@ -70,3 +70,25 @@ func (r *TeamRepository) GetTeamByMemberAndEvent(ctx context.Context, userId, ev
 
 	return &team, err
 }
+
+func (r *TeamRepository) Delete(ctx context.Context, teamId uuid.UUID) error {
+	return r.db.Query.DeleteTeam(ctx, teamId)
+}
+
+func (r *TeamRepository) Update(ctx context.Context, teamId uuid.UUID, name *string, ownerId *uuid.UUID) (*sqlc.Team, error) {
+	params := sqlc.UpdateTeamByIdParams{
+		ID:              teamId,
+		OwnerIDDoUpdate: ownerId != nil && *ownerId != uuid.Nil,
+		NameDoUpdate:    name != nil && *name != "",
+	}
+
+	if ownerId != nil {
+		params.OwnerID = ownerId
+	}
+	if name != nil {
+		params.Name = *name
+	}
+
+	team, err := r.db.Query.UpdateTeamById(ctx, params)
+	return &team, err
+}

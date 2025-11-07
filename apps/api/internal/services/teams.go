@@ -13,7 +13,9 @@ import (
 )
 
 var (
-	ErrTeamExists = errors.New("team already exists")
+	ErrTeamExists          = errors.New("team already exists")
+	ErrTeamNotFound        = errors.New("team does not exist")
+	ErrNoEligibleNextOwner = errors.New("no eligible next owner for team")
 )
 
 type TeamService struct {
@@ -55,8 +57,7 @@ func (s *TeamService) CreateTeam(ctx context.Context, name string, eventId, user
 			return err
 		}
 
-		_, err = txTeamMemberRepo.Create(ctx, team.ID, userId)
-		if err != nil {
+		if _, err = txTeamMemberRepo.Create(ctx, team.ID, userId); err != nil {
 			return err
 		}
 
@@ -135,5 +136,68 @@ func (s *TeamService) JoinTeam(ctx context.Context, userId, teamId uuid.UUID) er
 }
 
 func (s *TeamService) LeaveTeam(ctx context.Context, userId, teamId uuid.UUID) error {
-	return s.teamMemberRepo.Delete(ctx, teamId, userId)
+	team, err := s.teamRepo.GetByID(ctx, teamId)
+	if err != nil {
+		if errors.Is(err, repository.ErrTeamNotFound) {
+			return ErrTeamNotFound
+		}
+		return err
+	}
+
+	// Check if user is NOT the owner
+	if team.OwnerID == nil || *team.OwnerID != userId {
+		return s.teamMemberRepo.Delete(ctx, team.ID, userId)
+	}
+
+	// User IS the owner
+	members, err := s.teamMemberRepo.GetTeamMembers(ctx, team.ID)
+	if err != nil {
+		return err
+	}
+
+	// Confirm that team has members. This should not run unless there are inconsistencies.
+	if len(members) == 0 {
+		s.logger.Warn().Msg("Team has no members but owner exists — inconsistent state.")
+		return s.teamRepo.Delete(ctx, team.ID)
+	}
+
+	// If current user is the last member → delete both team + membership
+	if len(members) == 1 {
+		return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+			txTeamRepo := s.teamRepo.NewTx(tx)
+			txTeamMemberRepo := s.teamMemberRepo.NewTx(tx)
+
+			if err := txTeamMemberRepo.Delete(ctx, team.ID, userId); err != nil {
+				return err
+			}
+			return txTeamRepo.Delete(ctx, team.ID)
+		})
+	}
+
+	// Choose the next owner deterministically
+	var nextOwner sqlc.GetTeamMembersRow
+	for _, m := range members {
+		if m.UserID != userId {
+			nextOwner = m
+			break
+		}
+	}
+
+	if nextOwner.UserID == uuid.Nil {
+		// Should not happen unless data is inconsistent
+		s.logger.Error().Msg("No eligible next owner found.")
+		return ErrNoEligibleNextOwner
+	}
+
+	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txTeamRepo := s.teamRepo.NewTx(tx)
+		txTeamMemberRepo := s.teamMemberRepo.NewTx(tx)
+
+		if err := txTeamMemberRepo.Delete(ctx, team.ID, userId); err != nil {
+			return err
+		}
+
+		_, err := txTeamRepo.Update(ctx, team.ID, nil, &nextOwner.UserID)
+		return err
+	})
 }

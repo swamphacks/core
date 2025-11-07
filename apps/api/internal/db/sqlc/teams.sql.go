@@ -113,3 +113,41 @@ func (q *Queries) GetUserEventTeam(ctx context.Context, arg GetUserEventTeamPara
 	)
 	return i, err
 }
+
+const updateTeamById = `-- name: UpdateTeamById :one
+UPDATE teams
+SET
+    owner_id = CASE WHEN $1::boolean THEN $2 ELSE owner_id END,
+    name = CASE WHEN $3::boolean THEN $4 ELSE name END
+WHERE
+    id = $5::uuid
+RETURNING id, name, owner_id, event_id, created_at, updated_at
+`
+
+type UpdateTeamByIdParams struct {
+	OwnerIDDoUpdate bool       `json:"owner_id_do_update"`
+	OwnerID         *uuid.UUID `json:"owner_id"`
+	NameDoUpdate    bool       `json:"name_do_update"`
+	Name            string     `json:"name"`
+	ID              uuid.UUID  `json:"id"`
+}
+
+func (q *Queries) UpdateTeamById(ctx context.Context, arg UpdateTeamByIdParams) (Team, error) {
+	row := q.db.QueryRow(ctx, updateTeamById,
+		arg.OwnerIDDoUpdate,
+		arg.OwnerID,
+		arg.NameDoUpdate,
+		arg.Name,
+		arg.ID,
+	)
+	var i Team
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.EventID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}

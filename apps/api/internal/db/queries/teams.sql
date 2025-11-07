@@ -33,3 +33,12 @@ LIMIT 1;
 SELECT *
 FROM teams
 WHERE id = $1;
+
+-- name: UpdateTeamById :one
+UPDATE teams
+SET
+    owner_id = CASE WHEN @owner_id_do_update::boolean THEN @owner_id ELSE owner_id END,
+    name = CASE WHEN @name_do_update::boolean THEN @name ELSE name END
+WHERE
+    id = @id::uuid
+RETURNING *;
