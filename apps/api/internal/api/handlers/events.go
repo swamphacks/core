@@ -450,7 +450,7 @@ func (h *EventHandler) GetEventStaffUsers(w http.ResponseWriter, r *http.Request
 	}
 }
 
-// Get all staff users for an event
+// Get all users for an event
 //
 //	@Summary		Get all users for an event
 //	@Description	Gets all users with any role for the event

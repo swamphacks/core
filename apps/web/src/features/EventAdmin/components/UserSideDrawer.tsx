@@ -3,9 +3,15 @@ import type { StaffUser } from "@/features/PlatformAdmin/EventManager/hooks/useE
 
 interface UserSideDrawerProps {
   user: StaffUser;
+  event_id: string;
 }
-function UserSideDrawer({ user }: UserSideDrawerProps) {
-  return <Modal isDismissible>{user.name}</Modal>;
+function UserSideDrawer({ user, event_id }: UserSideDrawerProps) {
+  return (
+    <Modal isDismissible>
+      {user.name}
+      {event_id}
+    </Modal>
+  );
 }
 
 export { UserSideDrawer };
