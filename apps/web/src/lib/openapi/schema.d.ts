@@ -4,1802 +4,2038 @@
  */
 
 export interface paths {
-  "/auth/callback": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * OAuth2 Auth Callback
-     * @description This route is used for OAuth authentication methods to verify and login/create an account.
-     */
-    post: {
-      parameters: {
-        query: {
-          /** @description The OAuth code passed back from the provider. Part of the PKCE flow. */
-          code: string;
-          /** @description The state containing a base64 encoded version of the nonce, provider, and redirect url. */
-          state: string;
+    "/auth/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        header: {
-          /** @description The nonce for comparing against the callback state decoded to prevent CSRF attacks. */
-          sh_auth_nonce: string;
-        };
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK: User is logged in successfully */
-        200: {
-          headers: {
-            /** @description Sets a sh_session cookie to signify auth status */
-            "Set-Cookie"?: string;
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Found: Logged in and redirected to a requested location */
-        302: {
-          headers: {
-            /** @description Sets a sh_session cookie to signify auth status */
-            "Set-Cookie"?: string;
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad Request: Something went wrong with the request queries or their properties */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Forbidden: Something went wrong verifying identity or authenticating. */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Bad Gateway: Authenticating OAuth server did not respond or user does not exist */
-        502: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Current User​
-     * @description Get the currently authenticated user's information.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["middleware.UserContext"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/email/queue": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Queue an Email Request
-     * @description Push an email request to the task queue
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Email data */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.QueueTextEmailRequest"];
-        };
-      };
-      responses: {
-        /** @description OK: Email request queued */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": string;
-          };
-        };
-        /** @description Bad request/Malformed request. The email request is potentially invalid. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: The server went kaput while queueing email sending */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get events
-     * @description Gets events with a nullable event role for authenticated users.
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Can be scoped to either published, scoped, or all. Scoped means admins and staff can see unpublished events */
-          scope?: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK: Events returned */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.GetEventsWithUserInfoRow"][];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Create a new event
-     * @description Create a new event with the provided details
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Event creation data */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.CreateEventFields"];
-        };
-      };
-      responses: {
-        /** @description OK: Event created */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.Event"];
-          };
-        };
-        /** @description Bad request/Malformed request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description endTime is before startTime or applicationClose is before applicationOpen */
-        409: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get an event
-     * @description Get a specific event by ID
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK - Event received */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.Event"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    /**
-     * Delete an event
-     * @description Delete an existing event
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK - Event deleted */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    /**
-     * Update an event
-     * @description Update an existing event
-     */
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK - Event updated (patched) */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    trace?: never;
-  };
-  "/events/{eventId}/application": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Application By User and Event ID
-     * @description Get the current user's application progress for an event. If this is their first time filling out the application, a new application will be created.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK: An application was found */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json":
-              | components["schemas"]["sqlc.Application"]
-              | {
-                  [key: string]: unknown;
+        get?: never;
+        put?: never;
+        /**
+         * OAuth2 Auth Callback
+         * @description This route is used for OAuth authentication methods to verify and login/create an account.
+         */
+        post: {
+            parameters: {
+                query: {
+                    /** @description The OAuth code passed back from the provider. Part of the PKCE flow. */
+                    code: string;
+                    /** @description The state containing a base64 encoded version of the nonce, provider, and redirect url. */
+                    state: string;
                 };
-          };
+                header: {
+                    /** @description The nonce for comparing against the callback state decoded to prevent CSRF attacks. */
+                    sh_auth_nonce: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description OK: User is logged in successfully */
+                200: {
+                    headers: {
+                        /** @description Sets a sh_session cookie to signify auth status */
+                        "Set-Cookie"?: string;
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Found: Logged in and redirected to a requested location */
+                302: {
+                    headers: {
+                        /** @description Sets a sh_session cookie to signify auth status */
+                        "Set-Cookie"?: string;
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request: Something went wrong with the request queries or their properties */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden: Something went wrong verifying identity or authenticating. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Bad Gateway: Authenticating OAuth server did not respond or user does not exist */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error retrieving application"\ */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/save": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Current User​
+         * @description Get the currently authenticated user's information.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session: string;
+                };
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["middleware.UserContext"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Save Application
-     * @description Save user's progress on the application. File/Upload fields are not saved.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Form data */
-      requestBody: {
-        content: {
-          "application/json": Record<string, never> | Record<string, never>;
+    "/email/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
+        get?: never;
+        put?: never;
+        /**
+         * Queue an Email Request
+         * @description Push an email request to the task queue
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Email data */
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never> | components["schemas"]["handlers.QueueTextEmailRequest"];
+                };
+            };
+            responses: {
+                /** @description OK: Email request queued */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string;
+                    };
+                };
+                /** @description Bad request/Malformed request. The email request is potentially invalid. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: The server went kaput while queueing email sending */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error saving application */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/stats": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get events
+         * @description Gets events with a nullable event role for authenticated users.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Can be scoped to either published, scoped, or all. Scoped means admins and staff can see unpublished events */
+                    scope?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description OK: Events returned */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["sqlc.GetEventsWithUserInfoRow"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create a new event
+         * @description Create a new event with the provided details
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Event creation data */
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never> | components["schemas"]["handlers.CreateEventFields"];
+                };
+            };
+            responses: {
+                /** @description OK: Event created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["sqlc.Event"];
+                    };
+                };
+                /** @description Bad request/Malformed request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description endTime is before startTime or applicationClose is before applicationOpen */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: Something went terribly wrong on our end. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Gets an event's submitted application statistics
-     * @description This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["services.ApplicationStatistics"];
-          };
+    "/events/{eventId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
+        /**
+         * Get an event
+         * @description Get a specific event by ID
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Event ID */
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description OK - Event received */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["sqlc.Event"];
+                    };
+                };
+                /** @description Server Error: Something went terribly wrong on our end. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-        /** @description Server Error: error getting statistics */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
+        put?: never;
+        post?: never;
+        /**
+         * Delete an event
+         * @description Delete an existing event
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Event ID */
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description OK - Event deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server Error: Something went terribly wrong on our end. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-      };
+        options?: never;
+        head?: never;
+        /**
+         * Update an event
+         * @description Update an existing event
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Event ID */
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description OK - Event updated (patched) */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server Error: Something went terribly wrong on our end. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/submit": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/events/{eventId}/application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Application By User and Event ID
+         * @description Get the current user's application progress for an event. If this is their first time filling out the application, a new application will be created.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Event ID */
+                    eventId: string;
+                };
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session: string;
+                };
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description OK: An application was found */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["sqlc.Application"] | {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Bad request/Malformed request. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: error retrieving application"\ */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Submit Application
-     * @description Submit the application for an event.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Submission form data */
-      requestBody: {
-        content: {
-          "application/json": Record<string, never>;
-          "application/x-www-form-urlencoded": Record<string, never>;
+    "/events/{eventId}/application/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
+        get?: never;
+        put?: never;
+        /**
+         * Save Application
+         * @description Save user's progress on the application. File/Upload fields are not saved.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Form data */
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never> | Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Bad request/Malformed request. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: error saving application */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error submitting application */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/interest": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/events/{eventId}/application/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets an event's submitted application statistics
+         * @description This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["services.ApplicationStatistics"];
+                    };
+                };
+                /** @description Bad request/Malformed request. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: error getting statistics */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Make an interest submission for an event (email list)
-     * @description Submit email for event interest/mailing list
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
+    "/events/{eventId}/application/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        cookie?: never;
-      };
-      /** @description Interest submission data */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.AddEmailRequest"];
+        get?: never;
+        put?: never;
+        /**
+         * Submit Application
+         * @description Submit the application for an event.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Submission form data */
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never>;
+                    "application/x-www-form-urlencoded": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Bad request/Malformed request. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: error submitting application */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-      };
-      responses: {
-        /** @description OK: Interest email created */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": string;
-          };
-        };
-        /** @description Bad request/Malformed request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Duplicate email found in DB */
-        409: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/overview": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/events/{eventId}/interest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make an interest submission for an event (email list)
+         * @description Submit email for event interest/mailing list
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Event ID */
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            /** @description Interest submission data */
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never> | components["schemas"]["handlers.AddEmailRequest"];
+                };
+            };
+            responses: {
+                /** @description OK: Interest email created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string;
+                    };
+                };
+                /** @description Bad request/Malformed request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Duplicate email found in DB */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: Something went terribly wrong on our end. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Retrieves general information about the event
-     * @description Returns data such as event details (name, description, location, dates, etc..) and basic application statistics
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["services.EventOverview"];
-          };
+    "/events/{eventId}/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
+        /**
+         * Retrieves general information about the event
+         * @description Returns data such as event details (name, description, location, dates, etc..) and basic application statistics
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["services.EventOverview"];
+                    };
+                };
+                /** @description Bad request/Malformed request. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: error getting statistics */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-        /** @description Server Error: error getting statistics */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/role": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/events/{eventId}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current user's event role for an event
+         * @description Get current user's role for a specific event
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Event ID */
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description OK - Return role */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["handlers.NullableEventRole"];
+                    };
+                };
+                /** @description Not Found - Role not found */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Not Found - Role not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: Something went terribly wrong on our end. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get the current user's event role for an event
-     * @description Get current user's role for a specific event
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
+    "/events/{eventId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
+        get?: never;
+        put?: never;
+        /**
+         * Change or add event role of a user
+         * @description Modify user's role for a specific event
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Event ID */
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            /** @description Event role data */
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never> | components["schemas"]["handlers.AssignRoleFields"];
+                };
+            };
+            responses: {
+                /** @description OK - Role updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Not Found - User not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: Something went terribly wrong on our end. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-      };
-      responses: {
-        /** @description OK - Return role */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["handlers.NullableEventRole"];
-          };
-        };
-        /** @description Not Found - Role not found */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Not Found - Role not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/roles": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/events/{eventId}/roles/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke event role of a user
+         * @description Remove user's role for a specific event
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Event ID */
+                    eventId: string;
+                    /** @description User ID */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK - Role revoked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Not Found - User not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: Something went terribly wrong on our end. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Change or add event role of a user
-     * @description Modify user's role for a specific event
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
+    "/events/{eventId}/roles/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        cookie?: never;
-      };
-      /** @description Event role data */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.AssignRoleFields"];
+        get?: never;
+        put?: never;
+        /**
+         * Change or add event role of a user in batch
+         * @description Modify users' role for a specific event
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Event ID */
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            /** @description Event roles data */
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never> | components["schemas"]["handlers.AssignRoleBatch"];
+                };
+            };
+            responses: {
+                /** @description OK - Roles updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Not Found - User not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Server Error: Something went terribly wrong on our end. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-      };
-      responses: {
-        /** @description OK - Role updated */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Not Found - User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/roles/{userId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/events/{eventId}/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all staff users for an event
+         * @description Gets all users with role STAFF or ADMIN
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Event ID */
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description OK - Return users */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["sqlc.GetEventStaffRow"][];
+                    };
+                };
+                /** @description Server Error: Something went terribly wrong on our end. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Revoke event role of a user
-     * @description Remove user's role for a specific event
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-          /** @description User ID */
-          userId: string;
+    "/events/{eventId}/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK - Role revoked */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
+        get?: never;
+        put?: never;
+        /**
+         * Create a new team
+         * @description Creates a new team for a specific event and assigns the creator as the owner.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The ID of the event */
+                    event_id: number;
+                };
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session_id: string;
+                };
+            };
+            /** @description Team Creation Payload */
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never> | components["schemas"]["handlers.CreateTeamRequest"];
+                };
+            };
+            responses: {
+                /** @description A team object */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["sqlc.Team"];
+                    };
+                };
+                /** @description Bad request: you had request parameters needed for this method. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Conflict: You already have a team. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Something went seriously wrong. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-        /** @description Not Found - User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/roles/batch": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/events/{eventId}/teams/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the authenticated user's team and its members for this specific event.
+         * @description Retrieves the team information and the full list of team members for the currently authenticated user within a specified event.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The ID of the event */
+                    event_id: number;
+                };
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session_id: string;
+                };
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Team information and members successfully retrieved. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["services.TeamWithMembers"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Team not found for the user in this event. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Something went seriously wrong. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Change or add event role of a user in batch
-     * @description Modify users' role for a specific event
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
+    "/teams/{teamId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        cookie?: never;
-      };
-      /** @description Event roles data */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.AssignRoleBatch"];
+        /**
+         * Get a team and its members by team id.
+         * @description Retrieves the team information and the full list of team members by a team id.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The ID of the team */
+                    team_id: string;
+                };
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session_id: string;
+                };
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Team information and members successfully retrieved. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["services.TeamWithMembers"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Team not found for the user in this event. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Something went seriously wrong. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-      };
-      responses: {
-        /** @description OK - Roles updated */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Not Found - User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/staff": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get/Search for users
+         * @description Get or search for users by name or email. If no search term is provided, returns all users with pagination.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Search term to filter users by name or email (optional) */
+                    search?: string;
+                    /** @description Maximum number of users to return (default is 50) */
+                    limit?: number;
+                    /** @description Number of users to skip for pagination (default is 0) */
+                    offset?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session: string;
+                };
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK: Returns a list of users matching the search criteria, or all users if no search term is provided. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["sqlc.AuthUser"][];
+                    };
+                };
+                /** @description Invalid query parameter(s) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Failed to retrieve users */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get all staff users for an event
-     * @description Gets all users with role STAFF or ADMIN
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
+    "/users/email-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Email Consent
+         * @description Update the user's email consent setting
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session: string;
+                };
+            };
+            /** @description The update email consent request body */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["handlers.UpdateEmailConsentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid request body */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description User not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Failed to update email consent */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-      };
-      responses: {
-        /** @description OK - Return users */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.GetEventStaffRow"][];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User Profile
+         * @description Get profile information of the currently authenticated user.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session: string;
+                };
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["sqlc.AuthUser"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description User profile not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Something went seriously wrong. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update User
+         * @description Update the user's information
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session: string;
+                };
+            };
+            /** @description The update profile request body */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["handlers.UpdateProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid request body */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description User not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Failed to update user profile */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
     };
-    /**
-     * Get/Search for users
-     * @description Get or search for users by name or email. If no search term is provided, returns all users with pagination.
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Search term to filter users by name or email (optional) */
-          search?: string;
-          /** @description Maximum number of users to return (default is 50) */
-          limit?: number;
-          /** @description Number of users to skip for pagination (default is 0) */
-          offset?: number;
+    "/users/me/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Complete Onboarding
+         * @description Onboard the user.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session: string;
+                };
+            };
+            /** @description The onboarding request body */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["handlers.CompleteOnboardingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid request body */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description User not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Failed to complete onboarding */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
         };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK: Returns a list of users matching the search criteria, or all users if no search term is provided. */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.AuthUser"][];
-          };
-        };
-        /** @description Invalid query parameter(s) */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Failed to retrieve users */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users/email-consent": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update Email Consent
-     * @description Update the user's email consent setting
-     */
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      /** @description The update email consent request body */
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["handlers.UpdateEmailConsentRequest"];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Invalid request body */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Failed to update email consent */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    trace?: never;
-  };
-  "/users/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get User Profile
-     * @description Get profile information of the currently authenticated user.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.AuthUser"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description User profile not found. */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went seriously wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update User
-     * @description Update the user's information
-     */
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      /** @description The update profile request body */
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["handlers.UpdateProfileRequest"];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Invalid request body */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Failed to update user profile */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    trace?: never;
-  };
-  "/users/me/onboarding": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Complete Onboarding
-     * @description Onboard the user.
-     */
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      /** @description The onboarding request body */
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["handlers.CompleteOnboardingRequest"];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Invalid request body */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Failed to complete onboarding */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    "handlers.AddEmailRequest": {
-      email: string;
-      source: string;
+    schemas: {
+        "handlers.AddEmailRequest": {
+            email: string;
+            source: string;
+        };
+        "handlers.AssignRoleBatch": {
+            assignments: components["schemas"]["handlers.AssignRoleFields"][];
+        };
+        "handlers.AssignRoleFields": {
+            email: string;
+            role: components["schemas"]["sqlc.EventRoleType"];
+            user_id: string;
+        };
+        "handlers.CompleteOnboardingRequest": {
+            name: string;
+            preferred_email: string;
+        };
+        "handlers.CreateEventFields": {
+            application_close: string;
+            application_open: string;
+            decision_release: string;
+            description: string;
+            end_time: string;
+            is_published: boolean;
+            location: string;
+            location_url: string;
+            max_attendees: number;
+            name: string;
+            rsvp_deadline: string;
+            start_time: string;
+            website_url: string;
+        };
+        "handlers.CreateTeamRequest": {
+            name: string;
+        };
+        "handlers.NullableEventRole": {
+            assigned_at: string;
+            event_id: string;
+            role: components["schemas"]["sqlc.EventRoleType"];
+            user_id: string;
+        };
+        "handlers.QueueTextEmailRequest": {
+            body: string;
+            subject: string;
+            to: string[];
+        };
+        "handlers.UpdateEmailConsentRequest": {
+            email_consent: boolean;
+        };
+        "handlers.UpdateProfileRequest": {
+            name: string;
+            preferred_email: string;
+        };
+        /** @description Information about the current user session. */
+        "middleware.UserContext": {
+            /**
+             * @description Primary email address (nullable)
+             * @example user@example.com
+             */
+            email: string;
+            /**
+             * @description Whether the user agreed to receive emails
+             * @example false
+             */
+            emailConsent: boolean;
+            /**
+             * @description Optional profile image URL
+             * @example https://cdn.example.com/avatar.png
+             */
+            image: string | null;
+            /**
+             * @description Full display name
+             * @example Jane Doe
+             */
+            name: string;
+            /**
+             * @description Whether the user completed onboarding
+             * @example true
+             */
+            onboarded: boolean;
+            /**
+             * @description Preferred email address for communications
+             * @example user.alt@example.com
+             */
+            preferredEmail: string;
+            role: components["schemas"]["sqlc.AuthUserRole"];
+            /**
+             * Format: uuid
+             * @description Unique identifier for the user
+             * @example 550e8400-e29b-41d4-a716-446655440000
+             */
+            userId: string;
+        };
+        "response.ErrorResponse": {
+            error: string;
+            message: string;
+        };
+        "services.ApplicationStatistics": {
+            age_stats: components["schemas"]["sqlc.GetApplicationAgeSplitRow"];
+            gender_stats: components["schemas"]["sqlc.GetApplicationGenderSplitRow"];
+            major_stats: components["schemas"]["sqlc.GetApplicationMajorSplitRow"][];
+            race_stats: components["schemas"]["sqlc.GetApplicationRaceSplitRow"][];
+            school_stats: components["schemas"]["sqlc.GetApplicationSchoolSplitRow"][];
+            status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
+        };
+        "services.EventOverview": {
+            application_status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
+            application_submission_stats: components["schemas"]["services.SubmissionTimesStatistics"][];
+            event_details: components["schemas"]["sqlc.Event"];
+        };
+        "services.SubmissionTimesStatistics": {
+            count: number;
+            /** Format: date-time */
+            day: string;
+        };
+        "services.TeamWithMembers": {
+            event_id: string;
+            id: string;
+            members: components["schemas"]["sqlc.GetTeamMembersRow"][];
+            name: string;
+            owner_id: string;
+        };
+        "sqlc.Application": {
+            application: number[];
+            created_at: string;
+            event_id: string;
+            saved_at: string;
+            status: components["schemas"]["sqlc.NullApplicationStatus"];
+            submitted_at: string;
+            updated_at: string;
+            user_id: string;
+        };
+        /** @enum {string} */
+        "sqlc.ApplicationStatus": "started" | "submitted" | "under_review" | "accepted" | "rejected" | "waitlisted" | "withdrawn";
+        "sqlc.AuthUser": {
+            created_at: string;
+            email: string;
+            email_consent: boolean;
+            email_verified: boolean;
+            id: string;
+            image: string;
+            name: string;
+            onboarded: boolean;
+            preferred_email: string;
+            role: components["schemas"]["sqlc.AuthUserRole"];
+            updated_at: string;
+        };
+        /**
+         * @description Role assigned to the user
+         * @enum {string}
+         */
+        "sqlc.AuthUserRole": "user" | "superuser";
+        "sqlc.Event": {
+            application_close: string;
+            application_open: string;
+            banner: string;
+            created_at: string;
+            decision_release: string;
+            description: string;
+            end_time: string;
+            id: string;
+            is_published: boolean;
+            location: string;
+            location_url: string;
+            max_attendees: number;
+            name: string;
+            rsvp_deadline: string;
+            start_time: string;
+            updated_at: string;
+            website_url: string;
+        };
+        /** @enum {string} */
+        "sqlc.EventRoleType": "admin" | "staff" | "attendee" | "applicant";
+        "sqlc.GetApplicationAgeSplitRow": {
+            age_18: number;
+            age_19: number;
+            age_20: number;
+            age_21: number;
+            age_22: number;
+            age_23_plus: number;
+            underage: number;
+        };
+        "sqlc.GetApplicationGenderSplitRow": {
+            female: number;
+            male: number;
+            non_binary: number;
+            other: number;
+        };
+        "sqlc.GetApplicationMajorSplitRow": {
+            count: number;
+            major: string;
+        };
+        "sqlc.GetApplicationRaceSplitRow": {
+            count: number;
+            race_group: string;
+        };
+        "sqlc.GetApplicationSchoolSplitRow": {
+            count: number;
+            school: string;
+        };
+        "sqlc.GetApplicationStatusSplitRow": {
+            accepted: number;
+            rejected: number;
+            started: number;
+            submitted: number;
+            under_review: number;
+            waitlisted: number;
+            withdrawn: number;
+        };
+        "sqlc.GetEventStaffRow": {
+            created_at: string;
+            email: string;
+            email_consent: boolean;
+            email_verified: boolean;
+            event_role: components["schemas"]["sqlc.EventRoleType"];
+            id: string;
+            image: string;
+            name: string;
+            onboarded: boolean;
+            preferred_email: string;
+            role: components["schemas"]["sqlc.AuthUserRole"];
+            updated_at: string;
+        };
+        "sqlc.GetEventsWithUserInfoRow": {
+            application_close: string;
+            application_open: string;
+            application_status: components["schemas"]["sqlc.NullApplicationStatus"];
+            banner: string;
+            created_at: string;
+            decision_release: string;
+            description: string;
+            end_time: string;
+            event_role: components["schemas"]["sqlc.NullEventRoleType"];
+            id: string;
+            is_published: boolean;
+            location: string;
+            location_url: string;
+            max_attendees: number;
+            name: string;
+            rsvp_deadline: string;
+            start_time: string;
+            updated_at: string;
+            website_url: string;
+        };
+        "sqlc.GetTeamMembersRow": {
+            email: string;
+            image: string;
+            joined_at: string;
+            name: string;
+            user_id: string;
+        };
+        "sqlc.NullApplicationStatus": {
+            application_status: components["schemas"]["sqlc.ApplicationStatus"];
+            /** @description Valid is true if ApplicationStatus is not NULL */
+            valid: boolean;
+        };
+        "sqlc.NullEventRoleType": {
+            event_role_type: components["schemas"]["sqlc.EventRoleType"];
+            /** @description Valid is true if EventRoleType is not NULL */
+            valid: boolean;
+        };
+        "sqlc.Team": {
+            created_at: string;
+            event_id: string;
+            id: string;
+            name: string;
+            owner_id: string;
+            updated_at: string;
+        };
     };
-    "handlers.AssignRoleBatch": {
-      assignments: components["schemas"]["handlers.AssignRoleFields"][];
-    };
-    "handlers.AssignRoleFields": {
-      email: string;
-      role: components["schemas"]["sqlc.EventRoleType"];
-      user_id: string;
-    };
-    "handlers.CompleteOnboardingRequest": {
-      name: string;
-      preferred_email: string;
-    };
-    "handlers.CreateEventFields": {
-      application_close: string;
-      application_open: string;
-      decision_release: string;
-      description: string;
-      end_time: string;
-      is_published: boolean;
-      location: string;
-      location_url: string;
-      max_attendees: number;
-      name: string;
-      rsvp_deadline: string;
-      start_time: string;
-      website_url: string;
-    };
-    "handlers.NullableEventRole": {
-      assigned_at: string;
-      event_id: string;
-      role: components["schemas"]["sqlc.EventRoleType"];
-      user_id: string;
-    };
-    "handlers.QueueTextEmailRequest": {
-      body: string;
-      subject: string;
-      to: string[];
-    };
-    "handlers.UpdateEmailConsentRequest": {
-      email_consent: boolean;
-    };
-    "handlers.UpdateProfileRequest": {
-      name: string;
-      preferred_email: string;
-    };
-    /** @description Information about the current user session. */
-    "middleware.UserContext": {
-      /**
-       * @description Primary email address (nullable)
-       * @example user@example.com
-       */
-      email: string;
-      /**
-       * @description Whether the user agreed to receive emails
-       * @example false
-       */
-      emailConsent: boolean;
-      /**
-       * @description Optional profile image URL
-       * @example https://cdn.example.com/avatar.png
-       */
-      image: string | null;
-      /**
-       * @description Full display name
-       * @example Jane Doe
-       */
-      name: string;
-      /**
-       * @description Whether the user completed onboarding
-       * @example true
-       */
-      onboarded: boolean;
-      /**
-       * @description Preferred email address for communications
-       * @example user.alt@example.com
-       */
-      preferredEmail: string;
-      role: components["schemas"]["sqlc.AuthUserRole"];
-      /**
-       * Format: uuid
-       * @description Unique identifier for the user
-       * @example 550e8400-e29b-41d4-a716-446655440000
-       */
-      userId: string;
-    };
-    "response.ErrorResponse": {
-      error: string;
-      message: string;
-    };
-    "services.ApplicationStatistics": {
-      age_stats: components["schemas"]["sqlc.GetApplicationAgeSplitRow"];
-      gender_stats: components["schemas"]["sqlc.GetApplicationGenderSplitRow"];
-      major_stats: components["schemas"]["sqlc.GetApplicationMajorSplitRow"][];
-      race_stats: components["schemas"]["sqlc.GetApplicationRaceSplitRow"][];
-      school_stats: components["schemas"]["sqlc.GetApplicationSchoolSplitRow"][];
-      status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
-    };
-    "services.EventOverview": {
-      application_status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
-      application_submission_stats: components["schemas"]["services.SubmissionTimesStatistics"][];
-      event_details: components["schemas"]["sqlc.Event"];
-    };
-    "services.SubmissionTimesStatistics": {
-      count: number;
-      /** Format: date-time */
-      day: string;
-    };
-    "sqlc.Application": {
-      application: number[];
-      created_at: string;
-      event_id: string;
-      saved_at: string;
-      status: components["schemas"]["sqlc.NullApplicationStatus"];
-      submitted_at: string;
-      updated_at: string;
-      user_id: string;
-    };
-    /** @enum {string} */
-    "sqlc.ApplicationStatus":
-      | "started"
-      | "submitted"
-      | "under_review"
-      | "accepted"
-      | "rejected"
-      | "waitlisted"
-      | "withdrawn";
-    "sqlc.AuthUser": {
-      created_at: string;
-      email: string;
-      email_consent: boolean;
-      email_verified: boolean;
-      id: string;
-      image: string;
-      name: string;
-      onboarded: boolean;
-      preferred_email: string;
-      role: components["schemas"]["sqlc.AuthUserRole"];
-      updated_at: string;
-    };
-    /**
-     * @description Role assigned to the user
-     * @enum {string}
-     */
-    "sqlc.AuthUserRole": "user" | "superuser";
-    "sqlc.Event": {
-      application_close: string;
-      application_open: string;
-      banner: string;
-      created_at: string;
-      decision_release: string;
-      description: string;
-      end_time: string;
-      id: string;
-      is_published: boolean;
-      location: string;
-      location_url: string;
-      max_attendees: number;
-      name: string;
-      rsvp_deadline: string;
-      start_time: string;
-      updated_at: string;
-      website_url: string;
-    };
-    /** @enum {string} */
-    "sqlc.EventRoleType": "admin" | "staff" | "attendee" | "applicant";
-    "sqlc.GetApplicationAgeSplitRow": {
-      age_18: number;
-      age_19: number;
-      age_20: number;
-      age_21: number;
-      age_22: number;
-      age_23_plus: number;
-      underage: number;
-    };
-    "sqlc.GetApplicationGenderSplitRow": {
-      female: number;
-      male: number;
-      non_binary: number;
-      other: number;
-    };
-    "sqlc.GetApplicationMajorSplitRow": {
-      count: number;
-      major: string;
-    };
-    "sqlc.GetApplicationRaceSplitRow": {
-      count: number;
-      race_group: string;
-    };
-    "sqlc.GetApplicationSchoolSplitRow": {
-      count: number;
-      school: string;
-    };
-    "sqlc.GetApplicationStatusSplitRow": {
-      accepted: number;
-      rejected: number;
-      started: number;
-      submitted: number;
-      under_review: number;
-      waitlisted: number;
-      withdrawn: number;
-    };
-    "sqlc.GetEventStaffRow": {
-      created_at: string;
-      email: string;
-      email_consent: boolean;
-      email_verified: boolean;
-      event_role: components["schemas"]["sqlc.EventRoleType"];
-      id: string;
-      image: string;
-      name: string;
-      onboarded: boolean;
-      preferred_email: string;
-      role: components["schemas"]["sqlc.AuthUserRole"];
-      updated_at: string;
-    };
-    "sqlc.GetEventsWithUserInfoRow": {
-      application_close: string;
-      application_open: string;
-      application_status: components["schemas"]["sqlc.NullApplicationStatus"];
-      banner: string;
-      created_at: string;
-      decision_release: string;
-      description: string;
-      end_time: string;
-      event_role: components["schemas"]["sqlc.NullEventRoleType"];
-      id: string;
-      is_published: boolean;
-      location: string;
-      location_url: string;
-      max_attendees: number;
-      name: string;
-      rsvp_deadline: string;
-      start_time: string;
-      updated_at: string;
-      website_url: string;
-    };
-    "sqlc.NullApplicationStatus": {
-      application_status: components["schemas"]["sqlc.ApplicationStatus"];
-      /** @description Valid is true if ApplicationStatus is not NULL */
-      valid: boolean;
-    };
-    "sqlc.NullEventRoleType": {
-      event_role_type: components["schemas"]["sqlc.EventRoleType"];
-      /** @description Valid is true if EventRoleType is not NULL */
-      valid: boolean;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;
