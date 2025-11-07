@@ -77,7 +77,9 @@ export default function ApplicationStatus({ eventId }: ApplicationStatusProps) {
         <div className="flex gap-3 flex-wrap">
           <div className="max-w-100 w-fit">
             <HackerProfile
-              data={JSON.parse(atob(application.data["application"]))}
+              applicationData={JSON.parse(
+                atob(application.data["application"]),
+              )}
               eventId={eventId}
             />
           </div>
@@ -101,7 +103,12 @@ export default function ApplicationStatus({ eventId }: ApplicationStatusProps) {
   );
 }
 
-function HackerProfile({ data, eventId }: { data: any; eventId: string }) {
+interface HackerProfileProps {
+  applicationData: any;
+  eventId: string;
+}
+
+function HackerProfile({ applicationData, eventId }: HackerProfileProps) {
   return (
     <div className="border border-input-border rounded-md p-3">
       <div className="mb-3">
@@ -113,41 +120,55 @@ function HackerProfile({ data, eventId }: { data: any; eventId: string }) {
       <div className="space-y-3">
         <HackerProfileField
           label="Name"
-          value={`${data["firstName"]} ${data["lastName"]}`}
+          value={`${applicationData["firstName"]} ${applicationData["lastName"]}`}
         />
-        <HackerProfileField label="School" value={data["school"]} />
+        <HackerProfileField label="School" value={applicationData["school"]} />
 
         <HackerProfileField
           label="Major(s)"
           value={
-            Array.isArray(data["majors"])
-              ? data["majors"].join(", ")
-              : data["majors"].split(",").join(", ")
+            Array.isArray(applicationData["majors"])
+              ? applicationData["majors"].join(", ")
+              : applicationData["majors"].split(",").join(", ")
           }
         />
 
         <HackerProfileField
           label="Graduation Year"
-          value={data["graduationYear"]}
+          value={applicationData["graduationYear"]}
         />
 
-        <HackerProfileField label="Shirt Size" value={data["shirtSize"]} />
+        <HackerProfileField
+          label="Shirt Size"
+          value={applicationData["shirtSize"]}
+        />
 
-        <HackerProfileField label="Email" value={data["preferredEmail"]} />
+        <HackerProfileField
+          label="Preferred Email"
+          value={applicationData["preferredEmail"]}
+        />
 
         <HackerProfileField
           label="University Email"
-          value={data["preferredEmail"]}
+          value={applicationData["universityEmail"]}
         />
 
-        <HackerProfileField isUrl label="Github" value={data["github"]} />
+        <HackerProfileField
+          isUrl
+          label="Github"
+          value={applicationData["github"]}
+        />
 
-        <HackerProfileField isUrl label="LinkedIn" value={data["linkedin"]} />
+        <HackerProfileField
+          isUrl
+          label="LinkedIn"
+          value={applicationData["linkedin"]}
+        />
 
         <div className="mt-8">
           <DownloadResume
             eventId={eventId}
-            hackerFullname={`${data["firstName"]} ${data["lastName"]}`}
+            hackerFullname={`${applicationData["firstName"]} ${applicationData["lastName"]}`}
           />
         </div>
       </div>
@@ -155,15 +176,17 @@ function HackerProfile({ data, eventId }: { data: any; eventId: string }) {
   );
 }
 
+interface HackerProfileFieldProps {
+  label: string;
+  value: string;
+  isUrl?: boolean;
+}
+
 function HackerProfileField({
   label,
   value,
   isUrl = false,
-}: {
-  label: string;
-  value: string;
-  isUrl?: boolean;
-}) {
+}: HackerProfileFieldProps) {
   return (
     <div>
       <span>{label}:</span>
@@ -184,13 +207,12 @@ function HackerProfileField({
   );
 }
 
-function DownloadResume({
-  eventId,
-  hackerFullname,
-}: {
+interface DownloadResumeProps {
   eventId: string;
   hackerFullname: string;
-}) {
+}
+
+function DownloadResume({ eventId, hackerFullname }: DownloadResumeProps) {
   const handleDownload = async () => {
     const res = await api.get(`events/${eventId}/application/download-resume`);
     const presignedUrl: string = await res.json();

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -95,7 +94,7 @@ func (c *R2Client) Delete(ctx context.Context, bucketName, key string) error {
 }
 
 // https://github.com/awsdocs/aws-doc-sdk-examples/blob/309de24d867a2b3f01d4da8018ad8173243556af/gov2/s3/actions/presigner.go#L33
-func (c *R2Client) PresignGetObject(ctx context.Context, bucketName, key string, lifetimeSecs int64) (*v4.PresignedHTTPRequest, error) {
+func (c *R2Client) PresignGetObject(ctx context.Context, bucketName, key string, lifetimeSecs int64) (*PresignedRequest, error) {
 	request, err := c.presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(key),
@@ -108,7 +107,13 @@ func (c *R2Client) PresignGetObject(ctx context.Context, bucketName, key string,
 		return nil, err
 	}
 
-	return request, err
+	presignedRequest := PresignedRequest{
+		URL:     request.URL,
+		Headers: request.SignedHeader,
+		Method:  request.Method,
+	}
+
+	return &presignedRequest, err
 }
 
 func (c *R2Client) Close() error {
