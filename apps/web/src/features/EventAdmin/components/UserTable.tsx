@@ -78,7 +78,7 @@ const UserTable = ({ data, eventId }: Props) => {
         },
       },
       {
-        accessorKey: "email",
+        accessorFn: (row) => row.preferred_email ?? row.email,
         header: "Email",
         filterFn: fuzzyTextFilterFn,
         sortingFn: "alphanumeric",
