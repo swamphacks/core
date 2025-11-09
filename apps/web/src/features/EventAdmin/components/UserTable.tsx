@@ -30,11 +30,17 @@ const UserTable = ({ data, eventId }: Props) => {
   const search = EventUsersRoute.useSearch();
   const navigate = EventUsersRoute.useNavigate();
 
-  const { columnFilters, setColumnFilters, sorting, setSorting } =
-    useUrlTableState({
-      search,
-      navigate,
-    });
+  const {
+    columnFilters,
+    setColumnFilters,
+    sorting,
+    setSorting,
+    pagination,
+    setPagination,
+  } = useUrlTableState({
+    search,
+    navigate,
+  });
 
   const columns: ColumnDef<EventUser>[] = useMemo(
     () => [
@@ -141,6 +147,8 @@ const UserTable = ({ data, eventId }: Props) => {
         onColumnFiltersChange={setColumnFilters}
         sorting={sorting}
         onSortingChange={setSorting}
+        pagination={pagination}
+        onPaginationChange={setPagination}
       />
     </div>
   );

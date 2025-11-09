@@ -1,10 +1,15 @@
 import { useState, useMemo, useEffect } from "react";
 import debounce from "lodash.debounce";
-import type { ColumnFiltersState, SortingState } from "@/components/ui/Table"; // Adjust this path as needed
+import type {
+  ColumnFiltersState,
+  SortingState,
+  PaginationState,
+} from "@/components/ui/Table"; // Adjust this path as needed
 
 interface TableState {
   filters: ColumnFiltersState;
   sorting: SortingState;
+  pagination: PaginationState;
 }
 
 // Helper functions for handling URL filter encoding
@@ -12,6 +17,10 @@ function parseTableState(encodedString: string | undefined): TableState {
   const defaults: TableState = {
     filters: [],
     sorting: [],
+    pagination: {
+      pageIndex: 0,
+      pageSize: 10,
+    },
   };
   if (encodedString) {
     try {
@@ -26,7 +35,12 @@ function parseTableState(encodedString: string | undefined): TableState {
 }
 
 function encodeTableState(state: TableState): string {
-  if (state.filters.length === 0 && state.sorting.length === 0) {
+  if (
+    state.filters.length === 0 &&
+    state.sorting.length === 0 &&
+    state.pagination.pageIndex === 0 &&
+    state.pagination.pageSize === 10
+  ) {
     return ""; // Return empty string to clear URL param
   }
   return btoa(JSON.stringify(state));
@@ -56,15 +70,21 @@ export function useUrlTableState<
   );
 
   const [sorting, setSorting] = useState<SortingState>(initialState.sorting);
+
+  const [pagination, setPagination] = useState<PaginationState>(
+    initialState.pagination,
+  );
+
   const debouncedUrlUpdate = useMemo(
     () =>
       debounce(
         (
           filters: ColumnFiltersState,
           sort: SortingState,
+          pagination: PaginationState,
           currentSearch: TSearch,
         ) => {
-          const newState: TableState = { filters, sorting: sort };
+          const newState: TableState = { filters, sorting: sort, pagination };
           const newSearchState = encodeTableState(newState);
 
           const newSearchParam = newSearchState ? newSearchState : undefined;
@@ -85,13 +105,15 @@ export function useUrlTableState<
   );
 
   useEffect(() => {
-    debouncedUrlUpdate(columnFilters, sorting, search);
-  }, [columnFilters, sorting, search, debouncedUrlUpdate]);
+    debouncedUrlUpdate(columnFilters, sorting, pagination, search);
+  }, [columnFilters, sorting, pagination, search, debouncedUrlUpdate]);
 
   return {
     columnFilters,
     setColumnFilters,
     sorting,
     setSorting,
+    pagination,
+    setPagination,
   };
 }
