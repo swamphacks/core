@@ -224,7 +224,7 @@ export function Table<TData>({
           {"<"}
         </Button>
         <Button
-          className="border rounded p-1"
+          className="rounded p-1"
           variant="secondary"
           onClick={() => table.nextPage()}
           isDisabled={!table.getCanNextPage()}
@@ -232,7 +232,7 @@ export function Table<TData>({
           {">"}
         </Button>
         <Button
-          className="border rounded p-1"
+          className="rounded p-1"
           variant="secondary"
           onClick={() => table.lastPage()}
           isDisabled={!table.getCanNextPage()}
