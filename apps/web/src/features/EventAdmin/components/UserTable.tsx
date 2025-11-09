@@ -62,6 +62,9 @@ const UserTable = ({ data, eventId }: Props) => {
             </div>
           );
         },
+        meta: {
+          responsiveClass: "hidden xl:table-cell",
+        },
       },
       {
         id: "name",

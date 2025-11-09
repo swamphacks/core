@@ -12,5 +12,6 @@ declare module "@tanstack/react-table" {
     // eslint-disable-line @typescript-eslint/no-unused-vars
     filterType?: "text" | "select";
     filterOptions?: FilterOption[];
+    responsiveClass?: string;
   }
 }

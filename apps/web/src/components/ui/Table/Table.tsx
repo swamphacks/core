@@ -85,10 +85,12 @@ export function Table<TData>({
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 const sortState = header.column.getIsSorted();
+                const responsiveClass =
+                  header.column.columnDef.meta?.responsiveClass ?? "";
                 return (
                   <th
                     key={header.id}
-                    className={`text-left px-4 py-2`}
+                    className={`text-left px-4 py-2 ${responsiveClass}`}
                     style={{
                       width: header.getSize(),
                       minWidth: header.column.columnDef.minSize,
@@ -194,11 +196,13 @@ export function Table<TData>({
           {table.getRowModel().rows.map((row, i) => (
             <tr key={row.id} className={i % 2 === 0 ? "bg-surface" : undefined}>
               {row.getVisibleCells().map((cell) => {
+                const responsiveClass =
+                  cell.column.columnDef.meta?.responsiveClass ?? "";
                 return (
                   <td
                     key={cell.id}
                     className={`
-                    p-4
+                    p-4 ${responsiveClass}
                   `}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
