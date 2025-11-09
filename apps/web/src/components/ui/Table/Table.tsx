@@ -17,6 +17,10 @@ import { TextField } from "@/components/ui/TextField";
 import { Button } from "../Button";
 import TablerChevronUp from "~icons/tabler/chevron-up";
 import TablerChevronDown from "~icons/tabler/chevron-down";
+import TablerChevronRight from "~icons/tabler/chevron-right";
+import TablerChevronLeft from "~icons/tabler/chevron-left";
+import TablerChevronsRight from "~icons/tabler/chevrons-right";
+import TablerChevronsLeft from "~icons/tabler/chevrons-left";
 import TablerArrowsSort from "~icons/tabler/arrows-sort";
 
 export interface ColumnFilter {
@@ -213,7 +217,7 @@ export function Table<TData>({
           onClick={() => table.firstPage()}
           isDisabled={!table.getCanPreviousPage()}
         >
-          {"<<"}
+          <TablerChevronsLeft></TablerChevronsLeft>
         </Button>
         <Button
           className="rounded p-1"
@@ -221,7 +225,7 @@ export function Table<TData>({
           onClick={() => table.previousPage()}
           isDisabled={!table.getCanPreviousPage()}
         >
-          {"<"}
+          <TablerChevronLeft></TablerChevronLeft>
         </Button>
         <Button
           className="rounded p-1"
@@ -229,7 +233,7 @@ export function Table<TData>({
           onClick={() => table.nextPage()}
           isDisabled={!table.getCanNextPage()}
         >
-          {">"}
+          <TablerChevronRight></TablerChevronRight>
         </Button>
         <Button
           className="rounded p-1"
@@ -237,7 +241,7 @@ export function Table<TData>({
           onClick={() => table.lastPage()}
           isDisabled={!table.getCanNextPage()}
         >
-          {">>"}
+          <TablerChevronsRight></TablerChevronsRight>
         </Button>
         <span className="flex items-center gap-1">
           <div>Page</div>

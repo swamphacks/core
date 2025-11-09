@@ -15,20 +15,10 @@ export const Route = createFileRoute(
   },
 });
 
-// TODO:
-/*
-- Create a component that can accept a column definition,
-- Takes in Data
-- Takes in filter data
-- Takes in "Actions Components?"
-- Create side popup
-- Other random things
-*/
 function RouteComponent() {
   // Make request to get user data
   const eventId = Route.useParams().eventId;
   const { data, isLoading, isError } = useEventUsers(eventId);
-  //const { eventRole } = Route.useRouteContext();
 
   if (isLoading) {
     return (

@@ -8,6 +8,7 @@ interface UserSideDrawerProps {
 function UserSideDrawer({ user, event_id }: UserSideDrawerProps) {
   return (
     <Modal isDismissible>
+      Under Construction...
       {user.name}
       {event_id}
     </Modal>
