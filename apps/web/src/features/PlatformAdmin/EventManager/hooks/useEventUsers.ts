@@ -6,8 +6,6 @@ export function getEventStaffUsersQueryKey(eventId: string) {
   return ["event", eventId, "staff-users"] as const;
 }
 
-// TODO: update this with correct API call when it is ready, for now just use staff users
-
 export type EventUsers =
   paths["/events/{eventId}/users"]["get"]["responses"]["200"]["content"]["application/json"];
 export type EventUser = EventUsers[number];

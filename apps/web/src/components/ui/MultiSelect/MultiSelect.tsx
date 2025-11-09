@@ -21,8 +21,6 @@ import TablerX from "~icons/tabler/x";
 import { useId, useState, type CSSProperties } from "react";
 import { ErrorList, fieldBorderStyles } from "@/components/ui/Field";
 
-//TODO: make sure this is backwards compatible
-
 const DropdownIndicator = (props: DropdownIndicatorProps) => {
   return (
     <components.DropdownIndicator {...props}>

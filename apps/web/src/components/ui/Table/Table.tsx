@@ -162,9 +162,9 @@ export function Table<TData>({
                         {header.column.getCanSort() && (
                           <div className="mt-3">
                             <Button
-                              variant="secondary" // Use a subtle button style
+                              variant="secondary"
                               onClick={header.column.getToggleSortingHandler()}
-                              className="p-3 h-10" // Make it small
+                              className="p-3 h-10"
                               aria-label={
                                 sortState === "asc"
                                   ? "Sorted ascending. Press to sort descending."
@@ -173,7 +173,6 @@ export function Table<TData>({
                                     : "Not sorted. Press to sort ascending."
                               }
                             >
-                              {/* Conditionally render the correct icon */}
                               {sortState === "asc" ? (
                                 <TablerChevronUp className="h-4 w-4" />
                               ) : sortState === "desc" ? (

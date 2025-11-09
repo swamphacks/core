@@ -16,7 +16,6 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  // Make request to get user data
   const eventId = Route.useParams().eventId;
   const { data, isLoading, isError } = useEventUsers(eventId);
 

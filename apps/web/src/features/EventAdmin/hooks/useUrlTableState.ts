@@ -4,7 +4,7 @@ import type {
   ColumnFiltersState,
   SortingState,
   PaginationState,
-} from "@/components/ui/Table"; // Adjust this path as needed
+} from "@/components/ui/Table";
 
 interface TableState {
   filters: ColumnFiltersState;
