@@ -10,7 +10,7 @@ import { UserSideDrawer } from "./UserSideDrawer";
 import { Route as EventUsersRoute } from "@/routes/_protected/events/$eventId/dashboard/_admin/user-management";
 
 import { Table } from "@/components/ui/Table";
-import { useUrlBoundTableFilters } from "../hooks/useUrlTableFilters";
+import { useUrlTableState } from "../hooks/useUrlTableState";
 
 // Filtering for event user data type
 const fuzzyTextFilterFn: FilterFn<EventUser> = (row, columnId, value) => {
@@ -30,10 +30,11 @@ const UserTable = ({ data, eventId }: Props) => {
   const search = EventUsersRoute.useSearch();
   const navigate = EventUsersRoute.useNavigate();
 
-  const { columnFilters, setColumnFilters } = useUrlBoundTableFilters({
-    search,
-    navigate,
-  });
+  const { columnFilters, setColumnFilters, sorting, setSorting } =
+    useUrlTableState({
+      search,
+      navigate,
+    });
 
   const columns: ColumnDef<EventUser>[] = useMemo(
     () => [
@@ -65,6 +66,7 @@ const UserTable = ({ data, eventId }: Props) => {
         },
         accessorKey: "name",
         filterFn: fuzzyTextFilterFn,
+        sortingFn: "alphanumeric",
         meta: {
           filterType: "text",
         },
@@ -73,6 +75,7 @@ const UserTable = ({ data, eventId }: Props) => {
         accessorKey: "email",
         header: "Email",
         filterFn: fuzzyTextFilterFn,
+        sortingFn: "alphanumeric",
         meta: {
           filterType: "text",
         },
@@ -87,6 +90,7 @@ const UserTable = ({ data, eventId }: Props) => {
           return <RoleBadge role={role} />;
         },
         filterFn: "arrIncludesSome",
+        enableSorting: false,
         meta: {
           filterType: "select",
           filterOptions: [
@@ -135,6 +139,8 @@ const UserTable = ({ data, eventId }: Props) => {
         columns={columns}
         columnFilters={columnFilters}
         onColumnFiltersChange={setColumnFilters}
+        sorting={sorting}
+        onSortingChange={setSorting}
       />
     </div>
   );

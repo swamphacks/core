@@ -10,7 +10,7 @@ export const Route = createFileRoute(
   component: RouteComponent,
   validateSearch: (search) => {
     return {
-      filters: search.filters ? String(search.filters) : undefined,
+      tableState: search.tableState ? String(search.tableState) : undefined,
     };
   },
 });
