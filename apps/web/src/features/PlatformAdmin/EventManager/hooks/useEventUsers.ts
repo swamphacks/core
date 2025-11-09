@@ -3,7 +3,7 @@ import type { paths } from "@/lib/openapi/schema";
 import { useQuery } from "@tanstack/react-query";
 
 export function getEventStaffUsersQueryKey(eventId: string) {
-  return ["event", eventId, "staff-users"] as const;
+  return ["event", eventId, "event-users"] as const;
 }
 
 export type EventUsers =

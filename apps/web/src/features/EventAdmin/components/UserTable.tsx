@@ -144,6 +144,7 @@ const UserTable = ({ data, eventId }: Props) => {
       </div>
 
       <Table
+        key="User Management"
         data={data ?? fallbackData}
         columns={columns}
         columnFilters={columnFilters}
