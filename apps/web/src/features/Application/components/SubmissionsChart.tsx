@@ -3,7 +3,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { useMemo } from "react";
 
 interface SubmissionsChartProps {
-  submission_stats: {
+  submission_stats?: {
     count: number;
     day: string;
   }[];
@@ -20,16 +20,18 @@ export default function SubmissionsChart({
     const labels: string[] = [];
     const values: number[] = [];
 
-    for (const submission of submission_stats) {
-      labels.push(
-        new Date(submission.day).toLocaleDateString(undefined, {
-          weekday: "narrow",
-          month: "short",
-          day: "numeric",
-          timeZone: "UTC",
-        }),
-      );
-      values.push(submission.count);
+    if (submission_stats) {
+      for (const submission of submission_stats) {
+        labels.push(
+          new Date(submission.day).toLocaleDateString(undefined, {
+            weekday: "narrow",
+            month: "short",
+            day: "numeric",
+            timeZone: "UTC",
+          }),
+        );
+        values.push(submission.count);
+      }
     }
 
     return { labels, values };
