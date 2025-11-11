@@ -1,13 +1,13 @@
-import ECharts from "@/components/ECharts";
+import ECharts, { pieChartColors } from "@/components/ECharts";
 import { useTheme } from "@/components/ThemeProvider";
 import { Card } from "@/components/ui/Card";
 import type { components } from "@/lib/openapi/schema";
 
 interface Props {
-  data?: components["schemas"]["sqlc.GetApplicationRaceSplitRow"][];
+  data: components["schemas"]["sqlc.GetApplicationGenderSplitRow"];
 }
 
-export default function ApplicationRaceChart({ data }: Props) {
+export default function ApplicationGenderChart({ data }: Props) {
   const { theme } = useTheme();
 
   const isDark =
@@ -15,34 +15,18 @@ export default function ApplicationRaceChart({ data }: Props) {
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  if (!data) {
-    return (
-      <div>
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
   return (
     <Card className="w-full h-72 md:h-80 bg-input-bg">
       <ECharts
         className=" w-full h-full"
         option={{
-          color: [
-            "#00B894", // mint
-            "#55EFC4", // light teal
-            "#0984E3", // vivid blue
-            "#6C5CE7", // violet
-            "#E84393", // pink
-            "#D63031", // red
-            "#FDCB6E", // warm yellow
-          ],
+          color: pieChartColors,
           title: {
-            text: "Application Races",
+            text: "Genders",
             textStyle: {
-              color: isDark ? "#FFFFFF" : "#000000",
+              color: isDark ? "#e4e4e7" : "#18181b",
               fontFamily: "Figtree",
-              fontSize: 22,
+              fontSize: 18,
             },
             padding: 15,
           },
@@ -68,10 +52,36 @@ export default function ApplicationRaceChart({ data }: Props) {
                 show: true,
                 color: isDark ? "#FFFFFF" : "#000000",
               },
-              data: data?.map((item) => ({
-                value: item.count,
-                name: item.race_group,
-              })),
+              data: [
+                {
+                  value: data.male,
+                  name: "Male",
+                  itemStyle: {
+                    color: "#4ECDC4",
+                  },
+                },
+                {
+                  value: data.female,
+                  name: "Female",
+                  itemStyle: {
+                    color: "#FF6B6B",
+                  },
+                },
+                {
+                  value: data.non_binary,
+                  name: "Non-binary",
+                  itemStyle: {
+                    color: "#F7B801",
+                  },
+                },
+                {
+                  value: data.other,
+                  name: "Other",
+                  itemStyle: {
+                    color: "#9B59B6",
+                  },
+                },
+              ].filter((item) => item.value > 0),
             },
           ],
         }}

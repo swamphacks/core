@@ -1,13 +1,13 @@
-import ECharts from "@/components/ECharts";
+import ECharts, { pieChartColors } from "@/components/ECharts";
 import { useTheme } from "@/components/ThemeProvider";
 import { Card } from "@/components/ui/Card";
 import type { components } from "@/lib/openapi/schema";
 
 interface Props {
-  data?: components["schemas"]["sqlc.GetApplicationGenderSplitRow"];
+  data: components["schemas"]["sqlc.GetApplicationAgeSplitRow"];
 }
 
-export default function ApplicationGenderChart({ data }: Props) {
+export default function ApplicationAgeChart({ data }: Props) {
   const { theme } = useTheme();
 
   const isDark =
@@ -15,25 +15,18 @@ export default function ApplicationGenderChart({ data }: Props) {
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  if (!data) {
-    return (
-      <div>
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
   return (
     <Card className="w-full h-72 md:h-80 bg-input-bg">
       <ECharts
         className=" w-full h-full"
         option={{
+          color: pieChartColors,
           title: {
-            text: "Application Genders",
+            text: "Ages",
             textStyle: {
-              color: isDark ? "#FFFFFF" : "#000000",
+              color: isDark ? "#e4e4e7" : "#18181b",
               fontFamily: "Figtree",
-              fontSize: 22,
+              fontSize: 18,
             },
             padding: 15,
           },
@@ -61,32 +54,32 @@ export default function ApplicationGenderChart({ data }: Props) {
               },
               data: [
                 {
-                  value: data.male,
-                  name: "Male",
-                  itemStyle: {
-                    color: "#4ECDC4",
-                  },
+                  value: data.underage,
+                  name: "<18 yrs",
                 },
                 {
-                  value: data.female,
-                  name: "Female",
-                  itemStyle: {
-                    color: "#FF6B6B",
-                  },
+                  value: data.age_18,
+                  name: "18 yrs",
                 },
                 {
-                  value: data.non_binary,
-                  name: "Non-binary",
-                  itemStyle: {
-                    color: "#F7B801",
-                  },
+                  value: data.age_19,
+                  name: "19 yrs",
                 },
                 {
-                  value: data.other,
-                  name: "Other",
-                  itemStyle: {
-                    color: "#9B59B6",
-                  },
+                  value: data.age_20,
+                  name: "20 yrs",
+                },
+                {
+                  value: data.age_21,
+                  name: "21 yrs",
+                },
+                {
+                  value: data.age_22,
+                  name: "22 yrs",
+                },
+                {
+                  value: data.age_23_plus,
+                  name: "23+ yrs",
                 },
               ].filter((item) => item.value > 0),
             },
