@@ -2183,21 +2183,6 @@ const docTemplate = `{
                 ]
             }
         },
-<<<<<<< HEAD
-        "/events/{eventId}/users": {
-            "get": {
-                "description": "Gets all users with any role for the event",
-                "parameters": [
-                    {
-                        "description": "Event ID",
-                        "in": "path",
-                        "name": "eventId",
-                        "required": true,
-                        "schema": {
-                            "format": "uuid",
-                            "type": "string"
-                        }
-=======
         "/events/{eventId}/teams": {
             "post": {
                 "description": "Creates a new team for a specific event and assigns the creator as the owner.",
@@ -2219,19 +2204,12 @@ const docTemplate = `{
                         "schema": {
                             "type": "integer"
                         }
->>>>>>> dev
                     }
                 ],
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-<<<<<<< HEAD
-                                "type": "object"
-                            }
-                        }
-                    }
-=======
                                 "oneOf": [
                                     {
                                         "type": "object"
@@ -2247,23 +2225,12 @@ const docTemplate = `{
                     },
                     "description": "Team Creation Payload",
                     "required": true
->>>>>>> dev
                 },
                 "responses": {
                     "200": {
                         "content": {
                             "application/json": {
                                 "schema": {
-<<<<<<< HEAD
-                                    "items": {
-                                        "$ref": "#/components/schemas/sqlc.GetEventStaffRow"
-                                    },
-                                    "type": "array"
-                                }
-                            }
-                        },
-                        "description": "OK - Return users"
-=======
                                     "$ref": "#/components/schemas/sqlc.Team"
                                 }
                             }
@@ -2299,7 +2266,6 @@ const docTemplate = `{
                             }
                         },
                         "description": "Conflict: You already have a team."
->>>>>>> dev
                     },
                     "500": {
                         "content": {
@@ -2309,14 +2275,6 @@ const docTemplate = `{
                                 }
                             }
                         },
-<<<<<<< HEAD
-                        "description": "Server Error: Something went terribly wrong on our end."
-                    }
-                },
-                "summary": "Get all users for an event",
-                "tags": [
-                    "Event"
-=======
                         "description": "Something went seriously wrong."
                     }
                 },
@@ -2397,6 +2355,61 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/users": {
+            "get": {
+                "description": "Gets all users with any role for the event",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/sqlc.GetEventStaffRow"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK - Return users"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Get all users for an event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
         "/teams/{teamId}": {
             "get": {
                 "description": "Retrieves the team information and the full list of team members by a team id.",
@@ -2465,7 +2478,6 @@ const docTemplate = `{
                 "summary": "Get a team and its members by team id.",
                 "tags": [
                     "Team"
->>>>>>> dev
                 ]
             }
         },
