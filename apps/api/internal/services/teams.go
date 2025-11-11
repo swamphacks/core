@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -16,6 +18,7 @@ var (
 	ErrTeamExists          = errors.New("team already exists")
 	ErrTeamNotFound        = errors.New("team does not exist")
 	ErrNoEligibleNextOwner = errors.New("no eligible next owner for team")
+	ErrTeamMembersNotBytes = errors.New("team members aren't bytes")
 )
 
 type TeamService struct {
@@ -70,12 +73,20 @@ func (s *TeamService) CreateTeam(ctx context.Context, name string, eventId, user
 	return &newTeam, nil
 }
 
+type MemberWithUserInfo struct {
+	UserID   uuid.UUID  `json:"user_id"`
+	Email    *string    `json:"email"`
+	Image    *string    `json:"image"`
+	Name     string     `json:"name"`
+	JoinedAt *time.Time `json:"joined_at"`
+}
+
 type TeamWithMembers struct {
-	ID      uuid.UUID                `json:"id"`
-	EventId *uuid.UUID               `json:"event_id"`
-	OwnerId *uuid.UUID               `json:"owner_id"`
-	Name    string                   `json:"name"`
-	Members []sqlc.GetTeamMembersRow `json:"members"`
+	ID      uuid.UUID            `json:"id"`
+	EventId *uuid.UUID           `json:"event_id"`
+	OwnerId *uuid.UUID           `json:"owner_id"`
+	Name    string               `json:"name"`
+	Members []MemberWithUserInfo `json:"members"`
 }
 
 func (s *TeamService) GetUserTeamWithMembers(ctx context.Context, userId, eventId uuid.UUID) (*TeamWithMembers, error) {
@@ -93,15 +104,53 @@ func (s *TeamService) GetUserTeamWithMembers(ctx context.Context, userId, eventI
 		return nil, err
 	}
 
+	var parsedMembers []MemberWithUserInfo
+	for _, member := range members {
+		parsedMembers = append(parsedMembers, MemberWithUserInfo{
+			UserID:   member.UserID,
+			Email:    member.Email,
+			Image:    member.Image,
+			Name:     member.Name,
+			JoinedAt: member.JoinedAt,
+		})
+	}
+
 	teamWithMembers := TeamWithMembers{
 		ID:      team.ID,
 		EventId: team.EventID,
 		OwnerId: team.OwnerID,
 		Name:    team.Name,
-		Members: members,
+		Members: parsedMembers,
 	}
 
 	return &teamWithMembers, nil
+}
+
+func (s *TeamService) GetTeamsWithMembersByEvent(ctx context.Context, eventId uuid.UUID, limit, offset int32) ([]TeamWithMembers, error) {
+	teams, err := s.teamRepo.GetTeamsWithMembersByEvent(ctx, eventId, limit, offset)
+	if err != nil {
+		return []TeamWithMembers{}, err
+	}
+
+	var result []TeamWithMembers
+
+	for _, team := range teams {
+		var parsedMembers []MemberWithUserInfo
+
+		if err := json.Unmarshal(team.Members, &parsedMembers); err != nil {
+			return []TeamWithMembers{}, err
+		}
+
+		result = append(result, TeamWithMembers{
+			ID:      team.ID,
+			EventId: team.EventID,
+			OwnerId: team.OwnerID,
+			Name:    team.Name,
+			Members: parsedMembers,
+		})
+	}
+
+	return result, nil
 }
 
 func (s *TeamService) GetTeamWithMembers(ctx context.Context, teamId uuid.UUID) (*TeamWithMembers, error) {
@@ -119,12 +168,23 @@ func (s *TeamService) GetTeamWithMembers(ctx context.Context, teamId uuid.UUID) 
 		return nil, err
 	}
 
+	var parsedMember []MemberWithUserInfo
+	for _, member := range members {
+		parsedMember = append(parsedMember, MemberWithUserInfo{
+			UserID:   member.UserID,
+			Email:    member.Email,
+			Image:    member.Image,
+			Name:     member.Name,
+			JoinedAt: member.JoinedAt,
+		})
+	}
+
 	teamWithMembers := TeamWithMembers{
 		ID:      team.ID,
 		EventId: team.EventID,
 		OwnerId: team.OwnerID,
 		Name:    team.Name,
-		Members: members,
+		Members: parsedMember,
 	}
 
 	return &teamWithMembers, nil

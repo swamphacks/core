@@ -114,6 +114,81 @@ func (q *Queries) GetUserEventTeam(ctx context.Context, arg GetUserEventTeamPara
 	return i, err
 }
 
+const listTeamsWithMembersByEvent = `-- name: ListTeamsWithMembersByEvent :many
+SELECT
+    t.id,
+    t.name,
+    t.owner_id,
+    t.event_id,
+    -- Step 1: Cast the aggregated JSON array to JSONB
+    (COALESCE(
+        json_agg(
+            json_build_object(
+                'user_id', u.id,
+                'name', u.name,
+                'email', u.email,
+                'image', u.image,
+                'joined_at', tm.joined_at
+            )
+        ) FILTER (WHERE u.id IS NOT NULL),
+        '[]'::json
+    ))::jsonb AS members -- <--- Explicitly cast to jsonb
+FROM
+    teams t
+LEFT JOIN
+    team_members tm ON t.id = tm.team_id
+LEFT JOIN
+    auth.users u ON tm.user_id = u.id
+WHERE
+    t.event_id = $1
+GROUP BY
+    t.id
+ORDER BY
+    t.created_at DESC
+LIMIT $2
+OFFSET $3
+`
+
+type ListTeamsWithMembersByEventParams struct {
+	EventID *uuid.UUID `json:"event_id"`
+	Limit   int32      `json:"limit"`
+	Offset  int32      `json:"offset"`
+}
+
+type ListTeamsWithMembersByEventRow struct {
+	ID      uuid.UUID  `json:"id"`
+	Name    string     `json:"name"`
+	OwnerID *uuid.UUID `json:"owner_id"`
+	EventID *uuid.UUID `json:"event_id"`
+	Members []byte     `json:"members"`
+}
+
+func (q *Queries) ListTeamsWithMembersByEvent(ctx context.Context, arg ListTeamsWithMembersByEventParams) ([]ListTeamsWithMembersByEventRow, error) {
+	rows, err := q.db.Query(ctx, listTeamsWithMembersByEvent, arg.EventID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTeamsWithMembersByEventRow{}
+	for rows.Next() {
+		var i ListTeamsWithMembersByEventRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.OwnerID,
+			&i.EventID,
+			&i.Members,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateTeamById = `-- name: UpdateTeamById :one
 UPDATE teams
 SET

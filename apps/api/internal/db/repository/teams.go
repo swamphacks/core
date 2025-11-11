@@ -71,6 +71,14 @@ func (r *TeamRepository) GetTeamByMemberAndEvent(ctx context.Context, userId, ev
 	return &team, err
 }
 
+func (r *TeamRepository) GetTeamsWithMembersByEvent(ctx context.Context, eventId uuid.UUID, limit, offset int32) ([]sqlc.ListTeamsWithMembersByEventRow, error) {
+	return r.db.Query.ListTeamsWithMembersByEvent(ctx, sqlc.ListTeamsWithMembersByEventParams{
+		EventID: ptr.UUIDToPtr(eventId),
+		Limit:   limit,
+		Offset:  offset,
+	})
+}
+
 func (r *TeamRepository) Delete(ctx context.Context, teamId uuid.UUID) error {
 	return r.db.Query.DeleteTeam(ctx, teamId)
 }

@@ -10,7 +10,9 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
+	"github.com/swamphacks/core/apps/api/internal/ptr"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
 type TeamHandler struct {
@@ -107,6 +109,55 @@ func (h *TeamHandler) GetTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res.Send(w, http.StatusOK, teamWithMembers)
+}
+
+// Gets an events teams
+//
+//	@Summary		Get an event's teams
+//	@Description	Gets all teams for a specific event.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie		string						true	"The authenticated session token/id"
+//	@Param			event_id		path		string						true	"The ID of the event"
+//	@Success		200				{array}		services.TeamWithMembers	"Teams successfully retrieved."
+//	@Failure		400				{object}	response.ErrorResponse		"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse		"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		500				{object}	response.ErrorResponse		"Something went seriously wrong."
+//
+//	@Router			/events/{eventId}/teams [get]
+func (h *TeamHandler) GetEventTeams(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	// Parse limit and offset from query parameters
+	query := r.URL.Query()
+	limit, err := web.ParseParamInt32(query, "limit", ptr.Int32ToPtr(10))
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("bad_params", "Malformed `limit` query parameter."))
+		return
+	}
+
+	offset, err := web.ParseParamInt32(query, "offset", ptr.Int32ToPtr(0))
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("bad_params", "Malformed `offset` query parameter."))
+		return
+	}
+
+	teams, err := h.teamService.GetTeamsWithMembersByEvent(r.Context(), eventId, *limit, *offset)
+	if err != nil {
+		h.logger.Err(err).Msg("Failed to get teams for event")
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, teams)
 }
 
 type CreateTeamRequest struct {

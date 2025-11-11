@@ -353,6 +353,33 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "services.MemberWithUserInfo": {
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "image": {
+                        "type": "string"
+                    },
+                    "joined_at": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email",
+                    "image",
+                    "joined_at",
+                    "name",
+                    "user_id"
+                ],
+                "type": "object"
+            },
             "services.SubmissionTimesStatistics": {
                 "properties": {
                     "count": {
@@ -379,7 +406,7 @@ const docTemplate = `{
                     },
                     "members": {
                         "items": {
-                            "$ref": "#/components/schemas/sqlc.GetTeamMembersRow"
+                            "$ref": "#/components/schemas/services.MemberWithUserInfo"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -890,33 +917,6 @@ const docTemplate = `{
                     "start_time",
                     "updated_at",
                     "website_url"
-                ],
-                "type": "object"
-            },
-            "sqlc.GetTeamMembersRow": {
-                "properties": {
-                    "email": {
-                        "type": "string"
-                    },
-                    "image": {
-                        "type": "string"
-                    },
-                    "joined_at": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "user_id": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "email",
-                    "image",
-                    "joined_at",
-                    "name",
-                    "user_id"
                 ],
                 "type": "object"
             },
@@ -2184,6 +2184,78 @@ const docTemplate = `{
             }
         },
         "/events/{eventId}/teams": {
+            "get": {
+                "description": "Gets all teams for a specific event.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The ID of the event",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/services.TeamWithMembers"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "Teams successfully retrieved."
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad Request: Missing or malformed parameters."
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Something went seriously wrong."
+                    }
+                },
+                "summary": "Get an events teams",
+                "tags": [
+                    "Team"
+                ]
+            },
             "post": {
                 "description": "Creates a new team for a specific event and assigns the creator as the owner.",
                 "parameters": [
