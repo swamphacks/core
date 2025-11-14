@@ -59,6 +59,9 @@ export default function StaffDashboardShell({
   const staffManagementActive =
     /^\/events\/[^/]+\/dashboard\/staff-management\/?$/.test(pathname);
 
+  const userManagementActive =
+    /^\/events\/[^/]+\/dashboard\/user-management\/?$/.test(pathname);
+
   return (
     <AppShell>
       <AppShell.Header>
@@ -170,6 +173,14 @@ export default function StaffDashboardShell({
                 <TablerShieldHalfFilled className="w-5 aspect-square" />
               }
               active={staffManagementActive}
+            />
+            <NavLink
+              label="User Management"
+              href={`/events/${eventId}/dashboard/user-management`}
+              leftSection={
+                <TablerShieldHalfFilled className="w-5 aspect-square" />
+              }
+              active={userManagementActive}
             />
           </NavLink>
         )}

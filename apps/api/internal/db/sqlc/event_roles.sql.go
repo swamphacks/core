@@ -85,6 +85,61 @@ func (q *Queries) GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEv
 	return items, nil
 }
 
+const getEventUsers = `-- name: GetEventUsers :many
+SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.role AS event_role
+FROM auth.users u
+JOIN event_roles er ON u.id = er.user_id
+WHERE er.event_id = $1
+`
+
+type GetEventUsersRow struct {
+	ID             uuid.UUID     `json:"id"`
+	Name           string        `json:"name"`
+	Email          *string       `json:"email"`
+	EmailVerified  bool          `json:"email_verified"`
+	Onboarded      bool          `json:"onboarded"`
+	Image          *string       `json:"image"`
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
+	Role           AuthUserRole  `json:"role"`
+	PreferredEmail *string       `json:"preferred_email"`
+	EmailConsent   bool          `json:"email_consent"`
+	EventRole      EventRoleType `json:"event_role"`
+}
+
+func (q *Queries) GetEventUsers(ctx context.Context, eventID uuid.UUID) ([]GetEventUsersRow, error) {
+	rows, err := q.db.Query(ctx, getEventUsers, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetEventUsersRow{}
+	for rows.Next() {
+		var i GetEventUsersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.EmailVerified,
+			&i.Onboarded,
+			&i.Image,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Role,
+			&i.PreferredEmail,
+			&i.EmailConsent,
+			&i.EventRole,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const removeRole = `-- name: RemoveRole :exec
 DELETE FROM event_roles
 WHERE event_id = $1

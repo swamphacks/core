@@ -450,6 +450,43 @@ func (h *EventHandler) GetEventStaffUsers(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// Get all users for an event
+//
+//	@Summary		Get all users for an event
+//	@Description	Gets all users with any role for the event
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path		string					true	"Event ID"	Format(uuid)
+//	@Success		200		{array}		sqlc.GetEventStaffRow	"OK - Return users"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId}/users [get]
+func (h *EventHandler) GetEventUsers(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	users, err := h.eventService.GetEventUsers(r.Context(), eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(users); err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
+		return
+	}
+}
+
 type AssignRoleFields struct {
 	Email  *string            `json:"email"`
 	UserID *string            `json:"user_id"`

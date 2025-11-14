@@ -149,6 +149,10 @@ func (s *EventService) GetEventStaffUsers(ctx context.Context, eventId uuid.UUID
 	return s.eventRepo.GetEventStaff(ctx, eventId)
 }
 
+func (s *EventService) GetEventUsers(ctx context.Context, eventID uuid.UUID) (*[]sqlc.GetEventUsersRow, error) {
+	return s.eventRepo.GetEventUsers(ctx, eventID)
+}
+
 func (s *EventService) AssignEventRole(
 	ctx context.Context,
 	userId *uuid.UUID,

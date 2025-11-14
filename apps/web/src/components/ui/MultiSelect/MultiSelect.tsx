@@ -68,6 +68,7 @@ export interface MultiSelectProps {
   label: string;
   options: Option[];
   isRequired?: boolean;
+  value?: PropsValue<Option>;
   onChange?: (data: Option[]) => void;
   defaultValue?: PropsValue<Option>;
 
@@ -86,6 +87,7 @@ const MultiSelect = ({
   name,
   options,
   onChange,
+  value,
   errors,
   defaultValue,
   validationBehavior = "native",
@@ -127,6 +129,7 @@ const MultiSelect = ({
         unstyled
         isMulti
         options={options}
+        {...(value !== undefined ? { value } : { defaultValue })}
         defaultValue={defaultValue}
         // @ts-ignore
         components={{ DropdownIndicator, ClearIndicator, MultiValueRemove }}
