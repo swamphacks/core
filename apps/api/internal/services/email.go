@@ -89,36 +89,47 @@ func (s *EmailService) QueueSendConfirmationEmail(to string, name string) (*asyn
 	return info, nil
 }
 
-func (s *EmailService) SendTeamInvitationEmail(recipient string, teamName string, inviterName string, eventName string, inviteLink string) (*asynq.TaskInfo, error) {
-	task, err := tasks.NewTaskSendTeamInvitation(tasks.SendTeamInvitationPayload{
-		To: to,
-		TeamName: teamName,
+func (s *EmailService) SendTeamInvitationEmail(recipient string, teamName string, inviterName string, eventName string, inviteLink string) error {
+	var body bytes.Buffer
+
+	template, err := template.ParseFiles("/app/internal/email/templates/TeamInvitationEmail.html")
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to parse team invitation email template")
+		return err
+	}
+
+	err = template.Execute(&body, struct {
+		TeamName    string
+		InviterName string
+		EventName   string
+		InviteLink  string
+	}{
+		TeamName:    teamName,
 		InviterName: inviterName,
-		EventName: eventName,
-		InviteLink: inviteLink,
+		EventName:   eventName,
+		InviteLink:  inviteLink,
 	})
-
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to create SendTeamInvitation task")
-		return nil, err
+		s.logger.Err(err).Msg("Failed to inject template variables for team invitation email")
+		return err
 	}
 
-	info, err := s.taskQueue.Enqueue(task, asynq.Queue("email"))
+	err = s.SESClient.SendHTMLEmail([]string{recipient}, "noreply@swamphacks.com", fmt.Sprintf("Team Invitation: %s", teamName), body.String())
 	if err != nil {
-		s.logger.Err(err).Msg("failed to queue SendTeamInvitation task")
-		return nil, err
+		s.logger.Err(err).Msg("Failed to send team invitation email")
+		return err
 	}
 
-	return info, nil
+	return nil
 }
 
 func (s *EmailService) QueueSendTeamInvitation(to string, teamName string, inviterName string, eventName string, inviteLink string) (*asynq.TaskInfo, error) {
-	task, err := tasks.NewTaskSendTeamInvitation(tasks.sendTeamInvitationPayload{
-		To: to,
-		TeamName: teamName,
+	task, err := tasks.NewTaskSendTeamInvitation(tasks.SendTeamInvitationPayload{
+		To:          to,
+		TeamName:    teamName,
 		InviterName: inviterName,
-		EventName: eventName,
-		InviteLink: inviteLink,
+		EventName:   eventName,
+		InviteLink:  inviteLink,
 	})
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create SendTeamInvitation task")

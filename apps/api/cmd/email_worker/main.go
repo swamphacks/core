@@ -46,6 +46,7 @@ func main() {
 	mux := asynq.NewServeMux()
 
 	mux.HandleFunc(tasks.TypeSendConfirmationEmail, emailWorker.HandleSendConfirmationEmailTask)
+	mux.HandleFunc(tasks.TypeSendTeamInvitation, emailWorker.HandleSendTeamInvitationTask)
 
 	logger.Info().Msg("Starting email worker")
 
