@@ -8,7 +8,6 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/logger"
-	"github.com/swamphacks/core/apps/api/internal/ptr"
 )
 
 type TeamJoinRequestRepository struct {
@@ -48,21 +47,58 @@ func (r *TeamJoinRequestRepository) Create(ctx context.Context, teamId, userId u
 	return &request, nil
 }
 
-func (r *TeamJoinRequestRepository) GetTeamJoinRequestsByUser(ctx context.Context, userId uuid.UUID) ([]sqlc.TeamJoinRequest, error) {
+func (r *TeamJoinRequestRepository) GetById(ctx context.Context, requestId uuid.UUID) (*sqlc.TeamJoinRequest, error) {
+	request, err := r.db.Query.GetTeamJoinRequestByID(ctx, requestId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &request, nil
+}
+
+func (r *TeamJoinRequestRepository) ListJoinRequestsByUser(ctx context.Context, userId uuid.UUID) ([]sqlc.TeamJoinRequest, error) {
 	return r.db.Query.ListTeamJoinRequestsByUserID(ctx, userId)
 }
 
-func (r *TeamJoinRequestRepository) GetTeamJoinRequestsByTeam(ctx context.Context, teamId uuid.UUID, status sqlc.JoinRequestStatus) ([]sqlc.TeamJoinRequest, error) {
+func (r *TeamJoinRequestRepository) ListJoinRequestsByTeam(ctx context.Context, teamId uuid.UUID, status sqlc.JoinRequestStatus) ([]sqlc.TeamJoinRequest, error) {
 	return r.db.Query.ListTeamJoinRequestsByTeamIDAndStatus(ctx, sqlc.ListTeamJoinRequestsByTeamIDAndStatusParams{
 		TeamID: teamId,
 		Status: status,
 	})
 }
 
-func (r *TeamJoinRequestRepository) GetTeamJoinRequestsByUserAndEvent(ctx context.Context, userId, eventId uuid.UUID, status sqlc.JoinRequestStatus) ([]sqlc.TeamJoinRequest, error) {
+func (r *TeamJoinRequestRepository) ListJoinRequestsByTeamWithUser(ctx context.Context, teamId uuid.UUID, status sqlc.JoinRequestStatus) ([]sqlc.ListJoinRequestsByTeamAndStatusWithUserRow, error) {
+	return r.db.Query.ListJoinRequestsByTeamAndStatusWithUser(ctx, sqlc.ListJoinRequestsByTeamAndStatusWithUserParams{
+		TeamID: teamId,
+		Status: status,
+	})
+}
+
+func (r *TeamJoinRequestRepository) ListJoinRequestsByUserAndEvent(ctx context.Context, userId, eventId uuid.UUID, status sqlc.JoinRequestStatus) ([]sqlc.TeamJoinRequest, error) {
 	return r.db.Query.ListTeamJoinRequestsByUserAndEventAndStatus(ctx, sqlc.ListTeamJoinRequestsByUserAndEventAndStatusParams{
 		UserID:  userId,
-		EventID: ptr.UUIDToPtr(eventId),
+		EventID: &eventId,
 		Status:  status,
 	})
+}
+
+func (r *TeamJoinRequestRepository) DeleteByUserAndEventAndStatus(ctx context.Context, userId, eventId uuid.UUID, status sqlc.JoinRequestStatus) error {
+	return r.db.Query.DeleteJoinRequestsByUserAndEventAndStatus(ctx, sqlc.DeleteJoinRequestsByUserAndEventAndStatusParams{
+		UserID:  userId,
+		EventID: &eventId,
+		Status:  status,
+	})
+}
+
+func (r *TeamJoinRequestRepository) UpdateStatus(ctx context.Context, requestId uuid.UUID, status sqlc.JoinRequestStatus) (*sqlc.TeamJoinRequest, error) {
+	request, err := r.db.Query.UpdateTeamJoinRequest(ctx, sqlc.UpdateTeamJoinRequestParams{
+		ID:             requestId,
+		StatusDoUpdate: true,
+		Status:         status,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &request, nil
 }

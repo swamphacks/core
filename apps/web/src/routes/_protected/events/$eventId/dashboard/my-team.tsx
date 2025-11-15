@@ -1,6 +1,6 @@
 import MyTeamCard from "@/features/Team/components/MyTeamCard";
 import NoTeamCard from "@/features/Team/components/NoTeamCard";
-import TeamInvitationSection from "@/features/Team/components/TeamInvitationSection";
+import TeamJoinRequestSection from "@/features/Team/components/TeamJoinRequestSection";
 import { useMyTeam } from "@/features/Team/hooks/useMyTeam";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
@@ -22,7 +22,10 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const eventId = Route.useParams().eventId;
+  const { user } = Route.useRouteContext();
   const team = useMyTeam(eventId);
+
+  const isOwner = team.data?.owner_id === user?.userId;
 
   if (team.isLoading) {
     return (
@@ -49,7 +52,11 @@ function RouteComponent() {
         ) : (
           <NoTeamCard eventId={eventId} />
         )}
-        <TeamInvitationSection />
+        {/* <TeamInvitationSection /> */}
+
+        {isOwner && team.data && (
+          <TeamJoinRequestSection teamId={team.data.id} />
+        )}
       </div>
     </main>
   );

@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
+	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/ptr"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/web"
@@ -277,7 +278,7 @@ type CreateJoinRequest struct {
 //	@Param			sh_session_id	cookie	string				true	"The authenticated session token/id"
 //	@Param			team_id			path	string				true	"The ID of the team"
 //	@Param			event_id		path	string				true	"The ID of the event"
-//	@Param			request			body	CreateTeamRequest	true	"Team Creation Payload"
+//	@Param			request			body	CreateJoinRequest	true	"Team Creation Payload"
 //	@Accept			json
 //	@Produce		json
 //	@Success		204	"Successfully left the team"
@@ -334,13 +335,13 @@ func (h *TeamHandler) RequestToJoinTeam(w http.ResponseWriter, r *http.Request) 
 //	@Summary		Get team's pending join requests
 //	@Description	Retrieves a team's pending join requests. This is only allowed for the team's owner.
 //	@Tags			Team
-//	@Param			sh_session_id	cookie		string					true	"The authenticated session token/id"
-//	@Param			team_id			path		string					true	"The ID of the team"
-//	@Success		200				{array}		sqlc.TeamJoinRequest	"Successfully retrieved pending requests"
-//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
-//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
-//	@Failure		403				{object}	response.ErrorResponse	"Forbidden: Requester is not allowed to perform this action."
-//	@Failure		500				{object}	response.ErrorResponse	"Something went seriously wrong."
+//	@Param			sh_session_id	cookie		string											true	"The authenticated session token/id"
+//	@Param			team_id			path		string											true	"The ID of the team"
+//	@Success		200				{array}		sqlc.ListJoinRequestsByTeamAndStatusWithUserRow	"Successfully retrieved pending requests"
+//	@Failure		400				{object}	response.ErrorResponse							"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse							"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		403				{object}	response.ErrorResponse							"Forbidden: Requester is not allowed to perform this action."
+//	@Failure		500				{object}	response.ErrorResponse							"Something went seriously wrong."
 //
 //	@Router			/teams/{teamId}/pending-joins [get]
 func (h *TeamHandler) GetPendingRequestsForTeam(w http.ResponseWriter, r *http.Request) {
@@ -403,4 +404,106 @@ func (h *TeamHandler) GetMyPendingRequests(w http.ResponseWriter, r *http.Reques
 	}
 
 	res.Send(w, http.StatusOK, requests)
+}
+
+// Accept/Approve a team join request
+//
+//	@Summary		Accept a team join request
+//	@Description	Accepts a pending team join request. Only the team owner can perform this action.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie	string	true	"The authenticated session token/id"
+//	@Param			team_id			path	string	true	"The ID of the team"
+//	@Param			request_id		path	string	true	"The ID of the join request"
+//	@Success		204				"Successfully accepted the join request"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden: Requester is not allowed to perform this action."
+//
+//	@Failure		404				{object}	response.ErrorResponse	"Not Found: The join request does not exist."
+//	@Failure		409				{object}	response.ErrorResponse	"Conflict: The join request has already been responded to."
+//
+//	@Failure		500				{object}	response.ErrorResponse	"Something went wrong."
+//
+//	@Router			/teams/join/{requestId}/accept [post]
+func (h *TeamHandler) AcceptTeamJoinRequest(w http.ResponseWriter, r *http.Request) {
+	requestId, err := web.PathParamToUUID(r, "requestId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_request_id", "The join request ID is malformed/missing."))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	err = h.teamService.RespondToJoinRequest(r.Context(), *userId, requestId, true)
+	if err != nil {
+		status, code, message := mapTeamServiceError(err)
+		res.SendError(w, status, res.NewError(code, message))
+		return
+	}
+
+	res.Send(w, http.StatusNoContent, nil)
+}
+
+// Reject a team join request
+//
+//	@Summary		Reject a team join request
+//	@Description	Rejects a pending team join request. Only the team owner can perform this action.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie	string	true	"The authenticated session token/id"
+//	@Param			team_id			path	string	true	"The ID of the team"
+//	@Param			request_id		path	string	true	"The ID of the join request"
+//	@Success		204				"Successfully accepted the join request"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden: Requester is not allowed to perform this action."
+//
+//	@Failure		404				{object}	response.ErrorResponse	"Not Found: The join request does not exist."
+//	@Failure		409				{object}	response.ErrorResponse	"Conflict: The join request has already been responded to."
+//
+//	@Failure		500				{object}	response.ErrorResponse	"Something went wrong."
+//
+//	@Router			/teams/join/{requestId}/reject [post]
+func (h *TeamHandler) RejectTeamJoinRequest(w http.ResponseWriter, r *http.Request) {
+	requestId, err := web.PathParamToUUID(r, "requestId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_request_id", "The join request ID is malformed/missing."))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	err = h.teamService.RespondToJoinRequest(r.Context(), *userId, requestId, false)
+	if err != nil {
+		status, code, message := mapTeamServiceError(err)
+		res.SendError(w, status, res.NewError(code, message))
+		return
+	}
+
+	res.Send(w, http.StatusNoContent, nil)
+}
+
+// Maps team service errors to HTTP status codes and messages
+func mapTeamServiceError(err error) (status int, code, message string) {
+	switch {
+	case errors.Is(err, services.ErrUserNotTeamOwner):
+		return http.StatusForbidden, "forbidden", "You do not have permission to perform this action."
+	case errors.Is(err, services.ErrUserNotApplicantOrAttendee):
+		return http.StatusForbidden, "invalid_user_role", "The user is not an applicant or attendee for this event."
+	case errors.Is(err, services.ErrUserOnTeam):
+		return http.StatusConflict, "user_on_team", "The user is already on a team for this event."
+	case errors.Is(err, services.ErrTeamFull):
+		return http.StatusConflict, "team_full", "The team is already full."
+	case errors.Is(err, repository.ErrTeamNotFound):
+		return http.StatusNotFound, "team_not_found", "Team resource was not found."
+	default:
+		return http.StatusInternalServerError, "internal_error", "Something went wrong."
+	}
 }

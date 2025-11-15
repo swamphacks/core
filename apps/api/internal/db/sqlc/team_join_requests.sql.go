@@ -12,41 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const approveTeamJoinRequest = `-- name: ApproveTeamJoinRequest :one
-UPDATE team_join_requests
-SET
-    status = 'APPROVED'::join_request_status,
-    processed_by_user_id = $1::uuid,
-    processed_at = NOW(),
-    updated_at = NOW()
-WHERE
-    id = $2 AND 
-    status = 'PENDING'::join_request_status
-RETURNING id, team_id, user_id, request_message, status, processed_by_user_id, processed_at, created_at, updated_at
-`
-
-type ApproveTeamJoinRequestParams struct {
-	ProcessedByUserID uuid.UUID `json:"processed_by_user_id"`
-	ID                uuid.UUID `json:"id"`
-}
-
-func (q *Queries) ApproveTeamJoinRequest(ctx context.Context, arg ApproveTeamJoinRequestParams) (TeamJoinRequest, error) {
-	row := q.db.QueryRow(ctx, approveTeamJoinRequest, arg.ProcessedByUserID, arg.ID)
-	var i TeamJoinRequest
-	err := row.Scan(
-		&i.ID,
-		&i.TeamID,
-		&i.UserID,
-		&i.RequestMessage,
-		&i.Status,
-		&i.ProcessedByUserID,
-		&i.ProcessedAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const createTeamJoinRequest = `-- name: CreateTeamJoinRequest :one
 INSERT INTO team_join_requests (
     team_id, user_id, request_message
@@ -89,6 +54,29 @@ func (q *Queries) DeleteJoinRequest(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const deleteJoinRequestsByUserAndEventAndStatus = `-- name: DeleteJoinRequestsByUserAndEventAndStatus :exec
+DELETE FROM team_join_requests tjr
+WHERE tjr.user_id = $1
+  AND tjr.status = $2
+  AND EXISTS (
+      SELECT 1
+      FROM teams t
+      WHERE t.id = tjr.team_id
+        AND t.event_id = $3
+  )
+`
+
+type DeleteJoinRequestsByUserAndEventAndStatusParams struct {
+	UserID  uuid.UUID         `json:"user_id"`
+	Status  JoinRequestStatus `json:"status"`
+	EventID *uuid.UUID        `json:"event_id"`
+}
+
+func (q *Queries) DeleteJoinRequestsByUserAndEventAndStatus(ctx context.Context, arg DeleteJoinRequestsByUserAndEventAndStatusParams) error {
+	_, err := q.db.Exec(ctx, deleteJoinRequestsByUserAndEventAndStatus, arg.UserID, arg.Status, arg.EventID)
+	return err
+}
+
 const getTeamJoinRequestByID = `-- name: GetTeamJoinRequestByID :one
 SELECT id, team_id, user_id, request_message, status, processed_by_user_id, processed_at, created_at, updated_at FROM team_join_requests 
 WHERE id = $1
@@ -109,6 +97,72 @@ func (q *Queries) GetTeamJoinRequestByID(ctx context.Context, id uuid.UUID) (Tea
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listJoinRequestsByTeamAndStatusWithUser = `-- name: ListJoinRequestsByTeamAndStatusWithUser :many
+SELECT 
+    tjr.id, tjr.team_id, tjr.user_id, tjr.request_message, tjr.status, tjr.processed_by_user_id, tjr.processed_at, tjr.created_at, tjr.updated_at,
+    u.email AS user_email,
+    u.name AS user_name,
+    u.image AS user_image
+FROM team_join_requests tjr
+JOIN auth.users u ON u.id = tjr.user_id
+WHERE tjr.team_id = $1::uuid
+    AND tjr.status = $2::join_request_status
+ORDER BY tjr.created_at DESC
+`
+
+type ListJoinRequestsByTeamAndStatusWithUserParams struct {
+	TeamID uuid.UUID         `json:"team_id"`
+	Status JoinRequestStatus `json:"status"`
+}
+
+type ListJoinRequestsByTeamAndStatusWithUserRow struct {
+	ID                uuid.UUID         `json:"id"`
+	TeamID            uuid.UUID         `json:"team_id"`
+	UserID            uuid.UUID         `json:"user_id"`
+	RequestMessage    *string           `json:"request_message"`
+	Status            JoinRequestStatus `json:"status"`
+	ProcessedByUserID *uuid.UUID        `json:"processed_by_user_id"`
+	ProcessedAt       *time.Time        `json:"processed_at"`
+	CreatedAt         time.Time         `json:"created_at"`
+	UpdatedAt         time.Time         `json:"updated_at"`
+	UserEmail         *string           `json:"user_email"`
+	UserName          string            `json:"user_name"`
+	UserImage         *string           `json:"user_image"`
+}
+
+func (q *Queries) ListJoinRequestsByTeamAndStatusWithUser(ctx context.Context, arg ListJoinRequestsByTeamAndStatusWithUserParams) ([]ListJoinRequestsByTeamAndStatusWithUserRow, error) {
+	rows, err := q.db.Query(ctx, listJoinRequestsByTeamAndStatusWithUser, arg.TeamID, arg.Status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListJoinRequestsByTeamAndStatusWithUserRow{}
+	for rows.Next() {
+		var i ListJoinRequestsByTeamAndStatusWithUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TeamID,
+			&i.UserID,
+			&i.RequestMessage,
+			&i.Status,
+			&i.ProcessedByUserID,
+			&i.ProcessedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserEmail,
+			&i.UserName,
+			&i.UserImage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listTeamJoinRequestsByTeamIDAndStatus = `-- name: ListTeamJoinRequestsByTeamIDAndStatus :many
@@ -238,41 +292,6 @@ func (q *Queries) ListTeamJoinRequestsByUserID(ctx context.Context, userID uuid.
 		return nil, err
 	}
 	return items, nil
-}
-
-const rejectTeamJoinRequest = `-- name: RejectTeamJoinRequest :one
-UPDATE team_join_requests
-SET
-    status = 'REJECTED'::join_request_status,
-    processed_by_user_id = $1::uuid,
-    processed_at = NOW(),
-    updated_at = NOW()
-WHERE
-    id = $2 AND 
-    status = 'PENDING'::join_request_status
-RETURNING id, team_id, user_id, request_message, status, processed_by_user_id, processed_at, created_at, updated_at
-`
-
-type RejectTeamJoinRequestParams struct {
-	ProcessedByUserID uuid.UUID `json:"processed_by_user_id"`
-	ID                uuid.UUID `json:"id"`
-}
-
-func (q *Queries) RejectTeamJoinRequest(ctx context.Context, arg RejectTeamJoinRequestParams) (TeamJoinRequest, error) {
-	row := q.db.QueryRow(ctx, rejectTeamJoinRequest, arg.ProcessedByUserID, arg.ID)
-	var i TeamJoinRequest
-	err := row.Scan(
-		&i.ID,
-		&i.TeamID,
-		&i.UserID,
-		&i.RequestMessage,
-		&i.Status,
-		&i.ProcessedByUserID,
-		&i.ProcessedAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
 }
 
 const updateTeamJoinRequest = `-- name: UpdateTeamJoinRequest :one

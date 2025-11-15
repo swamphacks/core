@@ -115,6 +115,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		r.Get("/{teamId}", api.Handlers.Teams.GetTeam)
 		r.Get("/{teamId}/pending-joins", api.Handlers.Teams.GetPendingRequestsForTeam)
 		r.Delete("/{teamId}/members/me", api.Handlers.Teams.LeaveTeam)
+		r.Post("/join/{requestId}/accept", api.Handlers.Teams.AcceptTeamJoinRequest)
+		r.Post("/join/{requestId}/reject", api.Handlers.Teams.RejectTeamJoinRequest)
 	})
 
 	// --- Event routes ---
@@ -166,6 +168,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				r.Post("/", api.Handlers.Teams.CreateTeam)
 				r.Get("/", api.Handlers.Teams.GetEventTeams)
 				r.Get("/me", api.Handlers.Teams.GetMyTeam)
+				r.Get("/me/pending-joins", api.Handlers.Teams.GetMyPendingRequests)
 
 				// Specific team routes within events
 				r.Route("/{teamId}", func(r chi.Router) {

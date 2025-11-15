@@ -3,6 +3,8 @@ import type { TeamWithMembers } from "../hooks/useMyTeam";
 import TablerUsers from "~icons/tabler/users";
 import TablerCheck from "~icons/tabler/check";
 import { Button } from "@/components/ui/Button";
+import { useJoinRequestActions } from "../hooks/useJoinRequestActions";
+import { toast } from "react-toastify";
 
 interface Props {
   team: TeamWithMembers;
@@ -10,11 +12,28 @@ interface Props {
   alreadyRequested?: boolean;
 }
 
-export default function TeamCard({ team, isCurrentTeam = false, alreadyRequested = false }: Props) {
-
-  const handleJoinRequest = () => {
-    // Implement join request logic here
-  }
+export default function TeamCard({
+  team,
+  isCurrentTeam = false,
+  alreadyRequested = false,
+}: Props) {
+  const { create } = useJoinRequestActions();
+  const handleJoinRequest = async () => {
+    await create.mutateAsync(
+      {
+        teamId: team.id,
+        eventId: team.event_id,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Join request sent!");
+        },
+        onError: () => {
+          toast.error("Failed to send join request. Try again later.");
+        },
+      },
+    );
+  };
 
   return (
     <div className="flex flex-col bg-surface md:max-w-86 w-full px-6 py-4 rounded-sm gap-2">
@@ -47,7 +66,11 @@ export default function TeamCard({ team, isCurrentTeam = false, alreadyRequested
           Requested
         </Button>
       ) : (
-        <Button onClick={handleJoinRequest} variant="secondary" className="mt-4 rounded-xs">
+        <Button
+          onClick={handleJoinRequest}
+          variant="secondary"
+          className="mt-4 rounded-xs"
+        >
           Request to Join
         </Button>
       )}

@@ -34,30 +34,6 @@ WHERE
     id = @id::uuid
 RETURNING *;
 
--- name: ApproveTeamJoinRequest :one
-UPDATE team_join_requests
-SET
-    status = 'APPROVED'::join_request_status,
-    processed_by_user_id = @processed_by_user_id::uuid,
-    processed_at = NOW(),
-    updated_at = NOW()
-WHERE
-    id = @id AND 
-    status = 'PENDING'::join_request_status
-RETURNING *;
-
--- name: RejectTeamJoinRequest :one
-UPDATE team_join_requests
-SET
-    status = 'REJECTED'::join_request_status,
-    processed_by_user_id = @processed_by_user_id::uuid,
-    processed_at = NOW(),
-    updated_at = NOW()
-WHERE
-    id = @id AND 
-    status = 'PENDING'::join_request_status
-RETURNING *;
-
 -- name: DeleteJoinRequest :exec
 DELETE FROM team_join_requests 
 WHERE id = @id;
@@ -73,4 +49,27 @@ WHERE tjr.user_id = $1
       WHERE t.id = tjr.team_id
         AND t.event_id = $3
   )
+ORDER BY tjr.created_at DESC;
+
+-- name: DeleteJoinRequestsByUserAndEventAndStatus :exec
+DELETE FROM team_join_requests tjr
+WHERE tjr.user_id = $1
+  AND tjr.status = $2
+  AND EXISTS (
+      SELECT 1
+      FROM teams t
+      WHERE t.id = tjr.team_id
+        AND t.event_id = $3
+  );
+
+-- name: ListJoinRequestsByTeamAndStatusWithUser :many
+SELECT 
+    tjr.*,
+    u.email AS user_email,
+    u.name AS user_name,
+    u.image AS user_image
+FROM team_join_requests tjr
+JOIN auth.users u ON u.id = tjr.user_id
+WHERE tjr.team_id = @team_id::uuid
+    AND tjr.status = @status::join_request_status
 ORDER BY tjr.created_at DESC;

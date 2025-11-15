@@ -133,6 +133,17 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "handlers.CreateJoinRequest": {
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "message"
+                ],
+                "type": "object"
+            },
             "handlers.CreateTeamRequest": {
                 "properties": {
                     "name": {
@@ -932,6 +943,61 @@ const docTemplate = `{
                     "JoinRequestStatusAPPROVED",
                     "JoinRequestStatusREJECTED"
                 ]
+            },
+            "sqlc.ListJoinRequestsByTeamAndStatusWithUserRow": {
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "processed_at": {
+                        "type": "string"
+                    },
+                    "processed_by_user_id": {
+                        "type": "string"
+                    },
+                    "request_message": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/sqlc.JoinRequestStatus"
+                    },
+                    "team_id": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "user_email": {
+                        "type": "string"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    },
+                    "user_image": {
+                        "type": "string"
+                    },
+                    "user_name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "id",
+                    "processed_at",
+                    "processed_by_user_id",
+                    "request_message",
+                    "status",
+                    "team_id",
+                    "updated_at",
+                    "user_email",
+                    "user_id",
+                    "user_image",
+                    "user_name"
+                ],
+                "type": "object"
             },
             "sqlc.NullApplicationStatus": {
                 "properties": {
@@ -2593,7 +2659,7 @@ const docTemplate = `{
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/handlers.CreateTeamRequest",
+                                "$ref": "#/components/schemas/handlers.CreateJoinRequest",
                                 "summary": "request",
                                 "description": "Team Creation Payload"
                             }
@@ -2705,6 +2771,212 @@ const docTemplate = `{
                 "summary": "Get all users for an event",
                 "tags": [
                     "Event"
+                ]
+            }
+        },
+        "/teams/join/{requestId}/accept": {
+            "post": {
+                "description": "Accepts a pending team join request. Only the team owner can perform this action.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The ID of the team",
+                        "in": "path",
+                        "name": "team_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The ID of the join request",
+                        "in": "path",
+                        "name": "request_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successfully accepted the join request"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad Request: Missing or malformed parameters."
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Forbidden: Requester is not allowed to perform this action."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Not Found: The join request does not exist."
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Conflict: The join request has already been responded to."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Something went wrong."
+                    }
+                },
+                "summary": "Accept a team join request",
+                "tags": [
+                    "Team"
+                ]
+            }
+        },
+        "/teams/join/{requestId}/reject": {
+            "post": {
+                "description": "Rejects a pending team join request. Only the team owner can perform this action.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The ID of the team",
+                        "in": "path",
+                        "name": "team_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The ID of the join request",
+                        "in": "path",
+                        "name": "request_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successfully accepted the join request"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad Request: Missing or malformed parameters."
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Forbidden: Requester is not allowed to perform this action."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Not Found: The join request does not exist."
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Conflict: The join request has already been responded to."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Something went wrong."
+                    }
+                },
+                "summary": "Reject a team join request",
+                "tags": [
+                    "Team"
                 ]
             }
         },
@@ -2872,7 +3144,7 @@ const docTemplate = `{
                             "application/json": {
                                 "schema": {
                                     "items": {
-                                        "$ref": "#/components/schemas/sqlc.TeamJoinRequest"
+                                        "$ref": "#/components/schemas/sqlc.ListJoinRequestsByTeamAndStatusWithUserRow"
                                     },
                                     "type": "array"
                                 }

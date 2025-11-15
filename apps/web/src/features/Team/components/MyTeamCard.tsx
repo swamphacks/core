@@ -4,6 +4,7 @@ import type { TeamWithMembers } from "../hooks/useMyTeam";
 import { useTeamActions } from "../hooks/useTeamActions";
 import { Button } from "@/components/ui/Button";
 import { toast } from "react-toastify";
+import TablerDoorExit from "~icons/tabler/door-exit";
 
 interface Props {
   eventId: string;
@@ -13,9 +14,30 @@ interface Props {
 export default function MyTeamCard({ eventId, team }: Props) {
   const { leave } = useTeamActions(eventId);
 
+  const handleLeaveTeam = () => {
+    leave.mutate(team.id, {
+      onSuccess: () => {
+        toast.success("Left the team successfully.");
+      },
+      onError: () => {
+        toast.error("Something went wrong, try again.");
+      },
+    });
+  };
+
   return (
-    <div className="border border-input-border rounded-md px-4 py-3 w-full md:w-fit md:min-w-120 flex flex-col gap-4">
-      <h3 className="text-text-main text-2xl">{team.name}</h3>
+    <div className="border border-input-border rounded-md px-4 py-3 w-full md:w-116 flex flex-col gap-4">
+      <div className="w-full flex flex-row items-center justify-between">
+        <h3 className="text-text-main text-2xl">{team.name}</h3>
+
+        <Button
+          onClick={handleLeaveTeam}
+          variant="icon"
+          className="aspect-square p-2.5"
+        >
+          <TablerDoorExit className="w-5 h-5 text-red-600" />
+        </Button>
+      </div>
       <div className="flex flex-row text-text-secondary items-center gap-4">
         <AvatarStack
           avatars={team.members.map((member) => ({
@@ -31,23 +53,33 @@ export default function MyTeamCard({ eventId, team }: Props) {
         </div>
       </div>
 
-      <Button>Invite User</Button>
+      <div className="flex flex-col">
+        <p>Members:</p>
 
-      <Button
-        variant="danger"
-        onPress={() =>
-          leave.mutate(team.id, {
-            onSuccess: () => {
-              toast.success("Left the team successfully.");
-            },
-            onError: () => {
-              toast.error("Something went wrong, try again.");
-            },
-          })
-        }
-      >
-        Leave
-      </Button>
+        <ul className="list-disc list-outside">
+          {team.members.map((member) => (
+            <li
+              key={member.user_id}
+              className="text-text-secondary flex items-center justify-between"
+            >
+              <span>{member.name}</span>
+              <button
+                type="button"
+                onClick={() => console.log("Remove", member.user_id)}
+                className="ml-2 p-1 hover:text-red-500"
+                aria-label={`Remove ${member.name}`}
+              >
+                <TablerDoorExit className="w-4 h-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="w-full text-wrap text-xs text-neutral-500">
+        * Invite your team to join by having them submit a request on the
+        Explore Teams page.
+      </p>
     </div>
   );
 }
