@@ -1,12 +1,13 @@
-import ECharts from "@/components/ECharts";
+import ECharts, { pieChartColors } from "@/components/ECharts";
 import { useTheme } from "@/components/ThemeProvider";
+import { Card } from "@/components/ui/Card";
 import type { components } from "@/lib/openapi/schema";
 
 interface Props {
-  data?: components["schemas"]["sqlc.GetApplicationMajorSplitRow"][];
+  data: components["schemas"]["sqlc.GetApplicationRaceSplitRow"][];
 }
 
-export default function ApplicationMajorsChart({ data }: Props) {
+export default function ApplicationRaceChart({ data }: Props) {
   const { theme } = useTheme();
 
   const isDark =
@@ -14,25 +15,18 @@ export default function ApplicationMajorsChart({ data }: Props) {
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  if (!data) {
-    return (
-      <div>
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="inline-block bg-input-bg rounded-md w-full h-full shadow-xs border-neutral-200 dark:border-neutral-800">
+    <Card className="w-full h-72 md:h-80 bg-input-bg">
       <ECharts
         className=" w-full h-full"
         option={{
+          color: pieChartColors,
           title: {
-            text: "Application Majors",
+            text: "Races",
             textStyle: {
-              color: isDark ? "#FFFFFF" : "#000000",
+              color: isDark ? "#e4e4e7" : "#18181b",
               fontFamily: "Figtree",
-              fontSize: 22,
+              fontSize: 18,
             },
             padding: 15,
           },
@@ -58,14 +52,14 @@ export default function ApplicationMajorsChart({ data }: Props) {
                 show: true,
                 color: isDark ? "#FFFFFF" : "#000000",
               },
-              data: data.map((row) => ({
-                value: row.count,
-                name: row.major,
+              data: data?.map((item) => ({
+                value: item.count,
+                name: item.race_group,
               })),
             },
           ],
         }}
       />
-    </div>
+    </Card>
   );
 }

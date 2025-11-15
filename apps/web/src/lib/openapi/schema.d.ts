@@ -787,6 +787,63 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/overview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieves general information about the event
+     * @description Returns data such as event details (name, description, location, dates, etc..) and basic application statistics
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["services.EventOverview"];
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error getting statistics */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/events/{eventId}/role": {
     parameters: {
       query?: never;
@@ -1105,6 +1162,856 @@ export interface paths {
     };
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/teams": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get an event's teams
+     * @description Gets all teams for a specific event.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the event */
+          event_id: string;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Teams successfully retrieved. */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["services.TeamWithMembers"][];
+          };
+        };
+        /** @description Bad Request: Missing or malformed parameters. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went seriously wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create a new team
+     * @description Creates a new team for a specific event and assigns the creator as the owner.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the event */
+          event_id: number;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      /** @description Team Creation Payload */
+      requestBody: {
+        content: {
+          "application/json":
+            | Record<string, never>
+            | components["schemas"]["handlers.CreateTeamRequest"];
+        };
+      };
+      responses: {
+        /** @description A team object */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.Team"];
+          };
+        };
+        /** @description Bad request: you had request parameters needed for this method. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Conflict: You already have a team. */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went seriously wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/teams/{teamId}/join": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Request to join a team
+     * @description Requests to join a team or fails if user is already on a team.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the team */
+          team_id: string;
+          /** @description The ID of the event */
+          event_id: string;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      /** @description Team Creation Payload */
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["handlers.CreateJoinRequest"];
+        };
+      };
+      responses: {
+        /** @description Successfully left the team */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad Request: Missing or malformed parameters. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Conflict: User is already on a team. */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went seriously wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/teams/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get the authenticated user's team and its members for this specific event.
+     * @description Retrieves the team information and the full list of team members for the currently authenticated user within a specified event.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the event */
+          event_id: number;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Team information and members successfully retrieved. */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["services.TeamWithMembers"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Team not found for the user in this event. */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went seriously wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/teams/me/pending-joins": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get your pending requests
+     * @description Retrieves the current user's pending requests for a specific event's teams.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the team */
+          team_id: string;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Successfully retrieved pending requests */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.TeamJoinRequest"][];
+          };
+        };
+        /** @description Bad Request: Missing or malformed parameters. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went seriously wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get all users for an event
+     * @description Gets all users with any role for the event
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK - Return users */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.GetEventStaffRow"][];
+          };
+        };
+        /** @description Server Error: Something went terribly wrong on our end. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/teams/{teamId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a team and its members by team id.
+     * @description Retrieves the team information and the full list of team members by a team id.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the team */
+          team_id: string;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Team information and members successfully retrieved. */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["services.TeamWithMembers"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Team not found for the user in this event. */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went seriously wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/teams/{teamId}/members/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Leave a team
+     * @description Leaves a team if the requester is on the team. Depends on cookies for user retrieval.
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the team */
+          team_id: string;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Successfully left the team */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad Request: Missing or malformed parameters. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went seriously wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/teams/{teamId}/pending-joins": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get team's pending join requests
+     * @description Retrieves a team's pending join requests. This is only allowed for the team's owner.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the team */
+          team_id: string;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Successfully retrieved pending requests */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.ListJoinRequestsByTeamAndStatusWithUserRow"][];
+          };
+        };
+        /** @description Bad Request: Missing or malformed parameters. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Forbidden: Requester is not allowed to perform this action. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went seriously wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/teams/join/{requestId}/accept": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Accept a team join request
+     * @description Accepts a pending team join request. Only the team owner can perform this action.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the team */
+          team_id: string;
+          /** @description The ID of the join request */
+          request_id: string;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Successfully accepted the join request */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad Request: Missing or malformed parameters. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Forbidden: Requester is not allowed to perform this action. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Not Found: The join request does not exist. */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Conflict: The join request has already been responded to. */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/teams/join/{requestId}/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reject a team join request
+     * @description Rejects a pending team join request. Only the team owner can perform this action.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the team */
+          team_id: string;
+          /** @description The ID of the join request */
+          request_id: string;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Successfully accepted the join request */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad Request: Missing or malformed parameters. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Forbidden: Requester is not allowed to perform this action. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Not Found: The join request does not exist. */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Conflict: The join request has already been responded to. */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -1518,6 +2425,12 @@ export interface components {
       start_time: string;
       website_url: string;
     };
+    "handlers.CreateJoinRequest": {
+      message: string;
+    };
+    "handlers.CreateTeamRequest": {
+      name: string;
+    };
     "handlers.NullableEventRole": {
       assigned_at: string;
       event_id: string;
@@ -1587,6 +2500,30 @@ export interface components {
       race_stats: components["schemas"]["sqlc.GetApplicationRaceSplitRow"][];
       school_stats: components["schemas"]["sqlc.GetApplicationSchoolSplitRow"][];
       status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
+    };
+    "services.EventOverview": {
+      application_status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
+      application_submission_stats: components["schemas"]["services.SubmissionTimesStatistics"][];
+      event_details: components["schemas"]["sqlc.Event"];
+    };
+    "services.MemberWithUserInfo": {
+      email: string;
+      image: string;
+      joined_at: string;
+      name: string;
+      user_id: string;
+    };
+    "services.SubmissionTimesStatistics": {
+      count: number;
+      /** Format: date-time */
+      day: string;
+    };
+    "services.TeamWithMembers": {
+      event_id: string;
+      id: string;
+      members: components["schemas"]["services.MemberWithUserInfo"][];
+      name: string;
+      owner_id: string;
     };
     "sqlc.Application": {
       application: number[];
@@ -1717,6 +2654,22 @@ export interface components {
       updated_at: string;
       website_url: string;
     };
+    /** @enum {string} */
+    "sqlc.JoinRequestStatus": "PENDING" | "APPROVED" | "REJECTED";
+    "sqlc.ListJoinRequestsByTeamAndStatusWithUserRow": {
+      created_at: string;
+      id: string;
+      processed_at: string;
+      processed_by_user_id: string;
+      request_message: string;
+      status: components["schemas"]["sqlc.JoinRequestStatus"];
+      team_id: string;
+      updated_at: string;
+      user_email: string;
+      user_id: string;
+      user_image: string;
+      user_name: string;
+    };
     "sqlc.NullApplicationStatus": {
       application_status: components["schemas"]["sqlc.ApplicationStatus"];
       /** @description Valid is true if ApplicationStatus is not NULL */
@@ -1726,6 +2679,25 @@ export interface components {
       event_role_type: components["schemas"]["sqlc.EventRoleType"];
       /** @description Valid is true if EventRoleType is not NULL */
       valid: boolean;
+    };
+    "sqlc.Team": {
+      created_at: string;
+      event_id: string;
+      id: string;
+      name: string;
+      owner_id: string;
+      updated_at: string;
+    };
+    "sqlc.TeamJoinRequest": {
+      created_at: string;
+      id: string;
+      processed_at: string;
+      processed_by_user_id: string;
+      request_message: string;
+      status: components["schemas"]["sqlc.JoinRequestStatus"];
+      team_id: string;
+      updated_at: string;
+      user_id: string;
     };
   };
   responses: never;

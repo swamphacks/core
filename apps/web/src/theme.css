@@ -1,6 +1,6 @@
 :root {
   --surface: oklch(97.015% 0.00011 271.152);
-  --background: oklch(98.015% 0.00011 271.152);
+  --background: oklch(99.405% 0.00011 271.152);
   --border: var(--color-zinc-300);
   --accent-main: var(--color-blue-500);
 
@@ -22,9 +22,9 @@
   --button-primary-hover: var(--color-blue-700);
   --button-primary-pressed: var(--color-blue-800);
   --button-primary-disabled: var(--color-blue-300);
-  --button-secondary: var(--color-gray-100);
-  --button-secondary-hover: var(--color-gray-200);
-  --button-secondary-pressed: var(--color-gray-300);
+  --button-secondary: var(--color-gray-200);
+  --button-secondary-hover: var(--color-gray-300);
+  --button-secondary-pressed: var(--color-zinc-200);
   --button-secondary-disabled: var(--color-gray-300);
   --button-outline: oklch(0.6187 0.2067 259.23 / 25%);
   --button-outline-hover: oklch(0.5465 0.2455 262.87 / 25%);
@@ -167,8 +167,8 @@
   --button-primary-pressed: var(--color-blue-800);
   --button-primary-disabled: var(--color-blue-300);
   --button-secondary: var(--color-zinc-800);
-  --button-secondary-hover: var(--color-zinc-500);
-  --button-secondary-pressed: var(--color-zinc-400);
+  --button-secondary-hover: var(--color-zinc-700);
+  --button-secondary-pressed: var(--color-zinc-600);
   --button-secondary-disabled: var(--color-neutral-700);
   --button-outline: oklch(0.6187 0.2067 259.23 / 25%);
   --button-outline-hover: oklch(0.5465 0.2455 262.87 / 25%);

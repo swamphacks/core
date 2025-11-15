@@ -109,6 +109,16 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		r.Patch("/me/onboarding", api.Handlers.User.CompleteOnboarding)
 	})
 
+	// --- Team routes (non Event specific) ---
+	api.Router.Route("/teams", func(r chi.Router) {
+		r.Use(mw.Auth.RequireAuth)
+		r.Get("/{teamId}", api.Handlers.Teams.GetTeam)
+		r.Get("/{teamId}/pending-joins", api.Handlers.Teams.GetPendingRequestsForTeam)
+		r.Delete("/{teamId}/members/me", api.Handlers.Teams.LeaveTeam)
+		r.Post("/join/{requestId}/accept", api.Handlers.Teams.AcceptTeamJoinRequest)
+		r.Post("/join/{requestId}/reject", api.Handlers.Teams.RejectTeamJoinRequest)
+	})
+
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
 
@@ -127,11 +137,14 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Get("/role", api.Handlers.Event.GetEventRole)
 
+			r.With(ensureEventStaff).Get("/overview", api.Handlers.Event.GetEventOverview)
+
 			// Admin-only
 			r.With(ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
 			r.With(ensureEventAdmin).Post("/banner", api.Handlers.Event.UploadEventBanner)
 			r.With(ensureEventAdmin).Delete("/banner", api.Handlers.Event.DeleteBanner)
 			r.With(ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
+			r.With(ensureEventAdmin).Get("/users", api.Handlers.Event.GetEventUsers)
 			r.With(ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
 			r.With(ensureEventAdmin).Delete("/roles/{userId}", api.Handlers.Event.RevokeEventRole)
 			r.With(ensureEventAdmin).Post("/roles/batch", api.Handlers.Event.BatchAssignEventRoles)
@@ -145,9 +158,23 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				r.Get("/", api.Handlers.Application.GetApplicationByUserAndEventID)
 				r.Post("/submit", api.Handlers.Application.SubmitApplication)
 				r.Post("/save", api.Handlers.Application.SaveApplication)
+				r.Get("/download-resume", api.Handlers.Application.DownloadResume)
 
 				// For statistics (Staff ONLY)
 				r.With(ensureEventStaff).Get("/stats", api.Handlers.Application.GetApplicationStatistics)
+			})
+
+			// Team routes
+			r.Route("/teams", func(r chi.Router) {
+				r.Post("/", api.Handlers.Teams.CreateTeam)
+				r.Get("/", api.Handlers.Teams.GetEventTeams)
+				r.Get("/me", api.Handlers.Teams.GetMyTeam)
+				r.Get("/me/pending-joins", api.Handlers.Teams.GetMyPendingRequests)
+
+				// Specific team routes within events
+				r.Route("/{teamId}", func(r chi.Router) {
+					r.Post("/join", api.Handlers.Teams.RequestToJoinTeam)
+				})
 			})
 		})
 	})

@@ -74,3 +74,12 @@ SELECT
     COUNT(*) FILTER (WHERE status = 'withdrawn')     AS withdrawn
 FROM applications
 WHERE event_id = $1;
+
+-- name: GetSubmissionTimes :many
+SELECT
+  date_trunc('day', submitted_at AT TIME ZONE 'US/Eastern')::date AS day,
+  COUNT(*) AS count
+FROM applications
+WHERE event_id = $1 AND submitted_at IS NOT NULL
+GROUP BY day
+ORDER By day;

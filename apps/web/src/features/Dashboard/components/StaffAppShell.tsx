@@ -14,6 +14,7 @@ import TablerFlower from "~icons/tabler/flower";
 import TablerTicket from "~icons/tabler/ticket";
 import TablerAdjustmentsHorizontal from "~icons/tabler/adjustments-horizontal";
 import TablerShieldHalfFilled from "~icons/tabler/shield-half-filled";
+import TablerChartBarPopular from "~icons/tabler/chart-bar-popular";
 import { type PropsWithChildren } from "react";
 import { Logo } from "@/components/Logo";
 
@@ -39,6 +40,8 @@ export default function StaffDashboardShell({
   const waitlistActive = /^\/events\/[^/]+\/dashboard\/waitlist\/?$/.test(
     pathname,
   );
+  const applicationStatisticsActive =
+    /^\/events\/[^/]+\/dashboard\/application-statistics\/?$/.test(pathname);
   const checkInActive = /^\/events\/[^/]+\/dashboard\/check-in\/?$/.test(
     pathname,
   );
@@ -55,6 +58,9 @@ export default function StaffDashboardShell({
     /^\/events\/[^/]+\/dashboard\/event-settings\/?$/.test(pathname);
   const staffManagementActive =
     /^\/events\/[^/]+\/dashboard\/staff-management\/?$/.test(pathname);
+
+  const userManagementActive =
+    /^\/events\/[^/]+\/dashboard\/user-management\/?$/.test(pathname);
 
   return (
     <AppShell>
@@ -78,7 +84,11 @@ export default function StaffDashboardShell({
         <NavLink
           label="Applications"
           leftSection={<TablerFileText className="w-5 aspect-square" />}
-          initialExpanded={waitlistActive || applicationReviewActive}
+          initialExpanded={
+            waitlistActive ||
+            applicationReviewActive ||
+            applicationStatisticsActive
+          }
         >
           <NavLink
             label="Application Review"
@@ -91,6 +101,14 @@ export default function StaffDashboardShell({
             href={`/events/${eventId}/dashboard/waitlist`}
             leftSection={<TablerAlarm className="w-5 aspect-square" />}
             active={waitlistActive}
+          />
+          <NavLink
+            label="Statistics"
+            href={`/events/${eventId}/dashboard/application-statistics`}
+            leftSection={
+              <TablerChartBarPopular className="w-5 aspect-square" />
+            }
+            active={applicationStatisticsActive}
           />
         </NavLink>
 
@@ -155,6 +173,14 @@ export default function StaffDashboardShell({
                 <TablerShieldHalfFilled className="w-5 aspect-square" />
               }
               active={staffManagementActive}
+            />
+            <NavLink
+              label="User Management"
+              href={`/events/${eventId}/dashboard/user-management`}
+              leftSection={
+                <TablerShieldHalfFilled className="w-5 aspect-square" />
+              }
+              active={userManagementActive}
             />
           </NavLink>
         )}

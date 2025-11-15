@@ -22,7 +22,7 @@ export default function ApplicantAppShell({
   const applicationStatusActive =
     /^\/events\/[^/]+\/dashboard\/application-status\/?$/.test(pathname);
   const teamFormationActive =
-    /^\/events\/[^/]+\/dashboard\/team-formation\/?$/.test(pathname);
+    /^\/events\/[^/]+\/dashboard\/my-team\/?$/.test(pathname);
 
   return (
     <AppShell>
@@ -45,7 +45,7 @@ export default function ApplicantAppShell({
         />
         <NavLink
           label="My Team"
-          href={`/events/${eventId}/dashboard/team-formation`}
+          href={`/events/${eventId}/dashboard/my-team`}
           leftSection={
             <TablerTransformPointBottomLeft className="w-5 aspect-square" />
           }

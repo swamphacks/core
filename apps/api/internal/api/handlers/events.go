@@ -450,6 +450,43 @@ func (h *EventHandler) GetEventStaffUsers(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// Get all users for an event
+//
+//	@Summary		Get all users for an event
+//	@Description	Gets all users with any role for the event
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path		string					true	"Event ID"	Format(uuid)
+//	@Success		200		{array}		sqlc.GetEventStaffRow	"OK - Return users"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId}/users [get]
+func (h *EventHandler) GetEventUsers(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	users, err := h.eventService.GetEventUsers(r.Context(), eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(users); err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
+		return
+	}
+}
+
 type AssignRoleFields struct {
 	Email  *string            `json:"email"`
 	UserID *string            `json:"user_id"`
@@ -722,4 +759,37 @@ func (h *EventHandler) DeleteBanner(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+// Get Event Overview
+//
+//	@Summary		Retrieves general information about the event
+//	@Description	Returns data such as event details (name, description, location, dates, etc..) and basic application statistics
+//	@Tags			Event
+//	@Produce		json
+//	@Success		200	{object}	services.EventOverview
+//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error getting statistics"
+//	@Router			/events/{eventId}/overview [get]
+func (h *EventHandler) GetEventOverview(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID."))
+		return
+	}
+
+	eventStats, err := h.eventService.GetEventOverview(r.Context(), eventId)
+
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("event_overview_err", "Something went wrong while aggregating event statistics."))
+		return
+	}
+
+	res.Send(w, http.StatusOK, eventStats)
 }

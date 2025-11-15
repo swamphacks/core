@@ -88,6 +88,20 @@ components:
       - start_time
       - website_url
       type: object
+    handlers.CreateJoinRequest:
+      properties:
+        message:
+          type: string
+      required:
+      - message
+      type: object
+    handlers.CreateTeamRequest:
+      properties:
+        name:
+          type: string
+      required:
+      - name
+      type: object
     handlers.NullableEventRole:
       properties:
         assigned_at:
@@ -222,6 +236,74 @@ components:
       - race_stats
       - school_stats
       - status_stats
+      type: object
+    services.EventOverview:
+      properties:
+        application_status_stats:
+          $ref: '#/components/schemas/sqlc.GetApplicationStatusSplitRow'
+        application_submission_stats:
+          items:
+            $ref: '#/components/schemas/services.SubmissionTimesStatistics'
+          type: array
+          uniqueItems: false
+        event_details:
+          $ref: '#/components/schemas/sqlc.Event'
+      required:
+      - application_status_stats
+      - application_submission_stats
+      - event_details
+      type: object
+    services.MemberWithUserInfo:
+      properties:
+        email:
+          type: string
+        image:
+          type: string
+        joined_at:
+          type: string
+        name:
+          type: string
+        user_id:
+          type: string
+      required:
+      - email
+      - image
+      - joined_at
+      - name
+      - user_id
+      type: object
+    services.SubmissionTimesStatistics:
+      properties:
+        count:
+          type: integer
+        day:
+          format: date-time
+          type: string
+      required:
+      - count
+      - day
+      type: object
+    services.TeamWithMembers:
+      properties:
+        event_id:
+          type: string
+        id:
+          type: string
+        members:
+          items:
+            $ref: '#/components/schemas/services.MemberWithUserInfo'
+          type: array
+          uniqueItems: false
+        name:
+          type: string
+        owner_id:
+          type: string
+      required:
+      - event_id
+      - id
+      - members
+      - name
+      - owner_id
       type: object
     sqlc.Application:
       properties:
@@ -582,6 +664,56 @@ components:
       - updated_at
       - website_url
       type: object
+    sqlc.JoinRequestStatus:
+      enum:
+      - PENDING
+      - APPROVED
+      - REJECTED
+      type: string
+      x-enum-varnames:
+      - JoinRequestStatusPENDING
+      - JoinRequestStatusAPPROVED
+      - JoinRequestStatusREJECTED
+    sqlc.ListJoinRequestsByTeamAndStatusWithUserRow:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: string
+        processed_at:
+          type: string
+        processed_by_user_id:
+          type: string
+        request_message:
+          type: string
+        status:
+          $ref: '#/components/schemas/sqlc.JoinRequestStatus'
+        team_id:
+          type: string
+        updated_at:
+          type: string
+        user_email:
+          type: string
+        user_id:
+          type: string
+        user_image:
+          type: string
+        user_name:
+          type: string
+      required:
+      - created_at
+      - id
+      - processed_at
+      - processed_by_user_id
+      - request_message
+      - status
+      - team_id
+      - updated_at
+      - user_email
+      - user_id
+      - user_image
+      - user_name
+      type: object
     sqlc.NullApplicationStatus:
       properties:
         application_status:
@@ -603,6 +735,59 @@ components:
       required:
       - event_role_type
       - valid
+      type: object
+    sqlc.Team:
+      properties:
+        created_at:
+          type: string
+        event_id:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        owner_id:
+          type: string
+        updated_at:
+          type: string
+      required:
+      - created_at
+      - event_id
+      - id
+      - name
+      - owner_id
+      - updated_at
+      type: object
+    sqlc.TeamJoinRequest:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: string
+        processed_at:
+          type: string
+        processed_by_user_id:
+          type: string
+        request_message:
+          type: string
+        status:
+          $ref: '#/components/schemas/sqlc.JoinRequestStatus'
+        team_id:
+          type: string
+        updated_at:
+          type: string
+        user_id:
+          type: string
+      required:
+      - created_at
+      - id
+      - processed_at
+      - processed_by_user_id
+      - request_message
+      - status
+      - team_id
+      - updated_at
+      - user_id
       type: object
 externalDocs:
   description: ""
@@ -1119,6 +1304,32 @@ paths:
       summary: Make an interest submission for an event (email list)
       tags:
       - Event
+  /events/{eventId}/overview:
+    get:
+      description: Returns data such as event details (name, description, location,
+        dates, etc..) and basic application statistics
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/services.EventOverview'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Bad request/Malformed request.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Server Error: error getting statistics'
+      summary: Retrieves general information about the event
+      tags:
+      - Event
   /events/{eventId}/role:
     get:
       description: Get current user's role for a specific event
@@ -1325,6 +1536,570 @@ paths:
       summary: Get all staff users for an event
       tags:
       - Event
+  /events/{eventId}/teams:
+    get:
+      description: Gets all teams for a specific event.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the event
+        in: path
+        name: event_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/services.TeamWithMembers'
+                type: array
+          description: Teams successfully retrieved.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Bad Request: Missing or malformed parameters.'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went seriously wrong.
+      summary: Get an event's teams
+      tags:
+      - Team
+    post:
+      description: Creates a new team for a specific event and assigns the creator
+        as the owner.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the event
+        in: path
+        name: event_id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/handlers.CreateTeamRequest'
+                description: Team Creation Payload
+                summary: request
+        description: Team Creation Payload
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sqlc.Team'
+          description: A team object
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Bad request: you had request parameters needed for this method.'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Conflict: You already have a team.'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went seriously wrong.
+      summary: Create a new team
+      tags:
+      - Team
+  /events/{eventId}/teams/{teamId}/join:
+    post:
+      description: Requests to join a team or fails if user is already on a team.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the team
+        in: path
+        name: team_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the event
+        in: path
+        name: event_id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/handlers.CreateJoinRequest'
+              description: Team Creation Payload
+              summary: request
+        description: Team Creation Payload
+        required: true
+      responses:
+        "204":
+          description: Successfully left the team
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Bad Request: Missing or malformed parameters.'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Conflict: User is already on a team.'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went seriously wrong.
+      summary: Request to join a team
+      tags:
+      - Team
+  /events/{eventId}/teams/me:
+    get:
+      description: Retrieves the team information and the full list of team members
+        for the currently authenticated user within a specified event.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the event
+        in: path
+        name: event_id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/services.TeamWithMembers'
+          description: Team information and members successfully retrieved.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Team not found for the user in this event.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went seriously wrong.
+      summary: Get the authenticated user's team and its members for this specific
+        event.
+      tags:
+      - Team
+  /events/{eventId}/teams/me/pending-joins:
+    get:
+      description: Retrieves the current user's pending requests for a specific event's
+        teams.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the team
+        in: path
+        name: team_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/sqlc.TeamJoinRequest'
+                type: array
+          description: Successfully retrieved pending requests
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Bad Request: Missing or malformed parameters.'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went seriously wrong.
+      summary: Get your pending requests
+      tags:
+      - Team
+  /events/{eventId}/users:
+    get:
+      description: Gets all users with any role for the event
+      parameters:
+      - description: Event ID
+        in: path
+        name: eventId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/sqlc.GetEventStaffRow'
+                type: array
+          description: OK - Return users
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Server Error: Something went terribly wrong on our end.'
+      summary: Get all users for an event
+      tags:
+      - Event
+  /teams/{teamId}:
+    get:
+      description: Retrieves the team information and the full list of team members
+        by a team id.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the team
+        in: path
+        name: team_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/services.TeamWithMembers'
+          description: Team information and members successfully retrieved.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Team not found for the user in this event.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went seriously wrong.
+      summary: Get a team and its members by team id.
+      tags:
+      - Team
+  /teams/{teamId}/members/me:
+    delete:
+      description: Leaves a team if the requester is on the team. Depends on cookies
+        for user retrieval.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the team
+        in: path
+        name: team_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Successfully left the team
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Bad Request: Missing or malformed parameters.'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went seriously wrong.
+      summary: Leave a team
+      tags:
+      - Team
+  /teams/{teamId}/pending-joins:
+    get:
+      description: Retrieves a team's pending join requests. This is only allowed
+        for the team's owner.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the team
+        in: path
+        name: team_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/sqlc.ListJoinRequestsByTeamAndStatusWithUserRow'
+                type: array
+          description: Successfully retrieved pending requests
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Bad Request: Missing or malformed parameters.'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Forbidden: Requester is not allowed to perform this action.'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went seriously wrong.
+      summary: Get team's pending join requests
+      tags:
+      - Team
+  /teams/join/{requestId}/accept:
+    post:
+      description: Accepts a pending team join request. Only the team owner can perform
+        this action.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the team
+        in: path
+        name: team_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the join request
+        in: path
+        name: request_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Successfully accepted the join request
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Bad Request: Missing or malformed parameters.'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Forbidden: Requester is not allowed to perform this action.'
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Not Found: The join request does not exist.'
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Conflict: The join request has already been responded to.'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went wrong.
+      summary: Accept a team join request
+      tags:
+      - Team
+  /teams/join/{requestId}/reject:
+    post:
+      description: Rejects a pending team join request. Only the team owner can perform
+        this action.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the team
+        in: path
+        name: team_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the join request
+        in: path
+        name: request_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Successfully accepted the join request
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Bad Request: Missing or malformed parameters.'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Forbidden: Requester is not allowed to perform this action.'
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Not Found: The join request does not exist.'
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Conflict: The join request has already been responded to.'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went wrong.
+      summary: Reject a team join request
+      tags:
+      - Team
   /users:
     get:
       description: Get or search for users by name or email. If no search term is

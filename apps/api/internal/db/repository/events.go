@@ -114,6 +114,11 @@ func (r *EventRepository) GetEventStaff(ctx context.Context, eventId uuid.UUID) 
 	return &users, err
 }
 
+func (r *EventRepository) GetEventUsers(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetEventUsersRow, error) {
+	users, err := r.db.Query.GetEventUsers(ctx, eventId)
+	return &users, err
+}
+
 func (r *EventRepository) AssignRole(ctx context.Context, params sqlc.AssignRoleParams) error {
 	return r.db.Query.AssignRole(ctx, params)
 }
@@ -125,4 +130,12 @@ func (r *EventRepository) RevokeRole(ctx context.Context, userId uuid.UUID, even
 	}
 
 	return r.db.Query.RemoveRole(ctx, params)
+}
+
+func (r *EventRepository) GetApplicationStatuses(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationStatusSplitRow, error) {
+	return r.db.Query.GetApplicationStatusSplit(ctx, eventId)
+}
+
+func (r *EventRepository) GetSubmissionTimes(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetSubmissionTimesRow, error) {
+	return r.db.Query.GetSubmissionTimes(ctx, eventId)
 }

@@ -80,6 +80,8 @@ func (r *ApplicationRepository) SubmitApplication(ctx context.Context, data any,
 		Application:         jsonBytes,
 		SubmittedAtDoUpdate: true,
 		SubmittedAt:         time.Now(),
+		SavedAtDoUpdate:     true,
+		SavedAt:             time.Now(),
 		UserID:              userId,
 		EventID:             eventId,
 	})
@@ -105,6 +107,8 @@ func (r *ApplicationRepository) SaveApplication(ctx context.Context, data any, u
 		Application:         jsonBytes,
 		UserID:              userId,
 		EventID:             eventId,
+		SavedAtDoUpdate:     true,
+		SavedAt:             time.Now(),
 	})
 
 	if err != nil {
@@ -137,4 +141,8 @@ func (r *ApplicationRepository) GetSubmittedApplicationSchools(ctx context.Conte
 
 func (r *ApplicationRepository) GetApplicationStatuses(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationStatusSplitRow, error) {
 	return r.db.Query.GetApplicationStatusSplit(ctx, eventId)
+}
+
+func (r *ApplicationRepository) GetSubmissionTimes(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetSubmissionTimesRow, error) {
+	return r.db.Query.GetSubmissionTimes(ctx, eventId)
 }
