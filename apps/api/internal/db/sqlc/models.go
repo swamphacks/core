@@ -188,6 +188,93 @@ func (ns NullGetEventScopeType) Value() (driver.Value, error) {
 	return string(ns.GetEventScopeType), nil
 }
 
+type InvitationStatus string
+
+const (
+	InvitationStatusPENDING  InvitationStatus = "PENDING"
+	InvitationStatusACCEPTED InvitationStatus = "ACCEPTED"
+	InvitationStatusEXPIRED  InvitationStatus = "EXPIRED"
+	InvitationStatusREJECTED InvitationStatus = "REJECTED"
+)
+
+func (e *InvitationStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = InvitationStatus(s)
+	case string:
+		*e = InvitationStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for InvitationStatus: %T", src)
+	}
+	return nil
+}
+
+type NullInvitationStatus struct {
+	InvitationStatus InvitationStatus `json:"invitation_status"`
+	Valid            bool             `json:"valid"` // Valid is true if InvitationStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullInvitationStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.InvitationStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.InvitationStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullInvitationStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.InvitationStatus), nil
+}
+
+type JoinRequestStatus string
+
+const (
+	JoinRequestStatusPENDING  JoinRequestStatus = "PENDING"
+	JoinRequestStatusAPPROVED JoinRequestStatus = "APPROVED"
+	JoinRequestStatusREJECTED JoinRequestStatus = "REJECTED"
+)
+
+func (e *JoinRequestStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = JoinRequestStatus(s)
+	case string:
+		*e = JoinRequestStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for JoinRequestStatus: %T", src)
+	}
+	return nil
+}
+
+type NullJoinRequestStatus struct {
+	JoinRequestStatus JoinRequestStatus `json:"join_request_status"`
+	Valid             bool              `json:"valid"` // Valid is true if JoinRequestStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullJoinRequestStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.JoinRequestStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.JoinRequestStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullJoinRequestStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.JoinRequestStatus), nil
+}
+
 type Application struct {
 	UserID      uuid.UUID             `json:"user_id"`
 	EventID     uuid.UUID             `json:"event_id"`
@@ -282,6 +369,30 @@ type Team struct {
 	EventID   *uuid.UUID `json:"event_id"`
 	CreatedAt *time.Time `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+type TeamInvitation struct {
+	ID              uuid.UUID        `json:"id"`
+	TeamID          uuid.UUID        `json:"team_id"`
+	InvitedByUserID uuid.UUID        `json:"invited_by_user_id"`
+	InvitedEmail    string           `json:"invited_email"`
+	InvitedUserID   *uuid.UUID       `json:"invited_user_id"`
+	Status          InvitationStatus `json:"status"`
+	ExpiresAt       *time.Time       `json:"expires_at"`
+	CreatedAt       time.Time        `json:"created_at"`
+	UpdatedAt       time.Time        `json:"updated_at"`
+}
+
+type TeamJoinRequest struct {
+	ID                uuid.UUID         `json:"id"`
+	TeamID            uuid.UUID         `json:"team_id"`
+	UserID            uuid.UUID         `json:"user_id"`
+	RequestMessage    *string           `json:"request_message"`
+	Status            JoinRequestStatus `json:"status"`
+	ProcessedByUserID *uuid.UUID        `json:"processed_by_user_id"`
+	ProcessedAt       *time.Time        `json:"processed_at"`
+	CreatedAt         time.Time         `json:"created_at"`
+	UpdatedAt         time.Time         `json:"updated_at"`
 }
 
 type TeamMember struct {

@@ -113,3 +113,116 @@ func (q *Queries) GetUserEventTeam(ctx context.Context, arg GetUserEventTeamPara
 	)
 	return i, err
 }
+
+const listTeamsWithMembersByEvent = `-- name: ListTeamsWithMembersByEvent :many
+SELECT
+    t.id,
+    t.name,
+    t.owner_id,
+    t.event_id,
+    -- Step 1: Cast the aggregated JSON array to JSONB
+    (COALESCE(
+        json_agg(
+            json_build_object(
+                'user_id', u.id,
+                'name', u.name,
+                'email', u.email,
+                'image', u.image,
+                'joined_at', tm.joined_at
+            )
+        ) FILTER (WHERE u.id IS NOT NULL),
+        '[]'::json
+    ))::jsonb AS members -- <--- Explicitly cast to jsonb
+FROM
+    teams t
+LEFT JOIN
+    team_members tm ON t.id = tm.team_id
+LEFT JOIN
+    auth.users u ON tm.user_id = u.id
+WHERE
+    t.event_id = $1
+GROUP BY
+    t.id
+ORDER BY
+    t.created_at DESC
+LIMIT $2
+OFFSET $3
+`
+
+type ListTeamsWithMembersByEventParams struct {
+	EventID *uuid.UUID `json:"event_id"`
+	Limit   int32      `json:"limit"`
+	Offset  int32      `json:"offset"`
+}
+
+type ListTeamsWithMembersByEventRow struct {
+	ID      uuid.UUID  `json:"id"`
+	Name    string     `json:"name"`
+	OwnerID *uuid.UUID `json:"owner_id"`
+	EventID *uuid.UUID `json:"event_id"`
+	Members []byte     `json:"members"`
+}
+
+func (q *Queries) ListTeamsWithMembersByEvent(ctx context.Context, arg ListTeamsWithMembersByEventParams) ([]ListTeamsWithMembersByEventRow, error) {
+	rows, err := q.db.Query(ctx, listTeamsWithMembersByEvent, arg.EventID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTeamsWithMembersByEventRow{}
+	for rows.Next() {
+		var i ListTeamsWithMembersByEventRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.OwnerID,
+			&i.EventID,
+			&i.Members,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateTeamById = `-- name: UpdateTeamById :one
+UPDATE teams
+SET
+    owner_id = CASE WHEN $1::boolean THEN $2 ELSE owner_id END,
+    name = CASE WHEN $3::boolean THEN $4 ELSE name END
+WHERE
+    id = $5::uuid
+RETURNING id, name, owner_id, event_id, created_at, updated_at
+`
+
+type UpdateTeamByIdParams struct {
+	OwnerIDDoUpdate bool       `json:"owner_id_do_update"`
+	OwnerID         *uuid.UUID `json:"owner_id"`
+	NameDoUpdate    bool       `json:"name_do_update"`
+	Name            string     `json:"name"`
+	ID              uuid.UUID  `json:"id"`
+}
+
+func (q *Queries) UpdateTeamById(ctx context.Context, arg UpdateTeamByIdParams) (Team, error) {
+	row := q.db.QueryRow(ctx, updateTeamById,
+		arg.OwnerIDDoUpdate,
+		arg.OwnerID,
+		arg.NameDoUpdate,
+		arg.Name,
+		arg.ID,
+	)
+	var i Team
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.EventID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
