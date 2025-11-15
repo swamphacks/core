@@ -171,7 +171,7 @@ type CreateTeamRequest struct {
 //	@Tags			Team
 //
 //	@Accept			json
-//	@Product		json
+//	@Produce		json
 //
 //	@Param			sh_session_id	cookie		string					true	"The authenticated session token/id"
 //	@Param			event_id		path		int						true	"The ID of the event"
@@ -243,12 +243,12 @@ func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 func (h *TeamHandler) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 	teamIdStr := chi.URLParam(r, "teamId")
 	if teamIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The team ID is missing from the URL!"))
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_team_id", "The team ID is missing from the URL!"))
 		return
 	}
 	teamId, err := uuid.Parse(teamIdStr)
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The team ID is not a valid UUID"))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_team_id", "The team ID is not a valid UUID"))
 		return
 	}
 
@@ -263,4 +263,144 @@ func (h *TeamHandler) LeaveTeam(w http.ResponseWriter, r *http.Request) {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
 
 	}
+}
+
+type CreateJoinRequest struct {
+	Message *string `json:"message"`
+}
+
+// Request to join a team
+//
+//	@Summary		Request to join a team
+//	@Description	Requests to join a team or fails if user is already on a team.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie	string				true	"The authenticated session token/id"
+//	@Param			team_id			path	string				true	"The ID of the team"
+//	@Param			event_id		path	string				true	"The ID of the event"
+//	@Param			request			body	CreateTeamRequest	true	"Team Creation Payload"
+//	@Accept			json
+//	@Produce		json
+//	@Success		204	"Successfully left the team"
+//	@Failure		400	{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401	{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//
+//	@Failure		409	{object}	response.ErrorResponse	"Conflict: User is already on a team."
+//
+//	@Failure		500	{object}	response.ErrorResponse	"Something went seriously wrong."
+//
+//	@Router			/events/{eventId}/teams/{teamId}/join [post]
+func (h *TeamHandler) RequestToJoinTeam(w http.ResponseWriter, r *http.Request) {
+	teamId, err := web.PathParamToUUID(r, "teamId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_team_id", "The team ID is malformed/missing."))
+		return
+	}
+
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_event_id", "The event ID is malformed/missing."))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	var body CreateJoinRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Your request is missing a field"))
+		return
+	}
+	defer r.Body.Close()
+
+	request, err := h.teamService.RequestToJoinTeam(r.Context(), eventId, teamId, *userId, body.Message)
+	if err != nil {
+		if errors.Is(err, services.ErrUserOnTeam) {
+			res.SendError(w, http.StatusConflict, res.NewError("already_teamed", "You are already on a team."))
+			return
+		}
+
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, request)
+}
+
+// Get a team's pending join requets
+//
+//	@Summary		Get team's pending join requests
+//	@Description	Retrieves a team's pending join requests. This is only allowed for the team's owner.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie		string					true	"The authenticated session token/id"
+//	@Param			team_id			path		string					true	"The ID of the team"
+//	@Success		200				{array}		sqlc.TeamJoinRequest	"Successfully retrieved pending requests"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden: Requester is not allowed to perform this action."
+//	@Failure		500				{object}	response.ErrorResponse	"Something went seriously wrong."
+//
+//	@Router			/teams/{teamId}/pending-joins [get]
+func (h *TeamHandler) GetPendingRequestsForTeam(w http.ResponseWriter, r *http.Request) {
+	teamId, err := web.PathParamToUUID(r, "teamId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_team_id", "The team ID is malformed/missing."))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	requests, err := h.teamService.GetPendingJoinRequestForTeam(r.Context(), *userId, teamId)
+	if err != nil {
+		if errors.Is(err, services.ErrUserNotTeamOwner) {
+			res.SendError(w, http.StatusForbidden, res.NewError("forbidden", "You do not have the permissions for this action."))
+			return
+		}
+
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, requests)
+}
+
+// Get your pending requests for an event
+//
+//	@Summary		Get your pending requests
+//	@Description	Retrieves the current user's pending requests for a specific event's teams.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie		string					true	"The authenticated session token/id"
+//	@Param			team_id			path		string					true	"The ID of the team"
+//	@Success		200				{array}		sqlc.TeamJoinRequest	"Successfully retrieved pending requests"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		500				{object}	response.ErrorResponse	"Something went seriously wrong."
+//
+//	@Router			/events/{eventId}/teams/me/pending-joins [get]
+func (h *TeamHandler) GetMyPendingRequests(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_event_id", "The event ID is malformed/missing."))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	requests, err := h.teamService.GetUserPendingJoinRequestsByEvent(r.Context(), *userId, eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, requests)
 }

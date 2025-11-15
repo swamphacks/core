@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { TextField } from "@/components/ui/TextField";
 import { useForm, type FormValidateOrFn } from "@tanstack/react-form";
-import { Link } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { DialogTrigger, Form, Heading } from "react-aria-components";
 import {
@@ -18,6 +18,7 @@ interface Props {
 }
 
 export default function NoTeamCard({ eventId }: Props) {
+  const router = useRouter();
   const relativeExploreTeamsPath = `/events/${eventId}/dashboard/teams-explorer`;
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const { create } = useTeamActions(eventId);
@@ -67,9 +68,7 @@ export default function NoTeamCard({ eventId }: Props) {
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3 mt-2">
-        <Link to={relativeExploreTeamsPath}>
-          <Button variant="secondary">Explore Teams</Button>
-        </Link>
+          <Button onClick={() => router.navigate({ to: relativeExploreTeamsPath })} variant="secondary">Explore Teams</Button>
 
         <DialogTrigger isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
           <Button variant="primary">Create Team</Button>

@@ -16,8 +16,7 @@ export default function MyTeamCard({ eventId, team }: Props) {
   return (
     <div className="border border-input-border rounded-md px-4 py-3 w-full md:w-fit md:min-w-120 flex flex-col gap-4">
       <h3 className="text-text-main text-2xl">{team.name}</h3>
-
-      <div className="flex flex-row text-text-secondary items-center gap-2">
+      <div className="flex flex-row text-text-secondary items-center gap-4">
         <AvatarStack
           avatars={team.members.map((member) => ({
             src: member?.image,
@@ -26,9 +25,13 @@ export default function MyTeamCard({ eventId, team }: Props) {
           max={2}
           size="sm"
         />
-        <TablerUsers className="h-6 w-6" />
-        <p className="text-lg">{team.members.length} / 4 Members</p>
+        <div className="flex flex-row justify-center items-center gap-2">
+          <TablerUsers className="h-6 w-6" />
+          <p className="text-lg">{team.members.length} / 4 Members</p>
+        </div>
       </div>
+
+      <Button>Invite User</Button>
 
       <Button
         variant="danger"

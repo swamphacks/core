@@ -19,24 +19,29 @@ var (
 	ErrTeamNotFound        = errors.New("team does not exist")
 	ErrNoEligibleNextOwner = errors.New("no eligible next owner for team")
 	ErrTeamMembersNotBytes = errors.New("team members aren't bytes")
+	ErrUserOnTeam          = errors.New("user already on a team")
+	ErrUserNotTeamOwner    = errors.New("user is not the team owner")
 )
 
 type TeamService struct {
-	teamRepo       *repository.TeamRepository
-	teamMemberRepo *repository.TeamMemberRepository
-	txm            *db.TransactionManager
-	logger         zerolog.Logger
+	teamRepo            *repository.TeamRepository
+	teamMemberRepo      *repository.TeamMemberRepository
+	teamJoinRequestRepo *repository.TeamJoinRequestRepository
+	txm                 *db.TransactionManager
+	logger              zerolog.Logger
 }
 
-func NewTeamService(teamRepo *repository.TeamRepository, teamMemberRepo *repository.TeamMemberRepository, txm *db.TransactionManager, logger zerolog.Logger) *TeamService {
+func NewTeamService(teamRepo *repository.TeamRepository, teamMemberRepo *repository.TeamMemberRepository, teamJoinRequestRepo *repository.TeamJoinRequestRepository, txm *db.TransactionManager, logger zerolog.Logger) *TeamService {
 	return &TeamService{
-		teamRepo:       teamRepo,
-		teamMemberRepo: teamMemberRepo,
-		txm:            txm,
-		logger:         logger.With().Str("service", "TeamService").Str("component", "team").Logger(),
+		teamRepo:            teamRepo,
+		teamMemberRepo:      teamMemberRepo,
+		teamJoinRequestRepo: teamJoinRequestRepo,
+		txm:                 txm,
+		logger:              logger.With().Str("service", "TeamService").Str("component", "team").Logger(),
 	}
 }
 
+// TODO: Remove all join requests after creating a team
 func (s *TeamService) CreateTeam(ctx context.Context, name string, eventId, userId uuid.UUID) (*sqlc.Team, error) {
 	// Check if user already has a team for this event.
 	member, err := s.teamMemberRepo.GetTeamMemberByUserAndEvent(ctx, userId, eventId)
@@ -260,4 +265,51 @@ func (s *TeamService) LeaveTeam(ctx context.Context, userId, teamId uuid.UUID) e
 		_, err := txTeamRepo.Update(ctx, team.ID, nil, &nextOwner.UserID)
 		return err
 	})
+}
+
+func (s *TeamService) RequestToJoinTeam(ctx context.Context, eventId, teamId, userId uuid.UUID, message *string) (*sqlc.TeamJoinRequest, error) {
+	// Ensure user is not already on a team (User's can't request to join a team if they are already on a team)
+	_, err := s.teamMemberRepo.GetTeamMemberByUserAndEvent(ctx, userId, eventId)
+	if err != nil && !errors.Is(err, repository.ErrTeamMemberNotFound) {
+		return nil, err
+	}
+
+	if err == nil {
+		return nil, ErrUserOnTeam
+	}
+
+	request, err := s.teamJoinRequestRepo.Create(ctx, teamId, userId, message)
+	if err != nil {
+		return nil, err
+	}
+
+	return request, nil
+}
+
+func (s *TeamService) GetPendingJoinRequestForTeam(ctx context.Context, userId, teamId uuid.UUID) ([]sqlc.TeamJoinRequest, error) {
+	// Get team and check if user is the owner of the tema
+	team, err := s.teamRepo.GetByID(ctx, teamId)
+	if err != nil {
+		return []sqlc.TeamJoinRequest{}, err
+	}
+
+	if *team.OwnerID != userId {
+		return []sqlc.TeamJoinRequest{}, ErrUserNotTeamOwner
+	}
+
+	requests, err := s.teamJoinRequestRepo.GetTeamJoinRequestsByTeam(ctx, teamId, sqlc.JoinRequestStatusPENDING)
+	if err != nil {
+		return []sqlc.TeamJoinRequest{}, err
+	}
+
+	return requests, nil
+}
+
+func (s *TeamService) GetUserPendingJoinRequestsByEvent(ctx context.Context, userId, eventId uuid.UUID) ([]sqlc.TeamJoinRequest, error) {
+	requests, err := s.teamJoinRequestRepo.GetTeamJoinRequestsByUserAndEvent(ctx, userId, eventId, sqlc.JoinRequestStatusPENDING)
+	if err != nil {
+		return []sqlc.TeamJoinRequest{}, err
+	}
+
+	return requests, nil
 }

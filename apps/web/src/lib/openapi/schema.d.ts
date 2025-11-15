@@ -1163,7 +1163,63 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get an event's teams
+         * @description Gets all teams for a specific event.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The ID of the event */
+                    event_id: string;
+                };
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session_id: string;
+                };
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Teams successfully retrieved. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["services.TeamWithMembers"][];
+                    };
+                };
+                /** @description Bad Request: Missing or malformed parameters. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Something went seriously wrong. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
         put?: never;
         /**
          * Create a new team
@@ -1381,6 +1437,76 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{teamId}/members/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Leave a team
+         * @description Leaves a team if the requester is on the team. Depends on cookies for user retrieval.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The ID of the team */
+                    team_id: string;
+                };
+                cookie: {
+                    /** @description The authenticated session token/id */
+                    sh_session_id: string;
+                };
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successfully left the team */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request: Missing or malformed parameters. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated: Requester is not currently authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+                /** @description Something went seriously wrong. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["response.ErrorResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1871,6 +1997,13 @@ export interface components {
             application_submission_stats: components["schemas"]["services.SubmissionTimesStatistics"][];
             event_details: components["schemas"]["sqlc.Event"];
         };
+        "services.MemberWithUserInfo": {
+            email: string;
+            image: string;
+            joined_at: string;
+            name: string;
+            user_id: string;
+        };
         "services.SubmissionTimesStatistics": {
             count: number;
             /** Format: date-time */
@@ -1879,7 +2012,7 @@ export interface components {
         "services.TeamWithMembers": {
             event_id: string;
             id: string;
-            members: components["schemas"]["sqlc.GetTeamMembersRow"][];
+            members: components["schemas"]["services.MemberWithUserInfo"][];
             name: string;
             owner_id: string;
         };
@@ -2004,13 +2137,6 @@ export interface components {
             start_time: string;
             updated_at: string;
             website_url: string;
-        };
-        "sqlc.GetTeamMembersRow": {
-            email: string;
-            image: string;
-            joined_at: string;
-            name: string;
-            user_id: string;
         };
         "sqlc.NullApplicationStatus": {
             application_status: components["schemas"]["sqlc.ApplicationStatus"];

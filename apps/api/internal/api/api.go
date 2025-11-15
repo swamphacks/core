@@ -113,6 +113,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Route("/teams", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
 		r.Get("/{teamId}", api.Handlers.Teams.GetTeam)
+		r.Get("/{teamId}/pending-joins", api.Handlers.Teams.GetPendingRequestsForTeam)
 		r.Delete("/{teamId}/members/me", api.Handlers.Teams.LeaveTeam)
 	})
 
@@ -164,6 +165,11 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				r.Post("/", api.Handlers.Teams.CreateTeam)
 				r.Get("/", api.Handlers.Teams.GetEventTeams)
 				r.Get("/me", api.Handlers.Teams.GetMyTeam)
+
+				// Specific team routes within events
+				r.Route("/{teamId}", func(r chi.Router) {
+					r.Post("/join", api.Handlers.Teams.RequestToJoinTeam)
+				})
 			})
 		})
 	})

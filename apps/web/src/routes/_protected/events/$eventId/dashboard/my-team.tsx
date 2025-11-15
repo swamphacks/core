@@ -2,13 +2,22 @@ import MyTeamCard from "@/features/Team/components/MyTeamCard";
 import NoTeamCard from "@/features/Team/components/NoTeamCard";
 import TeamInvitationSection from "@/features/Team/components/TeamInvitationSection";
 import { useMyTeam } from "@/features/Team/hooks/useMyTeam";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
 
 export const Route = createFileRoute(
-  "/_protected/events/$eventId/dashboard/_applicant/team-formation",
+  "/_protected/events/$eventId/dashboard/my-team",
 )({
   component: RouteComponent,
+  beforeLoad: async ({ context }) => {
+    if (
+      !context.eventRole ||
+      !["applicant", "attendee"].includes(context.eventRole)
+    ) {
+      return notFound();
+    }
+    return {};
+  },
 });
 
 function RouteComponent() {
