@@ -133,3 +133,11 @@ func (s *TeamService) JoinTeam(ctx context.Context, userId, teamId uuid.UUID) er
 	_, err := s.teamMemberRepo.Create(ctx, teamId, userId)
 	return err
 }
+
+func (s *TeamService) InviteUserToTeam(ctx context.Context, teamId, inviterId uuid.UUID, inviteeEmail string) error {
+	// 1. Validate team exists and user is leader
+    // 2. Check if user exists or create invitation record
+    // 3. Generate invitation token
+    // 4. Call emailService.QueueSendTeamInvitation(...)
+    // 5. Save invitation to database
+}

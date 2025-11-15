@@ -2,6 +2,7 @@ package services
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 
 	"github.com/hibiken/asynq"
@@ -29,7 +30,7 @@ func (s *EmailService) SendConfirmationEmail(recipient string, name string) erro
 
 	var body bytes.Buffer
 
-	template, err := template.ParseFiles("./internal/email/templates/ConfirmationEmail.html")
+	template, err := template.ParseFiles("/app/internal/email/templates/ConfirmationEmail.html")
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to parse email template for recipient")
 	}
@@ -87,3 +88,49 @@ func (s *EmailService) QueueSendConfirmationEmail(to string, name string) (*asyn
 
 	return info, nil
 }
+
+func (s *EmailService) SendTeamInvitationEmail(recipient string, teamName string, inviterName string, eventName string, inviteLink string) (*asynq.TaskInfo, error) {
+	task, err := tasks.NewTaskSendTeamInvitation(tasks.SendTeamInvitationPayload{
+		To: to,
+		TeamName: teamName,
+		InviterName: inviterName,
+		EventName: eventName,
+		InviteLink: inviteLink,
+	})
+
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to create SendTeamInvitation task")
+		return nil, err
+	}
+
+	info, err := s.taskQueue.Enqueue(task, asynq.Queue("email"))
+	if err != nil {
+		s.logger.Err(err).Msg("failed to queue SendTeamInvitation task")
+		return nil, err
+	}
+
+	return info, nil
+}
+
+func (s *EmailService) QueueSendTeamInvitation(to string, teamName string, inviterName string, eventName string, inviteLink string) (*asynq.TaskInfo, error) {
+	task, err := tasks.NewTaskSendTeamInvitation(tasks.sendTeamInvitationPayload{
+		To: to,
+		TeamName: teamName,
+		InviterName: inviterName,
+		EventName: eventName,
+		InviteLink: inviteLink,
+	})
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to create SendTeamInvitation task")
+		return nil, err
+	}
+
+	info, err := s.taskQueue.Enqueue(task, asynq.Queue("email"))
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to queue SendTeamInvitation task")
+		return nil, err
+	}
+
+	return info, nil
+}
+
