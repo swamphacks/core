@@ -213,6 +213,25 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 	return nil
 }
 
+func (s *ApplicationService) DownloadResume(ctx context.Context, userId, eventId uuid.UUID) (*storage.PresignedRequest, error) {
+	presignableStorage, ok := s.storage.(storage.PresignableStorage)
+
+	if !ok {
+		err := errors.New("unable to type cast `Storage` to `PresignableStorage`")
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, eventId.String()+"/"+userId.String(), 60)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	return request, nil
+}
+
 type ApplicationStatistics struct {
 	GenderStatistics sqlc.GetApplicationGenderSplitRow   `json:"gender_stats"`
 	AgeStatistics    sqlc.GetApplicationAgeSplitRow      `json:"age_stats"`

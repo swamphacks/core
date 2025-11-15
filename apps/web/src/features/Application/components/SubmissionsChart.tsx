@@ -12,6 +12,11 @@ interface SubmissionsChartProps {
 export default function SubmissionsChart({
   submission_stats,
 }: SubmissionsChartProps) {
+  // TODO: Make this more elegant, throws error when submission stats is null/undefined
+  if (!submission_stats) {
+    return null;
+  }
+
   const { theme } = useTheme();
 
   const isDark = theme === "dark";

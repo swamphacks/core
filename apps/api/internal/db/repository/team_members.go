@@ -59,3 +59,10 @@ func (r *TeamMemberRepository) Create(ctx context.Context, teamId, userId uuid.U
 
 	return &member, err
 }
+
+func (r *TeamMemberRepository) Delete(ctx context.Context, teamId, userId uuid.UUID) error {
+	return r.db.Query.RemoveTeamMember(ctx, sqlc.RemoveTeamMemberParams{
+		UserID: userId,
+		TeamID: teamId,
+	})
+}

@@ -113,6 +113,10 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Route("/teams", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
 		r.Get("/{teamId}", api.Handlers.Teams.GetTeam)
+		r.Get("/{teamId}/pending-joins", api.Handlers.Teams.GetPendingRequestsForTeam)
+		r.Delete("/{teamId}/members/me", api.Handlers.Teams.LeaveTeam)
+		r.Post("/join/{requestId}/accept", api.Handlers.Teams.AcceptTeamJoinRequest)
+		r.Post("/join/{requestId}/reject", api.Handlers.Teams.RejectTeamJoinRequest)
 	})
 
 	// --- Event routes ---
@@ -154,6 +158,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				r.Get("/", api.Handlers.Application.GetApplicationByUserAndEventID)
 				r.Post("/submit", api.Handlers.Application.SubmitApplication)
 				r.Post("/save", api.Handlers.Application.SaveApplication)
+				r.Get("/download-resume", api.Handlers.Application.DownloadResume)
 
 				// For statistics (Staff ONLY)
 				r.With(ensureEventStaff).Get("/stats", api.Handlers.Application.GetApplicationStatistics)
@@ -162,7 +167,14 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			// Team routes
 			r.Route("/teams", func(r chi.Router) {
 				r.Post("/", api.Handlers.Teams.CreateTeam)
+				r.Get("/", api.Handlers.Teams.GetEventTeams)
 				r.Get("/me", api.Handlers.Teams.GetMyTeam)
+				r.Get("/me/pending-joins", api.Handlers.Teams.GetMyPendingRequests)
+
+				// Specific team routes within events
+				r.Route("/{teamId}", func(r chi.Router) {
+					r.Post("/join", api.Handlers.Teams.RequestToJoinTeam)
+				})
 			})
 		})
 	})

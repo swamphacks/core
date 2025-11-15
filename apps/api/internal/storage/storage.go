@@ -1,6 +1,8 @@
 package storage
 
-import "context"
+import (
+	"context"
+)
 
 type Storage interface {
 	Store(ctx context.Context, bucketName, key string, data []byte, contentType *string) error
