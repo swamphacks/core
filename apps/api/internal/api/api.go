@@ -158,6 +158,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				r.Get("/", api.Handlers.Application.GetApplicationByUserAndEventID)
 				r.Post("/submit", api.Handlers.Application.SubmitApplication)
 				r.Post("/save", api.Handlers.Application.SaveApplication)
+				r.Get("/download-resume", api.Handlers.Application.DownloadResume)
 
 				// For statistics (Staff ONLY)
 				r.With(ensureEventStaff).Get("/stats", api.Handlers.Application.GetApplicationStatistics)
