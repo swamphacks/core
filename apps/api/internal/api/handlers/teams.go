@@ -490,6 +490,209 @@ func (h *TeamHandler) RejectTeamJoinRequest(w http.ResponseWriter, r *http.Reque
 	res.Send(w, http.StatusNoContent, nil)
 }
 
+type InviteUserRequest struct {
+	Email string `json:"email"`
+}
+
+// Invite user to team
+//
+//	@Summary		Invite user to team
+//	@Description	Invites a user to a team by email. Only the team owner can invite users.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie			string				true	"The authenticated session token/id"
+//	@Param			teamId			path			string				true	"The ID of the team"
+//	@Param			request			body			InviteUserRequest	true	"Invitation request payload"
+//	@Accept			json
+//	@Produce		json
+//	@Success		204				"Successfully sent invitation"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden: User is not the team owner."
+//	@Failure		404				{object}	response.ErrorResponse	"Not Found: Team not found."
+//	@Failure		409				{object}	response.ErrorResponse	"Conflict: Invitation already exists."
+//	@Failure		500				{object}	response.ErrorResponse	"Something went wrong."
+//
+//	@Router			/teams/{teamId}/invite [post]
+func (h *TeamHandler) InviteUserToTeam(w http.ResponseWriter, r *http.Request) {
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	teamIdStr := chi.URLParam(r, "teamId")
+	if teamIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_team_id", "The team ID is missing from the URL!"))
+		return
+	}
+
+	teamId, err := uuid.Parse(teamIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_team_id", "The team ID is not a valid UUID"))
+		return
+	}
+
+	var body InviteUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Your request is missing a field"))
+		return
+	}
+	defer r.Body.Close()
+
+	if body.Email == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_email", "Email is required"))
+		return
+	}
+
+	err = h.teamService.InviteUserToTeam(r.Context(), teamId, *userId, body.Email)
+	if err != nil {
+		if errors.Is(err, services.ErrUserNotTeamOwner) {
+			res.SendError(w, http.StatusForbidden, res.NewError("forbidden", "You do not have permission to invite users to this team"))
+			return
+		}
+		if errors.Is(err, services.ErrTeamNotFound) {
+			res.SendError(w, http.StatusNotFound, res.NewError("team_not_found", "Team not found"))
+			return
+		}
+		if errors.Is(err, services.ErrInvitationAlreadyExists) {
+			res.SendError(w, http.StatusConflict, res.NewError("invitation_exists", "A pending invitation already exists for this email and team"))
+			return
+		}
+		h.logger.Err(err).Msg("Failed to invite user to team")
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		return
+	}
+
+	res.Send(w, http.StatusNoContent, nil)
+}
+
+// Get invitation details
+//
+//	@Summary		Get invitation details
+//	@Description	Retrieves invitation details including team name, inviter name, and event name. Works for unauthenticated users.
+//	@Tags			Team
+//	@Param			invitationId	path		string						true	"The ID of the invitation"
+//	@Success		200				{object}	services.InvitationDetails	"Invitation details successfully retrieved."
+//	@Failure		404				{object}	response.ErrorResponse		"Invitation not found or expired."
+//	@Failure		500				{object}	response.ErrorResponse		"Something went wrong."
+//
+//	@Router			/teams/invite/{invitationId} [get]
+func (h *TeamHandler) GetInvitation(w http.ResponseWriter, r *http.Request) {
+	invitationIdStr := chi.URLParam(r, "invitationId")
+	if invitationIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_invitation_id", "The invitation ID is missing from the URL!"))
+		return
+	}
+
+	invitationId, err := uuid.Parse(invitationIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_invitation_id", "The invitation ID is not a valid UUID"))
+		return
+	}
+
+	details, err := h.teamService.GetInvitationDetails(r.Context(), invitationId)
+	if err != nil {
+		if errors.Is(err, services.ErrInvitationNotFound) || errors.Is(err, services.ErrInvitationExpired) || errors.Is(err, services.ErrInvitationAlreadyAccepted) {
+			res.SendError(w, http.StatusNotFound, res.NewError("invitation_not_found", "Invitation not found, expired, or already accepted"))
+			return
+		}
+		h.logger.Err(err).Msg("Failed to get invitation details")
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, details)
+}
+
+// Accept invitation
+//
+//	@Summary		Accept team invitation
+//	@Description	Accepts a team invitation. Requires authentication and the user's email must match the invitation email. User must have a submitted application for the event.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie		string	true	"The authenticated session token/id"
+//	@Param			invitationId	path		string	true	"The ID of the invitation"
+//	@Success		204				"Successfully accepted the invitation"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden: Email mismatch or application required."
+//	@Failure		404				{object}	response.ErrorResponse	"Not Found: Invitation not found or expired."
+//	@Failure		409				{object}	response.ErrorResponse	"Conflict: Invitation already accepted."
+//	@Failure		500				{object}	response.ErrorResponse	"Something went wrong."
+//
+//	@Router			/teams/invite/{invitationId}/accept [post]
+func (h *TeamHandler) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	invitationIdStr := chi.URLParam(r, "invitationId")
+	if invitationIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_invitation_id", "The invitation ID is missing from the URL!"))
+		return
+	}
+
+	invitationId, err := uuid.Parse(invitationIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_invitation_id", "The invitation ID is not a valid UUID"))
+		return
+	}
+
+	err = h.teamService.AcceptInvitation(r.Context(), invitationId, *userId)
+	if err != nil {
+		status, code, message := mapInvitationServiceError(err)
+		res.SendError(w, status, res.NewError(code, message))
+		return
+	}
+
+	res.Send(w, http.StatusNoContent, nil)
+}
+
+// Reject invitation
+//
+//	@Summary		Reject team invitation
+//	@Description	Rejects a team invitation. Requires authentication and the user's email must match the invitation email.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie		string	true	"The authenticated session token/id"
+//	@Param			invitationId	path		string	true	"The ID of the invitation"
+//	@Success		204				"Successfully rejected the invitation"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden: Email mismatch."
+//	@Failure		404				{object}	response.ErrorResponse	"Not Found: Invitation not found."
+//	@Failure		500				{object}	response.ErrorResponse	"Something went wrong."
+//
+//	@Router			/teams/invite/{invitationId}/reject [post]
+func (h *TeamHandler) RejectInvitation(w http.ResponseWriter, r *http.Request) {
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	invitationIdStr := chi.URLParam(r, "invitationId")
+	if invitationIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_invitation_id", "The invitation ID is missing from the URL!"))
+		return
+	}
+
+	invitationId, err := uuid.Parse(invitationIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_invitation_id", "The invitation ID is not a valid UUID"))
+		return
+	}
+
+	err = h.teamService.RejectInvitation(r.Context(), invitationId, *userId)
+	if err != nil {
+		status, code, message := mapInvitationServiceError(err)
+		res.SendError(w, status, res.NewError(code, message))
+		return
+	}
+
+	res.Send(w, http.StatusNoContent, nil)
+}
+
 // Maps team service errors to HTTP status codes and messages
 func mapTeamServiceError(err error) (status int, code, message string) {
 	switch {
@@ -503,6 +706,24 @@ func mapTeamServiceError(err error) (status int, code, message string) {
 		return http.StatusConflict, "team_full", "The team is already full."
 	case errors.Is(err, repository.ErrTeamNotFound):
 		return http.StatusNotFound, "team_not_found", "Team resource was not found."
+	default:
+		return http.StatusInternalServerError, "internal_error", "Something went wrong."
+	}
+}
+
+// Maps invitation service errors to HTTP status codes and messages
+func mapInvitationServiceError(err error) (status int, code, message string) {
+	switch {
+	case errors.Is(err, services.ErrInvitationNotFound):
+		return http.StatusNotFound, "invitation_not_found", "Invitation not found."
+	case errors.Is(err, services.ErrInvitationExpired):
+		return http.StatusNotFound, "invitation_expired", "Invitation has expired."
+	case errors.Is(err, services.ErrInvitationAlreadyAccepted):
+		return http.StatusConflict, "invitation_already_accepted", "Invitation has already been accepted."
+	case errors.Is(err, services.ErrEmailMismatch):
+		return http.StatusForbidden, "email_mismatch", "Your email does not match the invitation email."
+	case errors.Is(err, services.ErrApplicationRequired):
+		return http.StatusForbidden, "application_required", "Please complete your application first."
 	default:
 		return http.StatusInternalServerError, "internal_error", "Something went wrong."
 	}

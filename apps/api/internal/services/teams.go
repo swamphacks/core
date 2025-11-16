@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
-
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
@@ -23,14 +24,25 @@ var (
 	ErrUserNotTeamOwner           = errors.New("user is not the team owner")
 	ErrTeamFull                   = errors.New("team is full")
 	ErrUserNotApplicantOrAttendee = errors.New("user is not an applicant or attendee for the event")
+	ErrInvitationNotFound         = errors.New("invitation not found")
+	ErrInvitationExpired          = errors.New("invitation expired")
+	ErrInvitationAlreadyAccepted  = errors.New("invitation already accepted")
+	ErrEmailMismatch              = errors.New("email mismatch")
+	ErrApplicationRequired        = errors.New("application required")
+	ErrInvitationAlreadyExists    = errors.New("pending invitation already exists for this email and team")
 )
 
 type TeamService struct {
 	teamRepo            *repository.TeamRepository
 	teamMemberRepo      *repository.TeamMemberRepository
 	teamJoinRequestRepo *repository.TeamJoinRequestRepository
+	teamInvitationRepo  *repository.TeamInvitationRepository
+	userRepo            *repository.UserRepository
+	applicationRepo     *repository.ApplicationRepository
 	eventRepo           *repository.EventRepository
+	emailService        *EmailService
 	txm                 *db.TransactionManager
+	cfg                 *config.Config
 	logger              zerolog.Logger
 }
 
@@ -38,15 +50,25 @@ func NewTeamService(
 	teamRepo *repository.TeamRepository,
 	teamMemberRepo *repository.TeamMemberRepository,
 	teamJoinRequestRepo *repository.TeamJoinRequestRepository,
+	teamInvitationRepo *repository.TeamInvitationRepository,
+	userRepo *repository.UserRepository,
+	applicationRepo *repository.ApplicationRepository,
 	eventRepo *repository.EventRepository,
+	emailService *EmailService,
 	txm *db.TransactionManager,
+	cfg *config.Config,
 	logger zerolog.Logger) *TeamService {
 	return &TeamService{
 		teamRepo:            teamRepo,
 		teamMemberRepo:      teamMemberRepo,
 		teamJoinRequestRepo: teamJoinRequestRepo,
+		teamInvitationRepo:  teamInvitationRepo,
+		userRepo:            userRepo,
+		applicationRepo:     applicationRepo,
 		eventRepo:           eventRepo,
+		emailService:        emailService,
 		txm:                 txm,
+		cfg:                 cfg,
 		logger:              logger.With().Str("service", "TeamService").Str("component", "team").Logger(),
 	}
 }
@@ -217,13 +239,256 @@ func (s *TeamService) JoinTeam(ctx context.Context, userId, teamId uuid.UUID) er
 }
 
 func (s *TeamService) InviteUserToTeam(ctx context.Context, teamId, inviterId uuid.UUID, inviteeEmail string) error {
-	// 1. Validate team exists and user is leader
-	// 2. Check if user exists or create invitation record
-	// 3. Generate invitation token
-	// 4. Call emailService.QueueSendTeamInvitation(...)
-	// 5. Save invitation to database
+	// 1. Validate team exists and inviter is team owner/leader
+	team, err := s.teamRepo.GetByID(ctx, teamId)
+	if err != nil {
+		if errors.Is(err, repository.ErrTeamNotFound) {
+			return ErrTeamNotFound
+		}
+		return err
+	}
+
+	// Check if inviter is the team owner
+	if team.OwnerID == nil || *team.OwnerID != inviterId {
+		return ErrUserNotTeamOwner
+	}
+
+	// 2. Check for existing pending invitation for this email/team (prevent duplicates)
+	_, err = s.teamInvitationRepo.GetByEmailAndTeam(ctx, inviteeEmail, teamId)
+	if err == nil {
+		// Invitation already exists
+		return ErrInvitationAlreadyExists
+	}
+	if err != nil && !errors.Is(err, repository.ErrInvitationNotFound) {
+		return err
+	}
+
+	// 3. Check if user exists by email
+	var invitedUserId *uuid.UUID
+	user, err := s.userRepo.GetByEmail(ctx, inviteeEmail)
+	if err == nil {
+		invitedUserId = &user.ID
+	} else if !errors.Is(err, repository.ErrUserNotFound) {
+		return err
+	}
+
+	// 4. Create invitation record with expiration (7 days from now)
+	expiresAt := time.Now().Add(7 * 24 * time.Hour)
+	invitation, err := s.teamInvitationRepo.Create(ctx, teamId, inviterId, inviteeEmail, &expiresAt)
+	if err != nil {
+		return err
+	}
+
+	// If user exists, update invitation with user ID
+	if invitedUserId != nil {
+		_, err = s.teamInvitationRepo.Update(ctx, invitation.ID, invitedUserId, nil)
+		if err != nil {
+			s.logger.Err(err).Msg("Failed to update invitation with user ID")
+			// Non-fatal, continue with email sending
+		}
+	}
+
+	// 5. Get team details (name, event) and inviter name for email
+	event, err := s.eventRepo.GetEventByID(ctx, *team.EventID)
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to get event for invitation email")
+		return err
+	}
+
+	inviter, err := s.userRepo.GetByID(ctx, inviterId)
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to get inviter for invitation email")
+		return err
+	}
+
+	// 6. Generate invitation link
+	baseURL := s.cfg.ClientUrl
+	if baseURL == "" {
+		baseURL = "https://app.swamphacks.com" // Fallback to production URL
+	}
+	inviteLink := fmt.Sprintf("%s/teams/invite/%s", baseURL, invitation.ID.String())
+
+	// 7. Call emailService.QueueSendTeamInvitation with dynamic link
+	_, err = s.emailService.QueueSendTeamInvitation(
+		inviteeEmail,
+		team.Name,
+		inviter.Name,
+		event.Name,
+		inviteLink,
+	)
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to queue team invitation email")
+		return err
+	}
+
 	return nil
 }
+
+type InvitationDetails struct {
+	ID              uuid.UUID     `json:"id"`
+	TeamName        string        `json:"team_name"`
+	InviterName     string        `json:"inviter_name"`
+	EventName       string        `json:"event_name"`
+	InvitedEmail    string        `json:"invited_email"`
+	Status          string        `json:"status"`
+	ExpiresAt       *time.Time    `json:"expires_at"`
+	CreatedAt       time.Time     `json:"created_at"`
+}
+
+func (s *TeamService) GetInvitationDetails(ctx context.Context, invitationId uuid.UUID) (*InvitationDetails, error) {
+	invitation, err := s.teamInvitationRepo.GetByID(ctx, invitationId)
+	if err != nil {
+		if errors.Is(err, repository.ErrInvitationNotFound) {
+			return nil, ErrInvitationNotFound
+		}
+		return nil, err
+	}
+
+	// Check if invitation is expired
+	if invitation.ExpiresAt != nil && invitation.ExpiresAt.Before(time.Now()) {
+		return nil, ErrInvitationExpired
+	}
+
+	// Check if already accepted
+	if invitation.Status == sqlc.InvitationStatusACCEPTED {
+		return nil, ErrInvitationAlreadyAccepted
+	}
+
+	// Get team details
+	team, err := s.teamRepo.GetByID(ctx, invitation.TeamID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get event details
+	if team.EventID == nil {
+		return nil, ErrTeamNotFound
+	}
+	event, err := s.eventRepo.GetEventByID(ctx, *team.EventID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get inviter details
+	inviter, err := s.userRepo.GetByID(ctx, invitation.InvitedByUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &InvitationDetails{
+		ID:           invitation.ID,
+		TeamName:     team.Name,
+		InviterName:  inviter.Name,
+		EventName:    event.Name,
+		InvitedEmail: invitation.InvitedEmail,
+		Status:       string(invitation.Status),
+		ExpiresAt:    invitation.ExpiresAt,
+		CreatedAt:    invitation.CreatedAt,
+	}, nil
+}
+
+func (s *TeamService) AcceptInvitation(ctx context.Context, invitationId, userId uuid.UUID) error {
+	// Get invitation
+	invitation, err := s.teamInvitationRepo.GetByID(ctx, invitationId)
+	if err != nil {
+		if errors.Is(err, repository.ErrInvitationNotFound) {
+			return ErrInvitationNotFound
+		}
+		return err
+	}
+
+	// Validate invitation (pending, not expired)
+	if invitation.Status != sqlc.InvitationStatusPENDING {
+		if invitation.Status == sqlc.InvitationStatusACCEPTED {
+			return ErrInvitationAlreadyAccepted
+		}
+		return ErrInvitationNotFound
+	}
+
+	if invitation.ExpiresAt != nil && invitation.ExpiresAt.Before(time.Now()) {
+		return ErrInvitationExpired
+	}
+
+	// Get user to verify email
+	user, err := s.userRepo.GetByID(ctx, userId)
+	if err != nil {
+		return err
+	}
+
+	// Verify authenticated user's email matches invitation email
+	if user.Email == nil || *user.Email != invitation.InvitedEmail {
+		return ErrEmailMismatch
+	}
+
+	// Get team's event ID from team record
+	team, err := s.teamRepo.GetByID(ctx, invitation.TeamID)
+	if err != nil {
+		return err
+	}
+
+	if team.EventID == nil {
+		return ErrTeamNotFound
+	}
+
+	// Check if user has submitted application for event
+	application, err := s.applicationRepo.GetApplicationByUserAndEventID(ctx, sqlc.GetApplicationByUserAndEventIDParams{
+		UserID:  userId,
+		EventID: *team.EventID,
+	})
+	if err != nil {
+		if errors.Is(err, repository.ErrApplicationNotFound) {
+			return ErrApplicationRequired
+		}
+		return err
+	}
+
+	// If application exists, check if it's submitted
+	if application.Status.ApplicationStatus != sqlc.ApplicationStatusSubmitted {
+		return ErrApplicationRequired
+	}
+
+	// Add user to team and mark invitation as accepted
+	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txTeamMemberRepo := s.teamMemberRepo.NewTx(tx)
+		txTeamInvitationRepo := s.teamInvitationRepo.NewTx(tx)
+
+		// Add user to team
+		if _, err := txTeamMemberRepo.Create(ctx, invitation.TeamID, userId); err != nil {
+			return err
+		}
+
+		// Mark invitation as accepted
+		_, err := txTeamInvitationRepo.AcceptInvitation(ctx, invitationId, userId)
+		return err
+	})
+}
+
+func (s *TeamService) RejectInvitation(ctx context.Context, invitationId, userId uuid.UUID) error {
+	// Get invitation
+	invitation, err := s.teamInvitationRepo.GetByID(ctx, invitationId)
+	if err != nil {
+		if errors.Is(err, repository.ErrInvitationNotFound) {
+			return ErrInvitationNotFound
+		}
+		return err
+	}
+
+	// Get user to verify email
+	user, err := s.userRepo.GetByID(ctx, userId)
+	if err != nil {
+		return err
+	}
+
+	// Verify authenticated user's email matches invitation email
+	if user.Email == nil || *user.Email != invitation.InvitedEmail {
+		return ErrEmailMismatch
+	}
+
+	// Reject invitation
+	_, err = s.teamInvitationRepo.RejectInvitation(ctx, invitationId)
+	return err
+}
+
 func (s *TeamService) LeaveTeam(ctx context.Context, userId, teamId uuid.UUID) error {
 	team, err := s.teamRepo.GetByID(ctx, teamId)
 	if err != nil {

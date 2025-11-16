@@ -109,12 +109,20 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		r.Patch("/me/onboarding", api.Handlers.User.CompleteOnboarding)
 	})
 
+	// --- Team invitation routes (unprotected GET, protected POST) ---
+	api.Router.Route("/teams/invite/{invitationId}", func(r chi.Router) {
+		r.Get("/", api.Handlers.Teams.GetInvitation) // Unprotected
+		r.With(mw.Auth.RequireAuth).Post("/accept", api.Handlers.Teams.AcceptInvitation)
+		r.With(mw.Auth.RequireAuth).Post("/reject", api.Handlers.Teams.RejectInvitation)
+	})
+
 	// --- Team routes (non Event specific) ---
 	api.Router.Route("/teams", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
 		r.Get("/{teamId}", api.Handlers.Teams.GetTeam)
 		r.Get("/{teamId}/pending-joins", api.Handlers.Teams.GetPendingRequestsForTeam)
 		r.Delete("/{teamId}/members/me", api.Handlers.Teams.LeaveTeam)
+		r.Post("/{teamId}/invite", api.Handlers.Teams.InviteUserToTeam)
 		r.Post("/join/{requestId}/accept", api.Handlers.Teams.AcceptTeamJoinRequest)
 		r.Post("/join/{requestId}/reject", api.Handlers.Teams.RejectTeamJoinRequest)
 	})
