@@ -5,14 +5,16 @@ import { useTeamActions } from "../hooks/useTeamActions";
 import { Button } from "@/components/ui/Button";
 import { toast } from "react-toastify";
 import TablerDoorExit from "~icons/tabler/door-exit";
+import TablerCircleX from "~icons/tabler/circle-x";
 
 interface Props {
   eventId: string;
+  userId: string;
   team: TeamWithMembers;
 }
 
-export default function MyTeamCard({ eventId, team }: Props) {
-  const { leave } = useTeamActions(eventId);
+export default function MyTeamCard({ eventId, userId, team }: Props) {
+  const { leave, kickTeamMember } = useTeamActions(eventId);
 
   const handleLeaveTeam = () => {
     leave.mutate(team.id, {
@@ -23,6 +25,20 @@ export default function MyTeamCard({ eventId, team }: Props) {
         toast.error("Something went wrong, try again.");
       },
     });
+  };
+
+  const handleKickMember = (memberId: string) => {
+    kickTeamMember.mutate(
+      { teamId: team.id, memberId },
+      {
+        onSuccess: () => {
+          toast.success("Member removed successfully.");
+        },
+        onError: () => {
+          toast.error("Failed to remove member. Try again later.");
+        },
+      },
+    );
   };
 
   return (
@@ -63,14 +79,23 @@ export default function MyTeamCard({ eventId, team }: Props) {
               className="text-text-secondary flex items-center justify-between"
             >
               <span>{member.name}</span>
-              <button
-                type="button"
-                onClick={() => console.log("Remove", member.user_id)}
-                className="ml-2 p-1 hover:text-red-500"
-                aria-label={`Remove ${member.name}`}
-              >
-                <TablerDoorExit className="w-4 h-4" />
-              </button>
+
+              {/* Only show kick button if the viewer is the owner and the member is not the owner */}
+              {member.user_id !== team.owner_id && userId == team.owner_id && (
+                <button
+                  type="button"
+                  onClick={() => handleKickMember(member.user_id)}
+                  className="ml-2 p-1 hover:text-red-500 cursor-pointer transition-all duration-150"
+                  aria-label={`Remove ${member.name}`}
+                >
+                  <TablerCircleX className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Indicate the owner */}
+              {member.user_id === team.owner_id && (
+                <span className="text-xs text-neutral-500">(Owner)</span>
+              )}
             </li>
           ))}
         </ul>

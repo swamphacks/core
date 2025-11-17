@@ -23,6 +23,7 @@ var (
 	ErrUserNotTeamOwner           = errors.New("user is not the team owner")
 	ErrTeamFull                   = errors.New("team is full")
 	ErrUserNotApplicantOrAttendee = errors.New("user is not an applicant or attendee for the event")
+	ErrKickOwnerSelf              = errors.New("team owner cannot kick themselves")
 )
 
 type TeamService struct {
@@ -401,4 +402,24 @@ func (s *TeamService) RespondToJoinRequest(ctx context.Context, ownerId, request
 		_, err := s.teamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.JoinRequestStatusREJECTED)
 		return err
 	}
+}
+
+func (s *TeamService) KickMemberFromTeam(ctx context.Context, memberId, teamId, userId uuid.UUID) error {
+	team, err := s.teamRepo.GetByID(ctx, teamId)
+	if err != nil {
+		return err
+	}
+
+	if *team.OwnerID != userId {
+		s.logger.Warn().Str("team_owner", team.OwnerID.String()).Str("user", userId.String()).Msg("User attempting to kick member is not the team owner")
+		return ErrUserNotTeamOwner
+	}
+
+	// Prevent owner from kicking themselves
+	if memberId == userId {
+		s.logger.Warn().Str("team_owner", team.OwnerID.String()).Msg("Team owner attempting to kick themselves")
+		return ErrKickOwnerSelf
+	}
+
+	return s.teamMemberRepo.Delete(ctx, team.ID, memberId)
 }
