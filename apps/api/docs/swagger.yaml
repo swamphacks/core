@@ -1157,6 +1157,33 @@ paths:
       summary: Get Application By User and Event ID
       tags:
       - Application
+  /events/{eventId}/application/download-resume:
+    get:
+      description: This handler creates a presigned S3 URL with GET permission for
+        the user's specific object, which is their uploaded resume. The client can
+        use this URL to download the object.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Bad request/Malformed request.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Server Error: error handling download resume request'
+      summary: Download the user's uploaded resume from their event application
+      tags:
+      - Application
   /events/{eventId}/application/save:
     post:
       description: Save user's progress on the application. File/Upload fields are
@@ -1874,6 +1901,59 @@ paths:
                 $ref: '#/components/schemas/response.ErrorResponse'
           description: Something went seriously wrong.
       summary: Get a team and its members by team id.
+      tags:
+      - Team
+  /teams/{teamId}/members/{userId}:
+    delete:
+      description: Kicks a member from a team. Only the team owner can perform this
+        action.
+      parameters:
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the team
+        in: path
+        name: team_id
+        required: true
+        schema:
+          type: string
+      - description: The ID of the user to be kicked
+        in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Successfully kicked the team member
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Bad Request: Missing or malformed parameters.'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Unauthenticated: Requester is not currently authenticated.'
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Forbidden: Requester is not allowed to perform this action.'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Something went wrong.
+      summary: Kick a member from a team
       tags:
       - Team
   /teams/{teamId}/members/me:

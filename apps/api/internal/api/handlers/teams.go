@@ -497,7 +497,7 @@ func (h *TeamHandler) RejectTeamJoinRequest(w http.ResponseWriter, r *http.Reque
 //	@Tags			Team
 //	@Param			sh_session_id	cookie	string	true	"The authenticated session token/id"
 //	@Param			team_id			path	string	true	"The ID of the team"
-//	@Param			userId		path	string	true	"The ID of the user to be kicked"
+//	@Param			userId			path	string	true	"The ID of the user to be kicked"
 //	@Success		204				"Successfully kicked the team member"
 //	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
 //	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
