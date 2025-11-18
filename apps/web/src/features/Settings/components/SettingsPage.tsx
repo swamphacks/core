@@ -230,7 +230,6 @@ export function SettingsPage({ logout }: { logout: () => void }) {
               </Button>
             </div>
 
-            {/* Versioning Footer */}
             <div className="m-4 text-center text-xs text-text-secondary flex flex-col gap-1">
               <a
                 href="https://github.com/swamphacks/core"
