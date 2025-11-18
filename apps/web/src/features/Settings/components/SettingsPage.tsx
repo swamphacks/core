@@ -229,6 +229,25 @@ export function SettingsPage({ logout }: { logout: () => void }) {
                 Log Out <TablerLogout className="text-badge-text-rejected" />
               </Button>
             </div>
+
+            {/* Versioning Footer */}
+            <div className="m-4 text-center text-xs text-text-secondary flex flex-col gap-1">
+              <a
+                href="https://github.com/swamphacks/core"
+                target="_blank"
+                className="hover:text-text-main"
+              >
+                beta v1.0.0 - View Source on GitHub
+              </a>
+
+              <a
+                href="https://discord.gg/hc5RVQnnsU"
+                target="_blank"
+                className="hover:text-text-main"
+              >
+                Join us →
+              </a>
+            </div>
           </div>
         </div>
       </div>
