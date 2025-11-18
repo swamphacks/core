@@ -115,6 +115,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		r.Get("/{teamId}", api.Handlers.Teams.GetTeam)
 		r.Get("/{teamId}/pending-joins", api.Handlers.Teams.GetPendingRequestsForTeam)
 		r.Delete("/{teamId}/members/me", api.Handlers.Teams.LeaveTeam)
+		r.Delete("/{teamId}/members/{userId}", api.Handlers.Teams.KickMemberFromTeam)
 		r.Post("/join/{requestId}/accept", api.Handlers.Teams.AcceptTeamJoinRequest)
 		r.Post("/join/{requestId}/reject", api.Handlers.Teams.RejectTeamJoinRequest)
 	})
