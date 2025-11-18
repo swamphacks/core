@@ -8,16 +8,27 @@ import { PageLoading } from "@/components/PageLoading";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "react-toastify";
 import ArrowIcon from "~icons/tabler/arrow-right";
+import { auth } from "@/lib/authClient";
+
+interface TeamMember {
+  user_id: string;
+  name: string;
+  email: string | null;
+  image: string | null;
+  joined_at: string | null;
+}
 
 interface InvitationDetails {
   id: string;
   team_name: string;
   inviter_name: string;
   event_name: string;
+  event_id: string;
   invited_email: string;
   status: string;
   expires_at: string | null;
   created_at: string;
+  team_members: TeamMember[];
 }
 
 async function fetchInvitation(invitationId: string): Promise<InvitationDetails> {
@@ -57,6 +68,10 @@ function RouteComponent() {
     queryFn: () => fetchInvitation(invitationId),
   });
 
+  // Get current user for displaying their profile picture
+  const userQuery = auth.useUser();
+  const currentUser = userQuery.data?.user;
+
   const acceptMutation = useMutation({
     mutationFn: () => acceptInvitation(invitationId),
     onSuccess: () => {
@@ -64,18 +79,61 @@ function RouteComponent() {
       router.navigate({ to: "/portal" });
     },
     onError: async (error: unknown) => {
-      let message = "Failed to accept invitation";
       try {
         if (error instanceof HTTPError) {
+          // user not authenticated redirect to login
+          if (error.response.status === 401) {
+            const invitationUrl = `/teams/invite/${invitationId}`;
+            router.navigate({
+              to: "/",
+              search: { redirect: invitationUrl },
+            });
+            toast.info("Please log in to accept the invitation");
+            return;
+          }
+
           const data = await error.response.json();
-          message = data.message || message;
+          
+          // If application is required, show toast with button to go to application
+          if (error.response.status === 403 && data.error === "application_required") {
+            const eventId = invitationQuery.data?.event_id;
+            if (eventId) {
+              toast.error(
+                <div className="flex flex-col gap-2">
+                  <Text className="text-sm">{data.message || "Please complete your application first."}</Text>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onPress={() => {
+                      const inviteLink = `/teams/invite/${invitationId}`;
+                      localStorage.setItem("pendingInviteLink", inviteLink);
+                      router.navigate({
+                        to: "/events/$eventId/application",
+                        params: { eventId },
+                      });
+                    }}
+                    className="self-start"
+                  >
+                    Go to Application
+                  </Button>
+                </div>,
+                {
+                  autoClose: 10000, // Keep it open longer so user can click the button
+                }
+              );
+              return;
+            }
+          }
+
+          toast.error(data.message || "Failed to accept invitation");
         } else if (error instanceof Error) {
-          message = error.message;
+          toast.error(error.message);
+        } else {
+          toast.error("Failed to accept invitation");
         }
       } catch {
-        // Use default message
+        toast.error("Failed to accept invitation");
       }
-      toast.error(message);
     },
   });
 
@@ -86,18 +144,29 @@ function RouteComponent() {
       router.navigate({ to: "/portal" });
     },
     onError: async (error: unknown) => {
-      let message = "Failed to reject invitation";
       try {
         if (error instanceof HTTPError) {
+          // If user is not authenticated (401), redirect to login
+          if (error.response.status === 401) {
+            const invitationUrl = `/teams/invite/${invitationId}`;
+            router.navigate({
+              to: "/",
+              search: { redirect: invitationUrl },
+            });
+            toast.info("Please log in to reject the invitation");
+            return;
+          }
+
           const data = await error.response.json();
-          message = data.message || message;
+          toast.error(data.message || "Failed to reject invitation");
         } else if (error instanceof Error) {
-          message = error.message;
+          toast.error(error.message);
+        } else {
+          toast.error("Failed to reject invitation");
         }
       } catch {
-        // Use default message
+        toast.error("Failed to reject invitation");
       }
-      toast.error(message);
     },
   });
 
@@ -137,13 +206,9 @@ function RouteComponent() {
   const isAccepted = invitation.status === "ACCEPTED";
   const isRejected = invitation.status === "REJECTED";
 
-  // Get first letter of inviter's name for the avatar
-  const inviterInitial = invitation.inviter_name.charAt(0).toUpperCase();
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-white">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="max-w-2xl w-full flex flex-col items-center">
-        {/* Logo */}
         <div className="mb-8 flex justify-center">
           <img
             src={
@@ -156,59 +221,120 @@ function RouteComponent() {
           />
         </div>
 
-        {/* Title */}
-        <Heading className="text-3xl font-medium mb-8 text-black">
+        <Heading className="text-3xl font-medium mb-8 text-text-main">
           SwampHacks Team Invitation
         </Heading>
 
-        {/* Visual Representation */}
         <div className="flex items-center justify-center mb-8 relative w-full max-w-md">
 
-          {/* Large gray circle (individual) */}
-          <div className="w-40 h-40 bg-[#929292] rounded-full"></div>
+          {/* Large circle (person accepting the invite) */}
+          <div className="w-40 h-40 rounded-full overflow-hidden bg-[#929292] dark:bg-gray-600 flex items-center justify-center border-4 border-white dark:border-gray-700 shadow-lg">
+            {currentUser?.image ? (
+              <img
+                src={currentUser.image}
+                alt={currentUser.name || "You"}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to initials if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    const initial = document.createElement('span');
+                    initial.className = 'text-white text-2xl font-medium';
+                    initial.textContent = (currentUser.name || 'U').charAt(0).toUpperCase();
+                    parent.appendChild(initial);
+                  }
+                }}
+              />
+            ) : currentUser?.name ? (
+              <span className="text-white text-2xl font-medium">
+                {currentUser.name.charAt(0).toUpperCase()}
+              </span>
+            ) : (
+              <span className="text-white text-2xl font-medium">?</span>
+            )}
+          </div>
 
           {/* Arrow */}
           <div className="mx-8 flex items-center">
             <ArrowIcon
-              className="h-15 w-15"
+              className="h-15 w-15 text-text-main"
             />
           </div>
 
-          {/* Four smaller circles (team) */}
+          {/* Team member profile pictures */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="w-15 h-15 bg-[#929292] rounded-full"></div>
-            <div className="w-15 h-15 bg-[#929292] rounded-full"></div>
-            <div className="w-15 h-15 bg-[#929292] rounded-full"></div>
-            <div className="w-15 h-15 bg-[#929292] rounded-full"></div>
+            {invitation.team_members && invitation.team_members.length > 0 ? (
+              invitation.team_members.slice(0, 4).map((member) => (
+                <div
+                  key={member.user_id}
+                  className="w-16 h-16 rounded-full overflow-hidden bg-[#929292] dark:bg-gray-600 flex items-center justify-center border-2 border-white dark:border-gray-700 shadow-sm"
+                  title={member.name}
+                >
+                  {member.image ? (
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to initials if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          const initial = document.createElement('span');
+                          initial.className = 'text-white text-xs font-medium';
+                          initial.textContent = member.name.charAt(0).toUpperCase();
+                          parent.appendChild(initial);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <span className="text-white text-xs font-medium">
+                      {member.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              ))
+            ) : (
+              // Fallback to gray circles if no members
+              <>
+                <div className="w-16 h-16 bg-[#929292] dark:bg-gray-600 rounded-full"></div>
+                <div className="w-16 h-16 bg-[#929292] dark:bg-gray-600 rounded-full"></div>
+                <div className="w-16 h-16 bg-[#929292] dark:bg-gray-600 rounded-full"></div>
+                <div className="w-16 h-16 bg-[#929292] dark:bg-gray-600 rounded-full"></div>
+              </>
+            )}
           </div>
         </div>
 
         {/* Invitation Text */}
-        <Text className="text-lg mb-8 text-black text-center">
+        <Text className="text-lg mb-8 text-text-main text-center">
           <strong>{invitation.inviter_name}</strong> has invited you to join their
           team for <strong>{invitation.event_name}</strong>
         </Text>
 
         {/* Status Messages */}
         {isExpired && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-            <Text className="text-yellow-800">
+          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+            <Text className="text-yellow-800 dark:text-yellow-200">
               This invitation has expired.
             </Text>
           </div>
         )}
 
         {isAccepted && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
-            <Text className="text-green-800">
+          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+            <Text className="text-green-800 dark:text-green-200">
               This invitation has already been accepted.
             </Text>
           </div>
         )}
 
         {isRejected && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <Text className="text-red-800">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+            <Text className="text-red-800 dark:text-red-200">
               This invitation has been rejected.
             </Text>
           </div>
@@ -253,8 +379,8 @@ function RouteComponent() {
         )}
 
         {/* Disclaimer */}
-        <div className="mt-8 py-4 px-15 bg-gray-100 border-1 border-[#D4D4D8] rounded-md max-w-lg text-center">
-          <Text className="text-sm text-gray-700">
+        <div className="mt-8 py-4 px-15 bg-surface border-1 border-border rounded-md max-w-lg text-center">
+          <Text className="text-sm text-text-secondary">
             You may always leave and join teams at your own discretion anytime
             during the event.
           </Text>

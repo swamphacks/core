@@ -325,14 +325,16 @@ func (s *TeamService) InviteUserToTeam(ctx context.Context, teamId, inviterId uu
 }
 
 type InvitationDetails struct {
-	ID              uuid.UUID     `json:"id"`
-	TeamName        string        `json:"team_name"`
-	InviterName     string        `json:"inviter_name"`
-	EventName       string        `json:"event_name"`
-	InvitedEmail    string        `json:"invited_email"`
-	Status          string        `json:"status"`
-	ExpiresAt       *time.Time    `json:"expires_at"`
-	CreatedAt       time.Time     `json:"created_at"`
+	ID              uuid.UUID          `json:"id"`
+	TeamName        string             `json:"team_name"`
+	InviterName     string             `json:"inviter_name"`
+	EventName       string             `json:"event_name"`
+	EventID         uuid.UUID          `json:"event_id"`
+	InvitedEmail    string             `json:"invited_email"`
+	Status          string             `json:"status"`
+	ExpiresAt       *time.Time         `json:"expires_at"`
+	CreatedAt       time.Time          `json:"created_at"`
+	TeamMembers     []MemberWithUserInfo `json:"team_members"`
 }
 
 func (s *TeamService) GetInvitationDetails(ctx context.Context, invitationId uuid.UUID) (*InvitationDetails, error) {
@@ -375,15 +377,34 @@ func (s *TeamService) GetInvitationDetails(ctx context.Context, invitationId uui
 		return nil, err
 	}
 
+	// Get team members with their profile pictures
+	members, err := s.teamMemberRepo.GetTeamMembers(ctx, team.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var parsedMembers []MemberWithUserInfo
+	for _, member := range members {
+		parsedMembers = append(parsedMembers, MemberWithUserInfo{
+			UserID:   member.UserID,
+			Email:    member.Email,
+			Image:    member.Image,
+			Name:     member.Name,
+			JoinedAt: member.JoinedAt,
+		})
+	}
+
 	return &InvitationDetails{
 		ID:           invitation.ID,
 		TeamName:     team.Name,
 		InviterName:  inviter.Name,
 		EventName:    event.Name,
+		EventID:      event.ID,
 		InvitedEmail: invitation.InvitedEmail,
 		Status:       string(invitation.Status),
 		ExpiresAt:    invitation.ExpiresAt,
 		CreatedAt:    invitation.CreatedAt,
+		TeamMembers:  parsedMembers,
 	}, nil
 }
 
@@ -445,6 +466,15 @@ func (s *TeamService) AcceptInvitation(ctx context.Context, invitationId, userId
 	// If application exists, check if it's submitted
 	if application.Status.ApplicationStatus != sqlc.ApplicationStatusSubmitted {
 		return ErrApplicationRequired
+	}
+
+	members, err := s.teamMemberRepo.GetTeamMembers(ctx, invitation.TeamID)
+	if err != nil {
+		return err
+	}
+
+	if len(members) >= 4 {
+		return ErrTeamFull
 	}
 
 	// Add user to team and mark invitation as accepted

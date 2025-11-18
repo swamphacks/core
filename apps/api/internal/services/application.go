@@ -79,6 +79,11 @@ type ApplicationService struct {
 	logger        zerolog.Logger
 }
 
+// GetApplicationRepository returns the application repository for direct access
+func (s *ApplicationService) GetApplicationRepository() *repository.ApplicationRepository {
+	return s.appRepo
+}
+
 func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
 	return &ApplicationService{
 		appRepo:       appRepo,
@@ -175,17 +180,9 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 
 func (s *ApplicationService) SaveApplication(ctx context.Context, data any, userId, eventId uuid.UUID) error {
 	// Guard clauses to ensure application can be saved
-	// 1) Check if applications are open for the event
-	// 2) Ensure application status is "started" (Reject all other statuses)
-	canSaveApplication, err := s.eventsService.IsApplicationsOpen(ctx, eventId)
-	if err != nil {
-		return err
-	}
-
-	if !canSaveApplication {
-		return ErrApplicationCannotSave
-	}
-
+	// 1) Ensure application status is "started" (Reject all other statuses)
+	// Note: We allow saving even when applications are closed so users can work on their form
+	
 	application, err := s.GetApplicationByUserAndEventID(ctx, sqlc.GetApplicationByUserAndEventIDParams{
 		UserID:  userId,
 		EventID: eventId,

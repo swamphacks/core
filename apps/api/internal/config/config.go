@@ -68,6 +68,8 @@ type Config struct {
 	CoreBuckets CoreBuckets      `envPrefix:"CORE_BUCKETS_"`
 	Smtp        SmtpConfig       `envPrefix:"SMTP_"`
 	AWS         AWSConfig        `envPrefix:"AWS_"`
+	
+	DiscordBotWebhookURL string `env:"DISCORD_BOT_WEBHOOK_URL"`
 }
 
 func Load() *Config {

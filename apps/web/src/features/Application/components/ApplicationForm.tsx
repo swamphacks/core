@@ -7,6 +7,7 @@ import TablerCircleCheck from "~icons/tabler/circle-check";
 import { Link } from "react-aria-components";
 import TablerArrowLeft from "~icons/tabler/arrow-left";
 import { api } from "@/lib/ky";
+import { HTTPError } from "ky";
 import { Spinner } from "@/components/ui/Spinner";
 import { useApplication } from "@/features/Application/hooks/useApplication";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
@@ -29,6 +30,7 @@ interface ApplicationFormProps {
 }
 
 export function ApplicationForm({ eventId }: ApplicationFormProps) {
+  const router = useRouter();
   // TODO: make the `build` api better so components that use this function doesn't have to call useMemo on it?
   const { Form, fieldsMeta } = useMemo(() => build(data), []);
   const fileFields = useRef(new Set<string>());
@@ -81,27 +83,53 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
       }
     }
 
-    const res = await api.post(`events/${eventId}/application/submit`, {
-      body: formData,
-    });
+    try {
+      await api.post(`events/${eventId}/application/submit`, {
+        body: formData,
+      });
 
-    if (!res.ok) {
-      const resBody: any = await res.json();
+      setIsSubmitted(true);
+      setIsInvalid(false);
+
+      const pendingInviteLink = localStorage.getItem("pendingInviteLink");
+      if (pendingInviteLink) {
+        localStorage.removeItem("pendingInviteLink");
+        const invitationIdMatch = pendingInviteLink.match(/\/teams\/invite\/([^/]+)/);
+        if (invitationIdMatch) {
+          const invitationId = invitationIdMatch[1];
+          setTimeout(() => {
+            router.navigate({
+              to: "/teams/invite/$invitationId",
+              params: { invitationId },
+              replace: true,
+            });
+          }, 2000);
+        }
+      }
+    } catch (error: unknown) {
+      let errorMessage = "Something went wrong while submitting your application";
+      
+      try {
+        if (error instanceof HTTPError) {
+          const resBody = await error.response.json();
+          errorMessage = resBody.message || errorMessage;
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+      } catch {
+      }
 
       showToast({
         title: "Submission Error",
-        message: resBody.message || "Something went wrong",
+        message: errorMessage,
         type: "error",
       });
 
       setIsInvalid(true);
-    } else {
-      setIsSubmitted(true);
-      setIsInvalid(false);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
-  }, []);
+  }, [eventId, router]);
 
   const onNewAttachments = useCallback((newFiles: Record<string, File[]>) => {
     for (const field in newFiles) {
