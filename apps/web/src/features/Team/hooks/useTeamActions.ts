@@ -29,6 +29,10 @@ async function createTeam(eventId: string, data: NewTeam) {
   }
 }
 
+async function kickMember(teamId: string, memberId: string) {
+  await api.delete(`teams/${teamId}/members/${memberId}`);
+}
+
 export function useTeamActions(eventId: string) {
   const queryClient = useQueryClient();
 
@@ -48,5 +52,15 @@ export function useTeamActions(eventId: string) {
     },
   });
 
-  return { leave, create };
+  const kickTeamMember = useMutation({
+    mutationFn: ({ teamId, memberId }: { teamId: string; memberId: string }) =>
+      kickMember(teamId, memberId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["myTeam", eventId],
+      });
+    },
+  });
+
+  return { leave, create, kickTeamMember };
 }

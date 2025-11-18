@@ -40,6 +40,22 @@ function RouteComponent() {
     );
   }
 
+  // Guard against missing user
+  if (!user || team.isError) {
+    return (
+      <main>
+        <Heading className="text-2xl lg:text-3xl font-semibold mb-6">
+          My Team
+        </Heading>
+        <div className="flex flex-col gap-4 max-w-xl">
+          <p className="text-red-500">
+            Something went wrong. Please refresh and try again.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main>
       <Heading className="text-2xl lg:text-3xl font-semibold mb-4">
@@ -48,7 +64,7 @@ function RouteComponent() {
 
       <div className="flex flex-col gap-8">
         {team.data ? (
-          <MyTeamCard eventId={eventId} team={team.data} />
+          <MyTeamCard eventId={eventId} userId={user.userId} team={team.data} />
         ) : (
           <NoTeamCard eventId={eventId} />
         )}

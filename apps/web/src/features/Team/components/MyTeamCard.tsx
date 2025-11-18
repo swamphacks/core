@@ -5,14 +5,17 @@ import { useTeamActions } from "../hooks/useTeamActions";
 import { Button } from "@/components/ui/Button";
 import { toast } from "react-toastify";
 import TablerDoorExit from "~icons/tabler/door-exit";
+import TablerCircleX from "~icons/tabler/circle-x";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 interface Props {
   eventId: string;
+  userId: string;
   team: TeamWithMembers;
 }
 
-export default function MyTeamCard({ eventId, team }: Props) {
-  const { leave } = useTeamActions(eventId);
+export default function MyTeamCard({ eventId, userId, team }: Props) {
+  const { leave, kickTeamMember } = useTeamActions(eventId);
 
   const handleLeaveTeam = () => {
     leave.mutate(team.id, {
@@ -25,18 +28,42 @@ export default function MyTeamCard({ eventId, team }: Props) {
     });
   };
 
+  const handleKickMember = (memberId: string) => {
+    kickTeamMember.mutate(
+      { teamId: team.id, memberId },
+      {
+        onSuccess: () => {
+          toast.success("Member removed successfully.");
+        },
+        onError: () => {
+          toast.error("Failed to remove member. Try again later.");
+        },
+      },
+    );
+  };
+
   return (
     <div className="border border-input-border rounded-md px-4 py-3 w-full md:w-116 flex flex-col gap-4">
       <div className="w-full flex flex-row items-center justify-between">
         <h3 className="text-text-main text-2xl">{team.name}</h3>
 
-        <Button
-          onClick={handleLeaveTeam}
-          variant="icon"
-          className="aspect-square p-2.5"
+        <Tooltip
+          tooltipProps={{
+            label: "Leave Team",
+            offset: 4,
+          }}
+          triggerProps={{
+            delay: 150,
+          }}
         >
-          <TablerDoorExit className="w-5 h-5 text-red-600" />
-        </Button>
+          <Button
+            onClick={handleLeaveTeam}
+            variant="icon"
+            className="aspect-square p-2.5"
+          >
+            <TablerDoorExit className="w-5 h-5 text-red-600" />
+          </Button>
+        </Tooltip>
       </div>
       <div className="flex flex-row text-text-secondary items-center gap-4">
         <AvatarStack
@@ -63,14 +90,34 @@ export default function MyTeamCard({ eventId, team }: Props) {
               className="text-text-secondary flex items-center justify-between"
             >
               <span>{member.name}</span>
-              <button
-                type="button"
-                onClick={() => console.log("Remove", member.user_id)}
-                className="ml-2 p-1 hover:text-red-500"
-                aria-label={`Remove ${member.name}`}
-              >
-                <TablerDoorExit className="w-4 h-4" />
-              </button>
+
+              {/* Only show kick button if the viewer is the owner and the member is not the owner */}
+              {member.user_id !== team.owner_id && userId == team.owner_id && (
+                <Tooltip
+                  tooltipProps={{
+                    label: `Remove ${member.name || "member"}`,
+                    offset: 4,
+                  }}
+                  triggerProps={{
+                    delay: 150,
+                  }}
+                >
+                  <Button
+                    variant="unstyled"
+                    className="ml-2 p-1"
+                    onClick={() => handleKickMember(member.user_id)}
+                  >
+                    <TablerCircleX className="w-5 h-5 hover:text-red-600 hover:cursor-pointer transition-colors duration-150" />
+                  </Button>
+                </Tooltip>
+              )}
+
+              {/* Indicate the owner */}
+              {member.user_id === team.owner_id && (
+                <span className="text-xs text-neutral-500 select-none">
+                  (Owner)
+                </span>
+              )}
             </li>
           ))}
         </ul>

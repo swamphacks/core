@@ -46,3 +46,10 @@ export const Danger: Story = {
     children: "Danger Button",
   },
 };
+
+export const Unstyled: Story = {
+  args: {
+    variant: "unstyled",
+    children: "Unstyled Button",
+  },
+};

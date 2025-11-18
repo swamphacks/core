@@ -490,6 +490,52 @@ func (h *TeamHandler) RejectTeamJoinRequest(w http.ResponseWriter, r *http.Reque
 	res.Send(w, http.StatusNoContent, nil)
 }
 
+// Kick a member from a team
+//
+//	@Summary		Kick a member from a team
+//	@Description	Kicks a member from a team. Only the team owner can perform this action.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie	string	true	"The authenticated session token/id"
+//	@Param			team_id			path	string	true	"The ID of the team"
+//	@Param			userId			path	string	true	"The ID of the user to be kicked"
+//	@Success		204				"Successfully kicked the team member"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden: Requester is not allowed to perform this action."
+//	@Failure		500				{object}	response.ErrorResponse	"Something went wrong."
+//
+//	@Router			/teams/{teamId}/members/{userId} [delete]
+func (h *TeamHandler) KickMemberFromTeam(w http.ResponseWriter, r *http.Request) {
+	// Implementation would go here
+	memberId, err := web.PathParamToUUID(r, "userId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_member_id", "The team member ID is malformed/missing."))
+		return
+	}
+
+	teamId, err := web.PathParamToUUID(r, "teamId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_team_id", "The team ID is malformed/missing."))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	err = h.teamService.KickMemberFromTeam(r.Context(), memberId, teamId, *userId)
+	if err != nil {
+		status, code, message := mapTeamServiceError(err)
+		res.SendError(w, status, res.NewError(code, message))
+		return
+	}
+
+	res.Send(w, http.StatusNoContent, nil)
+
+}
+
 type InviteUserRequest struct {
 	Email string `json:"email"`
 }
