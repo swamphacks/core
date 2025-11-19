@@ -492,25 +492,20 @@ function RouteComponent() {
 
         {!isExpired && !isAccepted && !isRejected && (
           <div className="flex flex-row gap-4 mb-8 w-full max-w-md">
-            <Button
-              onPress={() => acceptMutation.mutate()}
-              isDisabled={acceptMutation.isPending || rejectMutation.isPending}
-              className="flex-1 !bg-[#B9F8CF] hover:!bg-[#a2eabb] text-[#00A63E] border-1 border-[#7df7aa] font-light py-3 px-6"
-              style={{
-                backgroundColor: "#86efac",
-              }}
-            >
-              {acceptMutation.isPending ? "Accepting..." : "Accept"}
-            </Button>
+            
             <Button
               onPress={() => rejectMutation.mutate()}
               isDisabled={acceptMutation.isPending || rejectMutation.isPending}
-              className="flex-1 !bg-[#FFC9C9] hover:!bg-[#fab1b1] text-[#E7000B] border-1 border-[#f79e9e] font-light py-3 px-6"
-              style={{
-                backgroundColor: "#fca5a5",
-              }}
+              className="flex-1 !bg-red-500/80 hover:!bg-red-500 text-white py-3 px-6"
             >
               {rejectMutation.isPending ? "Rejecting..." : "Deny"}
+            </Button>
+            <Button
+              onPress={() => acceptMutation.mutate()}
+              isDisabled={acceptMutation.isPending || rejectMutation.isPending}
+              className="flex-1 !bg-green-600/80 hover:!bg-green-600 text-white py-3 px-6"
+            >
+              {acceptMutation.isPending ? "Accepting..." : "Accept"}
             </Button>
           </div>
         )}
