@@ -27,9 +27,10 @@ const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
 interface ApplicationFormProps {
   eventId: string;
+  redirectAfterSubmit?: string;
 }
 
-export function ApplicationForm({ eventId }: ApplicationFormProps) {
+export function ApplicationForm({ eventId, redirectAfterSubmit }: ApplicationFormProps) {
   const router = useRouter();
   // TODO: make the `build` api better so components that use this function doesn't have to call useMemo on it?
   const { Form, fieldsMeta } = useMemo(() => build(data), []);
@@ -91,10 +92,8 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
       setIsSubmitted(true);
       setIsInvalid(false);
 
-      const pendingInviteLink = localStorage.getItem("pendingInviteLink");
-      if (pendingInviteLink) {
-        localStorage.removeItem("pendingInviteLink");
-        const invitationIdMatch = pendingInviteLink.match(/\/teams\/invite\/([^/]+)/);
+      if (redirectAfterSubmit) {
+        const invitationIdMatch = redirectAfterSubmit.match(/\/teams\/invite\/([^/]+)/);
         if (invitationIdMatch) {
           const invitationId = invitationIdMatch[1];
           setTimeout(() => {
@@ -104,6 +103,29 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
               replace: true,
             });
           }, 2000);
+        } else {
+          setTimeout(() => {
+            router.navigate({
+              to: redirectAfterSubmit as any,
+              replace: true,
+            });
+          }, 2000);
+        }
+      } else {
+        const pendingInviteLink = localStorage.getItem("pendingInviteLink");
+        if (pendingInviteLink) {
+          localStorage.removeItem("pendingInviteLink");
+          const invitationIdMatch = pendingInviteLink.match(/\/teams\/invite\/([^/]+)/);
+          if (invitationIdMatch) {
+            const invitationId = invitationIdMatch[1];
+            setTimeout(() => {
+              router.navigate({
+                to: "/teams/invite/$invitationId",
+                params: { invitationId },
+                replace: true,
+              });
+            }, 2000);
+          }
         }
       }
     } catch (error: unknown) {
@@ -129,7 +151,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [eventId, router]);
+  }, [eventId, router, redirectAfterSubmit]);
 
   const onNewAttachments = useCallback((newFiles: Record<string, File[]>) => {
     for (const field in newFiles) {

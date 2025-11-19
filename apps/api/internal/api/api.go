@@ -112,6 +112,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	// --- Team invitation routes (unprotected GET, protected POST) ---
 	api.Router.Route("/teams/invite/{invitationId}", func(r chi.Router) {
 		r.Get("/", api.Handlers.Teams.GetInvitation) // Unprotected
+		r.With(mw.Auth.RequireAuth).Post("/claim", api.Handlers.Teams.LinkUserToInvitation)
 		r.With(mw.Auth.RequireAuth).Post("/accept", api.Handlers.Teams.AcceptInvitation)
 		r.With(mw.Auth.RequireAuth).Post("/reject", api.Handlers.Teams.RejectInvitation)
 	})

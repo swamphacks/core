@@ -409,6 +409,52 @@ func (s *TeamService) GetInvitationDetails(ctx context.Context, invitationId uui
 	}, nil
 }
 
+// LinkUserToInvitation links a user ID to an invitation if the invitation is still valid.
+// This should always happen whether the user has access to the event or not.
+// Returns true if the invitation is expired or already claimed.
+func (s *TeamService) LinkUserToInvitation(ctx context.Context, invitationId, userId uuid.UUID) (bool, error) {
+	// Get invitation
+	invitation, err := s.teamInvitationRepo.GetByID(ctx, invitationId)
+	if err != nil {
+		if errors.Is(err, repository.ErrInvitationNotFound) {
+			return true, ErrInvitationNotFound
+		}
+		return true, err
+	}
+
+	// Check if already accepted or rejected (this takes precedence over expiration check)
+	if invitation.Status != sqlc.InvitationStatusPENDING {
+		return true, nil // Already claimed (accepted/rejected)
+	}
+
+	// Check if invitation is expired
+	if invitation.ExpiresAt != nil {
+		now := time.Now()
+		if invitation.ExpiresAt.Before(now) {
+			s.logger.Debug().
+				Str("invitation_id", invitationId.String()).
+				Time("expires_at", *invitation.ExpiresAt).
+				Time("now", now).
+				Msg("Invitation expired")
+			return true, ErrInvitationExpired
+		}
+	}
+
+	// Link user ID to invitation if not already linked
+	if invitation.InvitedUserID == nil {
+		_, err = s.teamInvitationRepo.Update(ctx, invitationId, &userId, nil)
+		if err != nil {
+			s.logger.Err(err).
+				Str("invitation_id", invitationId.String()).
+				Str("user_id", userId.String()).
+				Msg("Failed to update invitation with user ID")
+			return false, err
+		}
+	}
+
+	return false, nil // Not expired/claimed
+}
+
 func (s *TeamService) AcceptInvitation(ctx context.Context, invitationId, userId uuid.UUID) error {
 	// Get invitation
 	invitation, err := s.teamInvitationRepo.GetByID(ctx, invitationId)

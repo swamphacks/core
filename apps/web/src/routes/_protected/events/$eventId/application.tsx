@@ -4,14 +4,18 @@ import { ApplicationForm } from "@/features/Application/components/ApplicationFo
 import TablerAlertCircle from "~icons/tabler/alert-circle";
 import { useEffect } from "react";
 
-export const Route = createFileRoute("/_protected/events/$eventId/application")(
-  {
-    component: RouteComponent,
+export const Route = createFileRoute("/_protected/events/$eventId/application")({
+  component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      redirect: (search.redirect as string) || undefined,
+    };
   },
-);
+});
 
 function RouteComponent() {
   const { eventId } = Route.useParams();
+  const { redirect } = Route.useSearch();
 
   // Show a confirmation dialog when the user closes the tab
   useEffect(() => {
@@ -31,7 +35,7 @@ function RouteComponent() {
       <div className="w-full h-screen bg-white dark:bg-background">
         {/* this padding left prevent the page being shifted when the form fully loads because of the scrollbar */}
         <div className="w-full bg-white dark:bg-background transition-[background] sm:pl-[calc(100vw-100%)]">
-          <ApplicationForm eventId={eventId} />
+          <ApplicationForm eventId={eventId} redirectAfterSubmit={redirect} />
         </div>
       </div>
     </ErrorBoundary>

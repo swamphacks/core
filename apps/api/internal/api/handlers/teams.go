@@ -650,6 +650,57 @@ func (h *TeamHandler) GetInvitation(w http.ResponseWriter, r *http.Request) {
 	res.Send(w, http.StatusOK, details)
 }
 
+// Link user to invitation
+//
+//	@Summary		Link user to invitation
+//	@Description	Links the authenticated user's ID to an invitation. This should always happen whether the user has access to the event or not. Returns whether the invitation is expired or already claimed.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie		string	true	"The authenticated session token/id"
+//	@Param			invitationId	path		string	true	"The ID of the invitation"
+//	@Success		200				{object}	map[string]interface{}	"Successfully linked user to invitation"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		404				{object}	response.ErrorResponse	"Not Found: Invitation not found."
+//	@Failure		500				{object}	response.ErrorResponse	"Something went wrong."
+//
+//	@Router			/teams/invite/{invitationId}/claim [post]
+func (h *TeamHandler) LinkUserToInvitation(w http.ResponseWriter, r *http.Request) {
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	invitationIdStr := chi.URLParam(r, "invitationId")
+	if invitationIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_invitation_id", "The invitation ID is missing from the URL!"))
+		return
+	}
+
+	invitationId, err := uuid.Parse(invitationIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_invitation_id", "The invitation ID is not a valid UUID"))
+		return
+	}
+
+	expired, err := h.teamService.LinkUserToInvitation(r.Context(), invitationId, *userId)
+	if err != nil {
+		if errors.Is(err, services.ErrInvitationNotFound) || errors.Is(err, services.ErrInvitationExpired) {
+			res.Send(w, http.StatusOK, map[string]interface{}{
+				"expired": true,
+			})
+			return
+		}
+		h.logger.Err(err).Msg("Failed to link user to invitation")
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, map[string]interface{}{
+		"expired": expired,
+	})
+}
+
 // Accept invitation
 //
 //	@Summary		Accept team invitation
