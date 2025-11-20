@@ -30,7 +30,10 @@ interface ApplicationFormProps {
   redirectAfterSubmit?: string;
 }
 
-export function ApplicationForm({ eventId, redirectAfterSubmit }: ApplicationFormProps) {
+export function ApplicationForm({
+  eventId,
+  redirectAfterSubmit,
+}: ApplicationFormProps) {
   const router = useRouter();
   // TODO: make the `build` api better so components that use this function doesn't have to call useMemo on it?
   const { Form, fieldsMeta } = useMemo(() => build(data), []);
@@ -67,55 +70,38 @@ export function ApplicationForm({ eventId, redirectAfterSubmit }: ApplicationFor
     } else {
       setLastSavedAt(undefined);
     }
-  }, [application?.data?.saved_at, application?.isLoading]);
+  }, [application]);
 
-  const onSubmit = useCallback(async (data: Record<string, any>) => {
-    setIsSubmitting(true);
+  const onSubmit = useCallback(
+    async (data: Record<string, unknown>) => {
+      setIsSubmitting(true);
 
-    const formData = new FormData();
+      const formData = new FormData();
 
-    for (const key in data) {
-      if (fieldsMeta[key] === QuestionTypes.upload) {
-        for (const file of data[key]) {
-          formData.append(`${key}[]`, file);
-        }
-      } else {
-        formData.set(key, data[key]);
-      }
-    }
-
-    try {
-      await api.post(`events/${eventId}/application/submit`, {
-        body: formData,
-      });
-
-      setIsSubmitted(true);
-      setIsInvalid(false);
-
-      if (redirectAfterSubmit) {
-        const invitationIdMatch = redirectAfterSubmit.match(/\/teams\/invite\/([^/]+)/);
-        if (invitationIdMatch) {
-          const invitationId = invitationIdMatch[1];
-          setTimeout(() => {
-            router.navigate({
-              to: "/teams/invite/$invitationId",
-              params: { invitationId },
-              replace: true,
-            });
-          }, 2000);
+      for (const key in data) {
+        if (fieldsMeta[key] === QuestionTypes.upload) {
+          const files = data[key] as File[];
+          for (const file of files) {
+            formData.append(`${key}[]`, file);
+          }
         } else {
-          setTimeout(() => {
-            router.navigate({
-              to: redirectAfterSubmit as any,
-              replace: true,
-            });
-          }, 2000);
+          const value = data[key];
+          formData.set(key, value as string | Blob);
         }
-      } else {
-        const pendingInviteLink = localStorage.getItem("pendingInviteLink");
-        if (pendingInviteLink) {
-          localStorage.removeItem("pendingInviteLink");
-          const invitationIdMatch = pendingInviteLink.match(/\/teams\/invite\/([^/]+)/);
+      }
+
+      try {
+        await api.post(`events/${eventId}/application/submit`, {
+          body: formData,
+        });
+
+        setIsSubmitted(true);
+        setIsInvalid(false);
+
+        if (redirectAfterSubmit) {
+          const invitationIdMatch = redirectAfterSubmit.match(
+            /\/teams\/invite\/([^/]+)/,
+          );
           if (invitationIdMatch) {
             const invitationId = invitationIdMatch[1];
             setTimeout(() => {
@@ -125,33 +111,43 @@ export function ApplicationForm({ eventId, redirectAfterSubmit }: ApplicationFor
                 replace: true,
               });
             }, 2000);
+          } else {
+            setTimeout(() => {
+              router.navigate({
+                to: redirectAfterSubmit,
+                replace: true,
+              });
+            }, 2000);
           }
         }
-      }
-    } catch (error: unknown) {
-      let errorMessage = "Something went wrong while submitting your application";
-      
-      try {
-        if (error instanceof HTTPError) {
-          const resBody = await error.response.json();
-          errorMessage = resBody.message || errorMessage;
-        } else if (error instanceof Error) {
-          errorMessage = error.message;
+      } catch (error: unknown) {
+        let errorMessage =
+          "Something went wrong while submitting your application";
+
+        try {
+          if (error instanceof HTTPError) {
+            const resBody = await error.response.json();
+            errorMessage = resBody.message || errorMessage;
+          } else if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+        } catch {
+          // Ignore errors when parsing error response
         }
-      } catch {
+
+        showToast({
+          title: "Submission Error",
+          message: errorMessage,
+          type: "error",
+        });
+
+        setIsInvalid(true);
+      } finally {
+        setIsSubmitting(false);
       }
-
-      showToast({
-        title: "Submission Error",
-        message: errorMessage,
-        type: "error",
-      });
-
-      setIsInvalid(true);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [eventId, router, redirectAfterSubmit]);
+    },
+    [eventId, router, redirectAfterSubmit, fieldsMeta],
+  );
 
   const onNewAttachments = useCallback((newFiles: Record<string, File[]>) => {
     for (const field in newFiles) {
@@ -183,7 +179,7 @@ export function ApplicationForm({ eventId, redirectAfterSubmit }: ApplicationFor
       );
       setIsSaving(false);
     },
-    [isSubmitted, isSubmitting],
+    [isSubmitted, isSubmitting, eventId],
   );
 
   if (application.isLoading) {
