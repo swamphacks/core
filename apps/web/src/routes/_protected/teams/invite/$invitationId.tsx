@@ -33,18 +33,13 @@ interface InvitationDetails {
   team_members: TeamMember[];
 }
 
-async function fetchInvitation(invitationId: string): Promise<InvitationDetails> {
-  try {
-    const response = await api
-      .get<InvitationDetails>(`teams/invite/${invitationId}`)
-      .json();
-    return response;
-  } catch (error) {
-    if (error instanceof HTTPError && error.response.status === 404) {
-      throw error;
-    }
-    throw error;
-  }
+async function fetchInvitation(
+  invitationId: string,
+): Promise<InvitationDetails> {
+  const response = await api
+    .get<InvitationDetails>(`teams/invite/${invitationId}`)
+    .json();
+  return response;
 }
 
 async function acceptInvitation(invitationId: string): Promise<void> {
@@ -55,8 +50,12 @@ async function rejectInvitation(invitationId: string): Promise<void> {
   await api.post(`teams/invite/${invitationId}/reject`).json();
 }
 
-async function linkUserToInvitation(invitationId: string): Promise<{ expired: boolean }> {
-  const response = await api.post<{ expired: boolean }>(`teams/invite/${invitationId}/claim`).json();
+async function linkUserToInvitation(
+  invitationId: string,
+): Promise<{ expired: boolean }> {
+  const response = await api
+    .post<{ expired: boolean }>(`teams/invite/${invitationId}/claim`)
+    .json();
   return response;
 }
 
@@ -68,7 +67,11 @@ interface BeforeLoadData {
 
 export const Route = createFileRoute("/_protected/teams/invite/$invitationId")({
   component: RouteComponent,
-  beforeLoad: async ({ context, location, params }): Promise<BeforeLoadData> => {
+  beforeLoad: async ({
+    context,
+    location,
+    params,
+  }): Promise<BeforeLoadData> => {
     const { user } = context;
     if (!user) {
       throw redirect({
@@ -84,12 +87,8 @@ export const Route = createFileRoute("/_protected/teams/invite/$invitationId")({
       const linkResult = await linkUserToInvitation(invitationId);
       expired = linkResult.expired;
     } catch (error) {
-      if (error instanceof HTTPError) {
-        if (error.response.status === 404) {
-          expired = true;
-        } else {
-          console.error("Error linking user to invitation:", error);
-        }
+      if (error instanceof HTTPError && error.response.status === 404) {
+        expired = true;
       } else {
         console.error("Error linking user to invitation:", error);
       }
@@ -134,13 +133,20 @@ export const Route = createFileRoute("/_protected/teams/invite/$invitationId")({
       if (!hasEventAccess) {
         try {
           const application = await fetchApplication(eventId);
-          if (application?.status === "submitted" || application?.status === "under_review" || 
-              application?.status === "accepted" || application?.status === "waitlisted") {
+          if (
+            application?.status === "submitted" ||
+            application?.status === "under_review" ||
+            application?.status === "accepted" ||
+            application?.status === "waitlisted"
+          ) {
             hasEventAccess = true;
           }
         } catch (error) {
           if (error instanceof HTTPError && error.response.status !== 404) {
-            console.warn("Error fetching application for event access check:", error);
+            console.warn(
+              "Error fetching application for event access check:",
+              error,
+            );
           }
         }
       }
@@ -166,7 +172,7 @@ export const Route = createFileRoute("/_protected/teams/invite/$invitationId")({
       expired: false,
       eventId,
     };
-  }
+  },
 });
 
 function ExpiredInvitationComponent() {
@@ -194,7 +200,8 @@ function ExpiredInvitationComponent() {
 
         <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md max-w-md">
           <Text className="text-yellow-800 dark:text-yellow-200 text-center">
-            This invitation has expired, been already accepted, or doesn't exist.
+            This invitation has expired, been already accepted, or doesn't
+            exist.
           </Text>
         </div>
 
@@ -250,13 +257,18 @@ function RouteComponent() {
           }
 
           const data = await error.response.json();
-          
-          if (error.response.status === 403 && data.error === "application_required") {
+
+          if (
+            error.response.status === 403 &&
+            data.error === "application_required"
+          ) {
             const eventId = invitationQuery.data?.event_id;
             if (eventId) {
               toast.error(
                 <div className="flex flex-col gap-2">
-                  <Text className="text-sm">{data.message || "Please complete your application first."}</Text>
+                  <Text className="text-sm">
+                    {data.message || "Please complete your application first."}
+                  </Text>
                   <Button
                     variant="primary"
                     size="sm"
@@ -265,7 +277,9 @@ function RouteComponent() {
                       router.navigate({
                         to: "/events/$eventId/application",
                         params: { eventId },
-                        search: { redirect: inviteLink } as { redirect: string },
+                        search: { redirect: inviteLink } as {
+                          redirect: string;
+                        },
                       });
                     }}
                     className="self-start"
@@ -275,7 +289,7 @@ function RouteComponent() {
                 </div>,
                 {
                   autoClose: 10000,
-                }
+                },
               );
               return;
             }
@@ -358,11 +372,6 @@ function RouteComponent() {
   }
 
   const invitation = invitationQuery.data;
-  const isExpired =
-    invitation.expires_at &&
-    new Date(invitation.expires_at) < new Date();
-  const isAccepted = invitation.status === "ACCEPTED";
-  const isRejected = invitation.status === "REJECTED";
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
@@ -384,7 +393,6 @@ function RouteComponent() {
         </Heading>
 
         <div className="flex items-center justify-center mb-8 relative w-full max-w-md">
-
           <div className="w-40 h-40 rounded-full overflow-hidden bg-[#929292] dark:bg-gray-600 flex items-center justify-center border-4 border-white dark:border-gray-700 shadow-lg">
             {currentUser?.image ? (
               <img
@@ -393,12 +401,14 @@ function RouteComponent() {
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
+                  target.style.display = "none";
                   const parent = target.parentElement;
                   if (parent) {
-                    const initial = document.createElement('span');
-                    initial.className = 'text-white text-2xl font-medium';
-                    initial.textContent = (currentUser.name || 'U').charAt(0).toUpperCase();
+                    const initial = document.createElement("span");
+                    initial.className = "text-white text-2xl font-medium";
+                    initial.textContent = (currentUser.name || "U")
+                      .charAt(0)
+                      .toUpperCase();
                     parent.appendChild(initial);
                   }
                 }}
@@ -413,9 +423,7 @@ function RouteComponent() {
           </div>
 
           <div className="mx-8 flex items-center">
-            <ArrowIcon
-              className="h-15 w-15 text-text-main"
-            />
+            <ArrowIcon className="h-15 w-15 text-text-main" />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -433,12 +441,14 @@ function RouteComponent() {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
+                        target.style.display = "none";
                         const parent = target.parentElement;
                         if (parent) {
-                          const initial = document.createElement('span');
-                          initial.className = 'text-white text-xs font-medium';
-                          initial.textContent = member.name.charAt(0).toUpperCase();
+                          const initial = document.createElement("span");
+                          initial.className = "text-white text-xs font-medium";
+                          initial.textContent = member.name
+                            .charAt(0)
+                            .toUpperCase();
                           parent.appendChild(initial);
                         }
                       }}
@@ -451,76 +461,37 @@ function RouteComponent() {
                 </div>
               ))
             ) : (
-              (<>
+              <>
                 <div className="w-16 h-16 bg-[#929292] dark:bg-gray-600 rounded-full"></div>
                 <div className="w-16 h-16 bg-[#929292] dark:bg-gray-600 rounded-full"></div>
                 <div className="w-16 h-16 bg-[#929292] dark:bg-gray-600 rounded-full"></div>
                 <div className="w-16 h-16 bg-[#929292] dark:bg-gray-600 rounded-full"></div>
-              </>)
+              </>
             )}
           </div>
         </div>
 
         <Text className="text-lg mb-8 text-text-main text-center">
-          <strong>{invitation.inviter_name}</strong> has invited you to join their
-          team for <strong>{invitation.event_name}</strong>
+          <strong>{invitation.inviter_name}</strong> has invited you to join
+          their team for <strong>{invitation.event_name}</strong>
         </Text>
 
-        {isExpired && (
-          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-            <Text className="text-yellow-800 dark:text-yellow-200">
-              This invitation has expired.
-            </Text>
-          </div>
-        )}
-
-        {isAccepted && (
-          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
-            <Text className="text-green-800 dark:text-green-200">
-              This invitation has already been accepted.
-            </Text>
-          </div>
-        )}
-
-        {isRejected && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-            <Text className="text-red-800 dark:text-red-200">
-              This invitation has been rejected.
-            </Text>
-          </div>
-        )}
-
-        {!isExpired && !isAccepted && !isRejected && (
-          <div className="flex flex-row gap-4 mb-8 w-full max-w-md">
-            
-            <Button
-              onPress={() => rejectMutation.mutate()}
-              isDisabled={acceptMutation.isPending || rejectMutation.isPending}
-              className="flex-1 !bg-red-500/80 hover:!bg-red-500 text-white py-3 px-6"
-            >
-              {rejectMutation.isPending ? "Rejecting..." : "Deny"}
-            </Button>
-            <Button
-              onPress={() => acceptMutation.mutate()}
-              isDisabled={acceptMutation.isPending || rejectMutation.isPending}
-              className="flex-1 !bg-green-600/80 hover:!bg-green-600 text-white py-3 px-6"
-            >
-              {acceptMutation.isPending ? "Accepting..." : "Accept"}
-            </Button>
-          </div>
-        )}
-
-        {(isExpired || isAccepted || isRejected) && (
+        <div className="flex flex-row gap-4 mb-8 w-full max-w-md">
           <Button
-            onPress={() => router.navigate({ to: "/portal" })}
-            className="w-full max-w-md !bg-green-400 hover:!bg-green-500 text-white font-semibold py-3 px-6 mb-8"
-            style={{
-              backgroundColor: "#86efac",
-            }}
+            onPress={() => rejectMutation.mutate()}
+            isDisabled={acceptMutation.isPending || rejectMutation.isPending}
+            className="flex-1 !bg-red-500/80 hover:!bg-red-500 text-white py-3 px-6"
           >
-            Go to Portal
+            {rejectMutation.isPending ? "Rejecting..." : "Deny"}
           </Button>
-        )}
+          <Button
+            onPress={() => acceptMutation.mutate()}
+            isDisabled={acceptMutation.isPending || rejectMutation.isPending}
+            className="flex-1 !bg-green-600/80 hover:!bg-green-600 text-white py-3 px-6"
+          >
+            {acceptMutation.isPending ? "Accepting..." : "Accept"}
+          </Button>
+        </div>
 
         <div className="mt-8 py-4 px-15 bg-surface border-1 border-border rounded-md max-w-lg text-center">
           <Text className="text-sm text-text-secondary">
@@ -530,5 +501,5 @@ function RouteComponent() {
         </div>
       </div>
     </div>
-  )
+  );
 }
