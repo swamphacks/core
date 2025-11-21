@@ -1,0 +1,42 @@
+services:
+  web-dev:
+    image: ghcr.io/swamphacks/core-web:dev
+    env_file:
+      - ./secrets/.env.dev.web
+    networks:
+      - caddy_net
+    expose:
+      - "80"  # accessible to Caddy via Docker network
+  web:
+    image: ghcr.io/swamphacks/core-web:latest
+    env_file:
+      - ./secrets/.env.web
+    networks:
+      - caddy_net
+    expose:
+      - "80"  # accessible to Caddy via Docker network
+
+  caddy:
+    image: ghcr.io/caddybuilds/caddy-cloudflare:latest
+    container_name: caddy
+    env_file:
+      - ./secrets/.env.cf # This needs to be pulled first since Caddy needs to compelte DNS challenge!
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.web:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - caddy_net
+    depends_on:
+      - web-dev
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  caddy_net:
+    driver: bridge

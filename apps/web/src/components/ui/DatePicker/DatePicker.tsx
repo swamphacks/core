@@ -40,8 +40,8 @@ export function DatePicker<T extends DateValue>({
       )}
     >
       {label && <Label isRequired={props.isRequired}>{label}</Label>}
-      <FieldGroup className="min-w-[208px] w-auto border-1 rounded-sm items-center bg-surface">
-        <DateInput className="flex-1 min-w-[150px] px-2 py-1.5 text-sm" />
+      <FieldGroup className="min-w-[208px] w-auto border-1 rounded-sm items-center bg-input-bg">
+        <DateInput className="flex-1 min-w-[150px] px-2 py-2 text-sm" />
         <Button
           variant="icon"
           className="w-6 mr-1 rounded-sm outline-offset-0 px-0 py-1"

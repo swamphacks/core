@@ -7,6 +7,14 @@ services:
     env_file:
       - ./secrets/.env.dev.api
 
+  dev-web:
+    image: ghcr.io/swamphacks/core-web:dev
+    ports:
+      - "5174:5173"
+    restart: always
+    env_file:
+      - ./secrets/.env.dev.web
+  
   dev-email-worker:
     image: ghcr.io/swamphacks/core-email-worker:dev
     restart: always

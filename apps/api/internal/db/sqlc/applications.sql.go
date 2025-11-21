@@ -7,6 +7,7 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -17,7 +18,7 @@ INSERT INTO applications (
 ) VALUES (
     $1, $2
 )
-RETURNING user_id, event_id, status, application, resume_url, created_at, saved_at, updated_at
+RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at
 `
 
 type CreateApplicationParams struct {
@@ -33,10 +34,10 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.EventID,
 		&i.Status,
 		&i.Application,
-		&i.ResumeUrl,
 		&i.CreatedAt,
 		&i.SavedAt,
 		&i.UpdatedAt,
+		&i.SubmittedAt,
 	)
 	return i, err
 }
@@ -57,7 +58,7 @@ func (q *Queries) DeleteApplication(ctx context.Context, arg DeleteApplicationPa
 }
 
 const getApplicationByUserAndEventID = `-- name: GetApplicationByUserAndEventID :one
-SELECT user_id, event_id, status, application, resume_url, created_at, saved_at, updated_at FROM applications
+SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at FROM applications
 WHERE user_id = $1 AND event_id = $2
 `
 
@@ -74,10 +75,10 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 		&i.EventID,
 		&i.Status,
 		&i.Application,
-		&i.ResumeUrl,
 		&i.CreatedAt,
 		&i.SavedAt,
 		&i.UpdatedAt,
+		&i.SubmittedAt,
 	)
 	return i, err
 }
@@ -87,9 +88,10 @@ UPDATE applications
 SET
     status = CASE WHEN $1::boolean THEN $2::application_status ELSE status END,
     application = CASE WHEN $3::boolean THEN $4::JSONB ELSE application END,
-    resume_url = CASE WHEN $5::boolean THEN $6 ELSE resume_url END
+    submitted_at = CASE WHEN $5::boolean THEN $6::timestamptz ELSE submitted_at END,
+    saved_at = CASE WHEN $7::boolean THEN $8::timestamptz ELSE saved_at END
 WHERE
-    user_id = $7 AND event_id = $8
+    user_id = $9 AND event_id = $10
 `
 
 type UpdateApplicationParams struct {
@@ -97,8 +99,10 @@ type UpdateApplicationParams struct {
 	Status              ApplicationStatus `json:"status"`
 	ApplicationDoUpdate bool              `json:"application_do_update"`
 	Application         []byte            `json:"application"`
-	ResumeUrlDoUpdate   bool              `json:"resume_url_do_update"`
-	ResumeUrl           *string           `json:"resume_url"`
+	SubmittedAtDoUpdate bool              `json:"submitted_at_do_update"`
+	SubmittedAt         time.Time         `json:"submitted_at"`
+	SavedAtDoUpdate     bool              `json:"saved_at_do_update"`
+	SavedAt             time.Time         `json:"saved_at"`
 	UserID              uuid.UUID         `json:"user_id"`
 	EventID             uuid.UUID         `json:"event_id"`
 }
@@ -109,8 +113,10 @@ func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationPa
 		arg.Status,
 		arg.ApplicationDoUpdate,
 		arg.Application,
-		arg.ResumeUrlDoUpdate,
-		arg.ResumeUrl,
+		arg.SubmittedAtDoUpdate,
+		arg.SubmittedAt,
+		arg.SavedAtDoUpdate,
+		arg.SavedAt,
 		arg.UserID,
 		arg.EventID,
 	)

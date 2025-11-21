@@ -31,7 +31,7 @@ func SendError(w http.ResponseWriter, status int, errorResponse ErrorResponse) {
 
 // Send marshals any successful payload struct to JSON, sets the status code,
 // and writes the response.
-func Send(w http.ResponseWriter, status int, payload interface{}) {
+func Send(w http.ResponseWriter, status int, payload any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
 

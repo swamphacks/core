@@ -1,7 +1,9 @@
 import { useFieldContext } from "@/components/Form/formContext";
 import { Select, type SelectProps } from "@/components/ui/Select";
 
-export default function SelectField<T extends object>(props: SelectProps<T>) {
+export default function SelectField<T extends { id: string; name: string }>(
+  props: SelectProps<T>,
+) {
   const field = useFieldContext();
 
   return (

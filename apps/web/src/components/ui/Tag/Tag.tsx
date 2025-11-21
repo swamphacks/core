@@ -28,7 +28,7 @@ type Color = keyof typeof colors;
 const ColorContext = createContext<Color>("gray");
 
 export const tagStyles = tv({
-  base: "transition cursor-default m-0 text-xs rounded-sm border px-1 py-0.5 flex items-center max-w-fit gap-1",
+  base: "transition cursor-default m-0 text-sm rounded-sm border px-1 py-0.5 flex items-center max-w-fit gap-1",
   variants: {
     color: {
       gray: "",

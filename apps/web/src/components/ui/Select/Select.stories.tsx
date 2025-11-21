@@ -2,7 +2,7 @@
 import type { Meta } from "@storybook/react";
 import { Form } from "react-aria-components";
 import { Button } from "@/components/ui/Button";
-import { Select, SelectItem, SelectSection } from ".";
+import { Select } from ".";
 
 const meta: Meta<typeof Select> = {
   title: "UI/Select",
@@ -18,46 +18,33 @@ const meta: Meta<typeof Select> = {
 
 export default meta;
 
+const data = [
+  {
+    id: "Small",
+    name: "Small",
+  },
+  {
+    id: "Medium",
+    name: "Medium",
+  },
+  {
+    id: "Large",
+    name: "Large",
+  },
+];
+
 export const Example = (args: any) => (
-  <Select {...args} label="T-Shirt Size" placeholder="Select size">
-    <SelectItem>Small</SelectItem>
-    <SelectItem id="mint">Medium</SelectItem>
-    <SelectItem>Large</SelectItem>
-  </Select>
+  <Select
+    {...args}
+    label="T-Shirt Size"
+    placeholder="Select size"
+    items={data}
+  />
 );
 
 export const DisabledItems = (args: any) => <Example {...args} />;
 DisabledItems.args = {
-  disabledKeys: ["mint"],
-};
-
-export const Sections = (args: any) => (
-  <Select {...args}>
-    <SelectSection title="Fruit">
-      <SelectItem id="Apple">Apple</SelectItem>
-      <SelectItem id="Banana">Banana</SelectItem>
-      <SelectItem id="Orange">Orange</SelectItem>
-      <SelectItem id="Honeydew">Honeydew</SelectItem>
-      <SelectItem id="Grapes">Grapes</SelectItem>
-      <SelectItem id="Watermelon">Watermelon</SelectItem>
-      <SelectItem id="Cantaloupe">Cantaloupe</SelectItem>
-      <SelectItem id="Pear">Pear</SelectItem>
-    </SelectSection>
-    <SelectSection title="Vegetable">
-      <SelectItem id="Cabbage">Cabbage</SelectItem>
-      <SelectItem id="Broccoli">Broccoli</SelectItem>
-      <SelectItem id="Carrots">Carrots</SelectItem>
-      <SelectItem id="Lettuce">Lettuce</SelectItem>
-      <SelectItem id="Spinach">Spinach</SelectItem>
-      <SelectItem id="Bok Choy">Bok Choy</SelectItem>
-      <SelectItem id="Cauliflower">Cauliflower</SelectItem>
-      <SelectItem id="Potatoes">Potatoes</SelectItem>
-    </SelectSection>
-  </Select>
-);
-
-Sections.args = {
-  label: "Preferred fruit or vegetable",
+  disabledKeys: ["Small"],
 };
 
 export const Validation = (args: any) => (

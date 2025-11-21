@@ -1,11 +1,10 @@
-/* eslint-disable react-refresh/only-export-components */
 import { forwardRef } from "react";
 import { tv, type VariantProps } from "tailwind-variants";
 
 // Very basic card component, maybe in the future we could do something like https://chakra-ui.com/docs/components/card
 
 export const card = tv({
-  base: "inline-block bg-surface rounded-md w-full sm:max-w-96 shadow-xs",
+  base: "inline-block bg-surface rounded-md w-full sm:max-w-96 shadow-xs border-neutral-200 dark:border-neutral-800",
   variants: {},
 
   defaultVariants: {},

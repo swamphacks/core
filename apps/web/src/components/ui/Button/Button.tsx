@@ -6,35 +6,47 @@ import {
 import { tv } from "tailwind-variants";
 
 export interface ButtonProps extends RACButtonProps {
-  variant?: "primary" | "secondary" | "danger" | "icon" | "skeleton";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "danger"
+    | "icon"
+    | "skeleton"
+    | "unstyled";
   size?: "sm" | "md" | "lg" | "auto";
   className?: string;
 }
 
 export const button = tv({
-  base: "inline-flex cursor-pointer items-center justify-center rounded-md font-medium focus:outline-none",
+  base: "inline-flex cursor-pointer items-center justify-center rounded-md font-medium focus:outline-none gap-2",
   variants: {
     variant: {
       skeleton: "",
       primary:
         "bg-button-primary hover:bg-button-primary-hover pressed:bg-button-primary-pressed text-white",
       secondary:
-        "bg-button-secondary hover:bg-button-secondary-hover pressed:bg-button-secondary-pressed text-gray-800 dark:bg-zinc-600 dark:hover:bg-zinc-500 dark:pressed:bg-zinc-400 dark:text-zinc-100",
+        "bg-button-secondary hover:bg-button-secondary-hover pressed:bg-button-secondary-pressed",
       danger:
         "bg-button-danger hover:bg-button-danger-hover pressed:bg-button-danger-pressed text-white",
       icon: "border-0 p-1 flex items-center justify-center text-gray-600 hover:bg-black/[5%] pressed:bg-black/10 dark:text-zinc-400 dark:hover:bg-white/10 dark:pressed:bg-white/20 disabled:bg-transparent",
+      unstyled: "",
     },
     isDisabled: {
-      true: "cursor-not-allowed bg-gray-100 dark:bg-zinc-800 text-gray-300 dark:text-zinc-600 forced-colors:text-[GrayText] border-black/5 dark:border-white/5",
+      true: "cursor-not-allowed bg-gray-200 dark:bg-neutral-700 text-text-main/30 border-black/5 dark:border-white/5",
     },
     size: {
       auto: "",
-      sm: "p-2 text-sm",
-      md: "p-2 text-base",
-      lg: "p-2 text-base",
+      sm: "py-2 px-4 text-sm",
+      md: "py-2 px-4 text-base",
+      lg: "py-2 px-4 text-lg",
     },
   },
-
+  compoundVariants: [
+    {
+      variant: "unstyled",
+      class: "", // override everything
+    },
+  ],
   defaultVariants: {
     variant: "primary",
     size: "md",
@@ -49,7 +61,7 @@ export function Button(props: ButtonProps) {
         button({
           ...renderProps,
           variant: props.variant,
-          size: props.size,
+          size: props.variant === "unstyled" ? undefined : props.size,
           className,
         }),
       )}

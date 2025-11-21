@@ -1,0 +1,41 @@
+-- name: AddTeamMember :one
+INSERT INTO team_members (
+    user_id,
+    team_id
+) VALUES (
+    $1,
+    $2
+)
+RETURNING *;
+
+-- name: RemoveTeamMember :exec
+DELETE FROM team_members
+WHERE user_id = $1
+  AND team_id = $2;
+
+-- name: GetTeamMembers :many
+SELECT
+    u.id AS user_id,
+    u.email,
+    u.image,
+    u.name,
+    tm.joined_at
+FROM
+    team_members tm
+JOIN
+    auth.users u ON tm.user_id = u.id
+WHERE
+    tm.team_id = $1;
+
+-- name: GetTeamMemberByUserAndEvent :one
+SELECT tm.*
+FROM team_members tm
+JOIN teams t on tm.team_id = t.id
+WHERE tm.user_id = $1
+    AND t.event_id = $2
+LIMIT 1;
+
+-- name: CreateTeamMember :one
+INSERT INTO team_members (team_id, user_id)
+VALUES ($1, $2)
+RETURNING *;

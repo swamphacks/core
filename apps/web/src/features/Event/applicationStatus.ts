@@ -127,6 +127,16 @@ const applicationStatus = defineStatus({
       text: "Event Summary",
     },
   },
+  upcoming: {
+    className: "bg-badge-bg-not-applied text-badge-text-not-applied",
+    text: "Not Applied",
+    icon: TablerPointFilled,
+    button: {
+      className:
+        "bg-event-button-bg-completed text-event-button-text-completed hover:bg-event-button-bg-completed-hover",
+      text: "Coming Soon",
+    },
+  },
 });
 
 export default applicationStatus;

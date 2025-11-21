@@ -6,7 +6,7 @@ import {
   useStore,
   type StandardSchemaV1Issue,
 } from "@tanstack/react-form";
-import { lazy } from "react";
+import { lazy, useRef } from "react";
 import { fieldContext, formContext } from "./formContext.ts";
 import { SubmitButton } from "@/components/Form/fields/SubmitButton";
 
@@ -16,7 +16,8 @@ const ComboBoxField = lazy(() => import("./fields/ComboBoxField"));
 const MultiSelectField = lazy(() => import("./fields/MultiSelectField"));
 const RadioField = lazy(() => import("./fields/RadioField"));
 const SelectField = lazy(() => import("./fields/SelectField"));
-const DatePickerField = lazy(() => import("./fields/DatePickerField.tsx"));
+const DatePickerField = lazy(() => import("./fields/DatePickerField"));
+const UploadField = lazy(() => import("./fields/UploadField"));
 
 export const { useAppForm, withForm } = createFormHook({
   fieldComponents: {
@@ -27,6 +28,7 @@ export const { useAppForm, withForm } = createFormHook({
     RadioField,
     SelectField,
     DatePickerField,
+    UploadField,
   },
   formComponents: {
     SubmitButton,
@@ -42,15 +44,47 @@ export function useFormErrors<T>(
   const fieldMeta = useStore(form.store, (state) => {
     return state.fieldMeta;
   });
-  const formErrors: Record<string, string[]> = {};
+  // const formErrors: Record<string, string[]> = {};
+  const prevRef = useRef<Record<string, string[]>>({});
 
-  const fields = Object.keys(fieldMeta);
+  // const fields = Object.keys(fieldMeta);
 
-  fields.forEach((field) => {
-    formErrors[field] = fieldMeta[field as keyof typeof fieldMeta].errors.map(
+  const newErrors: Record<string, string[]> = {};
+  for (const field of Object.keys(fieldMeta)) {
+    newErrors[field] = fieldMeta[field as keyof typeof fieldMeta].errors.map(
       (error: StandardSchemaV1Issue) => error.message,
     );
-  });
+  }
 
-  return formErrors;
+  const prev = prevRef.current;
+
+  // shallow compare keys and arrays of messages
+  let changed = false;
+  const prevKeys = Object.keys(prev);
+  const newKeys = Object.keys(newErrors);
+  if (prevKeys.length !== newKeys.length) {
+    changed = true;
+  } else {
+    for (const k of newKeys) {
+      const a = prev[k] ?? [];
+      const b = newErrors[k];
+      if (a.length !== b.length) {
+        changed = true;
+        break;
+      }
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) {
+          changed = true;
+          break;
+        }
+      }
+      if (changed) break;
+    }
+  }
+
+  if (changed) {
+    prevRef.current = newErrors;
+  }
+
+  return prevRef.current;
 }

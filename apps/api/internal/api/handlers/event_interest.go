@@ -33,6 +33,20 @@ type AddEmailRequest struct {
 	Source *string `json:"source"`
 }
 
+// Make an interest submission for an event
+//
+//	@Summary		Make an interest submission for an event (email list)
+//	@Description	Submit email for event interest/mailing list
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path		string					true	"Event ID"
+//	@Param			request	body		AddEmailRequest			true	"Interest submission data"
+//	@Success		201		{object}	string					"OK: Interest email created"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request"
+//	@Failure		409		{object}	response.ErrorResponse	"Duplicate email found in DB"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId}/interest [post]
 func (h *EventInterestHandler) AddEmailToEvent(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -61,7 +75,7 @@ func (h *EventInterestHandler) AddEmailToEvent(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		switch err {
 		case services.ErrEmailConflict:
-			res.SendError(w, http.StatusConflict, res.NewError("duplicate_email", "Email is already registered for this event"))
+			res.SendError(w, http.StatusConflict, res.NewError("duplicate_email", "Email already subscribed for updates"))
 		case services.ErrFailedToCreateSubmission:
 			res.SendError(w, http.StatusInternalServerError, res.NewError("submission_error", "Failed to create event interest submission"))
 		default:
