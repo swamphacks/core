@@ -93,7 +93,7 @@ const EventButton = ({
         });
         break;
       case "upcoming":
-        toast.info("Applications for this event have not opened yet.", {
+        toast.info("Applications for this event currently are not open.", {
           position: "bottom-right",
         });
         break;
