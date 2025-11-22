@@ -149,7 +149,8 @@ const EventCard = ({
                 eventId={eventId}
               />
             </div>
-          ) : status === "notApplied" &&
+          ) : (status === "notApplied" &&
+              currentTime.getTime() < application_open.getTime()) ||
             currentTime.getTime() > application_close.getTime() ? (
             <EventButton
               className="w-full mt-4"
