@@ -59,7 +59,10 @@ export default function ReviewerList({ staff, assigned, setAssigned }: Props) {
                 </div>
               </Checkbox>
 
-              <NumberField className="ml-auto">
+              <NumberField
+                aria-label={`Number of apps for ${s.name ?? "Anonymous"}`}
+                className="ml-auto"
+              >
                 <Input
                   disabled={!isSelected}
                   onChange={(e) => {
@@ -75,7 +78,7 @@ export default function ReviewerList({ staff, assigned, setAssigned }: Props) {
                       ),
                     );
                   }}
-                  className="border-border border-2 w-12 h-6 text-sm px-1 disabled:bg-input-bg-disbaled dark:disabled:bg-neutral-800 disabled:cursor-not-allowed"
+                  className="border-border border-1 disabled:border-0 w-12 h-6 text-sm px-1 disabled:bg-input-bg-disbaled dark:disabled:bg-neutral-800 disabled:cursor-not-allowed"
                 />
               </NumberField>
             </div>

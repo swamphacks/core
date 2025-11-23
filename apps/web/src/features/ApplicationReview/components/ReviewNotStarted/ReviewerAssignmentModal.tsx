@@ -39,9 +39,13 @@ export default function ReviewerAssignmentModal({
 
     if (remaining < 0) return alert("Assigned applications exceed total.");
     if (remaining > 0 && !hasNull)
-      return alert("Leave one reviewer blank to distribute remaining.");
+      return alert(
+        "Leave at least one reviewer blank to distribute remaining.",
+      );
     if (assigned.length === 0) return alert("Select reviewers.");
 
+    // Start the review process with assigned reviewers
+    //TODO: Implement the actual submission logic
     console.log("Assigned Reviewers:", assigned);
     console.log("Beginning review process for event:", event.id);
     onClose();
