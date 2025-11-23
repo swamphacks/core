@@ -52,7 +52,6 @@ const EventCard = ({
   const descriptionLength = description.length;
   const isClamped = descriptionLength > 105;
   const currentTime: Date = new Date();
-  console.log(status);
 
   //TODO: Optimize so that multiple modals aren't created for each card
 
