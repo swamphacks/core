@@ -276,17 +276,17 @@ func (ns NullJoinRequestStatus) Value() (driver.Value, error) {
 }
 
 type Application struct {
-	UserID           uuid.UUID             `json:"user_id"`
-	EventID          uuid.UUID             `json:"event_id"`
-	Status           NullApplicationStatus `json:"status"`
-	Application      []byte                `json:"application"`
-	CreatedAt        time.Time             `json:"created_at"`
-	SavedAt          time.Time             `json:"saved_at"`
-	UpdatedAt        time.Time             `json:"updated_at"`
-	SubmittedAt      *time.Time            `json:"submitted_at"`
-	ExperienceRating *int32                `json:"experience_rating"`
-	PassionRating    *int32                `json:"passion_rating"`
-	AssignedReviewer *uuid.UUID            `json:"assigned_reviewer"`
+	UserID             uuid.UUID             `json:"user_id"`
+	EventID            uuid.UUID             `json:"event_id"`
+	Status             NullApplicationStatus `json:"status"`
+	Application        []byte                `json:"application"`
+	CreatedAt          time.Time             `json:"created_at"`
+	SavedAt            time.Time             `json:"saved_at"`
+	UpdatedAt          time.Time             `json:"updated_at"`
+	SubmittedAt        *time.Time            `json:"submitted_at"`
+	ExperienceRating   *int32                `json:"experience_rating"`
+	PassionRating      *int32                `json:"passion_rating"`
+	AssignedReviewerID *uuid.UUID            `json:"assigned_reviewer_id"`
 }
 
 type AuthAccount struct {

@@ -18,7 +18,7 @@ INSERT INTO applications (
 ) VALUES (
     $1, $2
 )
-RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer
+RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id
 `
 
 type CreateApplicationParams struct {
@@ -40,7 +40,7 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.SubmittedAt,
 		&i.ExperienceRating,
 		&i.PassionRating,
-		&i.AssignedReviewer,
+		&i.AssignedReviewerID,
 	)
 	return i, err
 }
@@ -61,7 +61,7 @@ func (q *Queries) DeleteApplication(ctx context.Context, arg DeleteApplicationPa
 }
 
 const getApplicationByUserAndEventID = `-- name: GetApplicationByUserAndEventID :one
-SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer FROM applications
+SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id FROM applications
 WHERE user_id = $1 AND event_id = $2
 `
 
@@ -84,7 +84,7 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 		&i.SubmittedAt,
 		&i.ExperienceRating,
 		&i.PassionRating,
-		&i.AssignedReviewer,
+		&i.AssignedReviewerID,
 	)
 	return i, err
 }
