@@ -8,7 +8,7 @@ export type TeamsWithMembers =
 export function useEventTeams(eventId: string, limit: number, offset: number) {
   async function fetchEventTeams(): Promise<TeamsWithMembers | null> {
     const result = await api
-      .get<TeamsWithMembers>(`events/${eventId}/teams`)
+      .get<TeamsWithMembers>(`events/${eventId}/teams?limit=${limit}&offset=${offset}`)
       .json();
     return result ?? null;
   }

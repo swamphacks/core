@@ -4,51 +4,11 @@ import type {
   ColumnFiltersState,
   SortingState,
   PaginationState,
-} from "@/components/ui/Table";
+} from "@tanstack/react-table";
 
-interface TableState {
-  filters: ColumnFiltersState;
-  sorting: SortingState;
-  pagination: PaginationState;
-}
+const RESERVED_KEYS = ["page", "limit", "sort"];
 
-// Helper functions for handling URL filter encoding
-function parseTableState(encodedString: string | undefined): TableState {
-  const defaults: TableState = {
-    filters: [],
-    sorting: [],
-    pagination: {
-      pageIndex: 0,
-      pageSize: 10,
-    },
-  };
-  if (encodedString) {
-    try {
-      const decoded = atob(encodedString);
-      const parsed = JSON.parse(decoded);
-      return { ...defaults, ...parsed };
-    } catch (e) {
-      console.error("Failed to decode filters from URL:", e);
-    }
-  }
-  return defaults;
-}
-
-function encodeTableState(state: TableState): string {
-  if (
-    state.filters.length === 0 &&
-    state.sorting.length === 0 &&
-    state.pagination.pageIndex === 0 &&
-    state.pagination.pageSize === 10
-  ) {
-    return ""; // Return empty string to clear URL param
-  }
-  return btoa(JSON.stringify(state));
-}
-
-interface UseUrlStateProps<
-  TSearch extends { tableState?: string | undefined },
-> {
+interface UseUrlStateProps<TSearch> {
   search: TSearch;
   navigate: (options: {
     search: (prev: TSearch) => TSearch;
@@ -57,47 +17,97 @@ interface UseUrlStateProps<
   debounceMs?: number;
 }
 
-export function useUrlTableState<
-  TSearch extends { tableState?: string | undefined },
->({ search, navigate, debounceMs = 300 }: UseUrlStateProps<TSearch>) {
-  const initialState = useMemo(
-    () => parseTableState(search.tableState),
-    [search.tableState],
-  );
+export function useUrlTableState<TSearch extends Record<string, any>>({
+  search,
+  navigate,
+  debounceMs = 300,
+}: UseUrlStateProps<TSearch>) {
+  const initialState = useMemo(() => {
+    const pageIndex = Number(search.page) ? Number(search.page) - 1 : 0;
+    const pageSize = Number(search.limit) ? Number(search.limit) : 10;
+
+    let sorting: SortingState = [];
+    if (search.sort && typeof search.sort === "string") {
+      const [id, dir] = search.sort.split(".");
+      sorting = [{ id, desc: dir === "desc" }];
+    }
+
+    // Map any non-reserved key to a column filter
+    const filters: ColumnFiltersState = Object.keys(search)
+      .filter(
+        (key) => !RESERVED_KEYS.includes(key) && search[key] !== undefined,
+      )
+      .map((key) => ({
+        id: key,
+        value: search[key],
+      }));
+
+    return {
+      pagination: { pageIndex, pageSize },
+      sorting,
+      filters,
+    };
+  }, [search]);
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
     initialState.filters,
   );
-
   const [sorting, setSorting] = useState<SortingState>(initialState.sorting);
-
   const [pagination, setPagination] = useState<PaginationState>(
     initialState.pagination,
   );
 
-  const debouncedUrlUpdate = useMemo(
+  const updateUrl = useMemo(
     () =>
       debounce(
         (
-          filters: ColumnFiltersState,
-          sort: SortingState,
-          pagination: PaginationState,
+          currentFilters: ColumnFiltersState,
+          currentSorting: SortingState,
+          currentPagination: PaginationState,
           currentSearch: TSearch,
         ) => {
-          const newState: TableState = { filters, sorting: sort, pagination };
-          const newSearchState = encodeTableState(newState);
+          const newParams: Record<string, any> = {};
 
-          const newSearchParam = newSearchState ? newSearchState : undefined;
-
-          if (newSearchParam !== currentSearch.tableState) {
-            navigate({
-              search: (prev) => ({
-                ...prev,
-                tableState: newSearchParam,
-              }),
-              replace: true,
-            });
+          if (currentPagination.pageIndex > 0) {
+            newParams.page = currentPagination.pageIndex + 1;
+          } else {
+            newParams.page = undefined; // Remove from URL
           }
+
+          if (currentPagination.pageSize !== 10) {
+            newParams.limit = currentPagination.pageSize;
+          } else {
+            newParams.limit = undefined;
+          }
+
+          if (currentSorting.length > 0) {
+            const { id, desc } = currentSorting[0];
+            newParams.sort = `${id}.${desc ? "desc" : "asc"}`;
+          } else {
+            newParams.sort = undefined;
+          }
+
+          // Remove "stale" filters that aren't in url params
+          Object.keys(currentSearch).forEach((key) => {
+            if (!RESERVED_KEYS.includes(key)) {
+              newParams[key] = undefined;
+            }
+          });
+
+          currentFilters.forEach((filter) => {
+            if (filter.value !== undefined && filter.value !== "") {
+              newParams[filter.id] = filter.value;
+            }
+          });
+
+          // Check if anything actually changed to avoid redundant navigations
+          navigate({
+            search: (prev) => ({
+              ...prev,
+              ...newParams,
+            }),
+            replace: true,
+          });
         },
         debounceMs,
       ),
@@ -105,8 +115,8 @@ export function useUrlTableState<
   );
 
   useEffect(() => {
-    debouncedUrlUpdate(columnFilters, sorting, pagination, search);
-  }, [columnFilters, sorting, pagination, search, debouncedUrlUpdate]);
+    updateUrl(columnFilters, sorting, pagination, search);
+  }, [columnFilters, sorting, pagination, search, updateUrl]);
 
   return {
     columnFilters,
