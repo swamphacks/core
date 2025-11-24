@@ -490,6 +490,52 @@ func (h *TeamHandler) RejectTeamJoinRequest(w http.ResponseWriter, r *http.Reque
 	res.Send(w, http.StatusNoContent, nil)
 }
 
+// Kick a member from a team
+//
+//	@Summary		Kick a member from a team
+//	@Description	Kicks a member from a team. Only the team owner can perform this action.
+//	@Tags			Team
+//	@Param			sh_session_id	cookie	string	true	"The authenticated session token/id"
+//	@Param			team_id			path	string	true	"The ID of the team"
+//	@Param			userId			path	string	true	"The ID of the user to be kicked"
+//	@Success		204				"Successfully kicked the team member"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad Request: Missing or malformed parameters."
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		403				{object}	response.ErrorResponse	"Forbidden: Requester is not allowed to perform this action."
+//	@Failure		500				{object}	response.ErrorResponse	"Something went wrong."
+//
+//	@Router			/teams/{teamId}/members/{userId} [delete]
+func (h *TeamHandler) KickMemberFromTeam(w http.ResponseWriter, r *http.Request) {
+	// Implementation would go here
+	memberId, err := web.PathParamToUUID(r, "userId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_member_id", "The team member ID is malformed/missing."))
+		return
+	}
+
+	teamId, err := web.PathParamToUUID(r, "teamId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("malformed_team_id", "The team ID is malformed/missing."))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusUnauthorized, res.NewError("unauthorized", "User not authenticated"))
+		return
+	}
+
+	err = h.teamService.KickMemberFromTeam(r.Context(), memberId, teamId, *userId)
+	if err != nil {
+		status, code, message := mapTeamServiceError(err)
+		res.SendError(w, status, res.NewError(code, message))
+		return
+	}
+
+	res.Send(w, http.StatusNoContent, nil)
+
+}
+
 // Maps team service errors to HTTP status codes and messages
 func mapTeamServiceError(err error) (status int, code, message string) {
 	switch {
@@ -503,6 +549,8 @@ func mapTeamServiceError(err error) (status int, code, message string) {
 		return http.StatusConflict, "team_full", "The team is already full."
 	case errors.Is(err, repository.ErrTeamNotFound):
 		return http.StatusNotFound, "team_not_found", "Team resource was not found."
+	case errors.Is(err, services.ErrKickOwnerSelf):
+		return http.StatusBadRequest, "cannot_kick_owner", "Team owners cannot kick themselves from their own team."
 	default:
 		return http.StatusInternalServerError, "internal_error", "Something went wrong."
 	}

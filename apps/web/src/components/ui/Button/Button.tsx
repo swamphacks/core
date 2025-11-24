@@ -6,7 +6,13 @@ import {
 import { tv } from "tailwind-variants";
 
 export interface ButtonProps extends RACButtonProps {
-  variant?: "primary" | "secondary" | "danger" | "icon" | "skeleton";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "danger"
+    | "icon"
+    | "skeleton"
+    | "unstyled";
   size?: "sm" | "md" | "lg" | "auto";
   className?: string;
 }
@@ -23,6 +29,7 @@ export const button = tv({
       danger:
         "bg-button-danger hover:bg-button-danger-hover pressed:bg-button-danger-pressed text-white",
       icon: "border-0 p-1 flex items-center justify-center text-gray-600 hover:bg-black/[5%] pressed:bg-black/10 dark:text-zinc-400 dark:hover:bg-white/10 dark:pressed:bg-white/20 disabled:bg-transparent",
+      unstyled: "",
     },
     isDisabled: {
       true: "cursor-not-allowed bg-gray-200 dark:bg-neutral-700 text-text-main/30 border-black/5 dark:border-white/5",
@@ -34,7 +41,12 @@ export const button = tv({
       lg: "py-2 px-4 text-lg",
     },
   },
-
+  compoundVariants: [
+    {
+      variant: "unstyled",
+      class: "", // override everything
+    },
+  ],
   defaultVariants: {
     variant: "primary",
     size: "md",
@@ -49,7 +61,7 @@ export function Button(props: ButtonProps) {
         button({
           ...renderProps,
           variant: props.variant,
-          size: props.size,
+          size: props.variant === "unstyled" ? undefined : props.size,
           className,
         }),
       )}
