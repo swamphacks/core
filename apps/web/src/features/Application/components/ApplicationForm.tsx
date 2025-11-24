@@ -48,6 +48,11 @@ export function ApplicationForm({
   const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>(undefined);
   const [savedText, setSavedText] = useState<string | undefined>("");
 
+  // Extract specific values to avoid dependency on entire application object
+  const savedAt = application.data?.saved_at;
+  const isLoading = application.isLoading;
+  const previousSavedAtRef = useRef<string | undefined>(undefined);
+
   // Update saved text every second. Restart interval when lastSavedAt changes.
   useEffect(() => {
     const id = setInterval(() => {
@@ -62,15 +67,20 @@ export function ApplicationForm({
   }, [lastSavedAt]);
 
   useEffect(() => {
-    if (!application || application.isLoading) return;
+    if (isLoading) return;
 
-    if (application.data?.saved_at) {
-      const parsed = parseISO(application.data.saved_at);
-      setLastSavedAt(parsed);
-    } else {
-      setLastSavedAt(undefined);
+    // Only update if saved_at actually changed
+    if (savedAt !== previousSavedAtRef.current) {
+      previousSavedAtRef.current = savedAt;
+
+      if (savedAt) {
+        const parsed = parseISO(savedAt);
+        setLastSavedAt(parsed);
+      } else {
+        setLastSavedAt(undefined);
+      }
     }
-  }, [application]);
+  }, [savedAt, isLoading]);
 
   const onSubmit = useCallback(
     async (data: Record<string, unknown>) => {
@@ -156,7 +166,7 @@ export function ApplicationForm({
   }, []);
 
   const onChange = useCallback(
-    async (formValues: Record<string, any>) => {
+    async (formValues: Record<string, unknown>) => {
       if (isSubmitted || isSubmitting) return;
 
       setIsSaving(true);
