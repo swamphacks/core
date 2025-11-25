@@ -36,7 +36,12 @@ export default function ReviewerAssignmentModal({
 
   const handleSubmit = () => {
     const hasNull = assigned.some((r) => r.amount === null);
+    const hasZero = assigned.some((r) => r.amount === 0);
 
+    if (hasZero)
+      return alert(
+        "Assigned applications cannot be zero for any reviewer. Either leave blank or assign a positive number.",
+      );
     if (remaining < 0) return alert("Assigned applications exceed total.");
     if (remaining > 0 && !hasNull)
       return alert(
