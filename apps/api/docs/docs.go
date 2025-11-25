@@ -391,6 +391,23 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "services.ReviewerAssignment": {
+                "properties": {
+                    "amount": {
+                        "description": "Number of applications assigned (nil if autoassign)",
+                        "type": "integer"
+                    },
+                    "id": {
+                        "description": "User/Reviewer ID",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "id"
+                ],
+                "type": "object"
+            },
             "services.SubmissionTimesStatistics": {
                 "properties": {
                     "count": {
@@ -447,11 +464,20 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
+                    "assigned_reviewer_id": {
+                        "type": "string"
+                    },
                     "created_at": {
                         "type": "string"
                     },
                     "event_id": {
                         "type": "string"
+                    },
+                    "experience_rating": {
+                        "type": "integer"
+                    },
+                    "passion_rating": {
+                        "type": "integer"
                     },
                     "saved_at": {
                         "type": "string"
@@ -471,8 +497,11 @@ const docTemplate = `{
                 },
                 "required": [
                     "application",
+                    "assigned_reviewer_id",
                     "created_at",
                     "event_id",
+                    "experience_rating",
+                    "passion_rating",
                     "saved_at",
                     "status",
                     "submitted_at",
@@ -573,6 +602,9 @@ const docTemplate = `{
                     "application_open": {
                         "type": "string"
                     },
+                    "application_review_started": {
+                        "type": "boolean"
+                    },
                     "banner": {
                         "type": "string"
                     },
@@ -622,6 +654,7 @@ const docTemplate = `{
                 "required": [
                     "application_close",
                     "application_open",
+                    "application_review_started",
                     "banner",
                     "created_at",
                     "decision_release",
@@ -856,6 +889,9 @@ const docTemplate = `{
                     "application_open": {
                         "type": "string"
                     },
+                    "application_review_started": {
+                        "type": "boolean"
+                    },
                     "application_status": {
                         "$ref": "#/components/schemas/sqlc.NullApplicationStatus"
                     },
@@ -911,6 +947,7 @@ const docTemplate = `{
                 "required": [
                     "application_close",
                     "application_open",
+                    "application_review_started",
                     "application_status",
                     "banner",
                     "created_at",
@@ -1682,6 +1719,62 @@ const docTemplate = `{
                     }
                 },
                 "summary": "Get Application By User and Event ID",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/assign-reviewers": {
+            "post": {
+                "description": "Assigns applications for an event to reviewers for the application review process.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "items": {
+                                            "$ref": "#/components/schemas/services.ReviewerAssignment"
+                                        },
+                                        "title": "request",
+                                        "type": "array"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Reviewer assignmnet payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Reviewers assigned"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error assigning reviewers"
+                    }
+                },
+                "summary": "Assign application to reviewers",
                 "tags": [
                     "Application"
                 ]

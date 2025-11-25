@@ -360,9 +360,13 @@ func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *
 //	@Summary		Assign application to reviewers
 //	@Description	Assigns applications for an event to reviewers for the application review process.
 //	@Tags			Application
-//	@Success		200	{object}	services.ApplicationStatistics
-//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
-//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error getting statistics"
+//
+//	@Accept			json
+//
+//	@Param			request	body	[]services.ReviewerAssignment	true	"Reviewer assignmnet payload"
+//	@Success		201		"Reviewers assigned"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error assigning reviewers"
 //	@Router			/events/{eventId}/application/assign-reviewers [post]
 func (h *ApplicationHandler) AssignApplicationReviewers(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")

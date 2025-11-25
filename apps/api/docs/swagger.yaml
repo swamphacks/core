@@ -272,6 +272,18 @@ components:
       - name
       - user_id
       type: object
+    services.ReviewerAssignment:
+      properties:
+        amount:
+          description: Number of applications assigned (nil if autoassign)
+          type: integer
+        id:
+          description: User/Reviewer ID
+          type: string
+      required:
+      - amount
+      - id
+      type: object
     services.SubmissionTimesStatistics:
       properties:
         count:
@@ -312,10 +324,16 @@ components:
             type: integer
           type: array
           uniqueItems: false
+        assigned_reviewer_id:
+          type: string
         created_at:
           type: string
         event_id:
           type: string
+        experience_rating:
+          type: integer
+        passion_rating:
+          type: integer
         saved_at:
           type: string
         status:
@@ -328,8 +346,11 @@ components:
           type: string
       required:
       - application
+      - assigned_reviewer_id
       - created_at
       - event_id
+      - experience_rating
+      - passion_rating
       - saved_at
       - status
       - submitted_at
@@ -406,6 +427,8 @@ components:
           type: string
         application_open:
           type: string
+        application_review_started:
+          type: boolean
         banner:
           type: string
         created_at:
@@ -439,6 +462,7 @@ components:
       required:
       - application_close
       - application_open
+      - application_review_started
       - banner
       - created_at
       - decision_release
@@ -609,6 +633,8 @@ components:
           type: string
         application_open:
           type: string
+        application_review_started:
+          type: boolean
         application_status:
           $ref: '#/components/schemas/sqlc.NullApplicationStatus'
         banner:
@@ -646,6 +672,7 @@ components:
       required:
       - application_close
       - application_open
+      - application_review_started
       - application_status
       - banner
       - created_at
@@ -1155,6 +1182,40 @@ paths:
                 $ref: '#/components/schemas/response.ErrorResponse'
           description: 'Server Error: error retrieving application"\'
       summary: Get Application By User and Event ID
+      tags:
+      - Application
+  /events/{eventId}/application/assign-reviewers:
+    post:
+      description: Assigns applications for an event to reviewers for the application
+        review process.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - items:
+                  $ref: '#/components/schemas/services.ReviewerAssignment'
+                title: request
+                type: array
+        description: Reviewer assignmnet payload
+        required: true
+      responses:
+        "201":
+          description: Reviewers assigned
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Bad request/Malformed request.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Server Error: error assigning reviewers'
+      summary: Assign application to reviewers
       tags:
       - Application
   /events/{eventId}/application/download-resume:
