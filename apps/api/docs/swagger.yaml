@@ -1157,6 +1157,54 @@ paths:
       summary: Get Application By User and Event ID
       tags:
       - Application
+  /events/{eventId}/application/assigned:
+    get:
+      description: Search through the `applications` and retrieves the one with matching
+        assigned reviewer user id to the current user id.
+      parameters:
+      - description: The user ID
+        in: query
+        name: userId
+        required: true
+        schema:
+          type: string
+      - description: Event ID
+        in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+      - description: The authenticated session token/id
+        in: cookie
+        name: sh_session
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/sqlc.Application'
+                - additionalProperties: {}
+                  type: object
+          description: 'OK: An application was found'
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: Bad request/Malformed request.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.ErrorResponse'
+          description: 'Server Error: error retrieving assigned application'
+      summary: Get a staff's assigned application for reviewing
+      tags:
+      - Application
   /events/{eventId}/application/download-resume:
     get:
       description: This handler creates a presigned S3 URL with GET permission for

@@ -1,4 +1,4 @@
-import { PageUnderConstruction } from "@/components/PageUnderConstruction";
+import ApplicationReviewPage from "@/features/Application/components/ApplicationReview/ApplicationReviewPage";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute(
@@ -8,5 +8,7 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  return <PageUnderConstruction />;
+  const { eventId } = Route.useParams();
+
+  return <ApplicationReviewPage eventId={eventId} />;
 }

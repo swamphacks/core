@@ -163,6 +163,9 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 				// For statistics (Staff ONLY)
 				r.With(ensureEventStaff).Get("/stats", api.Handlers.Application.GetApplicationStatistics)
+
+				// For application review (Staff ONLY)
+				r.With(ensureEventStaff).Get("/assigned", api.Handlers.Application.GetAssignedApplication)
 			})
 
 			// Team routes

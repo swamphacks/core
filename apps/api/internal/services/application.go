@@ -102,6 +102,17 @@ func (s *ApplicationService) GetApplicationByUserAndEventID(ctx context.Context,
 	return application, nil
 }
 
+func (s *ApplicationService) GetAssignedApplicationByUserAndEventID(ctx context.Context, params sqlc.GetAssignedApplicationByUserAndEventIdParams) (*sqlc.Application, error) {
+	application, err := s.appRepo.GetAssignedApplicationByUserAndEventID(ctx, params)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	return application, nil
+}
+
 func (s *ApplicationService) CreateApplication(ctx context.Context, params sqlc.CreateApplicationParams) (*sqlc.Application, error) {
 	canCreateApplication, err := s.eventsService.IsApplicationsOpen(ctx, params.EventID)
 
@@ -211,6 +222,17 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 	}
 
 	return nil
+}
+
+func (s *ApplicationService) SubmitApplicationReview(ctx context.Context, params sqlc.GetAssignedApplicationByUserAndEventIdParams) (*sqlc.Application, error) {
+	application, err := s.appRepo.GetAssignedApplicationByUserAndEventID(ctx, params)
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	return application, nil
 }
 
 func (s *ApplicationService) DownloadResume(ctx context.Context, userId, eventId uuid.UUID) (*storage.PresignedRequest, error) {
