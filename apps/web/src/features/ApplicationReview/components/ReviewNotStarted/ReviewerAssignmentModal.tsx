@@ -37,7 +37,12 @@ export default function ReviewerAssignmentModal({
   const handleSubmit = () => {
     const hasNull = assigned.some((r) => r.amount === null);
     const hasZero = assigned.some((r) => r.amount === 0);
+    const hasNegative = assigned.some((r) => (r.amount ?? 0) < 0);
 
+    if (hasNegative)
+      return alert(
+        "Assigned applications cannot be negative for any reviewer.",
+      );
     if (hasZero)
       return alert(
         "Assigned applications cannot be zero for any reviewer. Either leave blank or assign a positive number.",
