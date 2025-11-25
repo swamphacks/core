@@ -412,3 +412,7 @@ func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.U
 		return nil
 	})
 }
+
+func (s *ApplicationService) ResetApplicationReviews(ctx context.Context, eventId uuid.UUID) error {
+	return s.appRepo.ResetApplicationReviewsForEvent(ctx, eventId)
+}

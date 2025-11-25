@@ -1727,6 +1727,18 @@ const docTemplate = `{
         "/events/{eventId}/application/assign-reviewers": {
             "post": {
                 "description": "Assigns applications for an event to reviewers for the application review process.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1783,6 +1795,18 @@ const docTemplate = `{
         "/events/{eventId}/application/download-resume": {
             "get": {
                 "description": "This handler creates a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "content": {
@@ -1821,9 +1845,66 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/application/reset-reviews": {
+            "post": {
+                "description": "Resets all application reviews for a given event, clearing any existing reviewer assignments.",
+                "parameters": [
+                    {
+                        "description": "ID of the event to reset reviews for",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Application reviews reset successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to reset application reviews"
+                    }
+                },
+                "summary": "Reset application reviews",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
         "/events/{eventId}/application/save": {
             "post": {
                 "description": "Save user's progress on the application. File/Upload fields are not saved.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1884,6 +1965,18 @@ const docTemplate = `{
         "/events/{eventId}/application/stats": {
             "get": {
                 "description": "This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "content": {
@@ -1925,6 +2018,18 @@ const docTemplate = `{
         "/events/{eventId}/application/submit": {
             "post": {
                 "description": "Submit the application for an event.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "application/json": {

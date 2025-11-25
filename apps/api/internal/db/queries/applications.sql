@@ -52,5 +52,5 @@ SET assigned_reviewer_id = NULL,
     status = 'submitted',
     experience_rating = NULL,
     passion_rating = NULL
-WHERE status != 'submitted'
-    AND event_id = $1;
+WHERE status NOT IN ('submitted', 'started')
+  AND event_id = $1;

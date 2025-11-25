@@ -111,7 +111,8 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 //	@Tags			Application
 //	@Accept			json
 //	@Produce		json
-//	@Param			formBody	formData	any	true	"Submission form data"
+//	@Param			formBody	formData	any		true	"Submission form data"
+//	@Param			eventId		path		string	true	"Event ID"	Format(uuid)
 //	@Success		200
 //	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500	{object}	response.ErrorResponse	"Server Error: error submitting application"
@@ -239,7 +240,8 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 //	@Tags			Application
 //	@Accept			json
 //	@Produce		json
-//	@Param			data	body	any	true	"Form data"
+//	@Param			data	body	any		true	"Form data"
+//	@Param			eventId	path	string	true	"Event ID"	Format(uuid)
 //	@Success		200
 //	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500	{object}	response.ErrorResponse	"Server Error: error saving application"
@@ -288,9 +290,10 @@ func (h *ApplicationHandler) SaveApplication(w http.ResponseWriter, r *http.Requ
 //	@Description	This handler creates a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.
 //	@Tags			Application
 //	@Produce		json
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
-//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error handling download resume request"
+//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error handling download resume request"
 //	@Router			/events/{eventId}/application/download-resume [get]
 func (h *ApplicationHandler) DownloadResume(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
@@ -329,9 +332,10 @@ func (h *ApplicationHandler) DownloadResume(w http.ResponseWriter, r *http.Reque
 //	@Description	This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.
 //	@Tags			Application
 //	@Produce		json
-//	@Success		200	{object}	services.ApplicationStatistics
-//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
-//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error getting statistics"
+//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
+//	@Success		200		{object}	services.ApplicationStatistics
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error getting statistics"
 //	@Router			/events/{eventId}/application/stats [get]
 func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
@@ -360,9 +364,8 @@ func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *
 //	@Summary		Assign application to reviewers
 //	@Description	Assigns applications for an event to reviewers for the application review process.
 //	@Tags			Application
-//
 //	@Accept			json
-//
+//	@Param			eventId	path	string							true	"Event ID"	Format(uuid)
 //	@Param			request	body	[]services.ReviewerAssignment	true	"Reviewer assignmnet payload"
 //	@Success		201		"Reviewers assigned"
 //	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
@@ -389,4 +392,31 @@ func (h *ApplicationHandler) AssignApplicationReviewers(w http.ResponseWriter, r
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+// Reset application reviews
+//
+//	@Summary		Reset application reviews
+//	@Description	Resets all application reviews for a given event, clearing any existing reviewer assignments.
+//	@Tags			Application
+//
+//	@Param			eventId	path	string	true	"ID of the event to reset reviews for"
+//	@Success		200		"Application reviews reset successfully"
+//	@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//	@Failure		500		{object}	res.ErrorResponse	"Server error: failed to reset application reviews"
+//	@Router			/events/{eventId}/application/reset-reviews [post]
+func (h *ApplicationHandler) ResetApplicationReviews(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
+
+	err = h.appService.ResetApplicationReviews(r.Context(), eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("reset_reviews_error", "Something went wrong while resetting application reviews."))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
