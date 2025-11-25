@@ -308,3 +308,26 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context, event
 	}, nil
 
 }
+
+type ReviewerAssignment struct {
+	ID     uuid.UUID `json:"id"`     // User/Reviewer ID
+	Amount *int      `json:"amount"` // Number of applications assigned (nil if autoassign)
+}
+
+func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.UUID, reviewers []ReviewerAssignment) error {
+	// Split reviewers into fixed and auto
+	var fixed []ReviewerAssignment
+	var auto []ReviewerAssignment
+
+	for _, assignee := range reviewers {
+		if assignee.Amount != nil {
+			fixed = append(fixed, assignee)
+		} else {
+			auto = append(auto, assignee)
+		}
+	}
+
+	// Handle fixed assignments
+
+	return nil
+}

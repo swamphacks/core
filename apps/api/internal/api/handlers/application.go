@@ -16,6 +16,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
 type ApplicationHandler struct {
@@ -352,4 +353,36 @@ func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *
 	}
 
 	res.Send(w, http.StatusOK, appStats)
+}
+
+// Assign application to reviewers
+//
+//	@Summary		Assign application to reviewers
+//	@Description	Assigns applications for an event to reviewers for the application review process.
+//	@Tags			Application
+//	@Success		200	{object}	services.ApplicationStatistics
+//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error getting statistics"
+//	@Router			/events/{eventId}/application/assign-reviewers [post]
+func (h *ApplicationHandler) AssignApplicationReviewers(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
+
+	var payload []services.ReviewerAssignment
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Failed to parse request body: "+err.Error()))
+		return
+	}
+
+	// Process assignments
+	err = h.appService.AssignReviewers(r.Context(), eventId, payload)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("assign_reviewers_error", "Something went wrong while assigning reviewers to applications."))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 }
