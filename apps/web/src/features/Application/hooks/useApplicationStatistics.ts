@@ -10,8 +10,6 @@ const fetchApplicationStatistics = async (eventId: string) => {
     .get<ApplicationStatistics>(`events/${eventId}/application/stats`)
     .json();
 
-  console.log("Fetched application statistics:", response);
-
   return response;
 };
 
