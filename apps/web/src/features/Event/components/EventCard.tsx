@@ -51,6 +51,7 @@ const EventCard = ({
   //FIX: Sort of a crude calculation to determine is description will be clamped
   const descriptionLength = description.length;
   const isClamped = descriptionLength > 105;
+  const currentTime: Date = new Date();
 
   //TODO: Optimize so that multiple modals aren't created for each card
 
@@ -148,6 +149,14 @@ const EventCard = ({
                 eventId={eventId}
               />
             </div>
+          ) : status === "notApplied" &&
+            (currentTime.getTime() < application_open.getTime() ||
+              currentTime.getTime() > application_close.getTime()) ? (
+            <EventButton
+              className="w-full mt-4"
+              status={"upcoming"}
+              eventId={eventId}
+            />
           ) : (
             <EventButton
               className="w-full mt-4"

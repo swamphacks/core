@@ -4,7 +4,7 @@ import {
   Checkbox as AriaCheckbox,
   CheckboxGroup as AriaCheckboxGroup,
   type CheckboxGroupProps as AriaCheckboxGroupProps,
-  type CheckboxProps,
+  type CheckboxProps as AriaCheckboxProps,
   type ValidationResult,
   composeRenderProps,
 } from "react-aria-components";
@@ -61,13 +61,18 @@ const checkboxStyles = tv({
 });
 
 const boxStyles = tv({
-  base: "w-5 h-5 shrink-0 rounded-sm flex items-center justify-center border-2 transition",
+  base: "shrink-0 rounded-sm flex items-center justify-center border-2 transition",
   variants: {
     isSelected: {
       false:
         "bg-white dark:bg-neutral-800 border-(--color) [--color:var(--border)] group-pressed:[--color:var(--color-gray-500)] dark:group-pressed:[--color:var(--color-zinc-300)]",
 
       true: "bg-(--color) border-(--color) [--color:var(--color-blue-600)] group-pressed:[--color:var(--color-blue-700)] dark:[--color:var(--color-blue-300)] dark:group-pressed:[--color:var(--color-blue-200)] forced-colors:[--color:Highlight]!",
+    },
+    size: {
+      sm: "w-4 h-4",
+      md: "w-5 h-5",
+      lg: "w-6 h-6",
     },
     isInvalid: {
       true: "[--color:var(--input-border-invalid)]  forced-colors:[--color:Mark]! group-pressed:[--color:var(--color-red-800)] dark:group-pressed:[--color:var(--color-red-700)]",
@@ -76,7 +81,14 @@ const boxStyles = tv({
       true: "[--color:var(--color-gray-200)] dark:[--color:var(--color-zinc-700)] forced-colors:[--color:GrayText]!",
     },
   },
+  defaultVariants: {
+    size: "md",
+  },
 });
+
+interface CheckboxProps extends AriaCheckboxProps {
+  size?: "sm" | "md" | "lg";
+}
 
 const iconStyles =
   "w-4 h-4 text-white group-disabled:text-gray-400 dark:text-slate-900 dark:group-disabled:text-slate-600 forced-colors:text-[HighlightText]";
@@ -93,6 +105,7 @@ export function Checkbox(props: CheckboxProps) {
         <>
           <div
             className={boxStyles({
+              size: props.size,
               isSelected: isSelected || isIndeterminate,
               ...renderProps,
             })}
