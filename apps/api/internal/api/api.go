@@ -122,8 +122,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
-		r.Post("/{eventId}/application/reset-reviews", api.Handlers.Application.ResetApplicationReviews)
-		r.Post("/{eventId}/application/assign-reviewers", api.Handlers.Application.AssignApplicationReviewers)
+		// r.Post("/{eventId}/application/reset-reviews", api.Handlers.Application.ResetApplicationReviews)
+		// r.Post("/{eventId}/application/assign-reviewers", api.Handlers.Application.AssignApplicationReviewers)
 
 		// Superuser-only
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
@@ -165,6 +165,10 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 				// For statistics (Staff ONLY)
 				r.With(ensureEventStaff).Get("/stats", api.Handlers.Application.GetApplicationStatistics)
+
+				// Review admin routes (For Event Admins only)
+				r.With(ensureEventAdmin).Post("/reset-reviews", api.Handlers.Application.ResetApplicationReviews)
+				r.With(ensureEventAdmin).Post("/assign-reviewers", api.Handlers.Application.AssignApplicationReviewers)
 			})
 
 			// Team routes
