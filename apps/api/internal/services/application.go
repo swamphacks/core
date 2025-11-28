@@ -321,7 +321,6 @@ type ReviewerAllocation struct {
 }
 
 func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.UUID, reviewers []ReviewerAssignment) error {
-	// 1. Initialization and Separation (Optimized)
 	var fixedReviewers []ReviewerAssignment
 	var autoReviewers []ReviewerAssignment
 	var totalFixedAmount int
@@ -335,8 +334,6 @@ func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.U
 		}
 	}
 
-	// 2. Retrieve Applications (Ensure transaction is started before this call)
-	// NOTE: This entire function should ideally run inside a single transaction.
 	availableApplications, err := s.appRepo.ListAvailableApplicationForEvent(ctx, eventId)
 	if err != nil {
 		return err
@@ -391,8 +388,6 @@ func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.U
 		}
 	}
 
-	// s.logger.Debug().Interface("Allocations", finalAllocations).Int("Allocation count", appIndex).Int("Available Apps", len(availableApplications)).Msg("Final allocations")
-	// Iterate and print counts per reviewer
 	for _, allocation := range finalAllocations {
 		s.logger.Info().Str("ReviewerID", allocation.ReviewerID.String()).Int("AssignedCount", len(allocation.AssignedApplicationIDs)).Msg("Reviewer assigned applications")
 	}
