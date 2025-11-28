@@ -66,6 +66,20 @@ func (r *ApplicationRepository) GetApplicationByUserAndEventID(ctx context.Conte
 	return &application, nil
 }
 
+func (r *ApplicationRepository) GetAssignedApplicationByUserAndEventID(ctx context.Context, params sqlc.GetAssignedApplicationByUserAndEventIdParams) (*sqlc.Application, error) {
+	application, err := r.db.Query.GetAssignedApplicationByUserAndEventId(ctx, params)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrApplicationNotFound
+		}
+
+		return nil, err
+	}
+
+	return &application, nil
+}
+
 func (r *ApplicationRepository) SubmitApplication(ctx context.Context, data any, userId, eventId uuid.UUID) error {
 	jsonBytes, err := json.Marshal(data)
 

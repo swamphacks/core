@@ -594,6 +594,76 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/application/assigned": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a staff's assigned application for reviewing
+     * @description Search through the `applications` and retrieves the one with matching assigned reviewer user id to the current user id.
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description The user ID */
+          userId: string;
+        };
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK: An application was found */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json":
+              | components["schemas"]["sqlc.Application"]
+              | {
+                  [key: string]: unknown;
+                };
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error retrieving assigned application */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/events/{eventId}/application/download-resume": {
     parameters: {
       query?: never;
@@ -887,6 +957,68 @@ export interface paths {
           };
         };
         /** @description Server Error: error submitting application */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/application/submit-review": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit application review
+     * @description Handles ratings submissions from staff during the application review process.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description An object containing the passion and experience ratings */
+      requestBody: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": Record<string, never>;
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error submitting application review */
         500: {
           headers: {
             [name: string]: unknown;

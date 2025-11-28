@@ -108,6 +108,35 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 	return i, err
 }
 
+const getAssignedApplicationByUserAndEventId = `-- name: GetAssignedApplicationByUserAndEventId :one
+SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id FROM applications
+WHERE user_id = $1 AND event_id = $2
+`
+
+type GetAssignedApplicationByUserAndEventIdParams struct {
+	UserID  uuid.UUID `json:"user_id"`
+	EventID uuid.UUID `json:"event_id"`
+}
+
+func (q *Queries) GetAssignedApplicationByUserAndEventId(ctx context.Context, arg GetAssignedApplicationByUserAndEventIdParams) (Application, error) {
+	row := q.db.QueryRow(ctx, getAssignedApplicationByUserAndEventId, arg.UserID, arg.EventID)
+	var i Application
+	err := row.Scan(
+		&i.UserID,
+		&i.EventID,
+		&i.Status,
+		&i.Application,
+		&i.CreatedAt,
+		&i.SavedAt,
+		&i.UpdatedAt,
+		&i.SubmittedAt,
+		&i.ExperienceRating,
+		&i.PassionRating,
+		&i.AssignedReviewerID,
+	)
+	return i, err
+}
+
 const listAvailableApplicationsForEvent = `-- name: ListAvailableApplicationsForEvent :many
 
 SELECT user_id FROM applications

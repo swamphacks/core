@@ -10,6 +10,10 @@ RETURNING *;
 SELECT * FROM applications
 WHERE user_id = $1 AND event_id = $2;
 
+-- name: GetAssignedApplicationByUserAndEventId :one
+SELECT * FROM applications
+WHERE user_id = $1 AND event_id = $2;
+
 -- name: UpdateApplication :exec
 UPDATE applications
 SET
