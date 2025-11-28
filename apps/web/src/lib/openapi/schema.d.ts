@@ -529,6 +529,71 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/application/assign-reviewers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Assign application to reviewers
+     * @description Assigns applications for an event to reviewers for the application review process.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      /** @description Reviewer assignmnet payload */
+      requestBody: {
+        content: {
+          "application/json":
+            | Record<string, never>
+            | components["schemas"]["services.ReviewerAssignment"][];
+        };
+      };
+      responses: {
+        /** @description Reviewers assigned */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error assigning reviewers */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/events/{eventId}/application/assigned": {
     parameters: {
       query?: never;
@@ -614,7 +679,10 @@ export interface paths {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
         cookie?: never;
       };
       requestBody?: never;
@@ -656,6 +724,64 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/application/reset-reviews": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reset application reviews
+     * @description Resets all application reviews for a given event, clearing any existing reviewer assignments.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID of the event to reset reviews for */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Application reviews reset successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request: invalid event ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server error: failed to reset application reviews */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/events/{eventId}/application/save": {
     parameters: {
       query?: never;
@@ -673,7 +799,10 @@ export interface paths {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
         cookie?: never;
       };
       /** @description Form data */
@@ -733,7 +862,10 @@ export interface paths {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
         cookie?: never;
       };
       requestBody?: never;
@@ -792,7 +924,10 @@ export interface paths {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
         cookie?: never;
       };
       /** @description Submission form data */
@@ -822,6 +957,68 @@ export interface paths {
           };
         };
         /** @description Server Error: error submitting application */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/application/submit-review": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit application review
+     * @description Handles ratings submissions from staff during the application review process.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description An object containing the passion and experience ratings */
+      requestBody: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": Record<string, never>;
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error submitting application review */
         500: {
           headers: {
             [name: string]: unknown;
@@ -2721,6 +2918,12 @@ export interface components {
       name: string;
       user_id: string;
     };
+    "services.ReviewerAssignment": {
+      /** @description Number of applications assigned (nil if autoassign) */
+      amount: number;
+      /** @description User/Reviewer ID */
+      id: string;
+    };
     "services.SubmissionTimesStatistics": {
       count: number;
       /** Format: date-time */
@@ -2735,8 +2938,11 @@ export interface components {
     };
     "sqlc.Application": {
       application: number[];
+      assigned_reviewer_id: string;
       created_at: string;
       event_id: string;
+      experience_rating: number;
+      passion_rating: number;
       saved_at: string;
       status: components["schemas"]["sqlc.NullApplicationStatus"];
       submitted_at: string;
@@ -2773,6 +2979,7 @@ export interface components {
     "sqlc.Event": {
       application_close: string;
       application_open: string;
+      application_review_started: boolean;
       banner: string;
       created_at: string;
       decision_release: string;
@@ -2844,6 +3051,7 @@ export interface components {
     "sqlc.GetEventsWithUserInfoRow": {
       application_close: string;
       application_open: string;
+      application_review_started: boolean;
       application_status: components["schemas"]["sqlc.NullApplicationStatus"];
       banner: string;
       created_at: string;
