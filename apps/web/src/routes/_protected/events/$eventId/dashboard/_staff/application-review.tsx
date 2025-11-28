@@ -1,7 +1,5 @@
-import { useApplicationStatistics } from "@/features/Application/hooks/useApplicationStatistics";
 import ReviewNotStarted from "@/features/ApplicationReview/components/ReviewNotStarted/ReviewNotStarted";
 import { useEvent } from "@/features/Event/hooks/useEvent";
-import { useEventStaffUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
 import { createFileRoute } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
 
@@ -16,17 +14,8 @@ function RouteComponent() {
   const { user, eventRole } = Route.useRouteContext();
 
   const event = useEvent(eventId);
-  const stats = useApplicationStatistics(eventId);
-  const staff = useEventStaffUsers(eventId);
 
-  const loading =
-    !user ||
-    event.isLoading ||
-    stats.isLoading ||
-    staff.isLoading ||
-    !event.data ||
-    !stats.data ||
-    !staff.data;
+  const loading = !user || event.isLoading;
 
   if (loading) {
     return (
@@ -39,24 +28,29 @@ function RouteComponent() {
     );
   }
 
+  if (!event.data || event.isError) {
+    return <div>Event not found</div>;
+  }
+
   return (
     <main>
       <Heading className="text-2xl lg:text-3xl font-semibold mb-4">
         Application Review
       </Heading>
 
-      {eventRole === "staff" && (
-        <p className="text-text-secondary">
-          Application review has not started yet. Come back later!
-        </p>
-      )}
-
-      {eventRole === "admin" && (
-        <ReviewNotStarted
-          event={event.data}
-          stats={stats.data}
-          staff={staff.data}
-        />
+      {event.data.application_review_started ? (
+        <>
+          <p>Something</p>
+        </>
+      ) : (
+        <>
+          {eventRole === "staff" && (
+            <p className="text-text-secondary">
+              Application review has not started yet. Come back later!
+            </p>
+          )}
+          {eventRole === "admin" && <ReviewNotStarted event={event.data} />}
+        </>
       )}
     </main>
   );

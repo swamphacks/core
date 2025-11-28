@@ -1,16 +1,21 @@
 import type { Event } from "@/features/Event/schemas/event";
 import StartReviewButton from "./StartReviewButton";
-import type { ApplicationStatistics } from "@/features/Application/hooks/useApplicationStatistics";
-import type { StaffUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
+import { useApplicationStatistics } from "@/features/Application/hooks/useApplicationStatistics";
+import { useEventStaffUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
 
 interface Props {
   event: Event;
-  stats: ApplicationStatistics;
-  staff: StaffUsers;
 }
 
-export default function ReviewNotStarted({ event, stats, staff }: Props) {
-  const validNumOfApplicants = stats.status_stats.submitted > 0;
+export default function ReviewNotStarted({ event }: Props) {
+  const stats = useApplicationStatistics(event.id);
+  const staff = useEventStaffUsers(event.id);
+
+  if (stats.isLoading || staff.isLoading || !stats.data || !staff.data) {
+    return <div>Loading...</div>;
+  }
+
+  const validNumOfApplicants = stats.data.status_stats.submitted > 0;
   const validEventPhase = new Date(event.application_close) <= new Date();
 
   return (
@@ -19,8 +24,8 @@ export default function ReviewNotStarted({ event, stats, staff }: Props) {
 
       <StartReviewButton
         event={event}
-        stats={stats}
-        staff={staff}
+        stats={stats.data}
+        staff={staff.data}
         validNumOfApplicants={validNumOfApplicants}
         validEventPhase={validEventPhase}
       />
