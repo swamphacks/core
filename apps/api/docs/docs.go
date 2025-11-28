@@ -1792,6 +1792,84 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/application/assigned": {
+            "get": {
+                "description": "Search through the ` + "`" + `applications` + "`" + ` and retrieves the one with matching assigned reviewer user id to the current user id.",
+                "parameters": [
+                    {
+                        "description": "The user ID",
+                        "in": "query",
+                        "name": "userId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/sqlc.Application"
+                                        },
+                                        {
+                                            "additionalProperties": {},
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "description": "OK: An application was found"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error retrieving assigned application"
+                    }
+                },
+                "summary": "Get a staff's assigned application for reviewing",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
         "/events/{eventId}/application/download-resume": {
             "get": {
                 "description": "This handler creates a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.",
@@ -2080,6 +2158,59 @@ const docTemplate = `{
                     }
                 },
                 "summary": "Submit Application",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/submit-review": {
+            "post": {
+                "description": "Handles ratings submissions from staff during the application review process.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "title": "reviewData",
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "description": "An object containing the passion and experience ratings",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error submitting application review"
+                    }
+                },
+                "summary": "Submit application review",
                 "tags": [
                     "Application"
                 ]

@@ -359,6 +359,118 @@ func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *
 	res.Send(w, http.StatusOK, appStats)
 }
 
+// Get Assigned Application For Review
+//
+//	@Summary		Get a staff's assigned application for reviewing
+//	@Description	Search through the `applications` and retrieves the one with matching assigned reviewer user id to the current user id.
+//	@Tags			Application
+//	@Produce		json
+//	@Param			userId		query		string					true	"The user ID"
+//	@Param			eventId		path		string					true	"Event ID"
+//	@Param			sh_session	cookie		string					true	"The authenticated session token/id"
+//	@Success		200			{object}	sqlc.Application		"OK: An application was found"
+//	@Success		200			{object}	map[string]any			"OK: An application was found"
+//	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving assigned application"
+//	@Router			/events/{eventId}/application/assigned [get]
+func (h *ApplicationHandler) GetAssignedApplication(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID."))
+		return
+	}
+
+	userIdStr := r.URL.Query().Get("userId")
+	if userIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL query!"))
+		return
+	}
+
+	userId, err := uuid.Parse(userIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID."))
+		return
+	}
+
+	params := sqlc.GetAssignedApplicationByUserAndEventIdParams{
+		UserID:  userId,
+		EventID: eventId,
+	}
+
+	application, err := h.appService.GetAssignedApplicationByUserAndEventID(r.Context(), params)
+
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("get_assigned_application_error", "error retrieving assigned application"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, application)
+}
+
+// Submit application review
+//
+//	@Summary		Submit application review
+//	@Description	Handles ratings submissions from staff during the application review process.
+//	@Tags			Application
+//	@Produce		json
+//	@Param			reviewData	body	any	true	"An object containing the passion and experience ratings"
+//	@Success		200
+//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error submitting application review"
+//	@Router			/events/{eventId}/application/submit-review [post]
+func (h *ApplicationHandler) SubmitApplicationReview(w http.ResponseWriter, r *http.Request) {
+	// eventIdStr := chi.URLParam(r, "eventId")
+	// if eventIdStr == "" {
+	// 	res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+	// 	return
+	// }
+
+	// eventId, err := uuid.Parse(eventIdStr)
+	// if err != nil {
+	// 	res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID."))
+	// 	return
+	// }
+
+	// userIdStr := r.URL.Query().Get("userId")
+	// if userIdStr == "" {
+	// 	res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL query!"))
+	// 	return
+	// }
+
+	// userId, err := uuid.Parse(userIdStr)
+	// if err != nil {
+	// 	res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID."))
+	// 	return
+	// }
+
+	// var data any
+
+	// if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+	// 	res.SendError(w, http.StatusBadRequest, res.NewError("invalid_review_data", "Something went wrong while parsing review submission"))
+	// 	return
+	// }
+
+	// params := sqlc.GetAssignedApplicationByUserAndEventIdParams{
+	// 	UserID:  userId,
+	// 	EventID: eventId,
+	// }
+
+	// application, err := h.appService.GetAssignedApplicationByUserAndEventID(r.Context(), params)
+
+	// if err != nil {
+	// 	res.SendError(w, http.StatusBadRequest, res.NewError("get_assigned_application_error", "error retrieving assigned application"))
+	// 	return
+	// }
+
+	// res.Send(w, http.StatusOK)
+}
+
 // Assign application to reviewers
 //
 //	@Summary		Assign application to reviewers
