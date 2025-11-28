@@ -558,7 +558,7 @@ func (h *ApplicationHandler) GetResumePresignedUrl(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if eventRole.Role != sqlc.EventRoleTypeStaff && *userId != applicationId {
+	if eventRole.Role != sqlc.EventRoleTypeStaff && eventRole.Role != sqlc.EventRoleTypeAdmin && *userId != applicationId {
 		res.SendError(w, http.StatusForbidden, res.NewError("forbidden", "You are not allowed to see other ppls resumes :("))
 		return
 	}
