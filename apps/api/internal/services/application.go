@@ -392,7 +392,6 @@ func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.U
 		s.logger.Info().Str("ReviewerID", allocation.ReviewerID.String()).Int("AssignedCount", len(allocation.AssignedApplicationIDs)).Msg("Reviewer assigned applications")
 	}
 
-	// 3. Commit Assignments
 	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.appRepo.NewTx(tx)
 
