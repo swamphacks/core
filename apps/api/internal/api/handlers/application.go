@@ -533,7 +533,7 @@ func (h *ApplicationHandler) ResetApplicationReviews(w http.ResponseWriter, r *h
 	w.WriteHeader(http.StatusOK)
 }
 
-// Get resume for application review
+// Get resume
 //
 //	@Summary		Get resume for application review
 //	@Description	This handler creates a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.
@@ -544,35 +544,26 @@ func (h *ApplicationHandler) ResetApplicationReviews(w http.ResponseWriter, r *h
 //	@Success		200		{object}	string
 //	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500		{object}	response.ErrorResponse	"Server Error: error handling download resume request"
-//	@Router			/events/{eventId}/application/{applicationId}/download-reviewable-resume [get]
-func (h *ApplicationHandler) DownloadReviewableResume(w http.ResponseWriter, r *http.Request) {
-	eventIdStr := chi.URLParam(r, "eventId")
+//	@Router			/events/{eventId}/application/{applicationId}/resume [get]
+func (h *ApplicationHandler) GetResumePresignedUrl(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	applicationId, err := web.PathParamToUUID(r, "applicationId")
 
-	if eventIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+	// Ensure access
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	eventRole := ctxutils.GetEventRoleFromCtx(r.Context())
+
+	if userId == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "the user id of the current user is invalid"))
 		return
 	}
 
-	eventId, err := uuid.Parse(eventIdStr)
-	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+	if eventRole.Role != sqlc.EventRoleTypeStaff && *userId != applicationId {
+		res.SendError(w, http.StatusForbidden, res.NewError("forbidden", "You are not allowed to see other ppls resumes :("))
 		return
 	}
 
-	userIdStr := chi.URLParam(r, "userId")
-
-	if eventIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
-		return
-	}
-
-	userId, err := uuid.Parse(userIdStr)
-	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID"))
-		return
-	}
-
-	request, err := h.appService.DownloadResume(r.Context(), userId, eventId, 600)
+	request, err := h.appService.DownloadResume(r.Context(), applicationId, eventId, 600)
 
 	if err != nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("resume_download_error", "unable to retrieve resume download url"))
