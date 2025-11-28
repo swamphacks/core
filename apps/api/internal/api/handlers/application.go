@@ -316,7 +316,7 @@ func (h *ApplicationHandler) DownloadResume(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	request, err := h.appService.DownloadResume(r.Context(), *userId, eventId)
+	request, err := h.appService.DownloadResume(r.Context(), *userId, eventId, 60)
 
 	if err != nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("resume_download_error", "unable to retrieve resume download url"))
@@ -531,4 +531,53 @@ func (h *ApplicationHandler) ResetApplicationReviews(w http.ResponseWriter, r *h
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+// Get resume for application review
+//
+//	@Summary		Get resume for application review
+//	@Description	This handler creates a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.
+//	@Tags			Application
+//	@Produce		json
+//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
+//	@Param			applicationId path  string  true	"The application ID (userId of applicant)" Format(uuid)
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error handling download resume request"
+//	@Router			/events/{eventId}/application/{applicationId}/download-reviewable-resume [get]
+func (h *ApplicationHandler) DownloadReviewableResume(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+
+	userIdStr := chi.URLParam(r, "userId")
+
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
+		return
+	}
+
+	userId, err := uuid.Parse(userIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID"))
+		return
+	}
+
+	request, err := h.appService.DownloadResume(r.Context(), userId, eventId, 600)
+
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("resume_download_error", "unable to retrieve resume download url"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, request.URL)
 }
