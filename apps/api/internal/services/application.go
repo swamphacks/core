@@ -18,6 +18,7 @@ import (
 
 var (
 	ErrGetApplicationStatistics = errors.New("failed to aggregate application stats")
+	ErrMismatchedReviewerCounts = errors.New("the total number of applications does not match the total number of assigned reviews")
 )
 
 // TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
@@ -307,4 +308,108 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context, event
 		StatusStatistics: statusStats,
 	}, nil
 
+}
+
+type ReviewerAssignment struct {
+	ID     uuid.UUID `json:"id"`     // User/Reviewer ID
+	Amount *int      `json:"amount"` // Number of applications assigned (nil if autoassign)
+}
+
+type ReviewerAllocation struct {
+	ReviewerID             uuid.UUID   `json:"reviewer_id"`
+	AssignedApplicationIDs []uuid.UUID `json:"assigned_application_ids"`
+}
+
+func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.UUID, reviewers []ReviewerAssignment) error {
+
+	//TODO: Must check if applications are closed, if we havent released decisions, and more.
+
+	var fixedReviewers []ReviewerAssignment
+	var autoReviewers []ReviewerAssignment
+	var totalFixedAmount int
+
+	for _, assignee := range reviewers {
+		if assignee.Amount != nil {
+			fixedReviewers = append(fixedReviewers, assignee)
+			totalFixedAmount += *assignee.Amount
+		} else {
+			autoReviewers = append(autoReviewers, assignee)
+		}
+	}
+
+	availableApplications, err := s.appRepo.ListAvailableApplicationForEvent(ctx, eventId)
+	if err != nil {
+		return err
+	}
+
+	totalAvailable := len(availableApplications)
+	if totalAvailable == 0 {
+		return nil
+	}
+
+	if totalFixedAmount > totalAvailable {
+		return ErrMismatchedReviewerCounts
+	}
+
+	if totalAvailable > totalFixedAmount && len(autoReviewers) == 0 {
+		return ErrMismatchedReviewerCounts
+	}
+
+	var appIndex int = 0
+	var finalAllocations []ReviewerAllocation
+
+	// Assign fixed
+	for _, assignee := range fixedReviewers {
+		amountToAssign := *assignee.Amount
+
+		assignedSlice := availableApplications[appIndex : appIndex+amountToAssign]
+		finalAllocations = append(finalAllocations, ReviewerAllocation{
+			ReviewerID:             assignee.ID,
+			AssignedApplicationIDs: assignedSlice,
+		})
+
+		appIndex += amountToAssign
+	}
+
+	remainingApps := totalAvailable - appIndex
+	if remainingApps > 0 && len(autoReviewers) > 0 {
+		baseShare := remainingApps / len(autoReviewers)
+		remainder := remainingApps % len(autoReviewers)
+
+		for index, assignee := range autoReviewers {
+			assignCount := baseShare
+			if index < remainder {
+				assignCount++
+			}
+
+			assignedSlice := availableApplications[appIndex : appIndex+assignCount]
+			finalAllocations = append(finalAllocations, ReviewerAllocation{
+				ReviewerID:             assignee.ID,
+				AssignedApplicationIDs: assignedSlice,
+			})
+			appIndex += assignCount
+		}
+	}
+
+	for _, allocation := range finalAllocations {
+		s.logger.Info().Str("ReviewerID", allocation.ReviewerID.String()).Int("AssignedCount", len(allocation.AssignedApplicationIDs)).Msg("Reviewer assigned applications")
+	}
+
+	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+
+		for _, allocation := range finalAllocations {
+			err := txAppRepo.AssignApplicationToReviewByEvent(ctx, allocation.ReviewerID, eventId, allocation.AssignedApplicationIDs)
+			if err != nil {
+				s.logger.Err(err).Msg(err.Error())
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func (s *ApplicationService) ResetApplicationReviews(ctx context.Context, eventId uuid.UUID) error {
+	return s.appRepo.ResetApplicationReviewsForEvent(ctx, eventId)
 }

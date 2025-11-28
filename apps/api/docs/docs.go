@@ -391,6 +391,23 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "services.ReviewerAssignment": {
+                "properties": {
+                    "amount": {
+                        "description": "Number of applications assigned (nil if autoassign)",
+                        "type": "integer"
+                    },
+                    "id": {
+                        "description": "User/Reviewer ID",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "id"
+                ],
+                "type": "object"
+            },
             "services.SubmissionTimesStatistics": {
                 "properties": {
                     "count": {
@@ -447,11 +464,20 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
+                    "assigned_reviewer_id": {
+                        "type": "string"
+                    },
                     "created_at": {
                         "type": "string"
                     },
                     "event_id": {
                         "type": "string"
+                    },
+                    "experience_rating": {
+                        "type": "integer"
+                    },
+                    "passion_rating": {
+                        "type": "integer"
                     },
                     "saved_at": {
                         "type": "string"
@@ -471,8 +497,11 @@ const docTemplate = `{
                 },
                 "required": [
                     "application",
+                    "assigned_reviewer_id",
                     "created_at",
                     "event_id",
+                    "experience_rating",
+                    "passion_rating",
                     "saved_at",
                     "status",
                     "submitted_at",
@@ -573,6 +602,9 @@ const docTemplate = `{
                     "application_open": {
                         "type": "string"
                     },
+                    "application_review_started": {
+                        "type": "boolean"
+                    },
                     "banner": {
                         "type": "string"
                     },
@@ -622,6 +654,7 @@ const docTemplate = `{
                 "required": [
                     "application_close",
                     "application_open",
+                    "application_review_started",
                     "banner",
                     "created_at",
                     "decision_release",
@@ -856,6 +889,9 @@ const docTemplate = `{
                     "application_open": {
                         "type": "string"
                     },
+                    "application_review_started": {
+                        "type": "boolean"
+                    },
                     "application_status": {
                         "$ref": "#/components/schemas/sqlc.NullApplicationStatus"
                     },
@@ -911,6 +947,7 @@ const docTemplate = `{
                 "required": [
                     "application_close",
                     "application_open",
+                    "application_review_started",
                     "application_status",
                     "banner",
                     "created_at",
@@ -1687,9 +1724,89 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/application/assign-reviewers": {
+            "post": {
+                "description": "Assigns applications for an event to reviewers for the application review process.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "items": {
+                                            "$ref": "#/components/schemas/services.ReviewerAssignment"
+                                        },
+                                        "title": "request",
+                                        "type": "array"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Reviewer assignmnet payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Reviewers assigned"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error assigning reviewers"
+                    }
+                },
+                "summary": "Assign application to reviewers",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
         "/events/{eventId}/application/download-resume": {
             "get": {
                 "description": "This handler creates a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "content": {
@@ -1728,9 +1845,66 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/application/reset-reviews": {
+            "post": {
+                "description": "Resets all application reviews for a given event, clearing any existing reviewer assignments.",
+                "parameters": [
+                    {
+                        "description": "ID of the event to reset reviews for",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Application reviews reset successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to reset application reviews"
+                    }
+                },
+                "summary": "Reset application reviews",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
         "/events/{eventId}/application/save": {
             "post": {
                 "description": "Save user's progress on the application. File/Upload fields are not saved.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1791,6 +1965,18 @@ const docTemplate = `{
         "/events/{eventId}/application/stats": {
             "get": {
                 "description": "This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "content": {
@@ -1832,6 +2018,18 @@ const docTemplate = `{
         "/events/{eventId}/application/submit": {
             "post": {
                 "description": "Submit the application for an event.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
