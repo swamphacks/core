@@ -321,6 +321,9 @@ type ReviewerAllocation struct {
 }
 
 func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.UUID, reviewers []ReviewerAssignment) error {
+
+	//TODO: Must check if applications are closed, if we havent released decisions, and more.
+
 	var fixedReviewers []ReviewerAssignment
 	var autoReviewers []ReviewerAssignment
 	var totalFixedAmount int
