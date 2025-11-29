@@ -118,6 +118,10 @@ func (r *ApplicationRepository) SaveApplication(ctx context.Context, data any, u
 	return nil
 }
 
+func (r *ApplicationRepository) UpdateApplication(ctx context.Context, params sqlc.UpdateApplicationParams) error {
+	return r.db.Query.UpdateApplication(ctx, params)
+}
+
 func (r *ApplicationRepository) ListAvailableApplicationForEvent(ctx context.Context, eventId uuid.UUID) ([]uuid.UUID, error) {
 	return r.db.Query.ListAvailableApplicationsForEvent(ctx, eventId)
 }

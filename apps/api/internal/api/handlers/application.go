@@ -398,62 +398,59 @@ func (h *ApplicationHandler) GetApplication(w http.ResponseWriter, r *http.Reque
 	res.Send(w, http.StatusOK, application)
 }
 
+type ReviewRatings struct {
+	PassionRating    int `json:"passion_rating" validate:"required,min=1,max=5"`
+	ExperienceRating int `json:"experience_rating" validate:"required,min=1,max=5"`
+}
+
 // Submit application review
 //
 //	@Summary		Submit application review
 //	@Description	Handles ratings submissions from staff during the application review process.
 //	@Tags			Application
 //	@Produce		json
-//	@Param			reviewData	body	any	true	"An object containing the passion and experience ratings"
-//	@Success		200
+//	@Param			reviewData	body	ReviewRatings	true	"An object containing the passion and experience ratings"
+//	@Success		201
 //	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500	{object}	response.ErrorResponse	"Server Error: error submitting application review"
-//	@Router			/events/{eventId}/application/submit-review [post]
+//	@Router			/events/{eventId}/application/{applicationId}/review [post]
 func (h *ApplicationHandler) SubmitApplicationReview(w http.ResponseWriter, r *http.Request) {
-	// eventIdStr := chi.URLParam(r, "eventId")
-	// if eventIdStr == "" {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
-	// 	return
-	// }
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
 
-	// eventId, err := uuid.Parse(eventIdStr)
-	// if err != nil {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID."))
-	// 	return
-	// }
+	applicationId, err := web.PathParamToUUID(r, "applicationId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_application_id", "The application ID is not a valid."))
+		return
+	}
 
-	// userIdStr := r.URL.Query().Get("userId")
-	// if userIdStr == "" {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL query!"))
-	// 	return
-	// }
+	reviewerId := ctxutils.GetUserIdFromCtx(r.Context())
+	if reviewerId == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
+		return
+	}
 
-	// userId, err := uuid.Parse(userIdStr)
-	// if err != nil {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID."))
-	// 	return
-	// }
+	var reviewData ReviewRatings
+	if err := json.NewDecoder(r.Body).Decode(&reviewData); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Failed to parse request body: "+err.Error()))
+		return
+	}
 
-	// var data any
+	validate := validator.New()
+	if err := validate.Struct(reviewData); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", err.Error()))
+		return
+	}
 
-	// if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("invalid_review_data", "Something went wrong while parsing review submission"))
-	// 	return
-	// }
+	if err = h.appService.SaveApplicationReview(r.Context(), *reviewerId, applicationId, eventId, reviewData.ExperienceRating, reviewData.PassionRating); err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("save_review_error", "Something went wrong while saving the application review."))
+		return
+	}
 
-	// params := sqlc.GetAssignedApplicationByUserAndEventIdParams{
-	// 	UserID:  userId,
-	// 	EventID: eventId,
-	// }
-
-	// application, err := h.appService.GetAssignedApplicationByUserAndEventID(r.Context(), params)
-
-	// if err != nil {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("get_assigned_application_error", "error retrieving assigned application"))
-	// 	return
-	// }
-
-	// res.Send(w, http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 }
 
 // Get Assigned Application IDs and Progress

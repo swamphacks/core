@@ -1,47 +1,99 @@
 import { useState, useEffect } from "react";
 import type { AssignedApplications } from "./useAssignedApplications";
 
+/**
+ * Custom hook to manage application review progress.
+ * Supports navigating through assigned applications and
+ * a virtual "Review Completed" step at the end.
+ *
+ * @param apps - Array of assigned applications
+ */
 export const useAppReviewProgress = (apps: AssignedApplications) => {
-  const [currentIndex, setCurrentIndex] = useState(() =>
-    apps.findIndex((app) => app.status === "in_progress"),
-  );
-  const [finished, setFinished] = useState(() =>
-    apps.every((app) => app.status === "completed"),
-  );
+  /**
+   * Determines the initial index when the hook is first used.
+   * - If apps are empty → -1 (loading / no apps)
+   * - If all apps completed → virtual finish step (apps.length)
+   * - If any in-progress app → index of first in-progress
+   * - Otherwise → fallback to first app (index 0)
+   */
+  const getInitialIndex = () => {
+    if (apps.length === 0) return -1;
 
-  // Keep currentIndex valid when apps update
+    const allCompleted = apps.every((app) => app.status === "completed");
+    if (allCompleted) return apps.length;
+
+    const inProgressIndex = apps.findIndex(
+      (app) => app.status === "in_progress",
+    );
+    return inProgressIndex >= 0 ? inProgressIndex : 0;
+  };
+
+  const [currentIndex, setCurrentIndex] = useState<number>(getInitialIndex());
+
+  /**
+   * Effect to keep currentIndex valid when apps change
+   * Handles edge cases such as:
+   * - Apps being loaded asynchronously
+   * - Apps being updated or removed
+   * - Initial load
+   */
   useEffect(() => {
-    if (!apps.length) {
+    if (apps.length === 0) {
       setCurrentIndex(-1);
       return;
     }
 
-    // If current index is invalid or current app removed, reset to first "in_progress" or first app
-    if (currentIndex < 0 || currentIndex >= apps.length) {
+    // If currentIndex is invalid (negative or past virtual finish), reset it
+    if (currentIndex < 0 || currentIndex > apps.length) {
       const newIndex = apps.findIndex((app) => app.status === "in_progress");
-      setCurrentIndex(newIndex >= 0 ? newIndex : 0);
+      setCurrentIndex(newIndex >= 0 ? newIndex : apps.length);
     }
-
-    setFinished(apps.every((app) => app.status === "completed"));
   }, [apps, currentIndex]);
 
-  const currentAssignedApplication = apps[currentIndex] || null;
+  /**
+   * The application corresponding to the current index.
+   * Null when at the virtual finish step.
+   */
+  const currentAssignedApplication =
+    currentIndex < apps.length ? apps[currentIndex] : null;
 
+  /**
+   * Move to the next step.
+   * Caps at virtual finish step (apps.length).
+   */
   const goNext = () => {
-    setCurrentIndex((prev) => Math.min(prev + 1, apps.length - 1));
-
-    if (currentIndex + 1 >= apps.length) {
-      setFinished(true);
-    }
+    setCurrentIndex((prev) => Math.min(prev + 1, apps.length));
   };
-  const goPrevious = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
+
+  /**
+   * Move to the previous step.
+   * Minimum is 0.
+   */
+  const goPrevious = () => {
+    setCurrentIndex((prev) => Math.max(prev - 1, 0));
+  };
+
+  /**
+   * Jump to a specific index.
+   * Allows the virtual finish step (apps.length).
+   */
+  const goToIndex = (index: number) => {
+    if (index < 0 || index > apps.length) return;
+    setCurrentIndex(index);
+  };
+
+  /**
+   * Whether the user is currently on the virtual finish step.
+   */
+  const finished = currentIndex === apps.length;
 
   return {
     currentAssignedApplication,
+    currentIndex,
+    totalApplications: apps.length,
+    finished,
     goNext,
     goPrevious,
-    currentIndex,
-    finished,
-    totalApplications: apps.length,
+    goToIndex,
   };
 };

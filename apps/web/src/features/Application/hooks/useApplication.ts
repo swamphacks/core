@@ -61,12 +61,6 @@ export async function fetchApplication(
     .get<Application>(`events/${eventId}/application/${userId}`)
     .json();
 
-  console.log("Fetched application:", result);
-  console.log(
-    "Raw application data:",
-    atob(result.application as unknown as string),
-  );
-
   const parsedApplication = ApplicationFieldsSchema.safeParse(
     JSON.parse(atob(result.application as unknown as string)),
   );
@@ -83,8 +77,12 @@ export async function fetchApplication(
 
 export function useApplication(eventId: string, userId: string) {
   return useQuery({
-    queryKey: ["events", eventId, "application", userId],
+    queryKey: getApplicationQueryKey(eventId, userId),
     queryFn: () => fetchApplication(eventId, userId),
     staleTime: 1000 * 60 * 15, // 15 minutes,
   });
+}
+
+export function getApplicationQueryKey(eventId: string, userId: string) {
+  return ["events", eventId, "application", userId] as const;
 }

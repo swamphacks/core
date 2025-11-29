@@ -172,6 +172,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 				// For application review (Staff ONLY)
 				r.With(ensureEventStaff).Get("/assigned", api.Handlers.Application.GetAssignedApplications)
+				r.With(ensureEventStaff).Post("/{applicationId}/review", api.Handlers.Application.SubmitApplicationReview)
 
 				// Review admin routes (For Event Admins only)
 				r.With(ensureEventAdmin).Post("/reset-reviews", api.Handlers.Application.ResetApplicationReviews)

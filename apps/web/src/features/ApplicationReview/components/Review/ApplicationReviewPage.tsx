@@ -1,18 +1,10 @@
 import TablerLoader from "~icons/tabler/loader-2";
-import { useEffect } from "react";
-import TablerArrowLeft from "~icons/tabler/arrow-left";
-import TablerArrowRight from "~icons/tabler/arrow-right";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/Button";
-import {
-  useAssignedApplications,
-  type AssignedApplications,
-} from "../../hooks/useAssignedApplications";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { useAssignedApplications } from "../../hooks/useAssignedApplications";
 import { useAppReviewTutorial } from "../../hooks/useAppReviewTutorial";
 import { useAppReviewProgress } from "../../hooks/useAppReviewProgress";
-import { useApplication } from "@/features/Application/hooks/useApplication";
-import { Rating } from "@smastrom/react-rating";
-import { useRatings } from "../../hooks/useRatings";
+import ApplicationReviewContainer from "./ApplicationReviewContainer";
 
 interface ApplicationReviewPageProps {
   eventId: string;
@@ -25,17 +17,6 @@ export default function ApplicationReviewPage({
   const appReviewProgress = useAppReviewProgress(assignedApps.data || []);
   const appTutorial = useAppReviewTutorial();
 
-  useEffect(() => {
-    console.log(
-      "Current Assigned Application:",
-      appReviewProgress.currentAssignedApplication,
-    );
-    console.log("Current Index:", appReviewProgress.currentIndex);
-  }, [
-    appReviewProgress.currentAssignedApplication,
-    appReviewProgress.currentIndex,
-  ]);
-
   if (appTutorial.isLoading || assignedApps.isLoading) {
     return (
       <div className="flex gap-2">
@@ -45,41 +26,129 @@ export default function ApplicationReviewPage({
     );
   }
 
-  if (assignedApps.isError || assignedApps.error || !assignedApps.data) {
+  if (assignedApps.isError || assignedApps.error) {
     return <div>An error occurred while loading assigned applications.</div>;
+  }
+
+  if (!assignedApps.data || assignedApps.data.length === 0) {
+    return (
+      <div>
+        <p className="text-text-secondary">
+          You have no assigned applications to review at this time. Refresh the
+          page?
+          <br />
+          Ask your organizer if you believe this is an error.
+        </p>
+      </div>
+    );
   }
 
   if (!appTutorial.isCompleted) {
     return (
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">
-          Application Review Tutorial
-        </h2>
-        <p className="mb-4">
-          Welcome to the application review process! Here are some guidelines to
-          help you get started:
+      <div className="w-full pb-8">
+        <p className="mb-8 text-text-secondary">
+          Welcome to the application review process! Follow these steps to get
+          started:
         </p>
-        <ul className="list-disc list-inside mb-4">
-          <li>Carefully read each application before making a decision.</li>
-          <li>Rate applicants based on their passion and experience.</li>
-          <li>Use the navigation buttons to move between applications.</li>
-        </ul>
-        <Button onClick={appTutorial.completeTutorial}>
-          Complete Tutorial
-        </Button>
+
+        {/* Step cards container */}
+        <div className="flex flex-col md:flex-row gap-6 w-full">
+          {/* Step 1 */}
+          <div className="flex-1 bg-surface p-6 rounded-lg shadow-sm flex flex-col items-start">
+            <img
+              src="https://static.vecteezy.com/system/resources/previews/049/674/041/non_2x/a-scroll-with-a-feather-and-a-quill-free-png.png"
+              alt="Step 1"
+              className="w-full h-32 object-contain mb-4"
+            />
+            <h3 className="text-xl font-semibold mb-2">
+              Step 1: Read Carefully
+            </h3>
+            <p className="text-text-secondary">
+              Carefully read each application before rating. The application
+              fields will be on the left side and their resume will be on the
+              right. The rating star buttons will be underneath the application
+              fields on the left.
+            </p>
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex-1 bg-surface p-6 rounded-lg shadow-sm flex flex-col items-start">
+            <img
+              src="https://pngimg.com/d/star_PNG76902.png"
+              alt="Step 2"
+              className="w-full h-32 object-contain mb-4"
+            />
+            <h3 className="text-xl font-semibold mb-2">
+              Step 2: Rate Applicants
+            </h3>
+            <p className="text-text-secondary">
+              Applicants should be rated on two separate scales: Experience and
+              Passion. Use the star ratings to provide your evaluation.
+              Experience reflects the applicant&apos;s relevant skills and
+              background, while Passion measures their enthusiasm and commitment
+              to the field.
+            </p>
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex-1 bg-surface p-6 rounded-lg shadow-sm flex flex-col items-start">
+            <img
+              src="https://www.freeiconspng.com/uploads/save-icon--1.png"
+              alt="Step 3"
+              className="w-full h-32 object-contain mb-4"
+            />
+            <h3 className="text-xl font-semibold mb-2">Step 3: Navigate</h3>
+            <p className="text-text-secondary">
+              Use the "Submit/Next" and "Back" buttons to navigate between
+              applications. Make sure to complete reviews for all assigned
+              applications. You may go back and adjust your ratings, but be sure
+              to save your changes!
+            </p>
+          </div>
+        </div>
+
+        {/* Complete tutorial button */}
+        <div className="mt-8">
+          <Button onClick={appTutorial.completeTutorial}>
+            Complete Tutorial
+          </Button>
+        </div>
       </div>
     );
   }
 
   if (appReviewProgress.finished) {
     return (
-      <div>You have completed all assigned application reviews. Thank you!</div>
+      <div className="flex flex-col items-start bg-surface w-full max-w-md px-6 py-6 border border-border rounded-lg shadow-sm">
+        {/* Image */}
+        <div className="mb-6 w-full flex flex-row justify-center">
+          <img
+            src="https://dejpknyizje2n.cloudfront.net/media/carstickers/versions/happy-go-lucky-alligator-art-sticker-uf6a4-438d-x450.png"
+            alt="Review Completed"
+            className="w-48 h-48 object-contain"
+          />
+        </div>
+
+        <h2 className="text-2xl font-semibold mb-3">Reviews Completed</h2>
+
+        <p className="mb-6 text-text-secondary">
+          You have completed reviewing all assigned applications. Thank you for
+          your time and effort! You can go back to change your reviews if
+          needed.
+        </p>
+
+        <div className="flex flex-row gap-4">
+          <Button variant="secondary" onClick={appReviewProgress.goPrevious}>
+            Change Reviews
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="flex h-full gap-4">
-      <div className="w-full">
+      <div className="w-full hidden md:flex md:flex-col">
         <div className="w-[50%] pr-3">
           <ProgressBar
             className="w-full"
@@ -89,6 +158,7 @@ export default function ApplicationReviewPage({
             valueLabel={`${appReviewProgress.currentIndex + 1}/${appReviewProgress.totalApplications} applications`}
           />
         </div>
+
         {appReviewProgress.currentAssignedApplication ? (
           <ApplicationReviewContainer
             next={appReviewProgress.goNext}
@@ -102,295 +172,12 @@ export default function ApplicationReviewPage({
           <div>Loading application...</div>
         )}
       </div>
-    </div>
-  );
-}
 
-interface ApplicationReviewContainerProps {
-  eventId: string;
-  userId?: string;
-  assignedApplication: AssignedApplications[number];
-  currentIndex: number;
-  totalApplications: number;
-  next: () => void;
-  back: () => void;
-}
-
-function ApplicationReviewContainer({
-  eventId,
-  assignedApplication,
-  currentIndex,
-  next,
-  back,
-}: ApplicationReviewContainerProps) {
-  const application = useApplication(eventId, assignedApplication.user_id);
-  const { experience, passion, isDirty, setExperience, setPassion, reset } =
-    useRatings(
-      application.data?.experience_rating || 0,
-      application.data?.passion_rating || 0,
-    );
-
-  const getHackathonExperienceText = (experience: string) => {
-    switch (experience) {
-      case "first_time":
-        return "Swamphacks would be my first!";
-      case "one":
-        return "1";
-      case "two":
-        return "2";
-      case "three":
-        return "3";
-      case "four_or_more":
-        return "4+";
-    }
-  };
-
-  const getProjectExperienceText = (experience: string) => {
-    switch (experience) {
-      case "no_experience":
-        return "Swamphacks would be my first!";
-      case "course_experience":
-        return "From courses";
-      case "independent_project":
-        return "Yes";
-    }
-  };
-
-  if (application.isLoading) {
-    return (
-      <div className="flex gap-2">
-        <TablerLoader className="text-xl animate-spin" />
-        <p>Loading application...</p>
-      </div>
-    );
-  }
-
-  if (application.isError || application.error || !application.data) {
-    return <div>An error occurred while loading the application.</div>;
-  }
-
-  const appFields = application.data.application;
-  const isCompleted = assignedApplication.status === "completed";
-  const allowSubmit = experience > 0 && passion > 0 && isDirty;
-
-  const mode = (() => {
-    if (!isCompleted) {
-      return "submit";
-    }
-    if (isCompleted && isDirty) {
-      return "completed-dirty";
-    }
-    return "completed-clean";
-  })();
-
-  return (
-    <div className="flex flex-row gap-6 mb-8 min-h-[85vh]">
-      {/* Application fields */}
-      <div className="flex-1 flex flex-col justify-between">
-        {/* Applicant Information */}
-        <div>
-          <div className="p-2 rounded-md border border-input-border mt-4 mb-4">
-            <span className="block mb-3">Applicant Information</span>
-            <div className="space-y-3">
-              <div className="flex gap-8">
-                <div className="flex flex-col">
-                  <span className="text-text-secondary">Name</span>
-                  <span>{appFields.firstName + " " + appFields.lastName}</span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-text-secondary">Major(s)</span>
-                  <span>{appFields.majors}</span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-text-secondary">School</span>
-                  <span className="truncate max-w-60">{appFields.school}</span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-text-secondary">Graduation Year</span>
-                  <span>{appFields.graduationYear}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-10">
-                <div className="flex flex-col">
-                  <span className="text-text-secondary">
-                    # of Hackathons Attended
-                  </span>
-                  <span>
-                    {getHackathonExperienceText(appFields.experience)}
-                  </span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-text-secondary">
-                    Project Experience
-                  </span>
-                  <span>
-                    {getProjectExperienceText(appFields.projectExperience)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Essay Responses */}
-
-          <div className="space-y-5 p-2 rounded-md border border-input-border mb-4">
-            <span className="block mb-3">Essay Responses</span>
-
-            <EssayResponse
-              question="What is your most memorable experience working in a group? What did
-              you learn and accomplish?"
-              response={appFields.essay1}
-            />
-
-            <EssayResponse
-              question=" Tell us about a project you are most proud of."
-              response={appFields.essay2}
-            />
-          </div>
-
-          {/* Reviewer Ratings */}
-
-          <RatingFields
-            experience={experience}
-            passion={passion}
-            onExperience={(v) => setExperience(v)}
-            onPassion={(v) => setPassion(v)}
-          />
-        </div>
-        <div className="w-full flex flex-row justify-between mt-4">
-          {currentIndex > 0 ? (
-            <Button
-              variant="secondary"
-              className="flex gap-1 items-center text-lg bg-button-secondary rounded-md py-2 px-3"
-              onClick={back}
-            >
-              <TablerArrowLeft />
-              Back
-            </Button>
-          ) : (
-            <div />
-          )}
-
-          {mode === "submit" && (
-            <Button
-              isDisabled={!allowSubmit}
-              className={`flex gap-1 items-center text-lg rounded-md py-2 px-3 ${
-                !allowSubmit && "opacity-30"
-              }`}
-              onClick={next}
-            >
-              Submit and Proceed
-              <TablerArrowRight />
-            </Button>
-          )}
-
-          {mode === "completed-clean" && (
-            <Button
-              variant="secondary"
-              className="flex gap-1 items-center text-lg bg-button-secondary rounded-md py-2 px-3"
-              onClick={next}
-            >
-              Next
-              <TablerArrowRight />
-            </Button>
-          )}
-
-          {mode === "completed-dirty" && (
-            <div className="flex flex-row gap-4">
-              <Button
-                className="flex gap-1 items-center text-lg rounded-md py-2 px-3"
-                onClick={() => {
-                  reset();
-                }}
-              >
-                Save Changes
-              </Button>
-
-              <Button
-                variant="secondary"
-                className="flex gap-1 items-center text-lg bg-button-secondary rounded-md py-2 px-3"
-                onClick={() => {
-                  // Reset ratings on navigation
-                  reset();
-                  next();
-                }}
-              >
-                Next
-                <TablerArrowRight />
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* PDF Viewer */}
-      <div className="flex-1">
-        <object
-          className="w-full h-full"
-          type="application/pdf"
-          data="/assets/sample.pdf"
-        >
-          <p>
-            Your browser does not support PDFs.
-            <a href="/assets/sample.pdf">Download the PDF</a>.
-          </p>
-        </object>
+      <div className="flex md:hidden">
+        <p className="text-lg text-red-600">
+          Please switch to a laptop or desktop to continue.
+        </p>
       </div>
     </div>
   );
 }
-
-interface EssayResponse {
-  question: string;
-  response: string;
-}
-
-function EssayResponse({ question, response }: EssayResponse) {
-  return (
-    <div>
-      <p className="text-text-secondary">{question}</p>
-      <p>{response}</p>
-    </div>
-  );
-}
-
-interface RatingFieldsProps {
-  experience: number;
-  passion: number;
-  onExperience: (value: number) => void;
-  onPassion: (value: number) => void;
-}
-
-export const RatingFields = ({
-  experience,
-  passion,
-  onExperience,
-  onPassion,
-}: RatingFieldsProps) => {
-  return (
-    <div className="w-1/3">
-      <div className="flex flex-row gap-4 justify-between items-center">
-        <p className="text-lg">Experience:</p>
-        <Rating
-          style={{ maxWidth: 150 }}
-          value={experience}
-          onChange={onExperience}
-        />
-      </div>
-
-      <div className="flex flex-row gap-4 items-center justify-between mt-4">
-        <p className="text-lg">Passion:</p>
-        <Rating
-          style={{ maxWidth: 150 }}
-          value={passion}
-          onChange={onPassion}
-        />
-      </div>
-    </div>
-  );
-};

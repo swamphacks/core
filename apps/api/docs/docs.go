@@ -201,6 +201,25 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "handlers.ReviewRatings": {
+                "properties": {
+                    "experience_rating": {
+                        "maximum": 5,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "passion_rating": {
+                        "maximum": 5,
+                        "minimum": 1,
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "experience_rating",
+                    "passion_rating"
+                ],
+                "type": "object"
+            },
             "handlers.UpdateEmailConsentRequest": {
                 "properties": {
                     "email_consent": {
@@ -2175,59 +2194,6 @@ const docTemplate = `{
                 ]
             }
         },
-        "/events/{eventId}/application/submit-review": {
-            "post": {
-                "description": "Handles ratings submissions from staff during the application review process.",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "title": "reviewData",
-                                "type": "object"
-                            }
-                        }
-                    },
-                    "description": "An object containing the passion and experience ratings",
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        },
-                        "description": "OK"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/response.ErrorResponse"
-                                }
-                            }
-                        },
-                        "description": "Bad request/Malformed request."
-                    },
-                    "500": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/response.ErrorResponse"
-                                }
-                            }
-                        },
-                        "description": "Server Error: error submitting application review"
-                    }
-                },
-                "summary": "Submit application review",
-                "tags": [
-                    "Application"
-                ]
-            }
-        },
         "/events/{eventId}/application/{applicationId}": {
             "get": {
                 "description": "Retrieves an application using the user id and event id primary keys and unique constraints. Only accessible by event staff and admins.",
@@ -2293,6 +2259,123 @@ const docTemplate = `{
                     }
                 },
                 "summary": "Get an application based on a user id and event id.",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/{applicationId}/resume": {
+            "get": {
+                "description": "This handler creates a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The application ID (userId of applicant)",
+                        "in": "path",
+                        "name": "applicationId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error handling download resume request"
+                    }
+                },
+                "summary": "Get resume for application review",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/{applicationId}/review": {
+            "post": {
+                "description": "Handles ratings submissions from staff during the application review process.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handlers.ReviewRatings",
+                                "summary": "reviewData",
+                                "description": "An object containing the passion and experience ratings"
+                            }
+                        }
+                    },
+                    "description": "An object containing the passion and experience ratings",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error submitting application review"
+                    }
+                },
+                "summary": "Submit application review",
                 "tags": [
                     "Application"
                 ]

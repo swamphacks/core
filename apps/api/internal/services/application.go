@@ -19,6 +19,7 @@ import (
 var (
 	ErrGetApplicationStatistics = errors.New("failed to aggregate application stats")
 	ErrMismatchedReviewerCounts = errors.New("the total number of applications does not match the total number of assigned reviews")
+	ErrWrongReviewerAssignment  = errors.New("an application has been assigned to a reviewer who is not authorized to review it")
 )
 
 // TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
@@ -484,4 +485,46 @@ func (s *ApplicationService) GetAssignedApplicationsAndProgress(ctx context.Cont
 	}
 
 	return assignedApps, nil
+}
+
+func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewerId, userId, eventId uuid.UUID, experienceRating, passionRating int) error {
+	// Log everything for debug
+	s.logger.Debug().Str("ReviewerId", reviewerId.String()).Str("UserId", userId.String()).Str("eventId", eventId.String()).Int32("Passion Rating", int32(passionRating)).Int32("Experiene Rating", int32(experienceRating)).Msg("Saving app review.")
+
+	// Get the assigned application
+	application, err := s.appRepo.GetApplicationByUserAndEventID(ctx, sqlc.GetApplicationByUserAndEventIDParams{
+		UserID:  userId,
+		EventID: eventId,
+	})
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+
+	// Ensure the application is assigned to the reviewer
+	if application.AssignedReviewerID == nil || *application.AssignedReviewerID != reviewerId {
+		s.logger.
+			Warn().
+			Str("AssignedReviewID", application.AssignedReviewerID.String()).
+			Str("ReviewID", reviewerId.String()).
+			Msg("Cannot review this application. either the assigned review is different or is nil.")
+		return ErrWrongReviewerAssignment
+	}
+
+	if err = s.appRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+		UserID:                   userId,
+		EventID:                  eventId,
+		ExperienceRatingDoUpdate: true,
+		ExperienceRating:         int32(experienceRating),
+		PassionRatingDoUpdate:    true,
+		PassionRating:            int32(passionRating),
+
+		//TODO: Make it so I don't have to set this!
+		StatusDoUpdate: false,
+		Status:         sqlc.ApplicationStatusUnderReview,
+	}); err != nil {
+		s.logger.Err(err).Msg("Something went wrong Updating the application")
+	}
+
+	return nil
 }

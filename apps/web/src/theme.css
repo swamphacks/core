@@ -26,6 +26,10 @@
   --button-secondary-hover: var(--color-gray-300);
   --button-secondary-pressed: var(--color-zinc-200);
   --button-secondary-disabled: var(--color-gray-300);
+  --button-success: var(--color-green-600);
+  --button-success-hover: var(--color-green-700);
+  --button-success-pressed: var(--color-green-800);
+  --button-success-disabled: var(--color-green-300);
   --button-outline: oklch(0.6187 0.2067 259.23 / 25%);
   --button-outline-hover: oklch(0.5465 0.2455 262.87 / 25%);
   --button-outline-pressed: oklch(0.5465 0.2455 262.87 / 25%);
