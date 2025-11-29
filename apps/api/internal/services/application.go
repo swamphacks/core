@@ -103,17 +103,6 @@ func (s *ApplicationService) GetApplicationByUserAndEventID(ctx context.Context,
 	return application, nil
 }
 
-func (s *ApplicationService) GetAssignedApplicationByUserAndEventID(ctx context.Context, params sqlc.GetAssignedApplicationByUserAndEventIdParams) (*sqlc.Application, error) {
-	application, err := s.appRepo.GetAssignedApplicationByUserAndEventID(ctx, params)
-
-	if err != nil {
-		s.logger.Err(err).Msg(err.Error())
-		return nil, err
-	}
-
-	return application, nil
-}
-
 func (s *ApplicationService) CreateApplication(ctx context.Context, params sqlc.CreateApplicationParams) (*sqlc.Application, error) {
 	canCreateApplication, err := s.eventsService.IsApplicationsOpen(ctx, params.EventID)
 
@@ -225,15 +214,15 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 	return nil
 }
 
-func (s *ApplicationService) SubmitApplicationReview(ctx context.Context, params sqlc.GetAssignedApplicationByUserAndEventIdParams) (*sqlc.Application, error) {
-	application, err := s.appRepo.GetAssignedApplicationByUserAndEventID(ctx, params)
+func (s *ApplicationService) SubmitApplicationReview(ctx context.Context) (*sqlc.Application, error) {
+	// application, err := s.appRepo.GetAssignedApplicationByUserAndEventID(ctx, params)
 
-	if err != nil {
-		s.logger.Err(err).Msg(err.Error())
-		return nil, err
-	}
+	// if err != nil {
+	// 	s.logger.Err(err).Msg(err.Error())
+	// 	return nil, err
+	// }
 
-	return application, nil
+	return nil, nil
 }
 
 func (s *ApplicationService) DownloadResume(ctx context.Context, userId, eventId uuid.UUID) (*storage.PresignedRequest, error) {
@@ -419,6 +408,7 @@ func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.U
 
 	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.appRepo.NewTx(tx)
+		txEventRepo := s.eventsService.eventRepo.NewTx(tx)
 
 		for _, allocation := range finalAllocations {
 			err := txAppRepo.AssignApplicationToReviewByEvent(ctx, allocation.ReviewerID, eventId, allocation.AssignedApplicationIDs)
@@ -428,10 +418,65 @@ func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.U
 			}
 		}
 
-		return nil
+		return txEventRepo.UpdateEventById(ctx, sqlc.UpdateEventByIdParams{
+			ID:                               eventId,
+			ApplicationReviewStartedDoUpdate: true,
+			ApplicationReviewStarted:         true,
+		})
 	})
 }
 
 func (s *ApplicationService) ResetApplicationReviews(ctx context.Context, eventId uuid.UUID) error {
-	return s.appRepo.ResetApplicationReviewsForEvent(ctx, eventId)
+	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+		txEventRepo := s.eventsService.eventRepo.NewTx(tx)
+
+		err := txAppRepo.ResetApplicationReviewsForEvent(ctx, eventId)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		return txEventRepo.UpdateEventById(ctx, sqlc.UpdateEventByIdParams{
+			ID:                               eventId,
+			ApplicationReviewStartedDoUpdate: true,
+			ApplicationReviewStarted:         false,
+		})
+	})
+
+}
+
+type ApplicationReviewStatus string
+
+const (
+	ApplicationReviewStatusInProgress ApplicationReviewStatus = "in_progress"
+	ApplicationReviewStatusCompleted  ApplicationReviewStatus = "completed"
+)
+
+type AssignedApplication struct {
+	UserID uuid.UUID               `json:"user_id"`
+	Status ApplicationReviewStatus `json:"status"`
+}
+
+func (s *ApplicationService) GetAssignedApplicationsAndProgress(ctx context.Context, reviewerId, eventId uuid.UUID) ([]AssignedApplication, error) {
+	applications, err := s.appRepo.ListApplicationByReviewerAndEvent(ctx, reviewerId, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	var assignedApps []AssignedApplication
+	for _, app := range applications {
+		status := ApplicationReviewStatusInProgress
+		if app.ExperienceRating != nil && app.PassionRating != nil {
+			status = ApplicationReviewStatusCompleted
+		}
+
+		assignedApps = append(assignedApps, AssignedApplication{
+			UserID: app.UserID,
+			Status: status,
+		})
+	}
+
+	return assignedApps, nil
 }

@@ -466,7 +466,7 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Application By User and Event ID
+     * Get Current User's Application by Event ID
      * @description Get the current user's application progress for an event. If this is their first time filling out the application, a new application will be created.
      */
     get: {
@@ -479,7 +479,7 @@ export interface paths {
         };
         cookie: {
           /** @description The authenticated session token/id */
-          sh_session: string;
+          sh_session_id: string;
         };
       };
       requestBody?: {
@@ -511,6 +511,71 @@ export interface paths {
           };
         };
         /** @description Server Error: error retrieving application"\ */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/application/{applicationId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get an application based on a user id and event id.
+     * @description Retrieves an application using the user id and event id primary keys and unique constraints. Only accessible by event staff and admins.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+          /** @description Application ID (Technically user ID) */
+          applicationId: string;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session: string;
+        };
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK: An application was found */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.Application"];
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error retrieving assigned application */
         500: {
           headers: {
             [name: string]: unknown;
@@ -602,15 +667,12 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get a staff's assigned application for reviewing
-     * @description Search through the `applications` and retrieves the one with matching assigned reviewer user id to the current user id.
+     * Get Assigned Application IDs and Progress
+     * @description Retrieves assigned applications and their review progress for the authenticated reviewer.
      */
     get: {
       parameters: {
-        query: {
-          /** @description The user ID */
-          userId: string;
-        };
+        query?: never;
         header?: never;
         path: {
           /** @description Event ID */
@@ -618,7 +680,7 @@ export interface paths {
         };
         cookie: {
           /** @description The authenticated session token/id */
-          sh_session: string;
+          sh_session_id: string;
         };
       };
       requestBody?: never;
@@ -629,11 +691,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            "application/json":
-              | components["schemas"]["sqlc.Application"]
-              | {
-                  [key: string]: unknown;
-                };
+            "application/json": components["schemas"]["services.AssignedApplication"][];
           };
         };
         /** @description Bad request/Malformed request. */
@@ -2898,6 +2956,8 @@ export interface components {
       error: string;
       message: string;
     };
+    /** @enum {string} */
+    "services.ApplicationReviewStatus": "in_progress" | "completed";
     "services.ApplicationStatistics": {
       age_stats: components["schemas"]["sqlc.GetApplicationAgeSplitRow"];
       gender_stats: components["schemas"]["sqlc.GetApplicationGenderSplitRow"];
@@ -2905,6 +2965,10 @@ export interface components {
       race_stats: components["schemas"]["sqlc.GetApplicationRaceSplitRow"][];
       school_stats: components["schemas"]["sqlc.GetApplicationSchoolSplitRow"][];
       status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
+    };
+    "services.AssignedApplication": {
+      status: components["schemas"]["services.ApplicationReviewStatus"];
+      user_id: string;
     };
     "services.EventOverview": {
       application_status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];

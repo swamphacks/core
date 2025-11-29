@@ -158,16 +158,19 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			// Application routes
 			r.Route("/application", func(r chi.Router) {
 				r.Use(mw.Auth.RequireAuth)
-				r.Get("/", api.Handlers.Application.GetApplicationByUserAndEventID)
+				r.Get("/", api.Handlers.Application.GetMyApplication)
 				r.Post("/submit", api.Handlers.Application.SubmitApplication)
 				r.Post("/save", api.Handlers.Application.SaveApplication)
 				r.Get("/download-resume", api.Handlers.Application.DownloadResume)
+
+				// Getting a resume (Staff Only)
+				r.With(ensureEventStaff).Get("/{applicationId}", api.Handlers.Application.GetApplication)
 
 				// For statistics (Staff ONLY)
 				r.With(ensureEventStaff).Get("/stats", api.Handlers.Application.GetApplicationStatistics)
 
 				// For application review (Staff ONLY)
-				r.With(ensureEventStaff).Get("/assigned", api.Handlers.Application.GetAssignedApplication)
+				r.With(ensureEventStaff).Get("/assigned", api.Handlers.Application.GetAssignedApplications)
 
 				// Review admin routes (For Event Admins only)
 				r.With(ensureEventAdmin).Post("/reset-reviews", api.Handlers.Application.ResetApplicationReviews)

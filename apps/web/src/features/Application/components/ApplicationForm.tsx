@@ -8,7 +8,7 @@ import { Link } from "react-aria-components";
 import TablerArrowLeft from "~icons/tabler/arrow-left";
 import { api } from "@/lib/ky";
 import { Spinner } from "@/components/ui/Spinner";
-import { useApplication } from "@/features/Application/hooks/useApplication";
+import { useMyApplication } from "@/features/Application/hooks/useMyApplication";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
 
 // TODO: can we put these in the assets folder?
@@ -36,7 +36,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const application = useApplication(eventId);
+  const application = useMyApplication(eventId);
 
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>(undefined);

@@ -10,10 +10,6 @@ RETURNING *;
 SELECT * FROM applications
 WHERE user_id = $1 AND event_id = $2;
 
--- name: GetAssignedApplicationByUserAndEventId :one
-SELECT * FROM applications
-WHERE user_id = $1 AND event_id = $2;
-
 -- name: UpdateApplication :exec
 UPDATE applications
 SET
@@ -58,3 +54,10 @@ SET assigned_reviewer_id = NULL,
     passion_rating = NULL
 WHERE status NOT IN ('submitted', 'started')
   AND event_id = $1;
+
+-- name: ListApplicationByReviewerAndEvent :many
+SELECT user_id, passion_rating, experience_rating FROM applications
+WHERE assigned_reviewer_id = $1
+    AND event_id = $2
+    AND status IN ('under_review')
+ORDER BY user_id ASC;

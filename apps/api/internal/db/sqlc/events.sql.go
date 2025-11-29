@@ -416,42 +416,45 @@ SET
     end_time = CASE WHEN $21::boolean THEN $22 ELSE end_time END,
     website_url = CASE WHEN $23::boolean THEN $24 ELSE website_url END,
     is_published = CASE WHEN $25::boolean THEN $26 ELSE is_published END,
-    banner = CASE WHEN $27::boolean THEN $28 ELSE banner END
+    banner = CASE WHEN $27::boolean THEN $28 ELSE banner END,
+    application_review_started = CASE WHEN $29::boolean THEN $30 ELSE application_review_started END
 WHERE
-    id = $29::uuid
+    id = $31::uuid
 RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started
 `
 
 type UpdateEventByIdParams struct {
-	NameDoUpdate             bool       `json:"name_do_update"`
-	Name                     string     `json:"name"`
-	DescriptionDoUpdate      bool       `json:"description_do_update"`
-	Description              *string    `json:"description"`
-	LocationDoUpdate         bool       `json:"location_do_update"`
-	Location                 *string    `json:"location"`
-	LocationUrlDoUpdate      bool       `json:"location_url_do_update"`
-	LocationUrl              *string    `json:"location_url"`
-	MaxAttendeesDoUpdate     bool       `json:"max_attendees_do_update"`
-	MaxAttendees             *int32     `json:"max_attendees"`
-	ApplicationOpenDoUpdate  bool       `json:"application_open_do_update"`
-	ApplicationOpen          time.Time  `json:"application_open"`
-	ApplicationCloseDoUpdate bool       `json:"application_close_do_update"`
-	ApplicationClose         time.Time  `json:"application_close"`
-	RsvpDeadlineDoUpdate     bool       `json:"rsvp_deadline_do_update"`
-	RsvpDeadline             *time.Time `json:"rsvp_deadline"`
-	DecisionReleaseDoUpdate  bool       `json:"decision_release_do_update"`
-	DecisionRelease          *time.Time `json:"decision_release"`
-	StartTimeDoUpdate        bool       `json:"start_time_do_update"`
-	StartTime                time.Time  `json:"start_time"`
-	EndTimeDoUpdate          bool       `json:"end_time_do_update"`
-	EndTime                  time.Time  `json:"end_time"`
-	WebsiteUrlDoUpdate       bool       `json:"website_url_do_update"`
-	WebsiteUrl               *string    `json:"website_url"`
-	IsPublishedDoUpdate      bool       `json:"is_published_do_update"`
-	IsPublished              *bool      `json:"is_published"`
-	BannerDoUpdate           bool       `json:"banner_do_update"`
-	Banner                   *string    `json:"banner"`
-	ID                       uuid.UUID  `json:"id"`
+	NameDoUpdate                     bool       `json:"name_do_update"`
+	Name                             string     `json:"name"`
+	DescriptionDoUpdate              bool       `json:"description_do_update"`
+	Description                      *string    `json:"description"`
+	LocationDoUpdate                 bool       `json:"location_do_update"`
+	Location                         *string    `json:"location"`
+	LocationUrlDoUpdate              bool       `json:"location_url_do_update"`
+	LocationUrl                      *string    `json:"location_url"`
+	MaxAttendeesDoUpdate             bool       `json:"max_attendees_do_update"`
+	MaxAttendees                     *int32     `json:"max_attendees"`
+	ApplicationOpenDoUpdate          bool       `json:"application_open_do_update"`
+	ApplicationOpen                  time.Time  `json:"application_open"`
+	ApplicationCloseDoUpdate         bool       `json:"application_close_do_update"`
+	ApplicationClose                 time.Time  `json:"application_close"`
+	RsvpDeadlineDoUpdate             bool       `json:"rsvp_deadline_do_update"`
+	RsvpDeadline                     *time.Time `json:"rsvp_deadline"`
+	DecisionReleaseDoUpdate          bool       `json:"decision_release_do_update"`
+	DecisionRelease                  *time.Time `json:"decision_release"`
+	StartTimeDoUpdate                bool       `json:"start_time_do_update"`
+	StartTime                        time.Time  `json:"start_time"`
+	EndTimeDoUpdate                  bool       `json:"end_time_do_update"`
+	EndTime                          time.Time  `json:"end_time"`
+	WebsiteUrlDoUpdate               bool       `json:"website_url_do_update"`
+	WebsiteUrl                       *string    `json:"website_url"`
+	IsPublishedDoUpdate              bool       `json:"is_published_do_update"`
+	IsPublished                      *bool      `json:"is_published"`
+	BannerDoUpdate                   bool       `json:"banner_do_update"`
+	Banner                           *string    `json:"banner"`
+	ApplicationReviewStartedDoUpdate bool       `json:"application_review_started_do_update"`
+	ApplicationReviewStarted         bool       `json:"application_review_started"`
+	ID                               uuid.UUID  `json:"id"`
 }
 
 func (q *Queries) UpdateEventById(ctx context.Context, arg UpdateEventByIdParams) error {
@@ -484,6 +487,8 @@ func (q *Queries) UpdateEventById(ctx context.Context, arg UpdateEventByIdParams
 		arg.IsPublished,
 		arg.BannerDoUpdate,
 		arg.Banner,
+		arg.ApplicationReviewStartedDoUpdate,
+		arg.ApplicationReviewStarted,
 		arg.ID,
 	)
 	return err

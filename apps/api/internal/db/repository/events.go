@@ -29,6 +29,17 @@ func NewEventRespository(db *db.DB) *EventRepository {
 	}
 }
 
+func (r *EventRepository) NewTx(tx pgx.Tx) *EventRepository {
+	txDB := &db.DB{
+		Pool:  r.db.Pool,
+		Query: sqlc.New(tx),
+	}
+
+	return &EventRepository{
+		db: txDB,
+	}
+}
+
 func (r *EventRepository) CreateEvent(ctx context.Context, params sqlc.CreateEventParams) (*sqlc.Event, error) {
 	event, err := r.db.Query.CreateEvent(ctx, params)
 	if db.IsUniqueViolation(err) {

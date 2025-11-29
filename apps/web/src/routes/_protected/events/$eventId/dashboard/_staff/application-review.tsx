@@ -1,3 +1,4 @@
+import ApplicationReviewPage from "@/features/ApplicationReview/components/Review/ApplicationReviewPage";
 import ReviewNotStarted from "@/features/ApplicationReview/components/ReviewNotStarted/ReviewNotStarted";
 import { useEvent } from "@/features/Event/hooks/useEvent";
 import { createFileRoute } from "@tanstack/react-router";
@@ -33,15 +34,15 @@ function RouteComponent() {
   }
 
   return (
-    <main>
+    <main className="h-full">
       <Heading className="text-2xl lg:text-3xl font-semibold mb-4">
         Application Review
       </Heading>
 
       {event.data.application_review_started ? (
-        <>
-          <p>Something</p>
-        </>
+        <div>
+          <ApplicationReviewPage eventId={event.data.id} />
+        </div>
       ) : (
         <>
           {eventRole === "staff" && (
