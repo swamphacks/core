@@ -316,7 +316,7 @@ func (h *ApplicationHandler) DownloadResume(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	request, err := h.appService.DownloadResume(r.Context(), *userId, eventId)
+	request, err := h.appService.DownloadResume(r.Context(), *userId, eventId, 60)
 
 	if err != nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("resume_download_error", "unable to retrieve resume download url"))
@@ -531,4 +531,44 @@ func (h *ApplicationHandler) ResetApplicationReviews(w http.ResponseWriter, r *h
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+// Get resume
+//
+//	@Summary		Get resume for application review
+//	@Description	This handler creates a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.
+//	@Tags			Application
+//	@Produce		json
+//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
+//	@Param			applicationId path  string  true	"The application ID (userId of applicant)" Format(uuid)
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error handling download resume request"
+//	@Router			/events/{eventId}/application/{applicationId}/resume [get]
+func (h *ApplicationHandler) GetResumePresignedUrl(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	applicationId, err := web.PathParamToUUID(r, "applicationId")
+
+	// Ensure access
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	eventRole := ctxutils.GetEventRoleFromCtx(r.Context())
+
+	if userId == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "the user id of the current user is invalid"))
+		return
+	}
+
+	if eventRole.Role != sqlc.EventRoleTypeStaff && eventRole.Role != sqlc.EventRoleTypeAdmin && *userId != applicationId {
+		res.SendError(w, http.StatusForbidden, res.NewError("forbidden", "You are not allowed to see other ppls resumes :("))
+		return
+	}
+
+	request, err := h.appService.DownloadResume(r.Context(), applicationId, eventId, 600)
+
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("resume_download_error", "unable to retrieve resume download url"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, request.URL)
 }
