@@ -225,7 +225,7 @@ func (s *ApplicationService) SubmitApplicationReview(ctx context.Context) (*sqlc
 	return nil, nil
 }
 
-func (s *ApplicationService) DownloadResume(ctx context.Context, userId, eventId uuid.UUID) (*storage.PresignedRequest, error) {
+func (s *ApplicationService) DownloadResume(ctx context.Context, userId, eventId uuid.UUID, lifetimeSecs int64) (*storage.PresignedRequest, error) {
 	presignableStorage, ok := s.storage.(storage.PresignableStorage)
 
 	if !ok {
@@ -234,7 +234,12 @@ func (s *ApplicationService) DownloadResume(ctx context.Context, userId, eventId
 		return nil, err
 	}
 
-	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, eventId.String()+"/"+userId.String(), 60)
+	if lifetimeSecs <= 0 {
+		err := errors.New("invalid number of lifetime seconds")
+		return nil, err
+	}
+
+	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, eventId.String()+"/"+userId.String(), lifetimeSecs)
 
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())

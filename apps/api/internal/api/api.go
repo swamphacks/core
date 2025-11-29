@@ -162,6 +162,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				r.Post("/submit", api.Handlers.Application.SubmitApplication)
 				r.Post("/save", api.Handlers.Application.SaveApplication)
 				r.Get("/download-resume", api.Handlers.Application.DownloadResume)
+				r.With(mw.Event.AttachEventRoleToContext()).Get("/{applicationId}/resume", api.Handlers.Application.GetResumePresignedUrl)
 
 				// Getting a resume (Staff Only)
 				r.With(ensureEventStaff).Get("/{applicationId}", api.Handlers.Application.GetApplication)
