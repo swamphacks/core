@@ -118,6 +118,33 @@ func (r *ApplicationRepository) SaveApplication(ctx context.Context, data any, u
 	return nil
 }
 
+func (r *ApplicationRepository) UpdateApplication(ctx context.Context, params sqlc.UpdateApplicationParams) error {
+	return r.db.Query.UpdateApplication(ctx, params)
+}
+
+func (r *ApplicationRepository) ListAvailableApplicationForEvent(ctx context.Context, eventId uuid.UUID) ([]uuid.UUID, error) {
+	return r.db.Query.ListAvailableApplicationsForEvent(ctx, eventId)
+}
+
+func (r *ApplicationRepository) AssignApplicationToReviewByEvent(ctx context.Context, reviewerId, eventId uuid.UUID, applicationIDs []uuid.UUID) error {
+	return r.db.Query.AssignApplicationsToReviewer(ctx, sqlc.AssignApplicationsToReviewerParams{
+		ReviewerID:     reviewerId,
+		EventID:        eventId,
+		ApplicationIds: applicationIDs,
+	})
+}
+
+func (r *ApplicationRepository) ListApplicationByReviewerAndEvent(ctx context.Context, reviewerId, eventId uuid.UUID) ([]sqlc.ListApplicationByReviewerAndEventRow, error) {
+	return r.db.Query.ListApplicationByReviewerAndEvent(ctx, sqlc.ListApplicationByReviewerAndEventParams{
+		AssignedReviewerID: &reviewerId,
+		EventID:            eventId,
+	})
+}
+
+func (r *ApplicationRepository) ResetApplicationReviewsForEvent(ctx context.Context, eventId uuid.UUID) error {
+	return r.db.Query.ResetApplicationReviews(ctx, eventId)
+}
+
 // Application statistics (Staff Dashboards)
 func (r *ApplicationRepository) GetSubmittedApplicationGenders(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationGenderSplitRow, error) {
 	return r.db.Query.GetApplicationGenderSplit(ctx, eventId)

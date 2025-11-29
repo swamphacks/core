@@ -17,7 +17,7 @@ const meta = {
   },
   argTypes: {
     variant: {
-      options: ["primary", "secondary", "danger"],
+      options: ["primary", "secondary", "danger", "success"],
       control: { type: "select" },
     },
   },

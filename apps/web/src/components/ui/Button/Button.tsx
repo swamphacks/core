@@ -9,6 +9,7 @@ export interface ButtonProps extends RACButtonProps {
   variant?:
     | "primary"
     | "secondary"
+    | "success"
     | "danger"
     | "icon"
     | "skeleton"
@@ -26,6 +27,8 @@ export const button = tv({
         "bg-button-primary hover:bg-button-primary-hover pressed:bg-button-primary-pressed text-white",
       secondary:
         "bg-button-secondary hover:bg-button-secondary-hover pressed:bg-button-secondary-pressed",
+      success:
+        "bg-green-500 hover:bg-green-600 pressed:bg-green-700 text-white",
       danger:
         "bg-button-danger hover:bg-button-danger-hover pressed:bg-button-danger-pressed text-white",
       icon: "border-0 p-1 flex items-center justify-center text-gray-600 hover:bg-black/[5%] pressed:bg-black/10 dark:text-zinc-400 dark:hover:bg-white/10 dark:pressed:bg-white/20 disabled:bg-transparent",

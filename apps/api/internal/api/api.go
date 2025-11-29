@@ -122,6 +122,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
+		// r.Post("/{eventId}/application/reset-reviews", api.Handlers.Application.ResetApplicationReviews)
+		// r.Post("/{eventId}/application/assign-reviewers", api.Handlers.Application.AssignApplicationReviewers)
 
 		// Superuser-only
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
@@ -156,13 +158,25 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			// Application routes
 			r.Route("/application", func(r chi.Router) {
 				r.Use(mw.Auth.RequireAuth)
-				r.Get("/", api.Handlers.Application.GetApplicationByUserAndEventID)
+				r.Get("/", api.Handlers.Application.GetMyApplication)
 				r.Post("/submit", api.Handlers.Application.SubmitApplication)
 				r.Post("/save", api.Handlers.Application.SaveApplication)
 				r.Get("/download-resume", api.Handlers.Application.DownloadResume)
+				r.With(mw.Event.AttachEventRoleToContext()).Get("/{applicationId}/resume", api.Handlers.Application.GetResumePresignedUrl)
+
+				// Getting a resume (Staff Only)
+				r.With(ensureEventStaff).Get("/{applicationId}", api.Handlers.Application.GetApplication)
 
 				// For statistics (Staff ONLY)
 				r.With(ensureEventStaff).Get("/stats", api.Handlers.Application.GetApplicationStatistics)
+
+				// For application review (Staff ONLY)
+				r.With(ensureEventStaff).Get("/assigned", api.Handlers.Application.GetAssignedApplications)
+				r.With(ensureEventStaff).Post("/{applicationId}/review", api.Handlers.Application.SubmitApplicationReview)
+
+				// Review admin routes (For Event Admins only)
+				r.With(ensureEventAdmin).Post("/reset-reviews", api.Handlers.Application.ResetApplicationReviews)
+				r.With(ensureEventAdmin).Post("/assign-reviewers", api.Handlers.Application.AssignApplicationReviewers)
 			})
 
 			// Team routes

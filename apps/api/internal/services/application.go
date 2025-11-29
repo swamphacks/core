@@ -18,6 +18,8 @@ import (
 
 var (
 	ErrGetApplicationStatistics = errors.New("failed to aggregate application stats")
+	ErrMismatchedReviewerCounts = errors.New("the total number of applications does not match the total number of assigned reviews")
+	ErrWrongReviewerAssignment  = errors.New("an application has been assigned to a reviewer who is not authorized to review it")
 )
 
 // TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
@@ -213,7 +215,18 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 	return nil
 }
 
-func (s *ApplicationService) DownloadResume(ctx context.Context, userId, eventId uuid.UUID) (*storage.PresignedRequest, error) {
+func (s *ApplicationService) SubmitApplicationReview(ctx context.Context) (*sqlc.Application, error) {
+	// application, err := s.appRepo.GetAssignedApplicationByUserAndEventID(ctx, params)
+
+	// if err != nil {
+	// 	s.logger.Err(err).Msg(err.Error())
+	// 	return nil, err
+	// }
+
+	return nil, nil
+}
+
+func (s *ApplicationService) DownloadResume(ctx context.Context, userId, eventId uuid.UUID, lifetimeSecs int64) (*storage.PresignedRequest, error) {
 	presignableStorage, ok := s.storage.(storage.PresignableStorage)
 
 	if !ok {
@@ -222,7 +235,12 @@ func (s *ApplicationService) DownloadResume(ctx context.Context, userId, eventId
 		return nil, err
 	}
 
-	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, eventId.String()+"/"+userId.String(), 60)
+	if lifetimeSecs <= 0 {
+		err := errors.New("invalid number of lifetime seconds")
+		return nil, err
+	}
+
+	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, eventId.String()+"/"+userId.String(), lifetimeSecs)
 
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())
@@ -307,4 +325,206 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context, event
 		StatusStatistics: statusStats,
 	}, nil
 
+}
+
+type ReviewerAssignment struct {
+	ID     uuid.UUID `json:"id"`     // User/Reviewer ID
+	Amount *int      `json:"amount"` // Number of applications assigned (nil if autoassign)
+}
+
+type ReviewerAllocation struct {
+	ReviewerID             uuid.UUID   `json:"reviewer_id"`
+	AssignedApplicationIDs []uuid.UUID `json:"assigned_application_ids"`
+}
+
+func (s *ApplicationService) AssignReviewers(ctx context.Context, eventId uuid.UUID, reviewers []ReviewerAssignment) error {
+
+	//TODO: Must check if applications are closed, if we havent released decisions, and more.
+
+	var fixedReviewers []ReviewerAssignment
+	var autoReviewers []ReviewerAssignment
+	var totalFixedAmount int
+
+	for _, assignee := range reviewers {
+		if assignee.Amount != nil {
+			fixedReviewers = append(fixedReviewers, assignee)
+			totalFixedAmount += *assignee.Amount
+		} else {
+			autoReviewers = append(autoReviewers, assignee)
+		}
+	}
+
+	availableApplications, err := s.appRepo.ListAvailableApplicationForEvent(ctx, eventId)
+	if err != nil {
+		return err
+	}
+
+	totalAvailable := len(availableApplications)
+	if totalAvailable == 0 {
+		return nil
+	}
+
+	if totalFixedAmount > totalAvailable {
+		return ErrMismatchedReviewerCounts
+	}
+
+	if totalAvailable > totalFixedAmount && len(autoReviewers) == 0 {
+		return ErrMismatchedReviewerCounts
+	}
+
+	var appIndex int = 0
+	var finalAllocations []ReviewerAllocation
+
+	// Assign fixed
+	for _, assignee := range fixedReviewers {
+		amountToAssign := *assignee.Amount
+
+		assignedSlice := availableApplications[appIndex : appIndex+amountToAssign]
+		finalAllocations = append(finalAllocations, ReviewerAllocation{
+			ReviewerID:             assignee.ID,
+			AssignedApplicationIDs: assignedSlice,
+		})
+
+		appIndex += amountToAssign
+	}
+
+	remainingApps := totalAvailable - appIndex
+	if remainingApps > 0 && len(autoReviewers) > 0 {
+		baseShare := remainingApps / len(autoReviewers)
+		remainder := remainingApps % len(autoReviewers)
+
+		for index, assignee := range autoReviewers {
+			assignCount := baseShare
+			if index < remainder {
+				assignCount++
+			}
+
+			assignedSlice := availableApplications[appIndex : appIndex+assignCount]
+			finalAllocations = append(finalAllocations, ReviewerAllocation{
+				ReviewerID:             assignee.ID,
+				AssignedApplicationIDs: assignedSlice,
+			})
+			appIndex += assignCount
+		}
+	}
+
+	for _, allocation := range finalAllocations {
+		s.logger.Info().Str("ReviewerID", allocation.ReviewerID.String()).Int("AssignedCount", len(allocation.AssignedApplicationIDs)).Msg("Reviewer assigned applications")
+	}
+
+	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+		txEventRepo := s.eventsService.eventRepo.NewTx(tx)
+
+		for _, allocation := range finalAllocations {
+			err := txAppRepo.AssignApplicationToReviewByEvent(ctx, allocation.ReviewerID, eventId, allocation.AssignedApplicationIDs)
+			if err != nil {
+				s.logger.Err(err).Msg(err.Error())
+				return err
+			}
+		}
+
+		return txEventRepo.UpdateEventById(ctx, sqlc.UpdateEventByIdParams{
+			ID:                               eventId,
+			ApplicationReviewStartedDoUpdate: true,
+			ApplicationReviewStarted:         true,
+		})
+	})
+}
+
+func (s *ApplicationService) ResetApplicationReviews(ctx context.Context, eventId uuid.UUID) error {
+	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+		txEventRepo := s.eventsService.eventRepo.NewTx(tx)
+
+		err := txAppRepo.ResetApplicationReviewsForEvent(ctx, eventId)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		return txEventRepo.UpdateEventById(ctx, sqlc.UpdateEventByIdParams{
+			ID:                               eventId,
+			ApplicationReviewStartedDoUpdate: true,
+			ApplicationReviewStarted:         false,
+		})
+	})
+
+}
+
+type ApplicationReviewStatus string
+
+const (
+	ApplicationReviewStatusInProgress ApplicationReviewStatus = "in_progress"
+	ApplicationReviewStatusCompleted  ApplicationReviewStatus = "completed"
+)
+
+type AssignedApplication struct {
+	UserID uuid.UUID               `json:"user_id"`
+	Status ApplicationReviewStatus `json:"status"`
+}
+
+func (s *ApplicationService) GetAssignedApplicationsAndProgress(ctx context.Context, reviewerId, eventId uuid.UUID) ([]AssignedApplication, error) {
+	applications, err := s.appRepo.ListApplicationByReviewerAndEvent(ctx, reviewerId, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
+
+	var assignedApps []AssignedApplication
+	for _, app := range applications {
+		status := ApplicationReviewStatusInProgress
+		if app.ExperienceRating != nil && app.PassionRating != nil {
+			status = ApplicationReviewStatusCompleted
+		}
+
+		assignedApps = append(assignedApps, AssignedApplication{
+			UserID: app.UserID,
+			Status: status,
+		})
+	}
+
+	return assignedApps, nil
+}
+
+func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewerId, userId, eventId uuid.UUID, experienceRating, passionRating int) error {
+	// Log everything for debug
+	s.logger.Debug().Str("ReviewerId", reviewerId.String()).Str("UserId", userId.String()).Str("eventId", eventId.String()).Int32("Passion Rating", int32(passionRating)).Int32("Experiene Rating", int32(experienceRating)).Msg("Saving app review.")
+
+	// Get the assigned application
+	application, err := s.appRepo.GetApplicationByUserAndEventID(ctx, sqlc.GetApplicationByUserAndEventIDParams{
+		UserID:  userId,
+		EventID: eventId,
+	})
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+
+	// Ensure the application is assigned to the reviewer
+	if application.AssignedReviewerID == nil || *application.AssignedReviewerID != reviewerId {
+		s.logger.
+			Warn().
+			Str("AssignedReviewID", application.AssignedReviewerID.String()).
+			Str("ReviewID", reviewerId.String()).
+			Msg("Cannot review this application. either the assigned review is different or is nil.")
+		return ErrWrongReviewerAssignment
+	}
+
+	if err = s.appRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+		UserID:                   userId,
+		EventID:                  eventId,
+		ExperienceRatingDoUpdate: true,
+		ExperienceRating:         int32(experienceRating),
+		PassionRatingDoUpdate:    true,
+		PassionRating:            int32(passionRating),
+
+		//TODO: Make it so I don't have to set this!
+		StatusDoUpdate: false,
+		Status:         sqlc.ApplicationStatusUnderReview,
+	}); err != nil {
+		s.logger.Err(err).Msg("Something went wrong Updating the application")
+	}
+
+	return nil
 }

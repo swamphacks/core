@@ -276,14 +276,17 @@ func (ns NullJoinRequestStatus) Value() (driver.Value, error) {
 }
 
 type Application struct {
-	UserID      uuid.UUID             `json:"user_id"`
-	EventID     uuid.UUID             `json:"event_id"`
-	Status      NullApplicationStatus `json:"status"`
-	Application []byte                `json:"application"`
-	CreatedAt   time.Time             `json:"created_at"`
-	SavedAt     time.Time             `json:"saved_at"`
-	UpdatedAt   time.Time             `json:"updated_at"`
-	SubmittedAt *time.Time            `json:"submitted_at"`
+	UserID             uuid.UUID             `json:"user_id"`
+	EventID            uuid.UUID             `json:"event_id"`
+	Status             NullApplicationStatus `json:"status"`
+	Application        []byte                `json:"application"`
+	CreatedAt          time.Time             `json:"created_at"`
+	SavedAt            time.Time             `json:"saved_at"`
+	UpdatedAt          time.Time             `json:"updated_at"`
+	SubmittedAt        *time.Time            `json:"submitted_at"`
+	ExperienceRating   *int32                `json:"experience_rating"`
+	PassionRating      *int32                `json:"passion_rating"`
+	AssignedReviewerID *uuid.UUID            `json:"assigned_reviewer_id"`
 }
 
 type AuthAccount struct {
@@ -328,23 +331,24 @@ type AuthUser struct {
 }
 
 type Event struct {
-	ID               uuid.UUID  `json:"id"`
-	Name             string     `json:"name"`
-	Description      *string    `json:"description"`
-	Location         *string    `json:"location"`
-	LocationUrl      *string    `json:"location_url"`
-	MaxAttendees     *int32     `json:"max_attendees"`
-	ApplicationOpen  time.Time  `json:"application_open"`
-	ApplicationClose time.Time  `json:"application_close"`
-	RsvpDeadline     *time.Time `json:"rsvp_deadline"`
-	DecisionRelease  *time.Time `json:"decision_release"`
-	StartTime        time.Time  `json:"start_time"`
-	EndTime          time.Time  `json:"end_time"`
-	WebsiteUrl       *string    `json:"website_url"`
-	IsPublished      *bool      `json:"is_published"`
-	CreatedAt        *time.Time `json:"created_at"`
-	UpdatedAt        *time.Time `json:"updated_at"`
-	Banner           *string    `json:"banner"`
+	ID                       uuid.UUID  `json:"id"`
+	Name                     string     `json:"name"`
+	Description              *string    `json:"description"`
+	Location                 *string    `json:"location"`
+	LocationUrl              *string    `json:"location_url"`
+	MaxAttendees             *int32     `json:"max_attendees"`
+	ApplicationOpen          time.Time  `json:"application_open"`
+	ApplicationClose         time.Time  `json:"application_close"`
+	RsvpDeadline             *time.Time `json:"rsvp_deadline"`
+	DecisionRelease          *time.Time `json:"decision_release"`
+	StartTime                time.Time  `json:"start_time"`
+	EndTime                  time.Time  `json:"end_time"`
+	WebsiteUrl               *string    `json:"website_url"`
+	IsPublished              *bool      `json:"is_published"`
+	CreatedAt                *time.Time `json:"created_at"`
+	UpdatedAt                *time.Time `json:"updated_at"`
+	Banner                   *string    `json:"banner"`
+	ApplicationReviewStarted bool       `json:"application_review_started"`
 }
 
 type EventInterestSubmission struct {

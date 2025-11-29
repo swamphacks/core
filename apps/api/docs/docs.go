@@ -201,6 +201,25 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "handlers.ReviewRatings": {
+                "properties": {
+                    "experience_rating": {
+                        "maximum": 5,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "passion_rating": {
+                        "maximum": 5,
+                        "minimum": 1,
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "experience_rating",
+                    "passion_rating"
+                ],
+                "type": "object"
+            },
             "handlers.UpdateEmailConsentRequest": {
                 "properties": {
                     "email_consent": {
@@ -298,6 +317,17 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "services.ApplicationReviewStatus": {
+                "enum": [
+                    "in_progress",
+                    "completed"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "ApplicationReviewStatusInProgress",
+                    "ApplicationReviewStatusCompleted"
+                ]
+            },
             "services.ApplicationStatistics": {
                 "properties": {
                     "age_stats": {
@@ -338,6 +368,21 @@ const docTemplate = `{
                     "race_stats",
                     "school_stats",
                     "status_stats"
+                ],
+                "type": "object"
+            },
+            "services.AssignedApplication": {
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/services.ApplicationReviewStatus"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "status",
+                    "user_id"
                 ],
                 "type": "object"
             },
@@ -388,6 +433,23 @@ const docTemplate = `{
                     "joined_at",
                     "name",
                     "user_id"
+                ],
+                "type": "object"
+            },
+            "services.ReviewerAssignment": {
+                "properties": {
+                    "amount": {
+                        "description": "Number of applications assigned (nil if autoassign)",
+                        "type": "integer"
+                    },
+                    "id": {
+                        "description": "User/Reviewer ID",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "id"
                 ],
                 "type": "object"
             },
@@ -447,11 +509,20 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
+                    "assigned_reviewer_id": {
+                        "type": "string"
+                    },
                     "created_at": {
                         "type": "string"
                     },
                     "event_id": {
                         "type": "string"
+                    },
+                    "experience_rating": {
+                        "type": "integer"
+                    },
+                    "passion_rating": {
+                        "type": "integer"
                     },
                     "saved_at": {
                         "type": "string"
@@ -471,8 +542,11 @@ const docTemplate = `{
                 },
                 "required": [
                     "application",
+                    "assigned_reviewer_id",
                     "created_at",
                     "event_id",
+                    "experience_rating",
+                    "passion_rating",
                     "saved_at",
                     "status",
                     "submitted_at",
@@ -573,6 +647,9 @@ const docTemplate = `{
                     "application_open": {
                         "type": "string"
                     },
+                    "application_review_started": {
+                        "type": "boolean"
+                    },
                     "banner": {
                         "type": "string"
                     },
@@ -622,6 +699,7 @@ const docTemplate = `{
                 "required": [
                     "application_close",
                     "application_open",
+                    "application_review_started",
                     "banner",
                     "created_at",
                     "decision_release",
@@ -856,6 +934,9 @@ const docTemplate = `{
                     "application_open": {
                         "type": "string"
                     },
+                    "application_review_started": {
+                        "type": "boolean"
+                    },
                     "application_status": {
                         "$ref": "#/components/schemas/sqlc.NullApplicationStatus"
                     },
@@ -911,6 +992,7 @@ const docTemplate = `{
                 "required": [
                     "application_close",
                     "application_open",
+                    "application_review_started",
                     "application_status",
                     "banner",
                     "created_at",
@@ -1625,7 +1707,7 @@ const docTemplate = `{
                     {
                         "description": "The authenticated session token/id",
                         "in": "cookie",
-                        "name": "sh_session",
+                        "name": "sh_session_id",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -1681,7 +1763,139 @@ const docTemplate = `{
                         "description": "Server Error: error retrieving application\"\\"
                     }
                 },
-                "summary": "Get Application By User and Event ID",
+                "summary": "Get Current User's Application by Event ID",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/assign-reviewers": {
+            "post": {
+                "description": "Assigns applications for an event to reviewers for the application review process.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "items": {
+                                            "$ref": "#/components/schemas/services.ReviewerAssignment"
+                                        },
+                                        "title": "request",
+                                        "type": "array"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Reviewer assignmnet payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Reviewers assigned"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error assigning reviewers"
+                    }
+                },
+                "summary": "Assign application to reviewers",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/assigned": {
+            "get": {
+                "description": "Retrieves assigned applications and their review progress for the authenticated reviewer.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/services.AssignedApplication"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK: An application was found"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error retrieving assigned application"
+                    }
+                },
+                "summary": "Get Assigned Application IDs and Progress",
                 "tags": [
                     "Application"
                 ]
@@ -1690,6 +1904,18 @@ const docTemplate = `{
         "/events/{eventId}/application/download-resume": {
             "get": {
                 "description": "This handler creates a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "content": {
@@ -1728,9 +1954,66 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/application/reset-reviews": {
+            "post": {
+                "description": "Resets all application reviews for a given event, clearing any existing reviewer assignments.",
+                "parameters": [
+                    {
+                        "description": "ID of the event to reset reviews for",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Application reviews reset successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to reset application reviews"
+                    }
+                },
+                "summary": "Reset application reviews",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
         "/events/{eventId}/application/save": {
             "post": {
                 "description": "Save user's progress on the application. File/Upload fields are not saved.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1791,6 +2074,18 @@ const docTemplate = `{
         "/events/{eventId}/application/stats": {
             "get": {
                 "description": "This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "content": {
@@ -1832,6 +2127,18 @@ const docTemplate = `{
         "/events/{eventId}/application/submit": {
             "post": {
                 "description": "Submit the application for an event.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1882,6 +2189,193 @@ const docTemplate = `{
                     }
                 },
                 "summary": "Submit Application",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/{applicationId}": {
+            "get": {
+                "description": "Retrieves an application using the user id and event id primary keys and unique constraints. Only accessible by event staff and admins.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Application ID (Technically user ID)",
+                        "in": "path",
+                        "name": "applicationId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/sqlc.Application"
+                                }
+                            }
+                        },
+                        "description": "OK: An application was found"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error retrieving assigned application"
+                    }
+                },
+                "summary": "Get an application based on a user id and event id.",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/{applicationId}/resume": {
+            "get": {
+                "description": "This handler creates a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The application ID (userId of applicant)",
+                        "in": "path",
+                        "name": "applicationId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error handling download resume request"
+                    }
+                },
+                "summary": "Get resume for application review",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/{applicationId}/review": {
+            "post": {
+                "description": "Handles ratings submissions from staff during the application review process.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handlers.ReviewRatings",
+                                "summary": "reviewData",
+                                "description": "An object containing the passion and experience ratings"
+                            }
+                        }
+                    },
+                    "description": "An object containing the passion and experience ratings",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error submitting application review"
+                    }
+                },
+                "summary": "Submit application review",
                 "tags": [
                     "Application"
                 ]

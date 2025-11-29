@@ -16,6 +16,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
 type ApplicationHandler struct {
@@ -28,21 +29,21 @@ func NewApplicationHandler(appService *services.ApplicationService) *Application
 	}
 }
 
-// Get Application By User and Event ID
+// Get current user's application by event ID
 //
-//	@Summary		Get Application By User and Event ID
+//	@Summary		Get Current User's Application by Event ID
 //	@Description	Get the current user's application progress for an event. If this is their first time filling out the application, a new application will be created.
 //	@Tags			Application
 //	@Accept			json
 //	@Produce		json
 //	@Param			eventId		path		string					true	"Event ID"
-//	@Param			sh_session	cookie		string					true	"The authenticated session token/id"
+//	@Param			sh_session_id	cookie		string					true	"The authenticated session token/id"
 //	@Success		200			{object}	sqlc.Application		"OK: An application was found"
 //	@Success		200			{object}	map[string]any			"OK: An application was found"
 //	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving application"\
 //	@Router			/events/{eventId}/application [get]
-func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWriter, r *http.Request) {
+func (h *ApplicationHandler) GetMyApplication(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 
 	if eventIdStr == "" {
@@ -110,7 +111,8 @@ func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWrite
 //	@Tags			Application
 //	@Accept			json
 //	@Produce		json
-//	@Param			formBody	formData	any	true	"Submission form data"
+//	@Param			formBody	formData	any		true	"Submission form data"
+//	@Param			eventId		path		string	true	"Event ID"	Format(uuid)
 //	@Success		200
 //	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500	{object}	response.ErrorResponse	"Server Error: error submitting application"
@@ -238,7 +240,8 @@ func (h *ApplicationHandler) SubmitApplication(w http.ResponseWriter, r *http.Re
 //	@Tags			Application
 //	@Accept			json
 //	@Produce		json
-//	@Param			data	body	any	true	"Form data"
+//	@Param			data	body	any		true	"Form data"
+//	@Param			eventId	path	string	true	"Event ID"	Format(uuid)
 //	@Success		200
 //	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500	{object}	response.ErrorResponse	"Server Error: error saving application"
@@ -287,9 +290,10 @@ func (h *ApplicationHandler) SaveApplication(w http.ResponseWriter, r *http.Requ
 //	@Description	This handler creates a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.
 //	@Tags			Application
 //	@Produce		json
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
-//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error handling download resume request"
+//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error handling download resume request"
 //	@Router			/events/{eventId}/application/download-resume [get]
 func (h *ApplicationHandler) DownloadResume(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
@@ -312,7 +316,7 @@ func (h *ApplicationHandler) DownloadResume(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	request, err := h.appService.DownloadResume(r.Context(), *userId, eventId)
+	request, err := h.appService.DownloadResume(r.Context(), *userId, eventId, 60)
 
 	if err != nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("resume_download_error", "unable to retrieve resume download url"))
@@ -328,9 +332,10 @@ func (h *ApplicationHandler) DownloadResume(w http.ResponseWriter, r *http.Reque
 //	@Description	This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.
 //	@Tags			Application
 //	@Produce		json
-//	@Success		200	{object}	services.ApplicationStatistics
-//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
-//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error getting statistics"
+//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
+//	@Success		200		{object}	services.ApplicationStatistics
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error getting statistics"
 //	@Router			/events/{eventId}/application/stats [get]
 func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
@@ -352,4 +357,234 @@ func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *
 	}
 
 	res.Send(w, http.StatusOK, appStats)
+}
+
+// Get an application for a user and event
+//
+//	@Summary		Get an application based on a user id and event id.
+//	@Description	Retrieves an application using the user id and event id primary keys and unique constraints. Only accessible by event staff and admins.
+//	@Tags			Application
+//	@Produce		json
+//	@Param			eventId		path		string					true	"Event ID"
+//	@Param			applicationId	path		string					true	"Application ID (Technically user ID)"
+//	@Param			sh_session	cookie		string					true	"The authenticated session token/id"
+//	@Success		200			{object}	sqlc.Application		"OK: An application was found"
+//	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving assigned application"
+//	@Router			/events/{eventId}/application/{applicationId} [get]
+func (h *ApplicationHandler) GetApplication(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
+
+	// So funny story, there is no ID in the application table, this is just an abstracted user_id.
+	applicationId, err := web.PathParamToUUID(r, "applicationId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_application_id", "The application ID is not a valid."))
+		return
+	}
+
+	application, err := h.appService.GetApplicationByUserAndEventID(r.Context(), sqlc.GetApplicationByUserAndEventIDParams{
+		UserID:  applicationId,
+		EventID: eventId,
+	})
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("get_assigned_application_error", "error retrieving assigned application"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, application)
+}
+
+type ReviewRatings struct {
+	PassionRating    int `json:"passion_rating" validate:"required,min=1,max=5"`
+	ExperienceRating int `json:"experience_rating" validate:"required,min=1,max=5"`
+}
+
+// Submit application review
+//
+//	@Summary		Submit application review
+//	@Description	Handles ratings submissions from staff during the application review process.
+//	@Tags			Application
+//	@Produce		json
+//	@Param			reviewData	body	ReviewRatings	true	"An object containing the passion and experience ratings"
+//	@Success		201
+//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error submitting application review"
+//	@Router			/events/{eventId}/application/{applicationId}/review [post]
+func (h *ApplicationHandler) SubmitApplicationReview(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
+
+	applicationId, err := web.PathParamToUUID(r, "applicationId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_application_id", "The application ID is not a valid."))
+		return
+	}
+
+	reviewerId := ctxutils.GetUserIdFromCtx(r.Context())
+	if reviewerId == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
+		return
+	}
+
+	var reviewData ReviewRatings
+	if err := json.NewDecoder(r.Body).Decode(&reviewData); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Failed to parse request body: "+err.Error()))
+		return
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(reviewData); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", err.Error()))
+		return
+	}
+
+	if err = h.appService.SaveApplicationReview(r.Context(), *reviewerId, applicationId, eventId, reviewData.ExperienceRating, reviewData.PassionRating); err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("save_review_error", "Something went wrong while saving the application review."))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+// Get Assigned Application IDs and Progress
+//
+//	@Summary		Get Assigned Application IDs and Progress
+//	@Description	Retrieves assigned applications and their review progress for the authenticated reviewer.
+//	@Tags			Application
+//	@Produce		json
+//	@Param			eventId		path		string					true	"Event ID"
+//	@Param			sh_session_id	cookie		string					true	"The authenticated session token/id"
+//	@Success		200			{array}	services.AssignedApplication		"OK: An application was found"
+//	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving assigned application"
+//	@Router			/events/{eventId}/application/assigned [get]
+func (h *ApplicationHandler) GetAssignedApplications(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
+
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
+		return
+	}
+
+	assignedApps, err := h.appService.GetAssignedApplicationsAndProgress(r.Context(), *userId, eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("get_assigned_applications_error", "Something went wrong while retrieving assigned applications."))
+		return
+	}
+
+	res.Send(w, http.StatusOK, assignedApps)
+}
+
+// Assign application to reviewers
+//
+//	@Summary		Assign application to reviewers
+//	@Description	Assigns applications for an event to reviewers for the application review process.
+//	@Tags			Application
+//	@Accept			json
+//	@Param			eventId	path	string							true	"Event ID"	Format(uuid)
+//	@Param			request	body	[]services.ReviewerAssignment	true	"Reviewer assignmnet payload"
+//	@Success		201		"Reviewers assigned"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error assigning reviewers"
+//	@Router			/events/{eventId}/application/assign-reviewers [post]
+func (h *ApplicationHandler) AssignApplicationReviewers(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
+
+	var payload []services.ReviewerAssignment
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Failed to parse request body: "+err.Error()))
+		return
+	}
+
+	// Process assignments
+	err = h.appService.AssignReviewers(r.Context(), eventId, payload)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("assign_reviewers_error", "Something went wrong while assigning reviewers to applications."))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+// Reset application reviews
+//
+//	@Summary		Reset application reviews
+//	@Description	Resets all application reviews for a given event, clearing any existing reviewer assignments.
+//	@Tags			Application
+//
+//	@Param			eventId	path	string	true	"ID of the event to reset reviews for"
+//	@Success		200		"Application reviews reset successfully"
+//	@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//	@Failure		500		{object}	res.ErrorResponse	"Server error: failed to reset application reviews"
+//	@Router			/events/{eventId}/application/reset-reviews [post]
+func (h *ApplicationHandler) ResetApplicationReviews(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
+
+	err = h.appService.ResetApplicationReviews(r.Context(), eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("reset_reviews_error", "Something went wrong while resetting application reviews."))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// Get resume
+//
+//	@Summary		Get resume for application review
+//	@Description	This handler creates a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.
+//	@Tags			Application
+//	@Produce		json
+//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
+//	@Param			applicationId path  string  true	"The application ID (userId of applicant)" Format(uuid)
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error handling download resume request"
+//	@Router			/events/{eventId}/application/{applicationId}/resume [get]
+func (h *ApplicationHandler) GetResumePresignedUrl(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	applicationId, err := web.PathParamToUUID(r, "applicationId")
+
+	// Ensure access
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	eventRole := ctxutils.GetEventRoleFromCtx(r.Context())
+
+	if userId == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "the user id of the current user is invalid"))
+		return
+	}
+
+	if eventRole.Role != sqlc.EventRoleTypeStaff && eventRole.Role != sqlc.EventRoleTypeAdmin && *userId != applicationId {
+		res.SendError(w, http.StatusForbidden, res.NewError("forbidden", "You are not allowed to see other ppls resumes :("))
+		return
+	}
+
+	request, err := h.appService.DownloadResume(r.Context(), applicationId, eventId, 600)
+
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("resume_download_error", "unable to retrieve resume download url"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, request.URL)
 }

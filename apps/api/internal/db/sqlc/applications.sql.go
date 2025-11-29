@@ -12,13 +12,32 @@ import (
 	"github.com/google/uuid"
 )
 
+const assignApplicationsToReviewer = `-- name: AssignApplicationsToReviewer :exec
+UPDATE applications
+SET assigned_reviewer_id = $1::uuid,
+    status = 'under_review'
+WHERE user_id = ANY($2::uuid[])
+  AND event_id = $3::uuid
+`
+
+type AssignApplicationsToReviewerParams struct {
+	ReviewerID     uuid.UUID   `json:"reviewer_id"`
+	ApplicationIds []uuid.UUID `json:"application_ids"`
+	EventID        uuid.UUID   `json:"event_id"`
+}
+
+func (q *Queries) AssignApplicationsToReviewer(ctx context.Context, arg AssignApplicationsToReviewerParams) error {
+	_, err := q.db.Exec(ctx, assignApplicationsToReviewer, arg.ReviewerID, arg.ApplicationIds, arg.EventID)
+	return err
+}
+
 const createApplication = `-- name: CreateApplication :one
 INSERT INTO applications (
     user_id, event_id
 ) VALUES (
     $1, $2
 )
-RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at
+RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id
 `
 
 type CreateApplicationParams struct {
@@ -38,6 +57,9 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.SavedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
+		&i.ExperienceRating,
+		&i.PassionRating,
+		&i.AssignedReviewerID,
 	)
 	return i, err
 }
@@ -58,7 +80,7 @@ func (q *Queries) DeleteApplication(ctx context.Context, arg DeleteApplicationPa
 }
 
 const getApplicationByUserAndEventID = `-- name: GetApplicationByUserAndEventID :one
-SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at FROM applications
+SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id FROM applications
 WHERE user_id = $1 AND event_id = $2
 `
 
@@ -79,8 +101,98 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 		&i.SavedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
+		&i.ExperienceRating,
+		&i.PassionRating,
+		&i.AssignedReviewerID,
 	)
 	return i, err
+}
+
+const listApplicationByReviewerAndEvent = `-- name: ListApplicationByReviewerAndEvent :many
+SELECT user_id, passion_rating, experience_rating FROM applications
+WHERE assigned_reviewer_id = $1
+    AND event_id = $2
+    AND status IN ('under_review')
+ORDER BY user_id ASC
+`
+
+type ListApplicationByReviewerAndEventParams struct {
+	AssignedReviewerID *uuid.UUID `json:"assigned_reviewer_id"`
+	EventID            uuid.UUID  `json:"event_id"`
+}
+
+type ListApplicationByReviewerAndEventRow struct {
+	UserID           uuid.UUID `json:"user_id"`
+	PassionRating    *int32    `json:"passion_rating"`
+	ExperienceRating *int32    `json:"experience_rating"`
+}
+
+func (q *Queries) ListApplicationByReviewerAndEvent(ctx context.Context, arg ListApplicationByReviewerAndEventParams) ([]ListApplicationByReviewerAndEventRow, error) {
+	rows, err := q.db.Query(ctx, listApplicationByReviewerAndEvent, arg.AssignedReviewerID, arg.EventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListApplicationByReviewerAndEventRow{}
+	for rows.Next() {
+		var i ListApplicationByReviewerAndEventRow
+		if err := rows.Scan(&i.UserID, &i.PassionRating, &i.ExperienceRating); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAvailableApplicationsForEvent = `-- name: ListAvailableApplicationsForEvent :many
+
+SELECT user_id FROM applications
+WHERE event_id = $1 
+    AND status = 'submitted'
+    AND experience_rating IS NULL
+    AND passion_rating IS NULL
+ORDER BY 
+    user_id ASC
+`
+
+// An application is considered "available" for an event if the application has a status of submitted and has not been reviewed yet.
+// For optimization purposes, we only select the application IDs.
+func (q *Queries) ListAvailableApplicationsForEvent(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listAvailableApplicationsForEvent, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const resetApplicationReviews = `-- name: ResetApplicationReviews :exec
+UPDATE applications
+SET assigned_reviewer_id = NULL,
+    status = 'submitted',
+    experience_rating = NULL,
+    passion_rating = NULL
+WHERE status NOT IN ('submitted', 'started')
+  AND event_id = $1
+`
+
+func (q *Queries) ResetApplicationReviews(ctx context.Context, eventID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, resetApplicationReviews, eventID)
+	return err
 }
 
 const updateApplication = `-- name: UpdateApplication :exec
@@ -89,22 +201,31 @@ SET
     status = CASE WHEN $1::boolean THEN $2::application_status ELSE status END,
     application = CASE WHEN $3::boolean THEN $4::JSONB ELSE application END,
     submitted_at = CASE WHEN $5::boolean THEN $6::timestamptz ELSE submitted_at END,
-    saved_at = CASE WHEN $7::boolean THEN $8::timestamptz ELSE saved_at END
+    saved_at = CASE WHEN $7::boolean THEN $8::timestamptz ELSE saved_at END,
+    assigned_reviewer_id = CASE WHEN $9::boolean THEN $10::UUID ELSE assigned_reviewer_id END,
+    experience_rating = CASE WHEN $11::boolean THEN $12::INT ELSE experience_rating END,
+    passion_rating = CASE WHEN $13::boolean THEN $14::INT ELSE passion_rating END
 WHERE
-    user_id = $9 AND event_id = $10
+    user_id = $15 AND event_id = $16
 `
 
 type UpdateApplicationParams struct {
-	StatusDoUpdate      bool              `json:"status_do_update"`
-	Status              ApplicationStatus `json:"status"`
-	ApplicationDoUpdate bool              `json:"application_do_update"`
-	Application         []byte            `json:"application"`
-	SubmittedAtDoUpdate bool              `json:"submitted_at_do_update"`
-	SubmittedAt         time.Time         `json:"submitted_at"`
-	SavedAtDoUpdate     bool              `json:"saved_at_do_update"`
-	SavedAt             time.Time         `json:"saved_at"`
-	UserID              uuid.UUID         `json:"user_id"`
-	EventID             uuid.UUID         `json:"event_id"`
+	StatusDoUpdate             bool              `json:"status_do_update"`
+	Status                     ApplicationStatus `json:"status"`
+	ApplicationDoUpdate        bool              `json:"application_do_update"`
+	Application                []byte            `json:"application"`
+	SubmittedAtDoUpdate        bool              `json:"submitted_at_do_update"`
+	SubmittedAt                time.Time         `json:"submitted_at"`
+	SavedAtDoUpdate            bool              `json:"saved_at_do_update"`
+	SavedAt                    time.Time         `json:"saved_at"`
+	AssignedReviewerIDDoUpdate bool              `json:"assigned_reviewer_id_do_update"`
+	AssignedReviewerID         uuid.UUID         `json:"assigned_reviewer_id"`
+	ExperienceRatingDoUpdate   bool              `json:"experience_rating_do_update"`
+	ExperienceRating           int32             `json:"experience_rating"`
+	PassionRatingDoUpdate      bool              `json:"passion_rating_do_update"`
+	PassionRating              int32             `json:"passion_rating"`
+	UserID                     uuid.UUID         `json:"user_id"`
+	EventID                    uuid.UUID         `json:"event_id"`
 }
 
 func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationParams) error {
@@ -117,6 +238,12 @@ func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationPa
 		arg.SubmittedAt,
 		arg.SavedAtDoUpdate,
 		arg.SavedAt,
+		arg.AssignedReviewerIDDoUpdate,
+		arg.AssignedReviewerID,
+		arg.ExperienceRatingDoUpdate,
+		arg.ExperienceRating,
+		arg.PassionRatingDoUpdate,
+		arg.PassionRating,
 		arg.UserID,
 		arg.EventID,
 	)
