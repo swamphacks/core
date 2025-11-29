@@ -102,17 +102,6 @@ export default function ApplicationReviewPage({
           <div>Loading application...</div>
         )}
       </div>
-
-      {/* <div className="w-full sm:w-[50%]">
-        <iframe
-          src="/assets/sample.pdf"
-          style={{
-            width: "100%",
-            height: "100%",
-            border: "none",
-          }}
-        ></iframe>
-      </div> */}
     </div>
   );
 }
