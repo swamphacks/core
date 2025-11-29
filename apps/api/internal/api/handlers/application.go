@@ -29,21 +29,21 @@ func NewApplicationHandler(appService *services.ApplicationService) *Application
 	}
 }
 
-// Get Application By User and Event ID
+// Get current user's application by event ID
 //
-//	@Summary		Get Application By User and Event ID
+//	@Summary		Get Current User's Application by Event ID
 //	@Description	Get the current user's application progress for an event. If this is their first time filling out the application, a new application will be created.
 //	@Tags			Application
 //	@Accept			json
 //	@Produce		json
 //	@Param			eventId		path		string					true	"Event ID"
-//	@Param			sh_session	cookie		string					true	"The authenticated session token/id"
+//	@Param			sh_session_id	cookie		string					true	"The authenticated session token/id"
 //	@Success		200			{object}	sqlc.Application		"OK: An application was found"
 //	@Success		200			{object}	map[string]any			"OK: An application was found"
 //	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving application"\
 //	@Router			/events/{eventId}/application [get]
-func (h *ApplicationHandler) GetApplicationByUserAndEventID(w http.ResponseWriter, r *http.Request) {
+func (h *ApplicationHandler) GetMyApplication(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 
 	if eventIdStr == "" {
@@ -359,52 +359,37 @@ func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *
 	res.Send(w, http.StatusOK, appStats)
 }
 
-// Get Assigned Application For Review
+// Get an application for a user and event
 //
-//	@Summary		Get a staff's assigned application for reviewing
-//	@Description	Search through the `applications` and retrieves the one with matching assigned reviewer user id to the current user id.
+//	@Summary		Get an application based on a user id and event id.
+//	@Description	Retrieves an application using the user id and event id primary keys and unique constraints. Only accessible by event staff and admins.
 //	@Tags			Application
 //	@Produce		json
-//	@Param			userId		query		string					true	"The user ID"
 //	@Param			eventId		path		string					true	"Event ID"
+//	@Param			applicationId	path		string					true	"Application ID (Technically user ID)"
 //	@Param			sh_session	cookie		string					true	"The authenticated session token/id"
 //	@Success		200			{object}	sqlc.Application		"OK: An application was found"
-//	@Success		200			{object}	map[string]any			"OK: An application was found"
 //	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving assigned application"
-//	@Router			/events/{eventId}/application/assigned [get]
-func (h *ApplicationHandler) GetAssignedApplication(w http.ResponseWriter, r *http.Request) {
-	eventIdStr := chi.URLParam(r, "eventId")
-	if eventIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
-		return
-	}
-
-	eventId, err := uuid.Parse(eventIdStr)
+//	@Router			/events/{eventId}/application/{applicationId} [get]
+func (h *ApplicationHandler) GetApplication(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
 		return
 	}
 
-	userIdStr := r.URL.Query().Get("userId")
-	if userIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL query!"))
-		return
-	}
-
-	userId, err := uuid.Parse(userIdStr)
+	// So funny story, there is no ID in the application table, this is just an abstracted user_id.
+	applicationId, err := web.PathParamToUUID(r, "applicationId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_application_id", "The application ID is not a valid."))
 		return
 	}
 
-	params := sqlc.GetAssignedApplicationByUserAndEventIdParams{
-		UserID:  userId,
+	application, err := h.appService.GetApplicationByUserAndEventID(r.Context(), sqlc.GetApplicationByUserAndEventIDParams{
+		UserID:  applicationId,
 		EventID: eventId,
-	}
-
-	application, err := h.appService.GetAssignedApplicationByUserAndEventID(r.Context(), params)
-
+	})
 	if err != nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("get_assigned_application_error", "error retrieving assigned application"))
 		return
@@ -413,62 +398,93 @@ func (h *ApplicationHandler) GetAssignedApplication(w http.ResponseWriter, r *ht
 	res.Send(w, http.StatusOK, application)
 }
 
+type ReviewRatings struct {
+	PassionRating    int `json:"passion_rating" validate:"required,min=1,max=5"`
+	ExperienceRating int `json:"experience_rating" validate:"required,min=1,max=5"`
+}
+
 // Submit application review
 //
 //	@Summary		Submit application review
 //	@Description	Handles ratings submissions from staff during the application review process.
 //	@Tags			Application
 //	@Produce		json
-//	@Param			reviewData	body	any	true	"An object containing the passion and experience ratings"
-//	@Success		200
+//	@Param			reviewData	body	ReviewRatings	true	"An object containing the passion and experience ratings"
+//	@Success		201
 //	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		500	{object}	response.ErrorResponse	"Server Error: error submitting application review"
-//	@Router			/events/{eventId}/application/submit-review [post]
+//	@Router			/events/{eventId}/application/{applicationId}/review [post]
 func (h *ApplicationHandler) SubmitApplicationReview(w http.ResponseWriter, r *http.Request) {
-	// eventIdStr := chi.URLParam(r, "eventId")
-	// if eventIdStr == "" {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
-	// 	return
-	// }
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
 
-	// eventId, err := uuid.Parse(eventIdStr)
-	// if err != nil {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID."))
-	// 	return
-	// }
+	applicationId, err := web.PathParamToUUID(r, "applicationId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_application_id", "The application ID is not a valid."))
+		return
+	}
 
-	// userIdStr := r.URL.Query().Get("userId")
-	// if userIdStr == "" {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL query!"))
-	// 	return
-	// }
+	reviewerId := ctxutils.GetUserIdFromCtx(r.Context())
+	if reviewerId == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
+		return
+	}
 
-	// userId, err := uuid.Parse(userIdStr)
-	// if err != nil {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID."))
-	// 	return
-	// }
+	var reviewData ReviewRatings
+	if err := json.NewDecoder(r.Body).Decode(&reviewData); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Failed to parse request body: "+err.Error()))
+		return
+	}
 
-	// var data any
+	validate := validator.New()
+	if err := validate.Struct(reviewData); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", err.Error()))
+		return
+	}
 
-	// if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("invalid_review_data", "Something went wrong while parsing review submission"))
-	// 	return
-	// }
+	if err = h.appService.SaveApplicationReview(r.Context(), *reviewerId, applicationId, eventId, reviewData.ExperienceRating, reviewData.PassionRating); err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("save_review_error", "Something went wrong while saving the application review."))
+		return
+	}
 
-	// params := sqlc.GetAssignedApplicationByUserAndEventIdParams{
-	// 	UserID:  userId,
-	// 	EventID: eventId,
-	// }
+	w.WriteHeader(http.StatusCreated)
+}
 
-	// application, err := h.appService.GetAssignedApplicationByUserAndEventID(r.Context(), params)
+// Get Assigned Application IDs and Progress
+//
+//	@Summary		Get Assigned Application IDs and Progress
+//	@Description	Retrieves assigned applications and their review progress for the authenticated reviewer.
+//	@Tags			Application
+//	@Produce		json
+//	@Param			eventId		path		string					true	"Event ID"
+//	@Param			sh_session_id	cookie		string					true	"The authenticated session token/id"
+//	@Success		200			{array}	services.AssignedApplication		"OK: An application was found"
+//	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving assigned application"
+//	@Router			/events/{eventId}/application/assigned [get]
+func (h *ApplicationHandler) GetAssignedApplications(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
 
-	// if err != nil {
-	// 	res.SendError(w, http.StatusBadRequest, res.NewError("get_assigned_application_error", "error retrieving assigned application"))
-	// 	return
-	// }
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+	if userId == nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "invalid user id"))
+		return
+	}
 
-	// res.Send(w, http.StatusOK)
+	assignedApps, err := h.appService.GetAssignedApplicationsAndProgress(r.Context(), *userId, eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("get_assigned_applications_error", "Something went wrong while retrieving assigned applications."))
+		return
+	}
+
+	res.Send(w, http.StatusOK, assignedApps)
 }
 
 // Assign application to reviewers

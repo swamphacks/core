@@ -66,20 +66,6 @@ func (r *ApplicationRepository) GetApplicationByUserAndEventID(ctx context.Conte
 	return &application, nil
 }
 
-func (r *ApplicationRepository) GetAssignedApplicationByUserAndEventID(ctx context.Context, params sqlc.GetAssignedApplicationByUserAndEventIdParams) (*sqlc.Application, error) {
-	application, err := r.db.Query.GetAssignedApplicationByUserAndEventId(ctx, params)
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrApplicationNotFound
-		}
-
-		return nil, err
-	}
-
-	return &application, nil
-}
-
 func (r *ApplicationRepository) SubmitApplication(ctx context.Context, data any, userId, eventId uuid.UUID) error {
 	jsonBytes, err := json.Marshal(data)
 
@@ -132,6 +118,10 @@ func (r *ApplicationRepository) SaveApplication(ctx context.Context, data any, u
 	return nil
 }
 
+func (r *ApplicationRepository) UpdateApplication(ctx context.Context, params sqlc.UpdateApplicationParams) error {
+	return r.db.Query.UpdateApplication(ctx, params)
+}
+
 func (r *ApplicationRepository) ListAvailableApplicationForEvent(ctx context.Context, eventId uuid.UUID) ([]uuid.UUID, error) {
 	return r.db.Query.ListAvailableApplicationsForEvent(ctx, eventId)
 }
@@ -141,6 +131,13 @@ func (r *ApplicationRepository) AssignApplicationToReviewByEvent(ctx context.Con
 		ReviewerID:     reviewerId,
 		EventID:        eventId,
 		ApplicationIds: applicationIDs,
+	})
+}
+
+func (r *ApplicationRepository) ListApplicationByReviewerAndEvent(ctx context.Context, reviewerId, eventId uuid.UUID) ([]sqlc.ListApplicationByReviewerAndEventRow, error) {
+	return r.db.Query.ListApplicationByReviewerAndEvent(ctx, sqlc.ListApplicationByReviewerAndEventParams{
+		AssignedReviewerID: &reviewerId,
+		EventID:            eventId,
 	})
 }
 

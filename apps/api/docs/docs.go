@@ -201,6 +201,25 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "handlers.ReviewRatings": {
+                "properties": {
+                    "experience_rating": {
+                        "maximum": 5,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "passion_rating": {
+                        "maximum": 5,
+                        "minimum": 1,
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "experience_rating",
+                    "passion_rating"
+                ],
+                "type": "object"
+            },
             "handlers.UpdateEmailConsentRequest": {
                 "properties": {
                     "email_consent": {
@@ -298,6 +317,17 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "services.ApplicationReviewStatus": {
+                "enum": [
+                    "in_progress",
+                    "completed"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "ApplicationReviewStatusInProgress",
+                    "ApplicationReviewStatusCompleted"
+                ]
+            },
             "services.ApplicationStatistics": {
                 "properties": {
                     "age_stats": {
@@ -338,6 +368,21 @@ const docTemplate = `{
                     "race_stats",
                     "school_stats",
                     "status_stats"
+                ],
+                "type": "object"
+            },
+            "services.AssignedApplication": {
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/services.ApplicationReviewStatus"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "status",
+                    "user_id"
                 ],
                 "type": "object"
             },
@@ -1662,7 +1707,7 @@ const docTemplate = `{
                     {
                         "description": "The authenticated session token/id",
                         "in": "cookie",
-                        "name": "sh_session",
+                        "name": "sh_session_id",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -1718,7 +1763,7 @@ const docTemplate = `{
                         "description": "Server Error: error retrieving application\"\\"
                     }
                 },
-                "summary": "Get Application By User and Event ID",
+                "summary": "Get Current User's Application by Event ID",
                 "tags": [
                     "Application"
                 ]
@@ -1794,17 +1839,8 @@ const docTemplate = `{
         },
         "/events/{eventId}/application/assigned": {
             "get": {
-                "description": "Search through the ` + "`" + `applications` + "`" + ` and retrieves the one with matching assigned reviewer user id to the current user id.",
+                "description": "Retrieves assigned applications and their review progress for the authenticated reviewer.",
                 "parameters": [
-                    {
-                        "description": "The user ID",
-                        "in": "query",
-                        "name": "userId",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
                     {
                         "description": "Event ID",
                         "in": "path",
@@ -1817,7 +1853,7 @@ const docTemplate = `{
                     {
                         "description": "The authenticated session token/id",
                         "in": "cookie",
-                        "name": "sh_session",
+                        "name": "sh_session_id",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -1829,15 +1865,10 @@ const docTemplate = `{
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "oneOf": [
-                                        {
-                                            "$ref": "#/components/schemas/sqlc.Application"
-                                        },
-                                        {
-                                            "additionalProperties": {},
-                                            "type": "object"
-                                        }
-                                    ]
+                                    "items": {
+                                        "$ref": "#/components/schemas/services.AssignedApplication"
+                                    },
+                                    "type": "array"
                                 }
                             }
                         },
@@ -1864,7 +1895,7 @@ const docTemplate = `{
                         "description": "Server Error: error retrieving assigned application"
                     }
                 },
-                "summary": "Get a staff's assigned application for reviewing",
+                "summary": "Get Assigned Application IDs and Progress",
                 "tags": [
                     "Application"
                 ]
@@ -2163,15 +2194,149 @@ const docTemplate = `{
                 ]
             }
         },
-        "/events/{eventId}/application/submit-review": {
+        "/events/{eventId}/application/{applicationId}": {
+            "get": {
+                "description": "Retrieves an application using the user id and event id primary keys and unique constraints. Only accessible by event staff and admins.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Application ID (Technically user ID)",
+                        "in": "path",
+                        "name": "applicationId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/sqlc.Application"
+                                }
+                            }
+                        },
+                        "description": "OK: An application was found"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error retrieving assigned application"
+                    }
+                },
+                "summary": "Get an application based on a user id and event id.",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/{applicationId}/resume": {
+            "get": {
+                "description": "This handler creates a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The application ID (userId of applicant)",
+                        "in": "path",
+                        "name": "applicationId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error handling download resume request"
+                    }
+                },
+                "summary": "Get resume for application review",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/{applicationId}/review": {
             "post": {
                 "description": "Handles ratings submissions from staff during the application review process.",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "title": "reviewData",
-                                "type": "object"
+                                "$ref": "#/components/schemas/handlers.ReviewRatings",
+                                "summary": "reviewData",
+                                "description": "An object containing the passion and experience ratings"
                             }
                         }
                     },
@@ -2179,7 +2344,7 @@ const docTemplate = `{
                     "required": true
                 },
                 "responses": {
-                    "200": {
+                    "201": {
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2187,7 +2352,7 @@ const docTemplate = `{
                                 }
                             }
                         },
-                        "description": "OK"
+                        "description": "Created"
                     },
                     "400": {
                         "content": {

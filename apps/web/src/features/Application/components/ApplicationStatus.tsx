@@ -1,6 +1,6 @@
 import Loading from "@/components/Loading";
 import { Button } from "@/components/ui/Button";
-import { useApplication } from "@/features/Application/hooks/useApplication";
+import { useMyApplication } from "@/features/Application/hooks/useMyApplication";
 import { EventBadge } from "@/features/Event/components/EventBadge";
 import { Heading } from "react-aria-components";
 import TablerUserCode from "~icons/tabler/user-code";
@@ -13,7 +13,7 @@ interface ApplicationStatusProps {
 }
 
 export default function ApplicationStatus({ eventId }: ApplicationStatusProps) {
-  const application = useApplication(eventId);
+  const application = useMyApplication(eventId);
 
   const renderStatus = () => {
     if (!application.data) return null;

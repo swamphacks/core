@@ -108,33 +108,43 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 	return i, err
 }
 
-const getAssignedApplicationByUserAndEventId = `-- name: GetAssignedApplicationByUserAndEventId :one
-SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id FROM applications
-WHERE user_id = $1 AND event_id = $2
+const listApplicationByReviewerAndEvent = `-- name: ListApplicationByReviewerAndEvent :many
+SELECT user_id, passion_rating, experience_rating FROM applications
+WHERE assigned_reviewer_id = $1
+    AND event_id = $2
+    AND status IN ('under_review')
+ORDER BY user_id ASC
 `
 
-type GetAssignedApplicationByUserAndEventIdParams struct {
-	UserID  uuid.UUID `json:"user_id"`
-	EventID uuid.UUID `json:"event_id"`
+type ListApplicationByReviewerAndEventParams struct {
+	AssignedReviewerID *uuid.UUID `json:"assigned_reviewer_id"`
+	EventID            uuid.UUID  `json:"event_id"`
 }
 
-func (q *Queries) GetAssignedApplicationByUserAndEventId(ctx context.Context, arg GetAssignedApplicationByUserAndEventIdParams) (Application, error) {
-	row := q.db.QueryRow(ctx, getAssignedApplicationByUserAndEventId, arg.UserID, arg.EventID)
-	var i Application
-	err := row.Scan(
-		&i.UserID,
-		&i.EventID,
-		&i.Status,
-		&i.Application,
-		&i.CreatedAt,
-		&i.SavedAt,
-		&i.UpdatedAt,
-		&i.SubmittedAt,
-		&i.ExperienceRating,
-		&i.PassionRating,
-		&i.AssignedReviewerID,
-	)
-	return i, err
+type ListApplicationByReviewerAndEventRow struct {
+	UserID           uuid.UUID `json:"user_id"`
+	PassionRating    *int32    `json:"passion_rating"`
+	ExperienceRating *int32    `json:"experience_rating"`
+}
+
+func (q *Queries) ListApplicationByReviewerAndEvent(ctx context.Context, arg ListApplicationByReviewerAndEventParams) ([]ListApplicationByReviewerAndEventRow, error) {
+	rows, err := q.db.Query(ctx, listApplicationByReviewerAndEvent, arg.AssignedReviewerID, arg.EventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListApplicationByReviewerAndEventRow{}
+	for rows.Next() {
+		var i ListApplicationByReviewerAndEventRow
+		if err := rows.Scan(&i.UserID, &i.PassionRating, &i.ExperienceRating); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listAvailableApplicationsForEvent = `-- name: ListAvailableApplicationsForEvent :many

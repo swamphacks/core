@@ -6,6 +6,8 @@ import type { ApplicationStatistics } from "@/features/Application/hooks/useAppl
 import type { StaffUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
 import ReviewerList from "./ReviewerList";
 import SummaryFooter from "./SummaryFooter";
+import { useAppReviewAdminActions } from "../../hooks/useAppReviewAdminActions";
+import { toast } from "react-toastify";
 
 export interface AssignedReviewer {
   id: string;
@@ -26,6 +28,7 @@ export default function ReviewerAssignmentModal({
   onClose,
 }: Props) {
   const [assigned, setAssigned] = useState<AssignedReviewer[]>([]);
+  const { assign } = useAppReviewAdminActions(event.id);
 
   const numAssigned = assigned.reduce(
     (acc, curr) => acc + (curr.amount ?? 0),
@@ -34,7 +37,7 @@ export default function ReviewerAssignmentModal({
 
   const remaining = stats.status_stats.submitted - numAssigned;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const hasNull = assigned.some((r) => r.amount === null);
     const hasZero = assigned.some((r) => r.amount === 0);
     const hasNegative = assigned.some((r) => (r.amount ?? 0) < 0);
@@ -54,11 +57,15 @@ export default function ReviewerAssignmentModal({
       );
     if (assigned.length === 0) return alert("Select reviewers.");
 
-    // Start the review process with assigned reviewers
-    //TODO: Implement the actual submission logic
-    console.log("Assigned Reviewers:", assigned);
-    console.log("Beginning review process for event:", event.id);
-    onClose();
+    await assign.mutateAsync(assigned, {
+      onSuccess: () => {
+        toast.success("Reviewers assigned successfully.");
+        onClose();
+      },
+      onError: () => {
+        toast.error("Failed to assign reviewers. Please try again.");
+      },
+    });
   };
 
   return (
