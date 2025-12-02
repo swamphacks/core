@@ -70,7 +70,7 @@ export default function ReviewerAssignmentModal({
 
   return (
     <Modal>
-      <div className="flex flex-col max-h-full sm:max-h-[90vh]">
+      <div className="flex flex-col h-full sm:h-[90vh]">
         <h2>Select Reviewers</h2>
         <div className="flex-3 overflow-auto mt-2">
           <ReviewerList
