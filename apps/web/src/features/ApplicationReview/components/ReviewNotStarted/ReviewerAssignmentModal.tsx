@@ -70,27 +70,29 @@ export default function ReviewerAssignmentModal({
 
   return (
     <Modal>
-      <div className="flex flex-col">
+      <div className="flex flex-col max-h-full sm:max-h-[90vh]">
         <h2>Select Reviewers</h2>
+        <div className="flex-3 overflow-auto mt-2">
+          <ReviewerList
+            staff={staff}
+            assigned={assigned}
+            setAssigned={setAssigned}
+          />
+        </div>
+        <div className="mt-4 flex gap-2 flex-col flex-1">
+          <SummaryFooter
+            numAssigned={numAssigned}
+            total={stats.status_stats.submitted}
+          />
 
-        <ReviewerList
-          staff={staff}
-          assigned={assigned}
-          setAssigned={setAssigned}
-        />
-
-        <SummaryFooter
-          numAssigned={numAssigned}
-          total={stats.status_stats.submitted}
-        />
-
-        <div className="mt-4 flex justify-end gap-2">
-          <Button slot="close" variant="secondary">
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Assign Reviewers
-          </Button>
+          <div className="flex flex-row w-full justify-end gap-2">
+            <Button className="w-fit" slot="close" variant="secondary">
+              Cancel
+            </Button>
+            <Button className="w-fit" variant="primary" onClick={handleSubmit}>
+              Assign Reviewers
+            </Button>
+          </div>
         </div>
       </div>
     </Modal>
