@@ -55,7 +55,9 @@ export default function ReviewerList({ staff, assigned, setAssigned }: Props) {
               <Checkbox value={s.id} className="flex-1">
                 <div className="flex flex-row items-center gap-2">
                   <span>{s.name || "Anonymous"}</span>
-                  <span className="text-xs text-text-secondary">{s.email}</span>
+                  <span className="text-xs text-text-secondary hidden sm:block">
+                    {s.email}
+                  </span>
                 </div>
               </Checkbox>
 
