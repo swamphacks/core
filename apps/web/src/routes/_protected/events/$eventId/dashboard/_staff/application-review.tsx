@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
+import ResetReviewWarningModal from "@/features/ApplicationReview/components/ResetReviewModal";
 import ApplicationReviewPage from "@/features/ApplicationReview/components/Review/ApplicationReviewPage";
 import ReviewNotStarted from "@/features/ApplicationReview/components/ReviewNotStarted/ReviewNotStarted";
 import { useAppReviewAdminActions } from "@/features/ApplicationReview/hooks/useAppReviewAdminActions";
 import { useEvent } from "@/features/Event/hooks/useEvent";
 import { createFileRoute } from "@tanstack/react-router";
-import { Heading } from "react-aria-components";
+import { DialogTrigger, Heading } from "react-aria-components";
 import { toast } from "react-toastify";
 
 export const Route = createFileRoute(
@@ -56,18 +57,25 @@ function RouteComponent() {
         </Heading>
 
         {eventRole === "admin" && event.data.application_review_started && (
-          <Tooltip
-            tooltipProps={{
-              label: "[ADMIN] Reset all application reviews for this event",
-            }}
-            triggerProps={{
-              delay: 100,
-            }}
-          >
-            <Button onPress={onReset} size="sm" className="m-0 h-fit w-fit">
-              Reset
-            </Button>
-          </Tooltip>
+          <DialogTrigger>
+            <Tooltip
+              tooltipProps={{
+                label: "[ADMIN] Reset all application reviews for this event",
+              }}
+              triggerProps={{
+                delay: 100,
+              }}
+            >
+              <Button size="sm" className="m-0 h-fit w-fit">
+                Reset Reviews
+              </Button>
+            </Tooltip>
+
+            <ResetReviewWarningModal
+              isPending={reset.isPending}
+              onReset={onReset}
+            />
+          </DialogTrigger>
         )}
       </div>
 
