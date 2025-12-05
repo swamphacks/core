@@ -7,7 +7,7 @@ SELECT
   COUNT(*) FILTER (WHERE application->>'gender' = 'non-binary') AS non_binary,
   COUNT(*) FILTER (WHERE application->>'gender' = '') AS other
 FROM applications
-WHERE status = 'submitted'
+WHERE status <> 'started' AND status IS NOT NULL
   AND event_id = $1;
 
 -- name: GetApplicationAgeSplit :one
@@ -20,7 +20,7 @@ SELECT
     COUNT(*) FILTER (WHERE (application->>'age')::int = 22) AS age_22,
     COUNT(*) FILTER (WHERE (application->>'age')::int >= 23) AS age_23_plus
 FROM applications
-WHERE status = 'submitted'
+WHERE status <> 'started' AND status IS NOT NULL
   AND event_id = $1;
 
 -- name: GetApplicationRaceSplit :many
@@ -32,7 +32,7 @@ SELECT
     END AS race_group,
     COUNT(*) AS count
 FROM applications
-WHERE status = 'submitted'
+WHERE status <> 'started' AND status IS NOT NULL
   AND event_id = $1
 GROUP BY 
     CASE 
@@ -47,7 +47,7 @@ SELECT
     (application->>'school')::text AS school,
     COUNT(*) AS count
 FROM applications
-WHERE status = 'submitted'
+WHERE status <> 'started' AND status IS NOT NULL
   AND event_id = $1
 GROUP BY (application->>'school')::text
 ORDER BY count DESC;
@@ -58,7 +58,7 @@ SELECT
     COUNT(*) AS count
 FROM applications,
 LATERAL unnest(string_to_array(application->>'majors', ',')) AS major
-WHERE status = 'submitted'
+WHERE status <> 'started' AND status IS NOT NULL
   AND event_id = $1
 GROUP BY trim(major)
 ORDER BY count DESC;

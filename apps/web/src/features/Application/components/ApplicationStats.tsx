@@ -13,13 +13,19 @@ export default function ApplicationStats({
   data,
   eventData,
 }: ApplicationStatsProps) {
+  const total_applications =
+    data.status_stats.submitted +
+    data.status_stats.under_review +
+    data.status_stats.accepted +
+    data.status_stats.rejected +
+    data.status_stats.waitlisted +
+    data.status_stats.withdrawn +
+    data.status_stats.started;
   return (
     <div className="space-y-2">
       <div className="bg-surface py-2 px-4 rounded-md">
         <p className="text-text-secondary">Total</p>
-        <p className="text-xl md:text-2xl">
-          {data.status_stats.started + data.status_stats.submitted}
-        </p>
+        <p className="text-xl md:text-2xl">{total_applications}</p>
       </div>
 
       <div className="bg-surface py-2 px-4 rounded-md">
@@ -29,7 +35,9 @@ export default function ApplicationStats({
 
       <div className="bg-surface py-2 px-4 rounded-md">
         <p className="text-text-secondary">Submitted</p>
-        <p className="text-xl md:text-2xl">{data.status_stats.submitted}</p>
+        <p className="text-xl md:text-2xl">
+          {total_applications - data.status_stats.started}
+        </p>
       </div>
 
       <div className="flex gap-2 items-center text-text-secondary text-sm">

@@ -12,6 +12,8 @@ import { Route as EventUsersRoute } from "@/routes/_protected/events/$eventId/da
 import { Table } from "@/components/ui/Table";
 import { useUrlTableState } from "../hooks/useUrlTableState";
 
+// Warning: When using the url table state saving (useUrlTableState hook), random query parameters may be interpreted as table filters if column name is identical.
+
 // Filtering for event user data type
 const fuzzyTextFilterFn: FilterFn<EventUser> = (row, columnId, value) => {
   const rowValue = row.getValue(columnId) as string;
