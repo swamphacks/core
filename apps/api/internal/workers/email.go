@@ -36,3 +36,29 @@ func (w *EmailWorker) HandleSendConfirmationEmailTask(ctx context.Context, t *as
 	}
 	return nil
 }
+
+func (w *EmailWorker) HandleSendTeamInvitationTask(ctx context.Context, t *asynq.Task) error {
+	var p tasks.SendTeamInvitationPayload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		w.logger.Err(err)
+		return fmt.Errorf("HandleSendTeamInvitationTask: json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+	}
+
+	// w.logger.Info().
+	// 	Str("to", p.To).
+	// 	Str("teamName", p.TeamName).
+	// 	Str("inviterName", p.InviterName).
+	// 	Msg("Processing team invitation email task")
+
+	if err := w.emailService.SendTeamInvitationEmail(p.To, p.TeamName, p.InviterName, p.EventName, p.InviteLink); err != nil {
+		w.logger.Err(err).Msg("Failed to send TeamInvitation from worker")
+		return err
+	}
+
+	// w.logger.Info().
+	// 	Str("to", p.To).
+	// 	Str("teamName", p.TeamName).
+	// 	Msg("Successfully sent team invitation email")
+
+	return nil
+}

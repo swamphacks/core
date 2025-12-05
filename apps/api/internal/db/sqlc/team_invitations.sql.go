@@ -117,6 +117,38 @@ func (q *Queries) GetInvitationByID(ctx context.Context, id uuid.UUID) (TeamInvi
 	return i, err
 }
 
+const getPendingInvitationByEmailAndTeam = `-- name: GetPendingInvitationByEmailAndTeam :one
+SELECT id, team_id, invited_by_user_id, invited_email, invited_user_id, status, expires_at, created_at, updated_at
+FROM team_invitations
+WHERE invited_email = $1 
+  AND team_id = $2 
+  AND status = 'PENDING'::invitation_status
+  AND expires_at > NOW()
+LIMIT 1
+`
+
+type GetPendingInvitationByEmailAndTeamParams struct {
+	InvitedEmail string    `json:"invited_email"`
+	TeamID       uuid.UUID `json:"team_id"`
+}
+
+func (q *Queries) GetPendingInvitationByEmailAndTeam(ctx context.Context, arg GetPendingInvitationByEmailAndTeamParams) (TeamInvitation, error) {
+	row := q.db.QueryRow(ctx, getPendingInvitationByEmailAndTeam, arg.InvitedEmail, arg.TeamID)
+	var i TeamInvitation
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.InvitedByUserID,
+		&i.InvitedEmail,
+		&i.InvitedUserID,
+		&i.Status,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listInvitationsByInvitedUserIDAndStatus = `-- name: ListInvitationsByInvitedUserIDAndStatus :many
 SELECT id, team_id, invited_by_user_id, invited_email, invited_user_id, status, expires_at, created_at, updated_at
 FROM team_invitations

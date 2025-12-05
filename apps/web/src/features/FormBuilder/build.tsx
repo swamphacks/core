@@ -10,6 +10,7 @@ import {
 } from "@/features/FormBuilder/formSchema";
 import {
   memo,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -175,7 +176,7 @@ export function build(formObject: FormObject): {
       const form = useAppForm({
         defaultValues: transformedDefaultValues,
         validators: {
-          // @ts-ignore
+          // @ts-expect-error - validationSchema type doesn't match expected validator type
           onSubmit: validationSchema,
         },
         onSubmit: async ({ value }) => {
@@ -189,16 +190,26 @@ export function build(formObject: FormObject): {
         onChangeDelayMs,
       ) as Record<string, any>;
 
+      const previousValuesRef = useRef<string>("");
+
       useEffect(() => {
         if (isSubmitting || isSubmittedProp) return;
 
         if (isDirty && Object.keys(formValues).length >= 1) {
-          onChange?.({
+          const currentValues = JSON.stringify({
             ...defaultFieldValues,
             ...formValues,
           });
+
+          if (previousValuesRef.current !== currentValues) {
+            previousValuesRef.current = currentValues;
+            onChange?.({
+              ...defaultFieldValues,
+              ...formValues,
+            });
+          }
         }
-      }, [isDirty, formValues, isSubmitting, isSubmittedProp]);
+      }, [isDirty, formValues, isSubmitting, isSubmittedProp, onChange]);
 
       useEffect(() => {
         const newOtherFields = [];
@@ -217,198 +228,201 @@ export function build(formObject: FormObject): {
         ) {
           setOtherFields(newOtherFields);
         }
-      }, [form.state.isDirty, form.state.values]);
+      }, [form.state.isDirty, form.state.values, otherFields, fieldsMeta]);
 
       const formRef = useRef<HTMLFormElement>(null);
 
       const formErrors = useFormErrors(form);
 
       // Recursively create form field components based on field type (section, layout, or question) and question types
-      const buildFormContent = (content: FormItemSchemaType[]) => {
-        return content.map((item) => {
-          if (item.type === "question") {
-            if (item.questionType === QuestionTypes.select) {
-              if (otherFields.includes(item.name)) {
-                return (
-                  <div
-                    key={`${item.name}-1`}
-                    className="flex-1 flex flex-col gap-1"
-                  >
-                    <form.AppField
-                      key={item.name}
-                      name={item.name}
-                      children={(field) => {
-                        return <SelectField item={item} field={field} />;
-                      }}
-                    />
-                    <div className="flex items-center gap-2">
-                      <TablerCornerDownRight className="opacity-20 text-xl mb-2" />
+      const buildFormContent = useCallback(
+        (content: FormItemSchemaType[]) => {
+          return content.map((item) => {
+            if (item.type === "question") {
+              if (item.questionType === QuestionTypes.select) {
+                if (otherFields.includes(item.name)) {
+                  return (
+                    <div
+                      key={`${item.name}-1`}
+                      className="flex-1 flex flex-col gap-1"
+                    >
                       <form.AppField
-                        key={`${item.name}-other`}
-                        name={`${item.name}-other`}
+                        key={item.name}
+                        name={item.name}
                         children={(field) => {
-                          return (
-                            <field.TextField
-                              placeholder="Enter value"
-                              aria-label={`${item.name}-other`}
-                              name={field.name}
-                              defaultValue={field.state.value}
-                              type="text"
-                              className="flex-1"
-                              validationBehavior="aria"
-                            />
-                          );
+                          return <SelectField item={item} field={field} />;
                         }}
                       />
+                      <div className="flex items-center gap-2">
+                        <TablerCornerDownRight className="opacity-20 text-xl mb-2" />
+                        <form.AppField
+                          key={`${item.name}-other`}
+                          name={`${item.name}-other`}
+                          children={(field) => {
+                            return (
+                              <field.TextField
+                                placeholder="Enter value"
+                                aria-label={`${item.name}-other`}
+                                name={field.name}
+                                defaultValue={field.state.value}
+                                type="text"
+                                className="flex-1"
+                                validationBehavior="aria"
+                              />
+                            );
+                          }}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  );
+                }
+
+                return (
+                  <form.AppField
+                    key={item.name}
+                    name={item.name}
+                    children={(field) => {
+                      return <SelectField item={item} field={field} />;
+                    }}
+                  />
                 );
               }
-
               return (
                 <form.AppField
                   key={item.name}
                   name={item.name}
                   children={(field) => {
-                    return <SelectField item={item} field={field} />;
+                    const fieldValue = field.state.value as string | undefined;
+
+                    switch (item.questionType) {
+                      case QuestionTypes.shortAnswer:
+                      case QuestionTypes.url:
+                        return (
+                          <field.TextField
+                            {...item}
+                            name={field.name}
+                            defaultValue={fieldValue}
+                            type="text"
+                            className="flex-1"
+                            validationBehavior="aria"
+                            icon={
+                              item.iconName
+                                ? textFieldIcons[item.iconName]
+                                : undefined
+                            }
+                          />
+                        );
+                      case QuestionTypes.paragraph:
+                        return (
+                          <field.TextField
+                            {...item}
+                            name={field.name}
+                            defaultValue={fieldValue}
+                            className="flex-1"
+                            textarea
+                            validationBehavior="aria"
+                          />
+                        );
+                      case QuestionTypes.number:
+                        return (
+                          <field.TextField
+                            {...item}
+                            name={field.name}
+                            defaultValue={fieldValue}
+                            type="number"
+                            className="flex-1"
+                            validationBehavior="aria"
+                          />
+                        );
+                      case QuestionTypes.multipleChoice:
+                        return (
+                          <field.RadioField
+                            {...item}
+                            name={field.name}
+                            defaultValue={fieldValue}
+                            className="flex-1"
+                            validationBehavior="aria"
+                          >
+                            {item.options.map((option) => (
+                              <Radio key={option.value} value={option.value}>
+                                {option.label}
+                              </Radio>
+                            ))}
+                          </field.RadioField>
+                        );
+                      case QuestionTypes.checkbox:
+                        return <CheckboxField item={item} field={field} />;
+                      case QuestionTypes.multiselect:
+                        return <MultiSelectField item={item} field={field} />;
+                      case QuestionTypes.date:
+                        return (
+                          <field.DatePickerField
+                            {...item}
+                            name={field.name}
+                            className="flex-1"
+                            validationBehavior="aria"
+                            defaultValue={parseDate(fieldValue ?? "")} // TODO: verify correctness
+                          />
+                        );
+                      case QuestionTypes.upload:
+                        return (
+                          <field.UploadField
+                            {...item}
+                            name={field.name}
+                            validationBehavior="aria"
+                            defaultValue={field.state.value as any}
+                            onChange={(files) => {
+                              field.handleChange(
+                                files.length === 0 ? null : files,
+                              );
+                            }}
+                            onNewFiles={(newFiles) => {
+                              onNewAttachments?.({
+                                [field.name]: newFiles,
+                              });
+                            }}
+                          />
+                        );
+                      default:
+                        break;
+                    }
                   }}
                 />
               );
             }
-            return (
-              <form.AppField
-                key={item.name}
-                name={item.name}
-                children={(field) => {
-                  const fieldValue = field.state.value as string | undefined;
 
-                  switch (item.questionType) {
-                    case QuestionTypes.shortAnswer:
-                    case QuestionTypes.url:
-                      return (
-                        <field.TextField
-                          {...item}
-                          name={field.name}
-                          defaultValue={fieldValue}
-                          type="text"
-                          className="flex-1"
-                          validationBehavior="aria"
-                          icon={
-                            item.iconName
-                              ? textFieldIcons[item.iconName]
-                              : undefined
-                          }
-                        />
-                      );
-                    case QuestionTypes.paragraph:
-                      return (
-                        <field.TextField
-                          {...item}
-                          name={field.name}
-                          defaultValue={fieldValue}
-                          className="flex-1"
-                          textarea
-                          validationBehavior="aria"
-                        />
-                      );
-                    case QuestionTypes.number:
-                      return (
-                        <field.TextField
-                          {...item}
-                          name={field.name}
-                          defaultValue={fieldValue}
-                          type="number"
-                          className="flex-1"
-                          validationBehavior="aria"
-                        />
-                      );
-                    case QuestionTypes.multipleChoice:
-                      return (
-                        <field.RadioField
-                          {...item}
-                          name={field.name}
-                          defaultValue={fieldValue}
-                          className="flex-1"
-                          validationBehavior="aria"
-                        >
-                          {item.options.map((option) => (
-                            <Radio key={option.value} value={option.value}>
-                              {option.label}
-                            </Radio>
-                          ))}
-                        </field.RadioField>
-                      );
-                    case QuestionTypes.checkbox:
-                      return <CheckboxField item={item} field={field} />;
-                    case QuestionTypes.multiselect:
-                      return <MultiSelectField item={item} field={field} />;
-                    case QuestionTypes.date:
-                      return (
-                        <field.DatePickerField
-                          {...item}
-                          name={field.name}
-                          className="flex-1"
-                          validationBehavior="aria"
-                          defaultValue={parseDate(fieldValue ?? "")} // TODO: verify correctness
-                        />
-                      );
-                    case QuestionTypes.upload:
-                      return (
-                        <field.UploadField
-                          {...item}
-                          name={field.name}
-                          validationBehavior="aria"
-                          defaultValue={field.state.value as any}
-                          onChange={(files) => {
-                            field.handleChange(
-                              files.length === 0 ? null : files,
-                            );
-                          }}
-                          onNewFiles={(newFiles) => {
-                            onNewAttachments?.({
-                              [field.name]: newFiles,
-                            });
-                          }}
-                        />
-                      );
-                    default:
-                      break;
-                  }
-                }}
-              />
-            );
-          }
-
-          if (item.type === "section") {
-            return (
-              <div className="mt-7 text-text-main" key={item.id}>
-                <p className="text-xl font-medium">{item.label}</p>
-                {item.description && (
-                  <div className="my-4">
-                    <p>{item.description}</p>
+            if (item.type === "section") {
+              return (
+                <div className="mt-7 text-text-main" key={item.id}>
+                  <p className="text-xl font-medium">{item.label}</p>
+                  {item.description && (
+                    <div className="my-4">
+                      <p>{item.description}</p>
+                    </div>
+                  )}
+                  <div className="mt-4 space-y-4">
+                    {buildFormContent(item.content)}
                   </div>
-                )}
-                <div className="mt-4 space-y-4">
-                  {buildFormContent(item.content)}
                 </div>
-              </div>
-            );
-          }
+              );
+            }
 
-          if (item.type === "layout") {
-            return (
-              <FieldGroup className="gap-4" key={item.id}>
-                {buildFormContent(item.content)}
-              </FieldGroup>
-            );
-          }
-        });
-      };
+            if (item.type === "layout") {
+              return (
+                <FieldGroup className="gap-4" key={item.id}>
+                  {buildFormContent(item.content)}
+                </FieldGroup>
+              );
+            }
+          });
+        },
+        [otherFields, form, onNewAttachments],
+      );
 
       // Cache result so buildFormContent doesn't invoke on rerender
       const formContent = useMemo(
         () => buildFormContent(data.content),
-        [otherFields],
+        [buildFormContent],
       );
 
       const errors = useStore(form.store, (state) => {
@@ -450,7 +464,7 @@ export function build(formObject: FormObject): {
             }
           }
         }
-      }, [errors]);
+      }, [errors, formErrors]);
 
       const isSubmittedState = useStore(form.store, (state) => {
         return state.isSubmitted;
@@ -478,7 +492,7 @@ export function build(formObject: FormObject): {
             </form.AppForm>
           </Form>
         );
-      }, [formErrors, formContent]);
+      }, [formErrors, formContent, form]);
 
       const formHeader = useMemo(() => {
         if (renderFormHeader) {
@@ -493,7 +507,7 @@ export function build(formObject: FormObject): {
             </div>
           );
         }
-      }, []);
+      }, [renderFormHeader]);
 
       return (
         <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">
@@ -522,25 +536,31 @@ function useJSONData(
         const data = item.options.data;
 
         switch (data) {
-          case "schools":
+          case "schools": {
             const schoolsRes = await fetch(`/assets/schools.json`);
             const schools = await schoolsRes.json();
-            setData(
-              schools.map((item: string) => ({ id: item, name: item })),
-            );
+            setData(schools.map((item: string) => ({ id: item, name: item })));
             break;
-          case "majors":
+          }
+          case "majors": {
             const majorsRes = await fetch(`/assets/majors.json`);
             const majors = await majorsRes.json();
             setData(majors.map((item: string) => ({ id: item, name: item })));
             break;
-          case "countries":
+          }
+          case "countries": {
             const countriesRes = await fetch(`/assets/countries.json`);
             const countries = await countriesRes.json();
             setData(
-              countries.map(({ name, code }: { name: string, code: string }) => ({ id: code, name })),
+              countries.map(
+                ({ name, code }: { name: string; code: string }) => ({
+                  id: code,
+                  name,
+                }),
+              ),
             );
             break;
+          }
           default:
             break;
         }
@@ -548,7 +568,7 @@ function useJSONData(
     }
 
     fetchData();
-  }, []);
+  }, [item.options]);
 
   return data;
 }

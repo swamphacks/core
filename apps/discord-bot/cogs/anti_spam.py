@@ -42,6 +42,15 @@ class AntiSpam(commands.Cog):
     messages that match predefined spam patterns. It also notifies users
     when their messages are removed.
     """
+    
+    WHITELISTED_CHANNELS: List[str] = [
+        "hacker-resources",
+        "ask-staff",
+    ]
+
+    WHITELISTED_CATEGORIES: List[str] = [
+        "--- SwampHacks XI (Staff) ---"
+    ]
 
     def __init__(self, bot: commands.Bot) -> None:
         """Initialize the AntiSpam cog
@@ -165,6 +174,31 @@ class AntiSpam(commands.Cog):
             
         except discord.Forbidden:
             print("Bot lacks permissions to delete messages")
+
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        """Initialize ignored channels when bot is ready"""
+        for guild in self.bot.guilds:
+            for category in guild.categories:
+                if category:
+                    category_name_lower = category.name.lower()
+                    for whitelisted_category in self.WHITELISTED_CATEGORIES:
+                        if whitelisted_category.lower() in category_name_lower:
+                            for channel in category.channels:
+                                if isinstance(channel, discord.TextChannel):
+                                    self.ignore_channels.add(channel.id)
+                            break
+            
+            for channel in guild.channels:
+                if isinstance(channel, discord.TextChannel):
+                    if channel.id in self.ignore_channels:
+                        continue
+                    
+                    channel_name_lower = channel.name.lower()
+                    for whitelisted_name in self.WHITELISTED_CHANNELS:
+                        if whitelisted_name.lower() in channel_name_lower:
+                            self.ignore_channels.add(channel.id)
+                            break
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:

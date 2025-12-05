@@ -59,3 +59,12 @@ SELECT *
 FROM team_invitations
 WHERE invited_user_id = @invited_user_id AND status = @status::invitation_status
 ORDER BY created_at DESC;
+
+-- name: GetPendingInvitationByEmailAndTeam :one
+SELECT *
+FROM team_invitations
+WHERE invited_email = @invited_email 
+  AND team_id = @team_id 
+  AND status = 'PENDING'::invitation_status
+  AND expires_at > NOW()
+LIMIT 1;

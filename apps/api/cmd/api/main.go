@@ -81,6 +81,7 @@ func main() {
 	teamRepo := repository.NewTeamRespository(database)
 	teamMemberRepo := repository.NewTeamMemberRespository(database)
 	teamJoinRequestRepo := repository.NewTeamJoinRequestRepository(database)
+	teamInvitationRepo := repository.NewTeamInvitationRespository(database)
 
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
@@ -89,7 +90,7 @@ func main() {
 	eventService := services.NewEventService(eventRepo, userRepo, r2Client, &cfg.CoreBuckets, logger)
 	emailService := services.NewEmailService(taskQueueClient, sesClient, logger)
 	applicationService := services.NewApplicationService(applicationRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, logger)
-	teamService := services.NewTeamService(teamRepo, teamMemberRepo, teamJoinRequestRepo, eventRepo, txm, logger)
+	teamService := services.NewTeamService(teamRepo, teamMemberRepo, teamJoinRequestRepo, teamInvitationRepo, userRepo, applicationRepo, eventRepo, emailService, txm, cfg, logger)
 
 	// Injections into handlers
 	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, cfg, logger)
