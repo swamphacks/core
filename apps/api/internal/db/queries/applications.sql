@@ -61,3 +61,5 @@ WHERE assigned_reviewer_id = $1
     AND event_id = $2
     AND status IN ('under_review')
 ORDER BY user_id ASC;
+
+-- name: AddApplicationWaitlistTime

@@ -20,3 +20,5 @@ SELECT u.*, er.role AS event_role
 FROM auth.users u
 JOIN event_roles er ON u.id = er.user_id
 WHERE er.event_id = $1;
+
+-- name: UpdateRole

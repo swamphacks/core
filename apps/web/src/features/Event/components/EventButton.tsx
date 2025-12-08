@@ -5,6 +5,9 @@ import { Button, button, type ButtonProps } from "@/components/ui/Button";
 import { cn } from "@/utils/cn";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "react-toastify";
+import { DialogTrigger } from "react-aria-components";
+import { EventWithdrawalModal } from "./EventWithdrawalModal";
+import { EventWaitlistModal } from "./EventWaitlistModal";
 
 type ApplicationStatusTypes = keyof typeof applicationStatus;
 
@@ -69,10 +72,6 @@ const EventButton = ({
         });
         break;
       case "rejected":
-        // Navigate to the rejected info page
-        router.navigate({
-          to: `/events/${eventId}/rejected`,
-        });
         break;
       case "notApplied":
         // Navigate to the application page
@@ -81,10 +80,6 @@ const EventButton = ({
         });
         break;
       case "notGoing":
-        // Navigate to the decline feedback page
-        router.navigate({
-          to: `/events/${eventId}/feedback/decline`,
-        });
         break;
       case "completed":
         // Navigate to the event summary
@@ -100,15 +95,41 @@ const EventButton = ({
     }
   };
 
-  return (
-    <Button
-      variant="skeleton"
-      className={cn(eventButtonClassName, "font-semibold")}
-      onClick={onClick}
-    >
-      {text || applicationStatus[statusProp].button.text}
-    </Button>
-  );
+  if (statusProp === "notGoing") {
+    return (
+      <DialogTrigger>
+        <Button
+          variant="skeleton"
+          className={cn(eventButtonClassName, "font-semibold")}
+        >
+          {text || applicationStatus[statusProp].button.text}
+        </Button>
+        <EventWithdrawalModal event_id={eventId}></EventWithdrawalModal>
+      </DialogTrigger>
+    );
+  } else if (statusProp === "rejected") {
+    return (
+      <DialogTrigger>
+        <Button
+          variant="skeleton"
+          className={cn(eventButtonClassName, "font-semibold")}
+        >
+          {text || applicationStatus[statusProp].button.text}
+        </Button>
+        <EventWaitlistModal event_id={eventId}></EventWaitlistModal>
+      </DialogTrigger>
+    );
+  } else {
+    return (
+      <Button
+        variant="skeleton"
+        className={cn(eventButtonClassName, "font-semibold")}
+        onClick={onClick}
+      >
+        {text || applicationStatus[statusProp].button.text}
+      </Button>
+    );
+  }
 };
 
 export { EventButton };
