@@ -1,20 +1,44 @@
 import { Modal } from "@/components/ui/Modal";
 import { auth } from "@/lib/authClient";
 import { Button } from "@/components/ui/Button";
+import { api } from "@/lib/ky";
+import { showToast } from "@/lib/toast/toast";
+
 interface EventWaitlistModalProps {
-  event_id: string;
+  eventId: string;
 }
 
-function EventWaitlistModal({ event_id }: EventWaitlistModalProps) {
+function EventWaitlistModal({ eventId }: EventWaitlistModalProps) {
   const { data: userData } = auth.useUser();
   const { user } = userData!;
   if (!user) {
-    return <div>Loading... {event_id}</div>;
+    return <div>Loading... {eventId}</div>;
   }
   /*     
       {user.userId}
       {event_id}
     */
+
+  const handleJoinWaitlist = async (userId: string, eventId: string) => {
+    try {
+      await api.patch(
+        `events/${eventId}/application/join-waitlist?userId=${userId}`,
+      );
+      showToast({
+        title: "Waitlist Joined",
+        message: "Successfully Joined Waitlist.",
+        type: "success",
+      });
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to join waitlist", error);
+      showToast({
+        title: "Join Failed",
+        message: "Failed to Join Waitlist. Please try again.",
+        type: "error",
+      });
+    }
+  };
 
   return (
     <Modal
@@ -32,8 +56,12 @@ function EventWaitlistModal({ event_id }: EventWaitlistModalProps) {
         </p>
       </div>
       <div className="mt-3 flex justify-center gap-3">
-        <Button variant="success">Join Waitlist</Button>
-        {/*When withdrawing, we need to change the accepted -> rejected and then refresh the page*/}
+        <Button
+          variant="success"
+          onPress={() => handleJoinWaitlist(user.userId, eventId)}
+        >
+          Join Waitlist
+        </Button>
       </div>
     </Modal>
   );

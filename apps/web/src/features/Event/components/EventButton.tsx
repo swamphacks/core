@@ -116,7 +116,7 @@ const EventButton = ({
         >
           {text || applicationStatus[statusProp].button.text}
         </Button>
-        <EventWaitlistModal event_id={eventId}></EventWaitlistModal>
+        <EventWaitlistModal eventId={eventId}></EventWaitlistModal>
       </DialogTrigger>
     );
   } else {

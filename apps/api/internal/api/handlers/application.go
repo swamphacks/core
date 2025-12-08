@@ -588,3 +588,31 @@ func (h *ApplicationHandler) GetResumePresignedUrl(w http.ResponseWriter, r *htt
 
 	res.Send(w, http.StatusOK, request.URL)
 }
+
+// Join Waitlist for an event
+//
+//	@Summary		Join event waitlist after rejected application status.
+//	@Description	Adds a waitlist join time to application. Sets status to waitlisted
+//	@Tags			Application
+//
+//	@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
+//	@Success		200		"Event Waitlist joined successfully"
+//	@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//	@Failure		500		{object}	res.ErrorResponse	"Server error: failed to join waitlist"
+//	@Router			/events/{eventId}/application/join-waitlist [post]
+func (h *ApplicationHandler) JoinWaitlist(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+
+	err = h.appService.JoinWaitlist(r.Context(), *userId, eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("reset_reviews_error", "Something went wrong while joining waitlist"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

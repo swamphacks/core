@@ -183,6 +183,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				//Accept acceptance
 
 				//Waitlist application
+				r.Patch("/join-waitlist", api.Handlers.Application.JoinWaitlist)
 			})
 
 			// Team routes

@@ -522,3 +522,12 @@ func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewer
 
 	return nil
 }
+
+func (s *ApplicationService) JoinWaitlist(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	err := s.appRepo.JoinWaitlist(ctx, userId, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}
