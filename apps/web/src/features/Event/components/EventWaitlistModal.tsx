@@ -5,6 +5,7 @@ import { api } from "@/lib/ky";
 import { showToast } from "@/lib/toast/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { eventsQueryKey } from "../hooks/useEventsWithUserInfo";
+import { myApplicationBaseKey } from "@/features/Application/hooks/useMyApplication";
 
 interface EventWaitlistModalProps {
   eventId: string;
@@ -31,7 +32,10 @@ function EventWaitlistModal({ eventId }: EventWaitlistModalProps) {
         type: "success",
       });
       await queryClient.invalidateQueries({
-        queryKey: [eventsQueryKey],
+        queryKey: eventsQueryKey,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...myApplicationBaseKey, eventId],
       });
     } catch (error) {
       console.error("Failed to join waitlist", error);

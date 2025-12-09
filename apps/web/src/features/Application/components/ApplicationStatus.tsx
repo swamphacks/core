@@ -89,6 +89,24 @@ export default function ApplicationStatus({ eventId }: ApplicationStatusProps) {
             </div>
           </div>
         );
+      case "waitlisted":
+        return (
+          <div>
+            <div className="mb-1">
+              <p className="text-lg flex items-center gap-2">
+                Your application is{" "}
+                <EventBadge status="waitlisted" className="text-sm" />
+              </p>
+            </div>
+            <div>
+              <EventButton
+                className="w-1/2 mt-4 mb-5"
+                status={status}
+                eventId={eventId}
+              />
+            </div>
+          </div>
+        );
       default:
         break;
     }
