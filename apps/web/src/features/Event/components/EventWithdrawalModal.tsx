@@ -1,20 +1,38 @@
 import { Modal } from "@/components/ui/Modal";
 import { auth } from "@/lib/authClient";
 import { Button } from "@/components/ui/Button";
+import { api } from "@/lib/ky";
+import { showToast } from "@/lib/toast/toast";
 interface EventWithdrawalModalProps {
-  event_id: string;
+  eventId: string;
 }
 
-function EventWithdrawalModal({ event_id }: EventWithdrawalModalProps) {
+function EventWithdrawalModal({ eventId }: EventWithdrawalModalProps) {
   const { data: userData } = auth.useUser();
-  const { user } = userData!;
-  if (!user) {
-    return <div>Loading...{event_id}</div>;
+  if (!userData?.user) {
+    return <div>Loading...</div>;
   }
-  /*     
-      {user.userId}
-      {event_id}
-    */
+  const { user } = userData;
+  const handleWithdrawAcceptance = async (userId: string, eventId: string) => {
+    try {
+      await api.patch(
+        `events/${eventId}/application/withdraw-acceptance?userId=${userId}`,
+      );
+      showToast({
+        title: "Acceptance Withdrawn",
+        message: "Successfully Withdrawn Application.",
+        type: "success",
+      });
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to join waitlist", error);
+      showToast({
+        title: "Failed to Withdraw",
+        message: "Failed to Withdraw Acceptance. Please try again.",
+        type: "error",
+      });
+    }
+  };
 
   return (
     <Modal
@@ -33,8 +51,12 @@ function EventWithdrawalModal({ event_id }: EventWithdrawalModalProps) {
         </p>
       </div>
       <div className="mt-3 flex justify-center gap-3">
-        <Button variant="danger">Withdraw</Button>
-        {/*When withdrawing, we need to change the accepted -> rejected and then refresh the page*/}
+        <Button
+          variant="danger"
+          onPress={() => handleWithdrawAcceptance(user.userId, eventId)}
+        >
+          Withdraw
+        </Button>
       </div>
     </Modal>
   );

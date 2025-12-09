@@ -10,14 +10,10 @@ interface EventWaitlistModalProps {
 
 function EventWaitlistModal({ eventId }: EventWaitlistModalProps) {
   const { data: userData } = auth.useUser();
-  const { user } = userData!;
-  if (!user) {
-    return <div>Loading... {eventId}</div>;
+  if (!userData?.user) {
+    return <div>Loading...</div>;
   }
-  /*     
-      {user.userId}
-      {event_id}
-    */
+  const { user } = userData;
 
   const handleJoinWaitlist = async (userId: string, eventId: string) => {
     try {

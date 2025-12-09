@@ -104,7 +104,7 @@ const EventButton = ({
         >
           {text || applicationStatus[statusProp].button.text}
         </Button>
-        <EventWithdrawalModal event_id={eventId}></EventWithdrawalModal>
+        <EventWithdrawalModal eventId={eventId}></EventWithdrawalModal>
       </DialogTrigger>
     );
   } else if (statusProp === "rejected") {

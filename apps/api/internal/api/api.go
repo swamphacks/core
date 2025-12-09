@@ -178,7 +178,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				r.With(ensureEventAdmin).Post("/reset-reviews", api.Handlers.Application.ResetApplicationReviews)
 				r.With(ensureEventAdmin).Post("/assign-reviewers", api.Handlers.Application.AssignApplicationReviewers)
 
-				//withdraw application
+				//withdraw Acceptance
+				r.Patch("/withdraw-acceptance", api.Handlers.Application.WithdrawAcceptance)
 
 				//Accept acceptance
 

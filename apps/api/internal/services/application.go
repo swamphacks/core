@@ -531,3 +531,18 @@ func (s *ApplicationService) JoinWaitlist(ctx context.Context, userId uuid.UUID,
 	}
 	return nil
 }
+
+func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	err := s.appRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+		UserID:  userId,
+		EventID: eventId,
+		//TODO: Make it so I don't have to set this!
+		StatusDoUpdate: true,
+		Status:         sqlc.ApplicationStatusRejected,
+	})
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}
