@@ -65,7 +65,7 @@ export default function ApplicationStatus({ eventId }: ApplicationStatusProps) {
       case "accepted":
         return (
           <div>
-            <div className="mb-5">
+            <div className="mb-1">
               <p className="text-lg flex items-center gap-2">
                 Your application is{" "}
                 <EventBadge status="accepted" className="text-sm" />
@@ -73,6 +73,19 @@ export default function ApplicationStatus({ eventId }: ApplicationStatusProps) {
               <p className="my-1 text-text-secondary">
                 Congratulations! We would love to see you at Swamphacks XI{" "}
               </p>
+            </div>
+            <div className="flex gap-2 mb-5">
+              <EventButton
+                className="w-1/3 mt-4"
+                status={status}
+                eventId={eventId}
+              />
+              <EventButton
+                className="w-1/3 mt-4"
+                status="notGoing"
+                text="Not Going"
+                eventId={eventId}
+              />
             </div>
           </div>
         );
