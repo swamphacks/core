@@ -627,7 +627,7 @@ func (h *ApplicationHandler) JoinWaitlist(w http.ResponseWriter, r *http.Request
 //	@Success		200		"Acceptance withdrawn joined successfully"
 //	@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
 //	@Failure		500		{object}	res.ErrorResponse	"Server error: failed to withdraw"
-//	@Router			/events/{eventId}/application/join-waitlist [patch]
+//	@Router			/events/{eventId}/application/withdraw-acceptance [patch]
 func (h *ApplicationHandler) WithdrawAcceptance(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
@@ -649,7 +649,7 @@ func (h *ApplicationHandler) WithdrawAcceptance(w http.ResponseWriter, r *http.R
 //
 //	@Summary		Accept an acceptance after being accepted to an event.
 //	@Description	Sets application status from accepted to rejected
-//	@Tags			Application
+//	@Tags			Application Event
 //
 //	@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
 //	@Success		200		"Acceptance withdrawn joined successfully"
