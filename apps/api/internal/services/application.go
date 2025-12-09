@@ -546,3 +546,18 @@ func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userId uuid
 	}
 	return nil
 }
+
+func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	// is a check for a user being accepted necessary here? or is the frontend enough
+
+	err := s.eventsService.eventRepo.UpdateRole(ctx,
+		userId,
+		eventId,
+		sqlc.EventRoleTypeAttendee,
+	)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}

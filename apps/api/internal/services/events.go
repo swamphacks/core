@@ -207,6 +207,10 @@ func (s *EventService) RevokeEventRole(ctx context.Context, userId uuid.UUID, ev
 	return s.eventRepo.RevokeRole(ctx, userId, eventId)
 }
 
+func (s *EventService) UpdateEventRole(ctx context.Context, userId uuid.UUID, eventId uuid.UUID, role sqlc.EventRoleType) error {
+	return s.eventRepo.UpdateRole(ctx, userId, eventId, role)
+}
+
 func (s *EventService) IsApplicationsOpen(ctx context.Context, eventId uuid.UUID) (bool, error) {
 	event, err := s.GetEventByID(ctx, eventId)
 	if err != nil {

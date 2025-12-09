@@ -3,16 +3,22 @@ import { auth } from "@/lib/authClient";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/ky";
 import { showToast } from "@/lib/toast/toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { eventsQueryKey } from "../hooks/useEventsWithUserInfo";
 interface EventWithdrawalModalProps {
   eventId: string;
 }
 
 function EventWithdrawalModal({ eventId }: EventWithdrawalModalProps) {
+  const queryClient = useQueryClient();
+
   const { data: userData } = auth.useUser();
   if (!userData?.user) {
     return <div>Loading...</div>;
   }
+
   const { user } = userData;
+
   const handleWithdrawAcceptance = async (userId: string, eventId: string) => {
     try {
       await api.patch(
@@ -23,7 +29,9 @@ function EventWithdrawalModal({ eventId }: EventWithdrawalModalProps) {
         message: "Successfully Withdrawn Application.",
         type: "success",
       });
-      window.location.reload();
+      await queryClient.invalidateQueries({
+        queryKey: [eventsQueryKey],
+      });
     } catch (error) {
       console.error("Failed to join waitlist", error);
       showToast({

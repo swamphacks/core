@@ -182,6 +182,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				r.Patch("/withdraw-acceptance", api.Handlers.Application.WithdrawAcceptance)
 
 				//Accept acceptance
+				r.Patch("/accept-acceptance", api.Handlers.Application.AcceptApplicationAcceptance)
 
 				//Waitlist application
 				r.Patch("/join-waitlist", api.Handlers.Application.JoinWaitlist)

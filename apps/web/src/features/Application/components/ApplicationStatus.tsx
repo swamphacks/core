@@ -7,6 +7,7 @@ import TablerUserCode from "~icons/tabler/user-code";
 import TablerUsersGroup from "~icons/tabler/users-group";
 import TablerDownload from "~icons/tabler/download";
 import { api } from "@/lib/ky";
+import { EventButton } from "@/features/Event/components/EventButton";
 
 interface ApplicationStatusProps {
   eventId: string;
@@ -35,6 +36,42 @@ export default function ApplicationStatus({ eventId }: ApplicationStatusProps) {
                 <span className="underline hover:text-text-main">
                   <a href="mailto:tech@swamphacks.com">tech@swamphacks.com</a>
                 </span>
+              </p>
+            </div>
+          </div>
+        );
+      case "rejected":
+        return (
+          <div>
+            <div className="mb-1">
+              <p className="text-lg flex items-center gap-2">
+                Your application is{" "}
+                <EventBadge status="rejected" className="text-sm" />
+              </p>
+              <p className="my-1 text-text-secondary">
+                We couldn't accomodate all the applications this year. If you
+                are still interested, please join the waitlist!{" "}
+              </p>
+            </div>
+            <div>
+              <EventButton
+                className="w-1/2 mt-4 mb-5"
+                status={status}
+                eventId={eventId}
+              />
+            </div>
+          </div>
+        );
+      case "accepted":
+        return (
+          <div>
+            <div className="mb-5">
+              <p className="text-lg flex items-center gap-2">
+                Your application is{" "}
+                <EventBadge status="accepted" className="text-sm" />
+              </p>
+              <p className="my-1 text-text-secondary">
+                Congratulations! We would love to see you at Swamphacks XI{" "}
               </p>
             </div>
           </div>

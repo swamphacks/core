@@ -21,4 +21,7 @@ FROM auth.users u
 JOIN event_roles er ON u.id = er.user_id
 WHERE er.event_id = $1;
 
--- name: UpdateRole
+-- name: UpdateRole :exec
+UPDATE event_roles
+SET role = $3
+WHERE event_id = $1 AND user_id = $2;

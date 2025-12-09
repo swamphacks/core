@@ -3,16 +3,21 @@ import { auth } from "@/lib/authClient";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/ky";
 import { showToast } from "@/lib/toast/toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { eventsQueryKey } from "../hooks/useEventsWithUserInfo";
 
 interface EventWaitlistModalProps {
   eventId: string;
 }
 
 function EventWaitlistModal({ eventId }: EventWaitlistModalProps) {
+  const queryClient = useQueryClient();
+
   const { data: userData } = auth.useUser();
   if (!userData?.user) {
     return <div>Loading...</div>;
   }
+
   const { user } = userData;
 
   const handleJoinWaitlist = async (userId: string, eventId: string) => {
@@ -25,7 +30,9 @@ function EventWaitlistModal({ eventId }: EventWaitlistModalProps) {
         message: "Successfully Joined Waitlist.",
         type: "success",
       });
-      window.location.reload();
+      await queryClient.invalidateQueries({
+        queryKey: [eventsQueryKey],
+      });
     } catch (error) {
       console.error("Failed to join waitlist", error);
       showToast({
