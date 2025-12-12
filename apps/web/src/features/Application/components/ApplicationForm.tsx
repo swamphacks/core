@@ -7,6 +7,7 @@ import TablerCircleCheck from "~icons/tabler/circle-check";
 import { Link } from "react-aria-components";
 import TablerArrowLeft from "~icons/tabler/arrow-left";
 import { api } from "@/lib/ky";
+import { HTTPError } from "ky";
 import { Spinner } from "@/components/ui/Spinner";
 import { useMyApplication } from "@/features/Application/hooks/useMyApplication";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
@@ -26,9 +27,14 @@ const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
 interface ApplicationFormProps {
   eventId: string;
+  redirectAfterSubmit?: string;
 }
 
-export function ApplicationForm({ eventId }: ApplicationFormProps) {
+export function ApplicationForm({
+  eventId,
+  redirectAfterSubmit,
+}: ApplicationFormProps) {
+  const router = useRouter();
   // TODO: make the `build` api better so components that use this function doesn't have to call useMemo on it?
   const { Form, fieldsMeta } = useMemo(() => build(data), []);
   const fileFields = useRef(new Set<string>());
@@ -41,6 +47,11 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>(undefined);
   const [savedText, setSavedText] = useState<string | undefined>("");
+
+  // Extract specific values to avoid dependency on entire application object
+  const savedAt = application.data?.saved_at;
+  const isLoading = application.isLoading;
+  const previousSavedAtRef = useRef<string | undefined>(undefined);
 
   // Update saved text every second. Restart interval when lastSavedAt changes.
   useEffect(() => {
@@ -56,52 +67,97 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   }, [lastSavedAt]);
 
   useEffect(() => {
-    if (!application || application.isLoading) return;
+    if (isLoading) return;
 
-    if (application.data?.saved_at) {
-      const parsed = parseISO(application.data.saved_at);
-      setLastSavedAt(parsed);
-    } else {
-      setLastSavedAt(undefined);
-    }
-  }, [application?.data?.saved_at, application?.isLoading]);
+    // Only update if saved_at actually changed
+    if (savedAt !== previousSavedAtRef.current) {
+      previousSavedAtRef.current = savedAt;
 
-  const onSubmit = useCallback(async (data: Record<string, any>) => {
-    setIsSubmitting(true);
-
-    const formData = new FormData();
-
-    for (const key in data) {
-      if (fieldsMeta[key] === QuestionTypes.upload) {
-        for (const file of data[key]) {
-          formData.append(`${key}[]`, file);
-        }
+      if (savedAt) {
+        const parsed = parseISO(savedAt);
+        setLastSavedAt(parsed);
       } else {
-        formData.set(key, data[key]);
+        setLastSavedAt(undefined);
       }
     }
+  }, [savedAt, isLoading]);
 
-    const res = await api.post(`events/${eventId}/application/submit`, {
-      body: formData,
-    });
+  const onSubmit = useCallback(
+    async (data: Record<string, unknown>) => {
+      setIsSubmitting(true);
 
-    if (!res.ok) {
-      const resBody: any = await res.json();
+      const formData = new FormData();
 
-      showToast({
-        title: "Submission Error",
-        message: resBody.message || "Something went wrong",
-        type: "error",
-      });
+      for (const key in data) {
+        if (fieldsMeta[key] === QuestionTypes.upload) {
+          const files = data[key] as File[];
+          for (const file of files) {
+            formData.append(`${key}[]`, file);
+          }
+        } else {
+          const value = data[key];
+          formData.set(key, value as string | Blob);
+        }
+      }
 
-      setIsInvalid(true);
-    } else {
-      setIsSubmitted(true);
-      setIsInvalid(false);
-    }
+      try {
+        await api.post(`events/${eventId}/application/submit`, {
+          body: formData,
+        });
 
-    setIsSubmitting(false);
-  }, []);
+        setIsSubmitted(true);
+        setIsInvalid(false);
+
+        if (redirectAfterSubmit) {
+          const invitationIdMatch = redirectAfterSubmit.match(
+            /\/teams\/invite\/([^/]+)/,
+          );
+          if (invitationIdMatch) {
+            const invitationId = invitationIdMatch[1];
+            setTimeout(() => {
+              router.navigate({
+                to: "/teams/invite/$invitationId",
+                params: { invitationId },
+                replace: true,
+              });
+            }, 2000);
+          } else {
+            setTimeout(() => {
+              router.navigate({
+                to: redirectAfterSubmit,
+                replace: true,
+              });
+            }, 2000);
+          }
+        }
+      } catch (error: unknown) {
+        let errorMessage =
+          "Something went wrong while submitting your application";
+
+        try {
+          if (error instanceof HTTPError) {
+            const resBody = await error.response.json();
+            errorMessage = resBody.message || errorMessage;
+          } else if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+        } catch {
+          // Ignore errors when parsing error response
+        }
+
+        showToast({
+          title: "Submission Error",
+          message: errorMessage,
+          type: "error",
+        });
+
+        setIsInvalid(true);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [eventId, router, redirectAfterSubmit, fieldsMeta],
+  );
 
   const onNewAttachments = useCallback((newFiles: Record<string, File[]>) => {
     for (const field in newFiles) {
@@ -110,7 +166,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
   }, []);
 
   const onChange = useCallback(
-    async (formValues: Record<string, any>) => {
+    async (formValues: Record<string, unknown>) => {
       if (isSubmitted || isSubmitting) return;
 
       setIsSaving(true);
@@ -133,7 +189,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
       );
       setIsSaving(false);
     },
-    [isSubmitted, isSubmitting],
+    [isSubmitted, isSubmitting, eventId],
   );
 
   if (application.isLoading) {

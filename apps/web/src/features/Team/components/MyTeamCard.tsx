@@ -6,7 +6,17 @@ import { Button } from "@/components/ui/Button";
 import { toast } from "react-toastify";
 import TablerDoorExit from "~icons/tabler/door-exit";
 import TablerCircleX from "~icons/tabler/circle-x";
+import TablerPlus from "~icons/tabler/plus";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { Modal } from "@/components/ui/Modal";
+import { TextField } from "@/components/ui/TextField";
+import { DialogTrigger, Form } from "react-aria-components";
+import { useState } from "react";
+import { useForm, type FormValidateOrFn } from "@tanstack/react-form";
+import { useFormErrors } from "@/components/Form";
+import { api } from "@/lib/ky";
+import { HTTPError } from "ky";
+import { z } from "zod";
 
 interface Props {
   eventId: string;
@@ -14,8 +24,65 @@ interface Props {
   team: TeamWithMembers;
 }
 
+const inviteEmailSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+type InviteEmail = z.infer<typeof inviteEmailSchema>;
+
+async function inviteUserToTeam(teamId: string, email: string) {
+  try {
+    await api.post(`teams/${teamId}/invite`, {
+      json: { email },
+    });
+  } catch (err) {
+    if (err instanceof HTTPError) {
+      if (err.response.status === 409) {
+        toast.error("A pending invitation already exists for this email.");
+      } else if (err.response.status === 403) {
+        toast.error("You don't have permission to invite users to this team.");
+      } else {
+        const data = await err.response.json().catch(() => ({}));
+        toast.error(data.message || "Failed to send invitation. Try again.");
+      }
+    }
+    throw err;
+  }
+}
+
 export default function MyTeamCard({ eventId, userId, team }: Props) {
   const { leave, kickTeamMember } = useTeamActions(eventId);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const isOwner = userId === team.owner_id;
+  const isTeamFull = team.members.length >= 4;
+
+  const inviteForm = useForm<
+    InviteEmail,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    FormValidateOrFn<InviteEmail>,
+    undefined,
+    undefined,
+    undefined
+  >({
+    defaultValues: {
+      email: "",
+    },
+    onSubmit: async ({ value }) => {
+      await inviteUserToTeam(team.id, value.email);
+      toast.success(`Invitation sent to ${value.email}!`);
+      setIsInviteModalOpen(false);
+      inviteForm.reset();
+    },
+    validators: {
+      onSubmit: inviteEmailSchema,
+    },
+  });
+
+  const inviteFormErrors = useFormErrors(inviteForm);
 
   const handleLeaveTeam = () => {
     leave.mutate(team.id, {
@@ -78,6 +145,79 @@ export default function MyTeamCard({ eventId, userId, team }: Props) {
           <TablerUsers className="h-6 w-6" />
           <p className="text-lg">{team.members.length} / 4 Members</p>
         </div>
+        {isOwner && !isTeamFull && (
+          <DialogTrigger
+            isOpen={isInviteModalOpen}
+            onOpenChange={setIsInviteModalOpen}
+          >
+            <Tooltip
+              tooltipProps={{
+                label: "Invite Member",
+                offset: 4,
+              }}
+              triggerProps={{
+                delay: 150,
+              }}
+            >
+              <Button variant="icon" className="aspect-square p-2.5 ml-auto">
+                <TablerPlus className="w-5 h-5 text-green-600" />
+              </Button>
+            </Tooltip>
+
+            <Modal title="Invite Team Member" size="md">
+              <Form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  inviteForm.handleSubmit();
+                }}
+                validationErrors={inviteFormErrors}
+              >
+                <div className="flex flex-col gap-4">
+                  <inviteForm.Field name="email">
+                    {(field) => (
+                      <TextField
+                        label="Email Address"
+                        name={field.name}
+                        placeholder="teammate@example.com"
+                        type="email"
+                        isDisabled={
+                          inviteForm.state.isSubmitting &&
+                          field.state.meta.errors.length === 0
+                        }
+                        value={field.state.value}
+                        onChange={(value) => field.handleChange(value)}
+                        validationBehavior="aria"
+                        errorMessage={field.state.meta.errors[0]}
+                        isRequired
+                      />
+                    )}
+                  </inviteForm.Field>
+
+                  <div className="flex flex-row gap-3 justify-end">
+                    <Button
+                      variant="secondary"
+                      onPress={() => {
+                        setIsInviteModalOpen(false);
+                        inviteForm.reset();
+                      }}
+                      isDisabled={inviteForm.state.isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      isPending={inviteForm.state.isSubmitting}
+                      type="submit"
+                      variant="primary"
+                    >
+                      Send Invitation
+                    </Button>
+                  </div>
+                </div>
+              </Form>
+            </Modal>
+          </DialogTrigger>
+        )}
       </div>
 
       <div className="flex flex-col">
@@ -123,10 +263,19 @@ export default function MyTeamCard({ eventId, userId, team }: Props) {
         </ul>
       </div>
 
-      <p className="w-full text-wrap text-xs text-neutral-500">
-        * Invite your team to join by having them submit a request on the
-        Explore Teams page.
-      </p>
+      {isOwner && (
+        <p className="w-full text-wrap text-xs text-neutral-500">
+          {isTeamFull
+            ? "* Team is full (4/4 members). Remove a member to invite someone new."
+            : "* Click the + button to invite members by email, or have them submit a request on the Explore Teams page."}
+        </p>
+      )}
+      {!isOwner && (
+        <p className="w-full text-wrap text-xs text-neutral-500">
+          * Ask the team owner to invite members or submit a request on the
+          Explore Teams page.
+        </p>
+      )}
     </div>
   );
 }
