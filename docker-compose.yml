@@ -12,6 +12,18 @@ services:
       - postgres
       - redis
 
+  bat_worker:
+    build:
+      dockerfile: cmd/email_worker/Dockerfile
+      context: ./apps/api
+      target: dev
+    env_file: "./apps/api/.env.dev"
+    volumes:
+      - ./apps/api:/app
+    working_dir: /app/cmd/BAT_worker
+    depends_on:
+      - redis
+
   email_worker:
     build:
       dockerfile: cmd/email_worker/Dockerfile
