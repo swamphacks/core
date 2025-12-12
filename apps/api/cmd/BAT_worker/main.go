@@ -9,8 +9,24 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/workers"
 )
 
-// Entrypoint for the BAT worker which handles
-// hackathon application review and admissions.
+/*
+                 -.                       .-
+              _..-'(                       )`-.._
+           ./'. '||\\.      _ _ /| HACK .//||` .`\.
+        ./'.|'.'||||\\|..   \'o.O' /  ..|//||||`.`|.`\.
+     ./'..|'.|| |||||\``````=(___)=''''''/||||| ||.`|..`\.
+   ./'.||'.|||| ||||||||||||.  U  .|||||||||||| ||||.`||.`\.
+  /'|||'.|||||| |||||||||||||     ||||||||||||| ||||||.`|||`\
+ '.|||'.||||||| |||||||||||||     ||||||||||||| |||||||.`|||.`
+'.||| ||||||||| |/'   ``\||``     ''||/''   `\| ||||||||| |||.`
+|/' \./'     `\./         \!|\   /|!/         \./'     `\./ `\|
+V    V         V          }' `\ /' `{          V         V    V
+`    `         `               V               '         '    '
+
+	Entrypoint for the BAT worker which handles hackathon application review
+	and admissions tasks.
+*/
+
 func main() {
 	logger := logger.New()
 	cfg := config.Load()
