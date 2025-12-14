@@ -8,14 +8,32 @@ import (
 
 type Handlers struct {
 	Auth          *AuthHandler
+	User          *UserHandler
 	EventInterest *EventInterestHandler
+	Event         *EventHandler
 	Email         *EmailHandler
+	Application   *ApplicationHandler
+	Teams         *TeamHandler
 }
 
-func NewHandlers(authService *services.AuthService, eventInterestService *services.EventInterestService, emailService *services.EmailService, cfg *config.Config, logger zerolog.Logger) *Handlers {
+func NewHandlers(
+	authService *services.AuthService,
+	userService *services.UserService,
+	eventInterestService *services.EventInterestService,
+	eventService *services.EventService,
+	emailService *services.EmailService,
+	appService *services.ApplicationService,
+	teamService *services.TeamService,
+	cfg *config.Config,
+	logger zerolog.Logger,
+) *Handlers {
 	return &Handlers{
 		Auth:          NewAuthHandler(authService, cfg, logger),
+		User:          NewUserHandler(userService, logger),
 		EventInterest: NewEventInterestHandler(eventInterestService, cfg, logger),
+		Event:         NewEventHandler(eventService, cfg, logger),
 		Email:         NewEmailHandler(emailService, logger),
+		Application:   NewApplicationHandler(appService),
+		Teams:         NewTeamHandler(teamService, logger),
 	}
 }

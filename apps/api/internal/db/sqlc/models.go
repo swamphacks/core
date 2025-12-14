@@ -145,15 +145,148 @@ func (ns NullEventRoleType) Value() (driver.Value, error) {
 	return string(ns.EventRoleType), nil
 }
 
+type GetEventScopeType string
+
+const (
+	GetEventScopeTypePublished GetEventScopeType = "published"
+	GetEventScopeTypeScoped    GetEventScopeType = "scoped"
+	GetEventScopeTypeAll       GetEventScopeType = "all"
+)
+
+func (e *GetEventScopeType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = GetEventScopeType(s)
+	case string:
+		*e = GetEventScopeType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for GetEventScopeType: %T", src)
+	}
+	return nil
+}
+
+type NullGetEventScopeType struct {
+	GetEventScopeType GetEventScopeType `json:"get_event_scope_type"`
+	Valid             bool              `json:"valid"` // Valid is true if GetEventScopeType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullGetEventScopeType) Scan(value interface{}) error {
+	if value == nil {
+		ns.GetEventScopeType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.GetEventScopeType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullGetEventScopeType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.GetEventScopeType), nil
+}
+
+type InvitationStatus string
+
+const (
+	InvitationStatusPENDING  InvitationStatus = "PENDING"
+	InvitationStatusACCEPTED InvitationStatus = "ACCEPTED"
+	InvitationStatusEXPIRED  InvitationStatus = "EXPIRED"
+	InvitationStatusREJECTED InvitationStatus = "REJECTED"
+)
+
+func (e *InvitationStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = InvitationStatus(s)
+	case string:
+		*e = InvitationStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for InvitationStatus: %T", src)
+	}
+	return nil
+}
+
+type NullInvitationStatus struct {
+	InvitationStatus InvitationStatus `json:"invitation_status"`
+	Valid            bool             `json:"valid"` // Valid is true if InvitationStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullInvitationStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.InvitationStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.InvitationStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullInvitationStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.InvitationStatus), nil
+}
+
+type JoinRequestStatus string
+
+const (
+	JoinRequestStatusPENDING  JoinRequestStatus = "PENDING"
+	JoinRequestStatusAPPROVED JoinRequestStatus = "APPROVED"
+	JoinRequestStatusREJECTED JoinRequestStatus = "REJECTED"
+)
+
+func (e *JoinRequestStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = JoinRequestStatus(s)
+	case string:
+		*e = JoinRequestStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for JoinRequestStatus: %T", src)
+	}
+	return nil
+}
+
+type NullJoinRequestStatus struct {
+	JoinRequestStatus JoinRequestStatus `json:"join_request_status"`
+	Valid             bool              `json:"valid"` // Valid is true if JoinRequestStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullJoinRequestStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.JoinRequestStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.JoinRequestStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullJoinRequestStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.JoinRequestStatus), nil
+}
+
 type Application struct {
-	UserID      uuid.UUID             `json:"user_id"`
-	EventID     uuid.UUID             `json:"event_id"`
-	Status      NullApplicationStatus `json:"status"`
-	Application []byte                `json:"application"`
-	ResumeUrl   *string               `json:"resume_url"`
-	CreatedAt   time.Time             `json:"created_at"`
-	SavedAt     time.Time             `json:"saved_at"`
-	UpdatedAt   time.Time             `json:"updated_at"`
+	UserID             uuid.UUID             `json:"user_id"`
+	EventID            uuid.UUID             `json:"event_id"`
+	Status             NullApplicationStatus `json:"status"`
+	Application        []byte                `json:"application"`
+	CreatedAt          time.Time             `json:"created_at"`
+	SavedAt            time.Time             `json:"saved_at"`
+	UpdatedAt          time.Time             `json:"updated_at"`
+	SubmittedAt        *time.Time            `json:"submitted_at"`
+	ExperienceRating   *int32                `json:"experience_rating"`
+	PassionRating      *int32                `json:"passion_rating"`
+	AssignedReviewerID *uuid.UUID            `json:"assigned_reviewer_id"`
 }
 
 type AuthAccount struct {
@@ -184,35 +317,38 @@ type AuthSession struct {
 }
 
 type AuthUser struct {
-	ID            uuid.UUID    `json:"id"`
-	Name          string       `json:"name"`
-	Email         *string      `json:"email"`
-	EmailVerified bool         `json:"email_verified"`
-	Onboarded     bool         `json:"onboarded"`
-	Image         *string      `json:"image"`
-	CreatedAt     time.Time    `json:"created_at"`
-	UpdatedAt     time.Time    `json:"updated_at"`
-	Role          AuthUserRole `json:"role"`
+	ID             uuid.UUID    `json:"id"`
+	Name           string       `json:"name"`
+	Email          *string      `json:"email"`
+	EmailVerified  bool         `json:"email_verified"`
+	Onboarded      bool         `json:"onboarded"`
+	Image          *string      `json:"image"`
+	CreatedAt      time.Time    `json:"created_at"`
+	UpdatedAt      time.Time    `json:"updated_at"`
+	Role           AuthUserRole `json:"role"`
+	PreferredEmail *string      `json:"preferred_email"`
+	EmailConsent   bool         `json:"email_consent"`
 }
 
 type Event struct {
-	ID               uuid.UUID  `json:"id"`
-	Name             string     `json:"name"`
-	Description      *string    `json:"description"`
-	Location         *string    `json:"location"`
-	LocationUrl      *string    `json:"location_url"`
-	MaxAttendees     *int32     `json:"max_attendees"`
-	ApplicationOpen  time.Time  `json:"application_open"`
-	ApplicationClose time.Time  `json:"application_close"`
-	RsvpDeadline     *time.Time `json:"rsvp_deadline"`
-	DecisionRelease  *time.Time `json:"decision_release"`
-	StartTime        time.Time  `json:"start_time"`
-	EndTime          time.Time  `json:"end_time"`
-	WebsiteUrl       *string    `json:"website_url"`
-	IsPublished      *bool      `json:"is_published"`
-	SavedAt          *time.Time `json:"saved_at"`
-	CreatedAt        *time.Time `json:"created_at"`
-	UpdatedAt        *time.Time `json:"updated_at"`
+	ID                       uuid.UUID  `json:"id"`
+	Name                     string     `json:"name"`
+	Description              *string    `json:"description"`
+	Location                 *string    `json:"location"`
+	LocationUrl              *string    `json:"location_url"`
+	MaxAttendees             *int32     `json:"max_attendees"`
+	ApplicationOpen          time.Time  `json:"application_open"`
+	ApplicationClose         time.Time  `json:"application_close"`
+	RsvpDeadline             *time.Time `json:"rsvp_deadline"`
+	DecisionRelease          *time.Time `json:"decision_release"`
+	StartTime                time.Time  `json:"start_time"`
+	EndTime                  time.Time  `json:"end_time"`
+	WebsiteUrl               *string    `json:"website_url"`
+	IsPublished              *bool      `json:"is_published"`
+	CreatedAt                *time.Time `json:"created_at"`
+	UpdatedAt                *time.Time `json:"updated_at"`
+	Banner                   *string    `json:"banner"`
+	ApplicationReviewStarted bool       `json:"application_review_started"`
 }
 
 type EventInterestSubmission struct {
@@ -228,4 +364,43 @@ type EventRole struct {
 	EventID    uuid.UUID     `json:"event_id"`
 	Role       EventRoleType `json:"role"`
 	AssignedAt *time.Time    `json:"assigned_at"`
+}
+
+type Team struct {
+	ID        uuid.UUID  `json:"id"`
+	Name      string     `json:"name"`
+	OwnerID   *uuid.UUID `json:"owner_id"`
+	EventID   *uuid.UUID `json:"event_id"`
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+type TeamInvitation struct {
+	ID              uuid.UUID        `json:"id"`
+	TeamID          uuid.UUID        `json:"team_id"`
+	InvitedByUserID uuid.UUID        `json:"invited_by_user_id"`
+	InvitedEmail    string           `json:"invited_email"`
+	InvitedUserID   *uuid.UUID       `json:"invited_user_id"`
+	Status          InvitationStatus `json:"status"`
+	ExpiresAt       *time.Time       `json:"expires_at"`
+	CreatedAt       time.Time        `json:"created_at"`
+	UpdatedAt       time.Time        `json:"updated_at"`
+}
+
+type TeamJoinRequest struct {
+	ID                uuid.UUID         `json:"id"`
+	TeamID            uuid.UUID         `json:"team_id"`
+	UserID            uuid.UUID         `json:"user_id"`
+	RequestMessage    *string           `json:"request_message"`
+	Status            JoinRequestStatus `json:"status"`
+	ProcessedByUserID *uuid.UUID        `json:"processed_by_user_id"`
+	ProcessedAt       *time.Time        `json:"processed_at"`
+	CreatedAt         time.Time         `json:"created_at"`
+	UpdatedAt         time.Time         `json:"updated_at"`
+}
+
+type TeamMember struct {
+	UserID   uuid.UUID  `json:"user_id"`
+	TeamID   uuid.UUID  `json:"team_id"`
+	JoinedAt *time.Time `json:"joined_at"`
 }

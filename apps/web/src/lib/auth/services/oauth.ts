@@ -37,7 +37,9 @@ export function _oauthSignIn<T extends AuthConfig>(config: T) {
     Cookies.set("sh_auth_nonce", state.nonce, {
       path: "/",
       sameSite: "lax",
-      secure: true,
+      secure: import.meta.env.DEV ? false : true,
+      //TODO: change this to an env variable
+      domain: import.meta.env.DEV ? "localhost" : ".swamphacks.com",
     });
 
     const params = createOAuthRequestParams(

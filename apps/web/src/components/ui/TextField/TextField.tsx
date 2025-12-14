@@ -2,6 +2,9 @@ import {
   TextField as RAC_TextField,
   type TextFieldProps as RAC_TextFieldProps,
   type ValidationResult,
+  Tooltip,
+  TooltipTrigger,
+  Button,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import {
@@ -13,6 +16,8 @@ import {
 } from "@/components/ui/Field";
 import { composeTailwindRenderProps, type Icon } from "@/components/ui/utils";
 import { TextArea } from "react-aria-components";
+import { cn } from "@/utils/cn";
+import TablerInfo from "~icons/tabler/info-circle";
 
 export const inputStyles = tv({
   base: "outline-0 border-1 rounded-sm",
@@ -29,7 +34,9 @@ export interface TextFieldProps extends RAC_TextFieldProps {
   description?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
   icon?: Icon;
+  iconPlacement?: "left" | "right";
   textarea?: boolean;
+  tooltip?: string;
 }
 
 const TextField = ({
@@ -40,6 +47,8 @@ const TextField = ({
   isRequired,
   icon,
   textarea,
+  iconPlacement = "left",
+  tooltip,
   ...props
 }: TextFieldProps) => {
   return (
@@ -51,14 +60,41 @@ const TextField = ({
       )}
       isRequired={isRequired}
     >
-      {label && <Label isRequired={isRequired}>{label}</Label>}
+      <div className="flex items-center gap-1.5">
+        {label && <Label isRequired={isRequired}>{label}</Label>}
+        {tooltip && (
+          <div className="hidden sm:flex">
+            <TooltipTrigger delay={250} closeDelay={250}>
+              <Button className="opacity-30">
+                <TablerInfo></TablerInfo>
+              </Button>
+              <Tooltip
+                offset={5}
+                className="bg-surface border-input-border border-2 flex justify-center items-center py-1 px-2 rounded-md"
+              >
+                {tooltip}
+              </Tooltip>
+            </TooltipTrigger>
+          </div>
+        )}
+      </div>
       {textarea ? (
         <TextArea
-          className={composeTailwindRenderProps(inputStyles, "px-2 py-1.5")}
+          className={composeTailwindRenderProps(
+            inputStyles,
+            cn(
+              "px-2 py-1.5 bg-input-bg text-base text-text-main disabled:cursor-not-allowed disabled:text-input-text-disabled disabled:bg-input-bg-disbaled",
+            ),
+          )}
           placeholder={placeholder}
         />
       ) : (
-        <Input className={inputStyles} placeholder={placeholder} icon={icon} />
+        <Input
+          className={inputStyles}
+          placeholder={placeholder}
+          icon={icon}
+          iconPlacement={iconPlacement}
+        />
       )}
 
       {description && <Description>{description}</Description>}

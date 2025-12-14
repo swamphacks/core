@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "title": "SwampHacks XI Application",
+    "description": "SwampHacks is the University of Florida’s largest annual hackathon. A 36-hour tech event where students from across the country come together to build projects, learn new skills, and connect with fellow innovators."
+  },
+
+  "content": [
+    {
+      "type": "section",
+      "label": "ℹ️ Personal Information",
+
+      "content": [
+        {
+          "type": "layout",
+
+          "content": [
+            {
+              "name": "firstName",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter your first name",
+              "label": "First Name",
+              "required": true,
+              "validation": {
+                "maxLength": 5
+              }
+            },
+
+            {
+              "name": "lastName",
+              "questionType": "shortAnswer",
+              "placeholder": "Enter your last name",
+              "label": "Last Name",
+              "required": true,
+              "validation": {
+                "maxLength": 5
+              }
+            }
+          ]
+        },
+        {
+          "name": "majors",
+          "questionType": "multiselect",
+          "placeholder": "Select your major(s)",
+          "label": "Major(s)",
+          "required": true,
+          "options": {
+            "data": "majors"
+          }
+        },
+        {
+          "name": "school",
+          "questionType": "select",
+          "placeholder": "Select your school",
+          "label": "School",
+          "required": true,
+          "searchable": true,
+          "options": {
+            "data": "schools"
+          }
+        },
+        {
+          "type": "question",
+          "name": "resume",
+          "questionType": "upload",
+          "label": "Upload your resume",
+          "required": true,
+          "validation": {
+            "validMimeTypes": ["application/pdf"]
+          }
+        },
+        {
+          "name": "shareInfo",
+          "questionType": "checkbox",
+          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the MLH Privacy Policy (https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md). I further agree to the terms of both the MLH Contest Terms and Conditions (https://github.com/MLH/mlh-policies/blob/main/contest-terms.md) and the MLH Privacy Policy (https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md).",
+          "required": true,
+          "options": [{ "label": "I agree", "value": "1" }]
+        },
+        {
+          "name": "test",
+          "questionType": "checkbox",
+          "placeholder": "Enter link",
+          "required": true,
+          "options": [
+            {
+              "label": "By clicking this,  I certify that I am 18 years old or will turn 18 before January 23rd, 2026.",
+              "value": "test"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

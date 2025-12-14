@@ -7,11 +7,13 @@ import (
 )
 
 type Middleware struct {
-	Auth *AuthMiddleware
+	Auth  *AuthMiddleware
+	Event *EventMiddleware
 }
 
 func NewMiddleware(db *db.DB, logger zerolog.Logger, cfg *config.Config) *Middleware {
 	return &Middleware{
-		Auth: NewAuthMiddleware(db, logger, cfg),
+		Auth:  NewAuthMiddleware(db, logger, cfg),
+		Event: NewEventMiddleware(db, logger, cfg),
 	}
 }

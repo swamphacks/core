@@ -6,3 +6,6 @@ api:
 
 storage:
 	docker compose up postgres redis
+
+backend:
+	docker compose up api email_worker bat_worker asynqmon

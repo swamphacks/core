@@ -12,6 +12,18 @@ services:
       - postgres
       - redis
 
+  bat_worker:
+    build:
+      dockerfile: cmd/email_worker/Dockerfile
+      context: ./apps/api
+      target: dev
+    env_file: "./apps/api/.env.dev"
+    volumes:
+      - ./apps/api:/app
+    working_dir: /app/cmd/BAT_worker
+    depends_on:
+      - redis
+
   email_worker:
     build:
       dockerfile: cmd/email_worker/Dockerfile
@@ -27,10 +39,11 @@ services:
   web:
     build:
       context: ./apps/web
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: dev
     volumes:
-      - ./apps/web:/app
-      - web_node_modules:/app/node_modules
+      - ./apps/web:/app:cached
+      - /app/node_modules
     ports:
       - "5173:5173"
     environment:
@@ -63,14 +76,19 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
-    image: redis:8.0
+    image: redis:8.2.1-alpine
     container_name: redis
     ports:
-      - 6379:6379
-    attach: false
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
 
 volumes:
   postgres_data:
-  web_node_modules:
     
     

@@ -165,7 +165,7 @@ paths:
           description: The authenticated session token/id
       tags:
         - Authentication
-  /event/{eventId}/interest:
+  /events/{eventId}/interest:
     post:
       summary: Make an interest submission for an event (email list)
       parameters:
@@ -231,8 +231,418 @@ paths:
       operationId: post-event-interest
       tags:
         - Event
+  /events:
+    get:
+      summary: Get events
+      description: Gets events with a nullable event role for authenticated users.
+      parameters:
+        - name: include_published
+          in: query
+          description: If true, include unpublished events as well. Superusers ONLY.
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 'OK: Events returned'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventWithUserInfo'
+
+      operationId: get-events
+      tags:
+        - Event
+    post:
+      summary: Create a new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - application_open
+                - application_close
+                - start_time
+                - end_time
+              properties:
+                name:
+                  type: string
+                  example: "Open Software Club's Workshop"
+                application_open:
+                  type: string
+                  format: date-time
+                  example: 2025-08-01T08:00:00Z
+                application_close:
+                  type: string
+                  format: date-time
+                  example: 2025-12-01T023:59:00Z
+                start_time:
+                  type: string
+                  format: date-time
+                  example: 2026-02-10T17:00:00Z
+                end_time:
+                  type: string
+                  format: date-time
+                  example: 2026-02-12T08:00:00Z
+                description:
+                  type: string
+                location:
+                  type: string
+                location_url:
+                  type: string
+                max_attendees:
+                  type: integer
+                rsvp_deadline:
+                  type: string
+                  format: date-time
+                  example: 2025-08-01T08:00:00Z
+                decision_release:
+                  type: string
+                  format: date-time
+                  example: 2025-08-01T08:00:00Z
+                website_url:
+                  type: string
+                is_published:
+                  type: boolean 
+      responses:
+        '201':
+          description: 'OK: Event created'
+          content:
+            application/json:
+              $ref: '#/components/schemas/Event'
+        '400':
+          description: 'Bad request/Malformed request'
+          content:
+            application/json:
+              $ref: '#/components/schemas/ErrorResponse'
+            examples:
+              Example 1:
+                value:
+                  error: invalid_request
+                  message: Could not parse request body
+        '409':
+          description: 'endTime is before startTime or applicationClose is before applicationOpen'
+          content:
+            schema:
+               $ref: '#/components/schemas/ErrorResponse'
+            examples:
+              Example 1:
+                value:
+                  error: time_conflict
+                  message: endTime is before startTime or applicationClose is before applicationOpen
+        5XX:
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: post-event
+      tags:
+        - Event
+  /events/{eventId}:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get an event
+      responses:
+        '201':
+          description: OK - Event received
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: get-single-event
+      tags:
+      - Event
+    patch:
+      summary: Update an event
+      responses:
+        '204':
+          description: OK - Event updated (patched)
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: patch-event
+      tags:
+      - Event
+    delete:
+      summary: Delete an event
+      responses:
+        '204':
+          description: OK - Event deleted (patched)
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: delete-event
+      tags:
+      - Event
+  /events/{eventId}/staff:
+    parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      summary: Get all staff users for an event
+      description: Gets all users with role STAFF or ADMIN
+      responses:
+        '200':
+          description: OK - Return users
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/UserWithEventRole'
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: get-event-staff
+      tags:
+        - Event
+  /events/{eventId}/roles:
+    parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      summary: Change or add event role of a user 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  nullable: true
+                  example: "user@example.com"
+                user_id:
+                  type: string
+                  nullable: true
+                  format: uuid
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                role:
+                  $ref: '#/components/schemas/EventRole'
+              required:
+                - role
+      responses:
+        '200':
+          description: OK - Return users
+        '404':
+          description: Not Found - User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: user_not_found
+                    message: User could not be found.
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: post-event-role
+      tags:
+        - Event
+  /events/{eventId}/role:
+    parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      summary: Get the current user's event role for an event
+      responses:
+        '200':
+          description: OK - Return role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NullableEventRoleRow'
+              examples:
+                Example 1:
+                  value:
+                    role: attendee
+                    user_id: 123e4567-e89b-12d3-a456-426614174000
+                    event_id: 123e4567-e89b-12d3-a456-426614174001
+                    assigned_at: 2025-08-08T17:00:00Z
+                Example 2 (no role):
+                  value:
+                    role: null
+                    user_id: 123e4567-e89b-12d3-a456-426614174000
+                    event_id: 123e4567-e89b-12d3-a456-426614174001
+                    assigned_at: null
+        '400':
+          description: Not Found - Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: invalid_event_id
+                    message: Event ID missing or malformed.
+        '404':
+          description: Not Found - Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: user_not_found
+                    message: User could not be found.
+        '5XX':
+          description: 'Server Error: Something went terribly wrong on our end.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Example 1:
+                  value:
+                    error: internal_err
+                    message: Something went wrong on our end.
+      operationId: get-user-event-role
+      tags:
+        - Event
 components:
   schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        location_url:
+          type: string
+          format: uri
+          nullable: true
+        max_attendees:
+          type: integer
+          format: int32
+          nullable: true
+        application_open:
+          type: string
+          format: date-time
+        application_close:
+          type: string
+          format: date-time
+        rsvp_deadline:
+          type: string
+          format: date-time
+          nullable: true
+        decision_release:
+          type: string
+          format: date-time
+          nullable: true
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        website_url:
+          type: string
+          format: uri
+          nullable: true
+        is_published:
+          type: boolean
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - name
+        - application_open
+        - application_close
+        - start_time
+        - end_time
     ErrorResponse:
       title: ErrorResponse
       type: object
@@ -298,6 +708,128 @@ components:
         user_agent:
           type: string
           nullable: true
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: "john@example.com"
+        email_verified:
+          type: boolean
+          example: true
+        onboarded:
+          type: boolean
+          example: false
+        image:
+          type: string
+          nullable: true
+          format: uri
+          example: "https://example.com/avatar.jpg"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-08-08T17:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-08-08T18:00:00Z"
+        role:
+          $ref: '#/components/schemas/UserRole'
+      required:
+        - id
+        - name
+        - email_verified
+        - onboarded
+        - created_at
+        - updated_at
+        - role
+    UserWithEventRole:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            event_role:
+              $ref: '#/components/schemas/EventRole'
+          required:
+            - event_role
+    UserRole:
+      type: string
+      enum:
+        - user
+        - superuser
+      example: user
+    EventRole:
+      type: string
+      enum:
+        - admin
+        - staff
+        - attendee
+        - applicant
+      example: attendee
+    ApplicationStatus:
+      type: string
+      enum:
+        - started
+        - submitted
+        - under_review
+        - accepted
+        - rejected
+        - waitlisted
+        - withdrawn
+      example: under_review
+    EventWithUserInfo:
+      allOf:
+        - $ref: '#/components/schemas/Event'
+        - type: object
+          properties:
+            event_role:
+              type: object
+              properties:
+                event_role_type:
+                  $ref: '#/components/schemas/EventRole'
+                valid:
+                  type: boolean
+              required:
+                - event_role_type
+                - valid
+            application_status:
+              type: object
+              properties:
+                application_status:
+                  $ref: '#/components/schemas/ApplicationStatus'
+                valid:
+                  type: boolean
+              required:
+                - application_status
+                - valid
+    NullableEventRoleRow:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/EventRole'
+          nullable: true
+        user_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        assigned_at:
+          type: string
+          format: date-time
+      required:
+        - user_id
+        - event_id
   securitySchemes:
     sh_session_id:
       type: http

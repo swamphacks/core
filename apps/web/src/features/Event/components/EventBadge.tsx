@@ -41,8 +41,18 @@ interface EventBadgeProps extends Omit<BadgeProps, "type"> {
   status: ApplicationStatusTypes;
 }
 
-const EventBadge = ({ status: statusProp, size, border }: EventBadgeProps) => {
-  const eventBadgeClassname = eventBadge({ status: statusProp, size, border });
+const EventBadge = ({
+  status: statusProp,
+  size,
+  border,
+  className,
+}: EventBadgeProps) => {
+  const eventBadgeClassname = eventBadge({
+    status: statusProp,
+    size,
+    border,
+    className,
+  });
   const status = applicationStatus[statusProp];
   const BadgeIcon = status?.icon;
 

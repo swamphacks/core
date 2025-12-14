@@ -1,261 +1,243 @@
-import { type ReactNode } from "react";
-import { TextField } from "@/components/ui/TextField";
-import { Form } from "react-aria-components";
-import { Button } from "@/components/ui/Button";
-import { FieldGroup } from "@/components/ui/Field";
-import TablerPhone from "~icons/tabler/phone";
-import { Radio, RadioGroup } from "@/components/ui/Radio";
-import { Select, SelectItem } from "@/components/ui/Select";
-import TablerAt from "~icons/tabler/at";
-import TablerBrandLinkedin from "~icons/tabler/brand-linkedin";
-import TablerBrandGithub from "~icons/tabler/brand-github";
-import { ComboBox, ComboBoxItem } from "@/components/ui/ComboBox";
-import {
-  MultiSelect,
-  MULTISELECT_NAME_PREFIX,
-} from "@/components/ui/MultiSelect";
+import { useRouter } from "@tanstack/react-router";
+import { build } from "@/features/FormBuilder/build";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { QuestionTypes } from "@/features/FormBuilder/types";
+import { showToast } from "@/lib/toast/toast";
+import TablerCircleCheck from "~icons/tabler/circle-check";
+import { Link } from "react-aria-components";
+import TablerArrowLeft from "~icons/tabler/arrow-left";
+import { api } from "@/lib/ky";
+import { Spinner } from "@/components/ui/Spinner";
+import { useMyApplication } from "@/features/Application/hooks/useMyApplication";
+import { formatDistanceToNowStrict, parseISO } from "date-fns";
+
+// TODO: can we put these in the assets folder?
+import Cloud from "./cloud.svg?react";
+import Cloud2 from "./cloud2.svg?react";
+import Cloud3 from "./cloud3.svg?react";
+import Cloud4 from "./cloud4.svg?react";
+import Tower from "./tower.svg?react";
+import Bell from "./bell.svg?react";
+
+// TODO: dynamically fetch application json data from somewhere (backend, cdn?) instead of hardcoding it in the frontend
+import data from "@/forms/application.json";
+
+const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
 interface ApplicationFormProps {
-  title: ReactNode;
-  description?: ReactNode;
+  eventId: string;
 }
 
-const options = [
-  { value: "chocolate", label: "Chocolate" },
-  { value: "strawberry", label: "Strawberry" },
-  { value: "vanilla", label: "Vanilla" },
-  { value: "vanilla2", label: "Vanilla" },
-  { value: "vanilla3", label: "Vanilla" },
-  { value: "vanilla4", label: "Vanilla" },
-  { value: "vanilla5", label: "Vanilla" },
-  { value: "vanilla6", label: "Vanilla" },
-  { value: "vanilla7", label: "Vanilla" },
-  { value: "vanilla8", label: "Vanilla" },
-];
+export function ApplicationForm({ eventId }: ApplicationFormProps) {
+  // TODO: make the `build` api better so components that use this function doesn't have to call useMemo on it?
+  const { Form, fieldsMeta } = useMemo(() => build(data), []);
+  const fileFields = useRef(new Set<string>());
+  const [isInvalid, setIsInvalid] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function parseFormData(formData: FormData): { [key: string]: any } {
-  const data: { [key: string]: any } = {};
+  const application = useMyApplication(eventId);
 
-  // eslint-disable-next-line prefer-const
-  for (let [name, element] of formData.entries()) {
-    // Ensure that values of multiselect fields are in array format
-    if (name.startsWith(MULTISELECT_NAME_PREFIX)) {
-      name = name.replace(MULTISELECT_NAME_PREFIX, "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>(undefined);
+  const [savedText, setSavedText] = useState<string | undefined>("");
 
-      const entry = data[name];
-      if (entry) {
-        data[name].push(element);
-      } else {
-        data[name] = [element];
+  // Update saved text every second. Restart interval when lastSavedAt changes.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (lastSavedAt) {
+        setSavedText(
+          `Saved ${formatDistanceToNowStrict(lastSavedAt, { addSuffix: true })}`,
+        );
       }
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, [lastSavedAt]);
+
+  useEffect(() => {
+    if (!application || application.isLoading) return;
+
+    if (application.data?.saved_at) {
+      const parsed = parseISO(application.data.saved_at);
+      setLastSavedAt(parsed);
     } else {
-      data[name] = element;
+      setLastSavedAt(undefined);
     }
+  }, [application?.data?.saved_at, application?.isLoading]);
+
+  const onSubmit = useCallback(async (data: Record<string, any>) => {
+    setIsSubmitting(true);
+
+    const formData = new FormData();
+
+    for (const key in data) {
+      if (fieldsMeta[key] === QuestionTypes.upload) {
+        for (const file of data[key]) {
+          formData.append(`${key}[]`, file);
+        }
+      } else {
+        formData.set(key, data[key]);
+      }
+    }
+
+    const res = await api.post(`events/${eventId}/application/submit`, {
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const resBody: any = await res.json();
+
+      showToast({
+        title: "Submission Error",
+        message: resBody.message || "Something went wrong",
+        type: "error",
+      });
+
+      setIsInvalid(true);
+    } else {
+      setIsSubmitted(true);
+      setIsInvalid(false);
+    }
+
+    setIsSubmitting(false);
+  }, []);
+
+  const onNewAttachments = useCallback((newFiles: Record<string, File[]>) => {
+    for (const field in newFiles) {
+      fileFields.current.add(field);
+    }
+  }, []);
+
+  const onChange = useCallback(
+    async (formValues: Record<string, any>) => {
+      if (isSubmitted || isSubmitting) return;
+
+      setIsSaving(true);
+
+      // don't save the file uploads
+      for (const field of fileFields.current) {
+        delete formValues[field];
+      }
+
+      await api.post(`events/${eventId}/application/save`, {
+        json: formValues,
+      });
+
+      const now = new Date();
+
+      setLastSavedAt(now);
+      // Set text immediately to avoid text flash
+      setSavedText(
+        `Saved ${formatDistanceToNowStrict(now, { addSuffix: true })}`,
+      );
+      setIsSaving(false);
+    },
+    [isSubmitted, isSubmitting],
+  );
+
+  if (application.isLoading) {
+    return (
+      <div className="flex w-full justify-center pt-10 gap-2 text-text-secondary">
+        <Spinner />
+        <p>Loading form...</p>
+      </div>
+    );
   }
 
-  return data;
-}
+  const applicationStatusSubmitted =
+    application.data["status"]["application_status"] !== "started";
 
-const ApplicationForm = ({ title, description }: ApplicationFormProps) => {
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // Prevent default browser page refresh.
-    e.preventDefault();
-
-    const formData = parseFormData(new FormData(e.currentTarget));
-
-    console.log(formData);
-  };
+  const saveStatus = (
+    <>
+      {isSaving && !isSubmitted && <span>Autosaving...</span>}
+      {!isSaving &&
+        savedText &&
+        !isSubmitted &&
+        !applicationStatusSubmitted && <span>{savedText}</span>}
+    </>
+  );
 
   return (
-    <div className="w-full sm:max-w-180 mx-auto font-figtree pb-2 p-2">
-      <div className="space-y-3 py-5 border-b-1 border-border">
-        <p className="text-2xl text-text-main">{title}</p>
-        <p className="text-text-secondary">{description}</p>
+    <>
+      <div className="hidden fixed xl:inline-flex w-fit z-[999] bottom-3 left-3 text-xs">
+        {saveStatus}
       </div>
+      <div className="flex-col">
+        <Form
+          defaultValues={
+            applicationStatusSubmitted
+              ? undefined
+              : JSON.parse(atob(application.data["application"]))
+          }
+          onSubmit={onSubmit}
+          onNewAttachments={onNewAttachments}
+          onChangeDelayMs={SAVE_DELAY_MS}
+          onChange={onChange}
+          SubmitSuccessComponent={SubmitSuccess}
+          isInvalid={isInvalid}
+          isSubmitted={isSubmitted || applicationStatusSubmitted}
+          isSubmitting={isSubmitting}
+          // TODO: figure out how to handle this through the JSON file, including how to import the SVG files there as well
+          renderFormHeader={(metadata) => {
+            return (
+              <div className="space-y-3 py-3 rounded-md relative overflow-hidden bg-[#f6fafc] dark:bg-gray-700 px-4 mt-1">
+                <div className="opacity-85">
+                  <div className="absolute -bottom-50 -right-33 z-10">
+                    <div className="relative inline-block">
+                      <Tower
+                        className="relative size-90 [transform:rotateX(25deg)_scale(1,0.9)]
+               [transform-origin:bottom_center] z-20"
+                      />
+                      <Bell className="absolute top-20 right-39 z-10 size-8" />
 
-      <Form className="space-y-3 mt-5" onSubmit={onSubmit}>
-        <div className="pb-5">
-          <p className="text-lg font-medium">ℹ️ Personal Information</p>
+                      <Cloud className="absolute -top-4 right-20 z-10 size-20 opacity-70 sm:opacity-100" />
+                      <Cloud2 className="absolute top-10 right-47 z-10 size-20 opacity-50 sm:opacity-100" />
+                      <Cloud3 className="absolute top-1 right-32 z-10 size-20 opacity-50 sm:opacity-100" />
+                      <Cloud4 className="absolute -top-5 right-55 z-10 size-20 opacity-30 sm:opacity-100" />
+                    </div>
+                  </div>
+                </div>
 
-          <div className="mt-3 space-y-4">
-            <FieldGroup className="gap-4">
-              <TextField
-                label="First Name"
-                placeholder="Enter your first name"
-                isRequired
-                className="flex-1"
-                name="firstName"
-              />
-              <TextField
-                label="Last Name"
-                placeholder="Enter your last name"
-                isRequired
-                className="flex-1"
-                name="lastName"
-              />
-            </FieldGroup>
-
-            <FieldGroup className="gap-4">
-              <TextField
-                label="Age"
-                placeholder="Enter your age"
-                isRequired
-                className="flex-1"
-              />
-              <TextField
-                label="Phone"
-                placeholder="Enter a phone number"
-                isRequired
-                className="flex-1"
-                icon={TablerPhone}
-              />
-            </FieldGroup>
-
-            <FieldGroup className="gap-4">
-              <TextField
-                label="Preferred Email"
-                placeholder="Enter your email"
-                isRequired
-                className="flex-1"
-                icon={TablerAt}
-              />
-              <TextField
-                label="University Email"
-                placeholder="Enter your school email"
-                isRequired
-                className="flex-1"
-                icon={TablerAt}
-              />
-            </FieldGroup>
-
-            <FieldGroup className="gap-4">
-              <TextField
-                label="Linkedin URL"
-                placeholder="Enter link"
-                isRequired
-                className="flex-1"
-                icon={TablerBrandLinkedin}
-              />
-            </FieldGroup>
-
-            <FieldGroup className="gap-4">
-              <TextField
-                label="Github URL"
-                placeholder="Enter link"
-                isRequired
-                className="flex-1"
-                icon={TablerBrandGithub}
-              />
-            </FieldGroup>
-          </div>
+                <p className="relative text-2xl text-text-main font-medium z-50 -top-1">
+                  {metadata.title}
+                </p>
+                <p className="relative text-text-main z-50 w-[85%] -top-1 font-medium sm:font-normal">
+                  {metadata.description}
+                </p>
+              </div>
+            );
+          }}
+        />
+        <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 text-sm pb-20">
+          <div className="lg:hidden">{saveStatus}</div>
         </div>
+      </div>
+    </>
+  );
+}
 
-        <div className="pb-5">
-          <p className="text-lg font-medium">🎓 Education</p>
+function SubmitSuccess() {
+  const router = useRouter();
 
-          <div className="mt-3 space-y-4">
-            <FieldGroup className="gap-4">
-              <ComboBox
-                label="School"
-                placeholder="Select your school"
-                isRequired
-                className="flex-1"
-              >
-                <ComboBoxItem>Chocolate</ComboBoxItem>
-                <ComboBoxItem>Mint</ComboBoxItem>
-                <ComboBoxItem>Strawberry</ComboBoxItem>
-                <ComboBoxItem>Vanilla</ComboBoxItem>
-              </ComboBox>
-              <Select
-                label="Level of Study"
-                placeholder="Select your level"
-                isRequired
-                className="flex-1"
-              >
-                <SelectItem>1st Year</SelectItem>
-                <SelectItem>2nd Year</SelectItem>
-                <SelectItem>3rd Year</SelectItem>
-                <SelectItem>4th Year</SelectItem>
-                <SelectItem>Grad Student</SelectItem>
-              </Select>
-            </FieldGroup>
-
-            <FieldGroup className="gap-4">
-              <TextField
-                label="Year in College"
-                placeholder="Select your year"
-                isRequired
-                className="flex-1"
-              />
-              <TextField
-                label="Graduation Date"
-                placeholder="Select date"
-                isRequired
-                className="flex-1"
-              />
-            </FieldGroup>
-
-            <FieldGroup className="gap-4">
-              <MultiSelect
-                name="majors"
-                label="Major(s)"
-                options={options}
-                isRequired
-              />
-            </FieldGroup>
-
-            <FieldGroup className="gap-4">
-              <MultiSelect
-                name="minors"
-                label="Minors(s)"
-                options={options}
-                isRequired
-              />
-            </FieldGroup>
-          </div>
-        </div>
-
-        <div>
-          <p className="text-lg">📋 Experience & Preferences</p>
-          <div className="mt-3 space-y-4">
-            <FieldGroup className="gap-4">
-              <RadioGroup
-                label="How many hackathons have you participated in?"
-                isRequired
-                className="grow"
-              >
-                <Radio value="0">SwampHacks would be my first</Radio>
-                <Radio value="1">1</Radio>
-                <Radio value="2">2</Radio>
-                <Radio value="3">3</Radio>
-                <Radio value="4">4</Radio>
-                <Radio value="5">5</Radio>
-                <Radio value="6">6</Radio>
-              </RadioGroup>
-            </FieldGroup>
-
-            <FieldGroup className="gap-4">
-              <Select
-                label="T-Shirt Size"
-                placeholder="Select your size"
-                isRequired
-                className="flex-1"
-              >
-                <SelectItem>Small</SelectItem>
-                <SelectItem>Medium</SelectItem>
-                <SelectItem>Large</SelectItem>
-              </Select>
-            </FieldGroup>
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <Button type="submit">Submit</Button>
-        </div>
-      </Form>
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 py-3 pl-3 bg-badge-bg-accepted/50 text-badge-text-accepted font-medium">
+        <TablerCircleCheck />
+        <p>Thank you! Your application has been received.</p>
+      </div>
+      <Link
+        onClick={() =>
+          router.navigate({
+            to: "/portal",
+            replace: true,
+            reloadDocument: true,
+          })
+        }
+        className="flex items-center gap-1 text-blue-500 select-none cursor-pointer hover:underline"
+      >
+        <TablerArrowLeft /> Back to dashboard
+      </Link>
     </div>
   );
-};
-
-export { ApplicationForm };
+}

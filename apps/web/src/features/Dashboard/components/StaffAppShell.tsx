@@ -1,0 +1,192 @@
+import { useLocation, useRouter } from "@tanstack/react-router";
+import { AppShell } from "@/components/AppShell/AppShell";
+import { NavLink } from "@/components/AppShell/NavLink";
+import TablerLayoutDashboard from "~icons/tabler/layout-dashboard";
+import TablerUsersGroup from "~icons/tabler/users-group";
+import TablerClipboardCheck from "~icons/tabler/clipboard-check";
+import TablerMail from "~icons/tabler/mail";
+import TablerSettings from "~icons/tabler/settings";
+import TablerFileText from "~icons/tabler/file-text";
+import TablerAlarm from "~icons/tabler/alarm";
+import TablerBodyScan from "~icons/tabler/body-scan";
+import TablerUserSearch from "~icons/tabler/user-search";
+import TablerFlower from "~icons/tabler/flower";
+import TablerTicket from "~icons/tabler/ticket";
+import TablerAdjustmentsHorizontal from "~icons/tabler/adjustments-horizontal";
+import TablerShieldHalfFilled from "~icons/tabler/shield-half-filled";
+import TablerChartBarPopular from "~icons/tabler/chart-bar-popular";
+import { type PropsWithChildren } from "react";
+import { Logo } from "@/components/Logo";
+
+interface DashboardAppShellProps {
+  eventId: string;
+  eventRole: "admin" | "staff";
+}
+
+export default function StaffDashboardShell({
+  eventId,
+  eventRole,
+  children,
+}: PropsWithChildren<DashboardAppShellProps>) {
+  const router = useRouter();
+  const pathname = useLocation({ select: (loc) => loc.pathname });
+
+  const dashboardOverviewActive = /^\/events\/[^/]+\/dashboard\/?$/.test(
+    pathname,
+  );
+
+  const applicationReviewActive =
+    /^\/events\/[^/]+\/dashboard\/application-review\/?$/.test(pathname);
+  const waitlistActive = /^\/events\/[^/]+\/dashboard\/waitlist\/?$/.test(
+    pathname,
+  );
+  const applicationStatisticsActive =
+    /^\/events\/[^/]+\/dashboard\/application-statistics\/?$/.test(pathname);
+  const checkInActive = /^\/events\/[^/]+\/dashboard\/check-in\/?$/.test(
+    pathname,
+  );
+  const attendeeDirectoryActive =
+    /^\/events\/[^/]+\/dashboard\/attendee-directory\/?$/.test(pathname);
+  const teamManagementActive =
+    /^\/events\/[^/]+\/dashboard\/team-management\/?$/.test(pathname);
+  const redeemablesActive = /^\/events\/[^/]+\/dashboard\/redeemables\/?$/.test(
+    pathname,
+  );
+  const emailsActive = /^\/events\/[^/]+\/dashboard\/emails\/?$/.test(pathname);
+
+  const eventSettingsActive =
+    /^\/events\/[^/]+\/dashboard\/event-settings\/?$/.test(pathname);
+  const staffManagementActive =
+    /^\/events\/[^/]+\/dashboard\/staff-management\/?$/.test(pathname);
+
+  const userManagementActive =
+    /^\/events\/[^/]+\/dashboard\/user-management\/?$/.test(pathname);
+
+  return (
+    <AppShell>
+      <AppShell.Header>
+        <div className="items-center gap-2 ml-3 flex">
+          <Logo
+            onClick={() => router.navigate({ to: "/portal" })}
+            className="py-2 cursor-pointer"
+            label={eventRole === "admin" ? "Admin Portal" : "Staff Portal"}
+          />
+        </div>
+      </AppShell.Header>
+
+      <AppShell.Navbar>
+        <NavLink
+          label="Overview"
+          href={`/events/${eventId}/dashboard`}
+          leftSection={<TablerLayoutDashboard className="w-5 aspect-square" />}
+          active={dashboardOverviewActive}
+        />
+        <NavLink
+          label="Applications"
+          leftSection={<TablerFileText className="w-5 aspect-square" />}
+          initialExpanded={
+            waitlistActive ||
+            applicationReviewActive ||
+            applicationStatisticsActive
+          }
+        >
+          <NavLink
+            label="Application Review"
+            href={`/events/${eventId}/dashboard/application-review`}
+            leftSection={<TablerClipboardCheck className="w-5 aspect-square" />}
+            active={applicationReviewActive}
+          />
+          <NavLink
+            label="Waitlist"
+            href={`/events/${eventId}/dashboard/waitlist`}
+            leftSection={<TablerAlarm className="w-5 aspect-square" />}
+            active={waitlistActive}
+          />
+          <NavLink
+            label="Statistics"
+            href={`/events/${eventId}/dashboard/application-statistics`}
+            leftSection={
+              <TablerChartBarPopular className="w-5 aspect-square" />
+            }
+            active={applicationStatisticsActive}
+          />
+        </NavLink>
+
+        <NavLink
+          label="Attendees"
+          leftSection={<TablerUsersGroup className="w-5 aspect-square" />}
+          initialExpanded={
+            checkInActive || teamManagementActive || attendeeDirectoryActive
+          }
+        >
+          <NavLink
+            label="Check In"
+            href={`/events/${eventId}/dashboard/check-in`}
+            leftSection={<TablerBodyScan className="w-5 aspect-square" />}
+            active={checkInActive}
+          />
+          <NavLink
+            label="Directory"
+            href={`/events/${eventId}/dashboard/attendee-directory`}
+            leftSection={<TablerUserSearch className="w-5 aspect-square" />}
+            active={attendeeDirectoryActive}
+          />
+          <NavLink
+            label="Teams"
+            href={`/events/${eventId}/dashboard/team-management`}
+            leftSection={<TablerFlower className="w-5 aspect-square" />}
+            active={teamManagementActive}
+          />
+        </NavLink>
+
+        <NavLink
+          label="Redeemables"
+          href={`/events/${eventId}/dashboard/redeemables`}
+          leftSection={<TablerTicket className="w-5 aspect-square" />}
+          active={redeemablesActive}
+        />
+
+        <NavLink
+          label="Email Campaigns"
+          href={`/events/${eventId}/dashboard/emails`}
+          leftSection={<TablerMail className="w-5 aspect-square" />}
+          active={emailsActive}
+        />
+        {eventRole == "admin" && (
+          <NavLink
+            label="Configuration"
+            leftSection={<TablerSettings className="w-5 aspect-square" />}
+            initialExpanded={eventSettingsActive || staffManagementActive}
+          >
+            <NavLink
+              label="Event Settings"
+              href={`/events/${eventId}/dashboard/event-settings`}
+              leftSection={
+                <TablerAdjustmentsHorizontal className="w-5 aspect-square" />
+              }
+              active={eventSettingsActive}
+            />
+            <NavLink
+              label="Staff & Roles"
+              href={`/events/${eventId}/dashboard/staff-management`}
+              leftSection={
+                <TablerShieldHalfFilled className="w-5 aspect-square" />
+              }
+              active={staffManagementActive}
+            />
+            <NavLink
+              label="User Management"
+              href={`/events/${eventId}/dashboard/user-management`}
+              leftSection={
+                <TablerShieldHalfFilled className="w-5 aspect-square" />
+              }
+              active={userManagementActive}
+            />
+          </NavLink>
+        )}
+      </AppShell.Navbar>
+
+      <AppShell.Main>{children}</AppShell.Main>
+    </AppShell>
+  );
+}

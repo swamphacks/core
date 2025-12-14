@@ -34,59 +34,69 @@ type Story = StoryObj<typeof meta>;
 export const Rejected: Story = {
   args: {
     status: "rejected",
+    eventId: "example-event-id",
   },
 };
 
 export const Attending: Story = {
   args: {
     status: "attending",
+    eventId: "example-event-id",
   },
 };
 
 export const Accepted: Story = {
   args: {
     status: "accepted",
+    eventId: "example-event-id",
   },
 };
 
 export const Waitlisted: Story = {
   args: {
     status: "waitlisted",
+    eventId: "example-event-id",
   },
 };
 
 export const UnderReview: Story = {
   args: {
     status: "underReview",
+    eventId: "example-event-id",
   },
 };
 
 export const NotApplied: Story = {
   args: {
     status: "notApplied",
+    eventId: "example-event-id",
   },
 };
 
 export const Staff: Story = {
   args: {
     status: "staff",
+    eventId: "example-event-id",
   },
 };
 
 export const Admin: Story = {
   args: {
     status: "admin",
+    eventId: "example-event-id",
   },
 };
 
 export const NotGoing: Story = {
   args: {
     status: "notGoing",
+    eventId: "example-event-id",
   },
 };
 
 export const Completed: Story = {
   args: {
     status: "completed",
+    eventId: "example-event-id",
   },
 };

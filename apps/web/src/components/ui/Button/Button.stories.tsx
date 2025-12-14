@@ -17,7 +17,7 @@ const meta = {
   },
   argTypes: {
     variant: {
-      options: ["primary", "secondary", "danger"],
+      options: ["primary", "secondary", "danger", "success"],
       control: { type: "select" },
     },
   },
@@ -44,5 +44,12 @@ export const Danger: Story = {
   args: {
     variant: "danger",
     children: "Danger Button",
+  },
+};
+
+export const Unstyled: Story = {
+  args: {
+    variant: "unstyled",
+    children: "Unstyled Button",
   },
 };

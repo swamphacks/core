@@ -35,7 +35,7 @@ func (s *EventInterestService) CreateInterestSubmission(ctx context.Context, eve
 	}
 
 	result, err := s.eventInterestRepo.AddEmail(ctx, params)
-	if err != nil && err == repository.ErrDuplicateEmails {
+	if err != nil && errors.Is(err, repository.ErrDuplicateEmails) {
 		s.logger.Err(err).Msg("Could not insert email due to duplicate existing.")
 		return nil, ErrEmailConflict
 	} else if err != nil {
