@@ -1,20 +1,31 @@
 package services
 
 import (
+	"context"
+	"errors"
+
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/bat"
+	"github.com/swamphacks/core/apps/api/internal/db/repository"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
+)
+
+var (
+	ErrListApplicationsFailure = errors.New("Failed to retrieve applications")
 )
 
 type BatService struct {
 	engine    *bat.BatEngine
+	appRepo   *repository.ApplicationRepository
+	eventRepo *repository.EventRepository
 	taskQueue *asynq.Client
 	logger    zerolog.Logger
 }
 
-func NewBatService(engine *bat.BatEngine, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
+func NewBatService(engine *bat.BatEngine, appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
 	return &BatService{
 		engine:    engine,
 		taskQueue: taskQueue,
@@ -40,12 +51,38 @@ func (s *BatService) QueueCalculateAdmissionsTask(eventId uuid.UUID) (*asynq.Tas
 	return info, nil
 }
 
-func (s *BatService) CalculateAdmissions() {
-	// First calculate scores for each applicant
-	score, err := s.engine.CalculateWeightedScore(1, 5)
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to calculate weighted score.")
+type ApplicantAdmissionsData struct {
+	ID            uuid.UUID
+	TeamID        uuid.NullUUID
+	WeightedScore float32
+	IsUFStudent   bool // Is a University of Florida student?
+	IsEarlyCareer bool // Is a freshman to sophomore?
+}
+
+func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID) error {
+	// First aggregate data necessary
+	applications, err := s.appRepo.ListApplicationsByEventAndStatus(ctx, eventId, sqlc.ApplicationStatusUnderReview)
+	if err != nil || len(applications) == 0 {
+		return ErrListApplicationsFailure
 	}
 
-	s.logger.Info().Float64("Weighted score", score).Msg("Successed in calculating score.")
+	event, err := s.eventRepo.GetEventByID(ctx, eventId)
+	if err != nil {
+		return err
+	}
+
+	maxAttendees := int32(500)
+	if event.MaxAttendees != nil {
+		maxAttendees = *event.MaxAttendees
+	}
+
+	var appAdmissionsData []ApplicantAdmissionsData
+	for _, app := range applications {
+		appAdmissionsData = append(appAdmissionsData, ApplicantAdmissionsData{
+			ID: app.UserID,
+			TeamID: ,
+		})
+	}
+
+	return nil
 }

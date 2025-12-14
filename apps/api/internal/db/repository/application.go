@@ -66,6 +66,20 @@ func (r *ApplicationRepository) GetApplicationByUserAndEventID(ctx context.Conte
 	return &application, nil
 }
 
+func (r *ApplicationRepository) ListApplicationsByEventAndStatus(ctx context.Context, eventId uuid.UUID, status sqlc.ApplicationStatus) ([]sqlc.ListApplicationsByEventAndStatusRow, error) {
+	applications, err := r.db.Query.ListApplicationsByEventAndStatus(ctx, sqlc.ListApplicationsByEventAndStatusParams{
+		EventID: eventId,
+		Status: sqlc.NullApplicationStatus{
+			Valid:             true,
+			ApplicationStatus: status,
+		},
+	})
+	if err != nil {
+		return []sqlc.ListApplicationsByEventAndStatusRow{}, err
+	}
+	return applications, nil
+}
+
 func (r *ApplicationRepository) SubmitApplication(ctx context.Context, data any, userId, eventId uuid.UUID) error {
 	jsonBytes, err := json.Marshal(data)
 

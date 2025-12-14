@@ -39,6 +39,12 @@ WHERE event_id = $1
 ORDER BY 
     user_id ASC;
 
+-- name: ListApplicationsByEventAndStatus :many
+SELECT user_id, application, experience_rating, passion_rating
+FROM applications
+WHERE event_id = $1
+    AND status = $2;
+
 -- name: AssignApplicationsToReviewer :exec
 UPDATE applications
 SET assigned_reviewer_id = @reviewer_id::uuid,
