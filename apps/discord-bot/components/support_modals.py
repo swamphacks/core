@@ -48,16 +48,25 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
             The method will send error messages if required channels or roles are not found.
             Staff members are notified with a soft ping (hidden mention) in the reports channel.
         """
+        from utils.roles_config import RoleNames, get_role_id
+        
         global last_pinged_mentor_index
         reports_channel = discord.utils.get(interaction.guild.channels, name="reports")
         support_channel = discord.utils.get(interaction.guild.channels, name="support")
         thread_author = interaction.user
-        mentor_role = discord.utils.get(interaction.guild.roles, name="Mentor")
-        if not mentor_role:
-            await interaction.response.send_message("Error: Could not find the **Mentor** role. Please create it before using this command.", ephemeral=True)
+        mod_role_name = RoleNames.MODERATOR
+        mod_role_id = get_role_id(mod_role_name)
+        
+        if mod_role_id:
+            mod_role = interaction.guild.get_role(int(mod_role_id))
+        else:
+            mod_role = discord.utils.get(interaction.guild.roles, name=mod_role_name)
+        
+        if not mod_role:
+            await interaction.response.send_message(f"Error: Could not find the **{mod_role_name}** role. Please create it before using this command.", ephemeral=True)
             return
         
-        # check if the channels and roles exist
+        # check if the channels exist
         if not reports_channel:
             await interaction.response.send_message(
                 "Error: Could not find the **reports** channel. Please create it before using this command.",
@@ -74,8 +83,8 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         if len(description) > 200:
             shortened_description = description[:200] + "..."
             
-        # get available mentors
-        available_mentors = get_available_mentors(mentor_role)
+        # get available mentors from all acceptable roles
+        available_mentors = get_available_mentors(interaction.guild)
         if not available_mentors:
             await interaction.response.send_message(
                 "Error: No available mentors at this time. Please try again later.",
@@ -124,7 +133,7 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
                 
         # soft ping staff and send the embed to the reports channel
         await reports_channel.send(
-            content=f"||{mentor_role.mention}||",
+            content=f"||{mod_role.mention}||",
             embed=reports_embed,
             view=SupportThreadButtons(thread, self.description_input),
             allowed_mentions=discord.AllowedMentions(roles=True)
@@ -174,14 +183,23 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             The method will send error messages if required channels or roles are not found.
             Staff members are notified with a soft ping (hidden mention) in the reports channel.
         """
+        from utils.roles_config import RoleNames, get_role_id
+        
         global last_pinged_mentor_index
         reports_channel = discord.utils.get(interaction.guild.channels, name="reports")
-        mentor_role = discord.utils.get(interaction.guild.roles, name="Mentor")
+        mod_role_name = RoleNames.MODERATOR
+        mod_role_id = get_role_id(mod_role_name)
+        
+        if mod_role_id:
+            mod_role = interaction.guild.get_role(int(mod_role_id))
+        else:
+            mod_role = discord.utils.get(interaction.guild.roles, name=mod_role_name)
+        
         category = discord.utils.get(interaction.guild.categories, name="Support-VCs")
         vc_author = interaction.user
         
-        if not mentor_role:
-            await interaction.response.send_message("Error: Could not find the **Mentor** role. Please create it before using this command.", ephemeral=True)
+        if not mod_role:
+            await interaction.response.send_message(f"Error: Could not find the **{mod_role_name}** role. Please create it before using this command.", ephemeral=True)
             return
 
         if not reports_channel:
@@ -204,7 +222,7 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         # give permissions to the moderator role and the user who clicked the button
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False, connect=False),
-            mentor_role: discord.PermissionOverwrite(view_channel=True, connect=True),
+            mod_role: discord.PermissionOverwrite(view_channel=True, connect=True),
             vc_author: discord.PermissionOverwrite(view_channel=True, connect=True),
         }
         
@@ -234,20 +252,21 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             print("Voice channel does not have an associated text channel.")
             return
 
-        # ping the user who created the thread
-        await interaction.response.send_message(
-            f"Voice channel created: {voice_channel.mention}",
-            ephemeral=True
-        )
-
-        # get available mentors
-        available_mentors = get_available_mentors(mentor_role)
+        # get available mentors from all acceptable roles
+        available_mentors = get_available_mentors(interaction.guild)
         if not available_mentors:
             await interaction.response.send_message(
                 "Error: No available mentors at this time. Please try again later.",
                 ephemeral=True
             )
             return
+        
+        # ping the user who created the thread
+        await interaction.response.send_message(
+            f"Voice channel created: {voice_channel.mention}",
+            ephemeral=True
+        )
+        
         if last_pinged_mentor_index >= len(available_mentors):
             last_pinged_mentor_index = 0
         selected_mentor = available_mentors[last_pinged_mentor_index]
@@ -264,7 +283,7 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         reports_embed.add_field(name="Opened by", value=f"{vc_author.mention}\n", inline=True)
 
         await reports_channel.send(
-            content=f"||{mentor_role.mention}||",
+            content=f"||{mod_role.mention}||",
             embed=reports_embed,
             view=SupportVCButtons(voice_channel, self.description_input),
             allowed_mentions=discord.AllowedMentions(roles=True)

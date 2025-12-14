@@ -38,3 +38,5 @@ coverage/
 venv
 
 **/.pnpm-store/
+
+.env.dev.discord

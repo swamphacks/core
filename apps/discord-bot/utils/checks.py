@@ -2,18 +2,7 @@ import os
 from discord import app_commands, Interaction, Permissions
 import json
 from typing import Callable, Coroutine, Any
-
-# def load_config():
-#     config_path = os.path.join(os.path.dirname(__file__), "..", "config.json")
-#     try:
-#         with open(config_path) as f:
-#             return json.load(f)
-#     except FileNotFoundError:
-#         raise FileNotFoundError(f"Config file not found at {config_path}")
-#     except json.JSONDecodeError as e:
-#         raise ValueError(f"Invalid JSON in config file: {e}")
-
-# config = load_config()
+from utils.roles_config import get_acceptable_roles
 
 def has_bot_full_access() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
     """
@@ -23,8 +12,9 @@ def has_bot_full_access() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
         bool: True if the user has one of the acceptable roles or is an administrator, False otherwise
     """
     async def predicate(interaction: Interaction):
-        # roles that are allowed to use all of the bot commands
-        ACCEPTABLE_ROLES = ["Moderator", "Mentor"]
+        # Get acceptable roles from config
+        acceptable_roles = get_acceptable_roles()
+        
         # Ensure interaction is in a channel and a user exists
         if not interaction.guild or not interaction.user:
             return False
@@ -38,7 +28,7 @@ def has_bot_full_access() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
         
         # check if user has moderator privileges
         # for now it just checks if they are an admin but adjust this later
-        if any(role.name in ACCEPTABLE_ROLES for role in member.roles):
+        if any(role.name in acceptable_roles for role in member.roles):
             # print(f"User {member.name} has moderator privileges.")
             return True
         else:

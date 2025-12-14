@@ -199,17 +199,50 @@ class General(commands.Cog):
     @app_commands.command(name="set_available_mentors", description="Set available mentors in the server")
     async def set_all_mentors_available(self, interaction: discord.Interaction) -> None:
         """
-        Set all users in the server with the "Mentor" role to "Available Mentor"
+        Set all users in the server with acceptable mentor roles to "Available Mentor"
         
         Args:
             interaction: The interaction that triggered this command
         """
-        mentor_role = self.get_role(interaction.guild, "Mentor")
-        if not mentor_role:
-            await interaction.response.send_message("Error: Could not find the **Mentor** role. Please create it before using this command.", ephemeral=True)
+        from utils.roles_config import get_acceptable_mentor_roles, RoleNames, get_role_id
+        
+        await interaction.response.defer(ephemeral=True)
+        
+        acceptable_mentor_roles = get_acceptable_mentor_roles()
+        available_role_name = RoleNames.AVAILABLE_MENTOR
+        available_role_id = get_role_id(available_role_name)
+        
+        if available_role_id:
+            available_role = interaction.guild.get_role(int(available_role_id))
+        else:
+            available_role = discord.utils.get(interaction.guild.roles, name=available_role_name)
+        
+        if not available_role:
+            await interaction.followup.send(f"Error: Could not find the **{available_role_name}** role. Please create it before using this command.", ephemeral=True)
             return
-        await set_all_mentors_available(mentor_role)
-        await interaction.response.send_message("All mentors are now available.", ephemeral=True)
+        
+        total_updated = 0
+        roles_found = []
+        
+        for role_name in acceptable_mentor_roles:
+            role_id = get_role_id(role_name)
+            if role_id:
+                role = interaction.guild.get_role(int(role_id))
+            else:
+                role = self.get_role(interaction.guild, role_name)
+            
+            if role:
+                roles_found.append(role_name)
+                for member in role.members:
+                    if available_role_name not in [r.name for r in member.roles]:
+                        await member.add_roles(available_role)
+                        total_updated += 1
+        
+        if not roles_found:
+            await interaction.followup.send(f"Error: Could not find any of the acceptable mentor roles ({', '.join(acceptable_mentor_roles)}). Please create them before using this command.", ephemeral=True)
+            return
+        
+        await interaction.followup.send(f"Successfully set {total_updated} members from roles {', '.join(roles_found)} to available.", ephemeral=True)
         
         
     @app_commands.command(name="add_to_thread", description="Add a user to the support thread")

@@ -8,4 +8,6 @@ dependencies = [
     "discord-py>=2.5.2",
     "google-genai>=1.26.0",
     "python-dotenv>=1.1.1",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.22.0",
 ]
