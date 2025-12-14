@@ -14,6 +14,7 @@ type Handlers struct {
 	Email         *EmailHandler
 	Application   *ApplicationHandler
 	Teams         *TeamHandler
+	Admission     *AdmissionHandler
 }
 
 func NewHandlers(
@@ -24,6 +25,7 @@ func NewHandlers(
 	emailService *services.EmailService,
 	appService *services.ApplicationService,
 	teamService *services.TeamService,
+	batService *services.BatService,
 	cfg *config.Config,
 	logger zerolog.Logger,
 ) *Handlers {
@@ -35,5 +37,6 @@ func NewHandlers(
 		Email:         NewEmailHandler(emailService, logger),
 		Application:   NewApplicationHandler(appService),
 		Teams:         NewTeamHandler(teamService, logger),
+		Admission:     NewAdmissionHandler(batService),
 	}
 }

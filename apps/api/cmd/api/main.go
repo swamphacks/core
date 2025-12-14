@@ -9,6 +9,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/api"
 	"github.com/swamphacks/core/apps/api/internal/api/handlers"
 	"github.com/swamphacks/core/apps/api/internal/api/middleware"
+	"github.com/swamphacks/core/apps/api/internal/bat"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
@@ -55,6 +56,12 @@ func main() {
 	// Create SES Client for email service
 	sesClient := email.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
 
+	// BAT Engine, needs to be synced with ENV soon
+	batEngine, err := bat.NewBatEngine(0.5, 0.5)
+	if err != nil {
+		logger.Fatal().Msg("Failed to init Bat Engine")
+	}
+
 	// Create asynq client
 	redisOpt, err := asynq.ParseRedisURI(cfg.RedisURL)
 	if err != nil {
@@ -90,9 +97,10 @@ func main() {
 	emailService := services.NewEmailService(taskQueueClient, sesClient, logger)
 	applicationService := services.NewApplicationService(applicationRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, logger)
 	teamService := services.NewTeamService(teamRepo, teamMemberRepo, teamJoinRequestRepo, eventRepo, txm, logger)
+	batService := services.NewBatService(batEngine, taskQueueClient, logger)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, cfg, logger)
+	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, batService, cfg, logger)
 
 	api := api.NewAPI(&logger, apiHandlers, mw)
 
