@@ -21,13 +21,14 @@ import (
 var (
 	ErrListApplicationsFailure = errors.New("Failed to retrieve applications")
 	ErrMissingRatings          = errors.New("Some applications are missing their review ratings")
-	ErrAddResultFailure = errors.New("Failed to add generated result")
+	ErrAddResultFailure        = errors.New("Failed to add generated result")
 )
 
 type BatService struct {
 	engine         *bat.BatEngine
 	appRepo        *repository.ApplicationRepository
 	eventRepo      *repository.EventRepository
+	batResultRepo  *repository.BatResultsRepository
 	batResultsRepo *repository.BatResultsRepository
 	taskQueue      *asynq.Client
 	logger         zerolog.Logger
@@ -170,15 +171,17 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID)
 	acceptedTeams, remaining, quota := admitTeams(teams, solo, quota)
 	accepted, rejected, quota := admitSoloApplicants(remaining, quota)
 
-	var acceptedUUIDs uuid.UUID[]
-	var rejectedUUIDs uuid.UUID[]
+	var acceptedUUIDs []uuid.UUID
+	var rejectedUUIDs []uuid.UUID
+
 	for _, applicant := range accepted {
 		acceptedUUIDs = append(acceptedUUIDs, applicant.ID)
 	}
+
 	for _, applicant := range rejected {
-		rejectedUUIDs = append(acceptedUUIDs, applicant.ID)
+		rejectedUUIDs = append(rejectedUUIDs, applicant.ID)
 	}
-	batResult, err := s.AddResult(eventId, accepted, rejected)
+	_, err = s.AddResult(ctx, eventId, acceptedUUIDs, rejectedUUIDs)
 
 	if err != nil {
 		return ErrAddResultFailure

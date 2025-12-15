@@ -41,18 +41,32 @@ func (q *Queries) AddResult(ctx context.Context, arg AddResultParams) (BatResult
 	return i, err
 }
 
+const deleteResultById = `-- name: DeleteResultById :execrows
+DELETE FROM bat_results
+WHERE id = $1
+`
+
+func (q *Queries) DeleteResultById(ctx context.Context, id uuid.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteResultById, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getResultsByEventId = `-- name: GetResultsByEventId :many
 SELECT
+    id,
     accepted_applicants,
     rejected_applicants,
     created_at
-FROM
-    bat_results
-WHERE
-    event_id = $1::uuid
+FROM bat_results
+WHERE event_id = $1
+ORDER BY created_at DESC
 `
 
 type GetResultsByEventIdRow struct {
+	ID                 uuid.UUID   `json:"id"`
 	AcceptedApplicants []uuid.UUID `json:"accepted_applicants"`
 	RejectedApplicants []uuid.UUID `json:"rejected_applicants"`
 	CreatedAt          time.Time   `json:"created_at"`
@@ -67,7 +81,12 @@ func (q *Queries) GetResultsByEventId(ctx context.Context, eventID uuid.UUID) ([
 	items := []GetResultsByEventIdRow{}
 	for rows.Next() {
 		var i GetResultsByEventIdRow
-		if err := rows.Scan(&i.AcceptedApplicants, &i.RejectedApplicants, &i.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.AcceptedApplicants,
+			&i.RejectedApplicants,
+			&i.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

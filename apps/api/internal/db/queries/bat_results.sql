@@ -9,9 +9,14 @@ INSERT INTO bat_results (
 
 -- name: GetResultsByEventId :many
 SELECT
+    id,
     accepted_applicants,
     rejected_applicants,
     created_at
 FROM bat_results
-WHERE event_id = @event_id::uuid
+WHERE event_id = $1
 ORDER BY created_at DESC;
+
+-- name: DeleteResultById :execrows
+DELETE FROM bat_results
+WHERE id = $1;
