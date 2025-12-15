@@ -2,7 +2,9 @@
 INSERT INTO bat_results (
     event_id,
     accepted_applicants,
-    rejected_applicants
+    rejected_applicants,
+    status,
+    
 ) VALUES (
     $1, $2, $3
 ) RETURNING *;
@@ -12,7 +14,9 @@ SELECT
     id,
     accepted_applicants,
     rejected_applicants,
-    created_at
+    status,
+    created_at,
+    completed_at
 FROM bat_results
 WHERE event_id = $1
 ORDER BY created_at DESC;
