@@ -14,20 +14,23 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/bat"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 )
 
 var (
 	ErrListApplicationsFailure = errors.New("Failed to retrieve applications")
 	ErrMissingRatings          = errors.New("Some applications are missing their review ratings")
+	ErrAddResultFailure = errors.New("Failed to add generated result")
 )
 
 type BatService struct {
-	engine    *bat.BatEngine
-	appRepo   *repository.ApplicationRepository
-	eventRepo *repository.EventRepository
-	taskQueue *asynq.Client
-	logger    zerolog.Logger
+	engine         *bat.BatEngine
+	appRepo        *repository.ApplicationRepository
+	eventRepo      *repository.EventRepository
+	batResultsRepo *repository.BatResultsRepository
+	taskQueue      *asynq.Client
+	logger         zerolog.Logger
 }
 
 func NewBatService(engine *bat.BatEngine, appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
@@ -38,6 +41,25 @@ func NewBatService(engine *bat.BatEngine, appRepo *repository.ApplicationReposit
 		eventRepo: eventRepo,
 		logger:    logger.With().Str("service", "Bat Service").Str("component", "admissions").Logger(),
 	}
+}
+
+func (s *BatService) AddResult(ctx context.Context, eventID uuid.UUID, acceptedApplicants []uuid.UUID, rejectedApplicants []uuid.UUID) (*sqlc.BatResult, error) {
+	params := sqlc.AddResultParams{
+		EventID:            eventID,
+		AcceptedApplicants: acceptedApplicants,
+		RejectedApplicants: rejectedApplicants,
+	}
+
+	result, err := s.batResultRepo.AddResult(ctx, params)
+	if err != nil && errors.Is(err, repository.ErrDuplicateResult) {
+		s.logger.Err(err).Msg("Could not insert result as it already exists.")
+		return nil, ErrResultConflict
+	} else if err != nil {
+		s.logger.Err(err).Msg("An unknown error was caught!")
+		return nil, ErrFailedToCreateResult
+	}
+
+	return result, nil
 }
 
 func (s *BatService) QueueCalculateAdmissionsTask(eventId uuid.UUID) (*asynq.TaskInfo, error) {
@@ -100,16 +122,6 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID)
 		return ErrListApplicationsFailure
 	}
 
-	// event, err := s.eventRepo.GetEventByID(ctx, eventId)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// maxAttendees := int32(500)
-	// if event.MaxAttendees != nil {
-	// 	maxAttendees = *event.MaxAttendees
-	// }
-
 	var appAdmissionsData []ApplicantAdmissionsData
 	for _, app := range applications {
 		if app.ExperienceRating == nil || app.PassionRating == nil {
@@ -157,6 +169,20 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID)
 	applyTeamSortKey(teams)
 	acceptedTeams, remaining, quota := admitTeams(teams, solo, quota)
 	accepted, rejected, quota := admitSoloApplicants(remaining, quota)
+
+	var acceptedUUIDs uuid.UUID[]
+	var rejectedUUIDs uuid.UUID[]
+	for _, applicant := range accepted {
+		acceptedUUIDs = append(acceptedUUIDs, applicant.ID)
+	}
+	for _, applicant := range rejected {
+		rejectedUUIDs = append(acceptedUUIDs, applicant.ID)
+	}
+	batResult, err := s.AddResult(eventId, accepted, rejected)
+
+	if err != nil {
+		return ErrAddResultFailure
+	}
 
 	s.logger.Info().Int("Accepted", len(accepted)+len(acceptedTeams)).Int("Rejected", len(rejected)).Msg("Finished Algo")
 
