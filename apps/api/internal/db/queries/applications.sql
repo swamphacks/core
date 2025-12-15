@@ -61,3 +61,9 @@ WHERE assigned_reviewer_id = $1
     AND event_id = $2
     AND status IN ('under_review')
 ORDER BY user_id ASC;
+
+-- name: JoinWaitlist :exec
+UPDATE applications
+SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
+    status = 'waitlisted'
+WHERE user_id = $1 AND event_id = $2;

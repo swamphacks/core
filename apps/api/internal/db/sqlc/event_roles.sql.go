@@ -155,3 +155,20 @@ func (q *Queries) RemoveRole(ctx context.Context, arg RemoveRoleParams) error {
 	_, err := q.db.Exec(ctx, removeRole, arg.EventID, arg.UserID)
 	return err
 }
+
+const updateRole = `-- name: UpdateRole :exec
+UPDATE event_roles
+SET role = $3
+WHERE event_id = $1 AND user_id = $2
+`
+
+type UpdateRoleParams struct {
+	EventID uuid.UUID     `json:"event_id"`
+	UserID  uuid.UUID     `json:"user_id"`
+	Role    EventRoleType `json:"role"`
+}
+
+func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) error {
+	_, err := q.db.Exec(ctx, updateRole, arg.EventID, arg.UserID, arg.Role)
+	return err
+}
