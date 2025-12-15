@@ -22,16 +22,19 @@ var (
 	ErrListApplicationsFailure = errors.New("Failed to retrieve applications")
 	ErrMissingRatings          = errors.New("Some applications are missing their review ratings")
 	ErrAddResultFailure        = errors.New("Failed to add generated result")
+	ErrRunConflict             = errors.New("Run already exists for this event")
+	ErrFailedToCreateRun       = errors.New("Failed to add run")
+	ErrFailedToDeleteRun       = errors.New("Failed to delete run")
+	ErrFailedToUpdateRun       = errors.New("Failed to update run")
 )
 
 type BatService struct {
-	engine         *bat.BatEngine
-	appRepo        *repository.ApplicationRepository
-	eventRepo      *repository.EventRepository
-	batResultRepo  *repository.BatResultsRepository
-	batResultsRepo *repository.BatResultsRepository
-	taskQueue      *asynq.Client
-	logger         zerolog.Logger
+	engine      *bat.BatEngine
+	appRepo     *repository.ApplicationRepository
+	eventRepo   *repository.EventRepository
+	batRunsRepo *repository.BatRunsRepository
+	taskQueue   *asynq.Client
+	logger      zerolog.Logger
 }
 
 func NewBatService(engine *bat.BatEngine, appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
@@ -44,23 +47,57 @@ func NewBatService(engine *bat.BatEngine, appRepo *repository.ApplicationReposit
 	}
 }
 
-func (s *BatService) AddResult(ctx context.Context, eventID uuid.UUID, acceptedApplicants []uuid.UUID, rejectedApplicants []uuid.UUID) (*sqlc.BatResult, error) {
-	params := sqlc.AddResultParams{
-		EventID:            eventID,
-		AcceptedApplicants: acceptedApplicants,
-		RejectedApplicants: rejectedApplicants,
-	}
+func (s *BatService) AddRun(ctx context.Context, eventId uuid.UUID) (*sqlc.BatRun, error) {
 
-	result, err := s.batResultRepo.AddResult(ctx, params)
-	if err != nil && errors.Is(err, repository.ErrDuplicateResult) {
+	run, err := s.batRunsRepo.AddRun(ctx, eventId)
+	if err != nil && errors.Is(err, repository.ErrDuplicateRun) {
 		s.logger.Err(err).Msg("Could not insert result as it already exists.")
-		return nil, ErrResultConflict
+		return nil, ErrRunConflict
 	} else if err != nil {
 		s.logger.Err(err).Msg("An unknown error was caught!")
-		return nil, ErrFailedToCreateResult
+		return nil, ErrFailedToCreateRun
 	}
 
-	return result, nil
+	return run, nil
+}
+
+func (s *BatService) GetRunsByEventId(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetRunsByEventIdRow, error) {
+	return s.batRunsRepo.GetRunsByEventId(ctx, eventId)
+}
+
+func (s *BatService) UpdateRunById(ctx context.Context, params sqlc.UpdateRunByIdParams) (*sqlc.GetRunByEventIdRow, error) {
+	err := s.batRunsRepo.UpdateRunById(ctx, params)
+	if err != nil {
+		if errors.Is(err, repository.ErrRunNotFound) {
+			s.logger.Err(err).Msg(repository.ErrRunNotFound.Error())
+		} else {
+			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
+		}
+		return nil, ErrFailedToUpdateRun
+	}
+
+	run, err := s.batRunsRepo.GetRunByEventId(ctx, params.ID)
+
+	return run, err
+}
+
+func (s *BatService) DeleteRunById(ctx context.Context, id uuid.UUID) error {
+	err := s.batRunsRepo.DeletRunById(ctx, id)
+	if err != nil {
+		switch err {
+		case repository.ErrRunNotFound:
+			s.logger.Err(err).Msg(repository.ErrRunNotFound.Error())
+		case repository.ErrNoRunsDeleted:
+			s.logger.Err(err).Msg(repository.ErrNoRunsDeleted.Error())
+		case repository.ErrMultipleRunsDeleted:
+			s.logger.Err(err).Msg(repository.ErrMultipleRunsDeleted.Error())
+		default:
+			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
+		}
+		return ErrFailedToDeleteRun
+	}
+
+	return err
 }
 
 func (s *BatService) QueueCalculateAdmissionsTask(eventId uuid.UUID) (*asynq.TaskInfo, error) {
