@@ -6,6 +6,8 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/swamphacks/core/apps/api/internal/bat"
 	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/db"
+	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
@@ -59,7 +61,13 @@ func main() {
 		logger.Fatal().Err(err).Msg("Bat engine failed to initialize.")
 	}
 
-	batService := services.NewBatService(batEngine, nil, logger)
+	database := db.NewDB(cfg.DatabaseURL)
+	defer database.Close()
+
+	eventRepo := repository.NewEventRespository(database)
+	applicationRepo := repository.NewApplicationRepository(database)
+
+	batService := services.NewBatService(batEngine, applicationRepo, eventRepo, nil, logger)
 
 	BATWorker := workers.NewBATWorker(batService, logger)
 

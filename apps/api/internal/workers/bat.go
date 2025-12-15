@@ -37,6 +37,11 @@ func (w *BATWorker) HandleCalculateAdmissionsTask(ctx context.Context, t *asynq.
 	}
 
 	// Fire off bat service
-	w.batService.CalculateAdmissions()
+	err := w.batService.CalculateAdmissions(ctx, p.EventID)
+	if err != nil {
+		w.logger.Err(err).Msg("Something went wrong calculating admissions.")
+		return err
+	}
+
 	return nil
 }

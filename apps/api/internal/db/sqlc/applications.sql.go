@@ -108,6 +108,58 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 	return i, err
 }
 
+const listAdmissionCandidatesByEvent = `-- name: ListAdmissionCandidatesByEvent :many
+SELECT a.user_id,
+    a.passion_rating,
+    a.experience_rating,
+    a.application,
+    t.id as team_id
+FROM applications a
+LEFT JOIN team_members tm
+    ON tm.user_id = a.user_id
+LEFT JOIN teams t
+    ON t.id = tm.team_id
+    AND t.event_id = a.event_id
+WHERE a.event_id = $1
+    AND a.status = 'under_review'
+    AND a.passion_rating IS NOT NULL
+    AND a.experience_rating IS NOT NULL
+`
+
+type ListAdmissionCandidatesByEventRow struct {
+	UserID           uuid.UUID  `json:"user_id"`
+	PassionRating    *int32     `json:"passion_rating"`
+	ExperienceRating *int32     `json:"experience_rating"`
+	Application      []byte     `json:"application"`
+	TeamID           *uuid.UUID `json:"team_id"`
+}
+
+func (q *Queries) ListAdmissionCandidatesByEvent(ctx context.Context, eventID uuid.UUID) ([]ListAdmissionCandidatesByEventRow, error) {
+	rows, err := q.db.Query(ctx, listAdmissionCandidatesByEvent, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAdmissionCandidatesByEventRow{}
+	for rows.Next() {
+		var i ListAdmissionCandidatesByEventRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.PassionRating,
+			&i.ExperienceRating,
+			&i.Application,
+			&i.TeamID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listApplicationByReviewerAndEvent = `-- name: ListApplicationByReviewerAndEvent :many
 SELECT user_id, passion_rating, experience_rating FROM applications
 WHERE assigned_reviewer_id = $1
@@ -137,50 +189,6 @@ func (q *Queries) ListApplicationByReviewerAndEvent(ctx context.Context, arg Lis
 	for rows.Next() {
 		var i ListApplicationByReviewerAndEventRow
 		if err := rows.Scan(&i.UserID, &i.PassionRating, &i.ExperienceRating); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listApplicationsByEventAndStatus = `-- name: ListApplicationsByEventAndStatus :many
-SELECT user_id, application, experience_rating, passion_rating
-FROM applications
-WHERE event_id = $1
-    AND status = $2
-`
-
-type ListApplicationsByEventAndStatusParams struct {
-	EventID uuid.UUID             `json:"event_id"`
-	Status  NullApplicationStatus `json:"status"`
-}
-
-type ListApplicationsByEventAndStatusRow struct {
-	UserID           uuid.UUID `json:"user_id"`
-	Application      []byte    `json:"application"`
-	ExperienceRating *int32    `json:"experience_rating"`
-	PassionRating    *int32    `json:"passion_rating"`
-}
-
-func (q *Queries) ListApplicationsByEventAndStatus(ctx context.Context, arg ListApplicationsByEventAndStatusParams) ([]ListApplicationsByEventAndStatusRow, error) {
-	rows, err := q.db.Query(ctx, listApplicationsByEventAndStatus, arg.EventID, arg.Status)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListApplicationsByEventAndStatusRow{}
-	for rows.Next() {
-		var i ListApplicationsByEventAndStatusRow
-		if err := rows.Scan(
-			&i.UserID,
-			&i.Application,
-			&i.ExperienceRating,
-			&i.PassionRating,
-		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

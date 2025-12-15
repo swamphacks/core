@@ -66,18 +66,11 @@ func (r *ApplicationRepository) GetApplicationByUserAndEventID(ctx context.Conte
 	return &application, nil
 }
 
-func (r *ApplicationRepository) ListApplicationsByEventAndStatus(ctx context.Context, eventId uuid.UUID, status sqlc.ApplicationStatus) ([]sqlc.ListApplicationsByEventAndStatusRow, error) {
-	applications, err := r.db.Query.ListApplicationsByEventAndStatus(ctx, sqlc.ListApplicationsByEventAndStatusParams{
-		EventID: eventId,
-		Status: sqlc.NullApplicationStatus{
-			Valid:             true,
-			ApplicationStatus: status,
-		},
-	})
-	if err != nil {
-		return []sqlc.ListApplicationsByEventAndStatusRow{}, err
-	}
-	return applications, nil
+// List all candidates considered for admission for an eventId.
+// This queries for all applications who are 'under_review' and have their rating fields filled out.
+// It also LEFT JOINs in their team id (if they have one) for further grouping based on teams.
+func (r *ApplicationRepository) ListAdmissionCandidatesByEvent(ctx context.Context, eventId uuid.UUID) ([]sqlc.ListAdmissionCandidatesByEventRow, error) {
+	return r.db.Query.ListAdmissionCandidatesByEvent(ctx, eventId)
 }
 
 func (r *ApplicationRepository) SubmitApplication(ctx context.Context, data any, userId, eventId uuid.UUID) error {
