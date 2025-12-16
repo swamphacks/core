@@ -15,6 +15,7 @@ type Handlers struct {
 	Application   *ApplicationHandler
 	Teams         *TeamHandler
 	Admission     *AdmissionHandler
+	Bat           *BatHandler
 }
 
 func NewHandlers(
@@ -38,5 +39,6 @@ func NewHandlers(
 		Application:   NewApplicationHandler(appService),
 		Teams:         NewTeamHandler(teamService, logger),
 		Admission:     NewAdmissionHandler(batService),
+		Bat:           NewBatHandler(batService, logger),
 	}
 }
