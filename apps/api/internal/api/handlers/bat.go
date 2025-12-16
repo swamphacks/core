@@ -32,7 +32,7 @@ func NewBatHandler(BatService *services.BatService, logger zerolog.Logger) *BatH
 //	@Accept         json
 //	@Produce		json
 //	@Success		200		{array}	sqlc.GetBatRunsWithUserInfoRow	"OK: BatRuns returned"
-//	@Router			/BatRuns [get]
+//	@Router			/events/{eventId}/bat-runs [get]
 func (h *BatHandler) GetRunsByEventId(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -67,4 +67,40 @@ func (h *BatHandler) GetRunsByEventId(w http.ResponseWriter, r *http.Request) {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
 		return
 	}
+}
+
+// Delete an event
+//
+//	@Summary		Delete an event
+//	@Description	Delete an existing event
+//	@Tags			Bat
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path	string	true	"Run ID"	Format(uuid)
+//	@Success		204		"OK - Run deleted"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
+//	@Router			/events/{eventId}/bat-runs [delete]
+func (h *BatHandler) DeleteRunById(w http.ResponseWriter, r *http.Request) {
+	eventIdStr := chi.URLParam(r, "eventId")
+	if eventIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+	eventId, err := uuid.Parse(eventIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		return
+	}
+	err = h.BatService.DeleteRunById(r.Context(), eventId)
+
+	if err != nil {
+		switch err {
+		case services.ErrFailedToDeleteRun:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("delete_error", "Failed to delete event"))
+		default:
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong"))
+		}
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
