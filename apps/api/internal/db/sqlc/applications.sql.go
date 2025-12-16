@@ -251,6 +251,32 @@ func (q *Queries) ListAvailableApplicationsForEvent(ctx context.Context, eventID
 	return items, nil
 }
 
+const listNonReviewedApplicationsByEvent = `-- name: ListNonReviewedApplicationsByEvent :many
+SELECT user_id FROM applications
+WHERE event_id = $1
+    AND passion_rating IS NULL OR experience_rating IS NULL
+`
+
+func (q *Queries) ListNonReviewedApplicationsByEvent(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listNonReviewedApplicationsByEvent, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const resetApplicationReviews = `-- name: ResetApplicationReviews :exec
 UPDATE applications
 SET assigned_reviewer_id = NULL,

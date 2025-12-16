@@ -34,7 +34,7 @@ INSERT INTO events (
     coalesce($12, NULL),
     coalesce($13, FALSE)
 ) 
-RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started, application_review_finished
 `
 
 type CreateEventParams struct {
@@ -89,6 +89,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.UpdatedAt,
 		&i.Banner,
 		&i.ApplicationReviewStarted,
+		&i.ApplicationReviewFinished,
 	)
 	return i, err
 }
@@ -109,7 +110,7 @@ func (q *Queries) DeleteEventById(ctx context.Context, id uuid.UUID) (int64, err
 
 const getAllEvents = `-- name: GetAllEvents :many
 SELECT
-    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at, e.banner, e.application_review_started,
+    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at, e.banner, e.application_review_started, e.application_review_finished,
     er.role AS event_role
 FROM events e
 LEFT JOIN event_roles AS er
@@ -119,25 +120,26 @@ ORDER BY e.start_time ASC
 `
 
 type GetAllEventsRow struct {
-	ID                       uuid.UUID         `json:"id"`
-	Name                     string            `json:"name"`
-	Description              *string           `json:"description"`
-	Location                 *string           `json:"location"`
-	LocationUrl              *string           `json:"location_url"`
-	MaxAttendees             *int32            `json:"max_attendees"`
-	ApplicationOpen          time.Time         `json:"application_open"`
-	ApplicationClose         time.Time         `json:"application_close"`
-	RsvpDeadline             *time.Time        `json:"rsvp_deadline"`
-	DecisionRelease          *time.Time        `json:"decision_release"`
-	StartTime                time.Time         `json:"start_time"`
-	EndTime                  time.Time         `json:"end_time"`
-	WebsiteUrl               *string           `json:"website_url"`
-	IsPublished              *bool             `json:"is_published"`
-	CreatedAt                *time.Time        `json:"created_at"`
-	UpdatedAt                *time.Time        `json:"updated_at"`
-	Banner                   *string           `json:"banner"`
-	ApplicationReviewStarted bool              `json:"application_review_started"`
-	EventRole                NullEventRoleType `json:"event_role"`
+	ID                        uuid.UUID         `json:"id"`
+	Name                      string            `json:"name"`
+	Description               *string           `json:"description"`
+	Location                  *string           `json:"location"`
+	LocationUrl               *string           `json:"location_url"`
+	MaxAttendees              *int32            `json:"max_attendees"`
+	ApplicationOpen           time.Time         `json:"application_open"`
+	ApplicationClose          time.Time         `json:"application_close"`
+	RsvpDeadline              *time.Time        `json:"rsvp_deadline"`
+	DecisionRelease           *time.Time        `json:"decision_release"`
+	StartTime                 time.Time         `json:"start_time"`
+	EndTime                   time.Time         `json:"end_time"`
+	WebsiteUrl                *string           `json:"website_url"`
+	IsPublished               *bool             `json:"is_published"`
+	CreatedAt                 *time.Time        `json:"created_at"`
+	UpdatedAt                 *time.Time        `json:"updated_at"`
+	Banner                    *string           `json:"banner"`
+	ApplicationReviewStarted  bool              `json:"application_review_started"`
+	ApplicationReviewFinished bool              `json:"application_review_finished"`
+	EventRole                 NullEventRoleType `json:"event_role"`
 }
 
 func (q *Queries) GetAllEvents(ctx context.Context, userID uuid.UUID) ([]GetAllEventsRow, error) {
@@ -168,6 +170,7 @@ func (q *Queries) GetAllEvents(ctx context.Context, userID uuid.UUID) ([]GetAllE
 			&i.UpdatedAt,
 			&i.Banner,
 			&i.ApplicationReviewStarted,
+			&i.ApplicationReviewFinished,
 			&i.EventRole,
 		); err != nil {
 			return nil, err
@@ -181,7 +184,7 @@ func (q *Queries) GetAllEvents(ctx context.Context, userID uuid.UUID) ([]GetAllE
 }
 
 const getEventByID = `-- name: GetEventByID :one
-SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started FROM events
+SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started, application_review_finished FROM events
 WHERE id = $1
 `
 
@@ -207,6 +210,7 @@ func (q *Queries) GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 		&i.UpdatedAt,
 		&i.Banner,
 		&i.ApplicationReviewStarted,
+		&i.ApplicationReviewFinished,
 	)
 	return i, err
 }
@@ -235,7 +239,7 @@ func (q *Queries) GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsPa
 
 const getEventsWithUserInfo = `-- name: GetEventsWithUserInfo :many
 SELECT
-    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at, e.banner, e.application_review_started,
+    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at, e.banner, e.application_review_started, e.application_review_finished,
     er.role AS event_role,
     a.status AS application_status
 FROM events e
@@ -263,26 +267,27 @@ type GetEventsWithUserInfoParams struct {
 }
 
 type GetEventsWithUserInfoRow struct {
-	ID                       uuid.UUID             `json:"id"`
-	Name                     string                `json:"name"`
-	Description              *string               `json:"description"`
-	Location                 *string               `json:"location"`
-	LocationUrl              *string               `json:"location_url"`
-	MaxAttendees             *int32                `json:"max_attendees"`
-	ApplicationOpen          time.Time             `json:"application_open"`
-	ApplicationClose         time.Time             `json:"application_close"`
-	RsvpDeadline             *time.Time            `json:"rsvp_deadline"`
-	DecisionRelease          *time.Time            `json:"decision_release"`
-	StartTime                time.Time             `json:"start_time"`
-	EndTime                  time.Time             `json:"end_time"`
-	WebsiteUrl               *string               `json:"website_url"`
-	IsPublished              *bool                 `json:"is_published"`
-	CreatedAt                *time.Time            `json:"created_at"`
-	UpdatedAt                *time.Time            `json:"updated_at"`
-	Banner                   *string               `json:"banner"`
-	ApplicationReviewStarted bool                  `json:"application_review_started"`
-	EventRole                NullEventRoleType     `json:"event_role"`
-	ApplicationStatus        NullApplicationStatus `json:"application_status"`
+	ID                        uuid.UUID             `json:"id"`
+	Name                      string                `json:"name"`
+	Description               *string               `json:"description"`
+	Location                  *string               `json:"location"`
+	LocationUrl               *string               `json:"location_url"`
+	MaxAttendees              *int32                `json:"max_attendees"`
+	ApplicationOpen           time.Time             `json:"application_open"`
+	ApplicationClose          time.Time             `json:"application_close"`
+	RsvpDeadline              *time.Time            `json:"rsvp_deadline"`
+	DecisionRelease           *time.Time            `json:"decision_release"`
+	StartTime                 time.Time             `json:"start_time"`
+	EndTime                   time.Time             `json:"end_time"`
+	WebsiteUrl                *string               `json:"website_url"`
+	IsPublished               *bool                 `json:"is_published"`
+	CreatedAt                 *time.Time            `json:"created_at"`
+	UpdatedAt                 *time.Time            `json:"updated_at"`
+	Banner                    *string               `json:"banner"`
+	ApplicationReviewStarted  bool                  `json:"application_review_started"`
+	ApplicationReviewFinished bool                  `json:"application_review_finished"`
+	EventRole                 NullEventRoleType     `json:"event_role"`
+	ApplicationStatus         NullApplicationStatus `json:"application_status"`
 }
 
 func (q *Queries) GetEventsWithUserInfo(ctx context.Context, arg GetEventsWithUserInfoParams) ([]GetEventsWithUserInfoRow, error) {
@@ -313,6 +318,7 @@ func (q *Queries) GetEventsWithUserInfo(ctx context.Context, arg GetEventsWithUs
 			&i.UpdatedAt,
 			&i.Banner,
 			&i.ApplicationReviewStarted,
+			&i.ApplicationReviewFinished,
 			&i.EventRole,
 			&i.ApplicationStatus,
 		); err != nil {
@@ -328,7 +334,7 @@ func (q *Queries) GetEventsWithUserInfo(ctx context.Context, arg GetEventsWithUs
 
 const getPublishedEvents = `-- name: GetPublishedEvents :many
 SELECT
-    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at, e.banner, e.application_review_started,
+    e.id, e.name, e.description, e.location, e.location_url, e.max_attendees, e.application_open, e.application_close, e.rsvp_deadline, e.decision_release, e.start_time, e.end_time, e.website_url, e.is_published, e.created_at, e.updated_at, e.banner, e.application_review_started, e.application_review_finished,
     er.role AS event_role
 FROM events e
 LEFT JOIN event_roles AS er
@@ -339,25 +345,26 @@ ORDER BY e.start_time ASC
 `
 
 type GetPublishedEventsRow struct {
-	ID                       uuid.UUID         `json:"id"`
-	Name                     string            `json:"name"`
-	Description              *string           `json:"description"`
-	Location                 *string           `json:"location"`
-	LocationUrl              *string           `json:"location_url"`
-	MaxAttendees             *int32            `json:"max_attendees"`
-	ApplicationOpen          time.Time         `json:"application_open"`
-	ApplicationClose         time.Time         `json:"application_close"`
-	RsvpDeadline             *time.Time        `json:"rsvp_deadline"`
-	DecisionRelease          *time.Time        `json:"decision_release"`
-	StartTime                time.Time         `json:"start_time"`
-	EndTime                  time.Time         `json:"end_time"`
-	WebsiteUrl               *string           `json:"website_url"`
-	IsPublished              *bool             `json:"is_published"`
-	CreatedAt                *time.Time        `json:"created_at"`
-	UpdatedAt                *time.Time        `json:"updated_at"`
-	Banner                   *string           `json:"banner"`
-	ApplicationReviewStarted bool              `json:"application_review_started"`
-	EventRole                NullEventRoleType `json:"event_role"`
+	ID                        uuid.UUID         `json:"id"`
+	Name                      string            `json:"name"`
+	Description               *string           `json:"description"`
+	Location                  *string           `json:"location"`
+	LocationUrl               *string           `json:"location_url"`
+	MaxAttendees              *int32            `json:"max_attendees"`
+	ApplicationOpen           time.Time         `json:"application_open"`
+	ApplicationClose          time.Time         `json:"application_close"`
+	RsvpDeadline              *time.Time        `json:"rsvp_deadline"`
+	DecisionRelease           *time.Time        `json:"decision_release"`
+	StartTime                 time.Time         `json:"start_time"`
+	EndTime                   time.Time         `json:"end_time"`
+	WebsiteUrl                *string           `json:"website_url"`
+	IsPublished               *bool             `json:"is_published"`
+	CreatedAt                 *time.Time        `json:"created_at"`
+	UpdatedAt                 *time.Time        `json:"updated_at"`
+	Banner                    *string           `json:"banner"`
+	ApplicationReviewStarted  bool              `json:"application_review_started"`
+	ApplicationReviewFinished bool              `json:"application_review_finished"`
+	EventRole                 NullEventRoleType `json:"event_role"`
 }
 
 func (q *Queries) GetPublishedEvents(ctx context.Context, userID uuid.UUID) ([]GetPublishedEventsRow, error) {
@@ -388,6 +395,7 @@ func (q *Queries) GetPublishedEvents(ctx context.Context, userID uuid.UUID) ([]G
 			&i.UpdatedAt,
 			&i.Banner,
 			&i.ApplicationReviewStarted,
+			&i.ApplicationReviewFinished,
 			&i.EventRole,
 		); err != nil {
 			return nil, err
@@ -417,44 +425,47 @@ SET
     website_url = CASE WHEN $23::boolean THEN $24 ELSE website_url END,
     is_published = CASE WHEN $25::boolean THEN $26 ELSE is_published END,
     banner = CASE WHEN $27::boolean THEN $28 ELSE banner END,
-    application_review_started = CASE WHEN $29::boolean THEN $30 ELSE application_review_started END
+    application_review_started = CASE WHEN $29::boolean THEN $30 ELSE application_review_started END,
+    application_review_finished = CASE WHEN $31::boolean THEN $32 ELSE application_review_finished END
 WHERE
-    id = $31::uuid
-RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started
+    id = $33::uuid
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started, application_review_finished
 `
 
 type UpdateEventByIdParams struct {
-	NameDoUpdate                     bool       `json:"name_do_update"`
-	Name                             string     `json:"name"`
-	DescriptionDoUpdate              bool       `json:"description_do_update"`
-	Description                      *string    `json:"description"`
-	LocationDoUpdate                 bool       `json:"location_do_update"`
-	Location                         *string    `json:"location"`
-	LocationUrlDoUpdate              bool       `json:"location_url_do_update"`
-	LocationUrl                      *string    `json:"location_url"`
-	MaxAttendeesDoUpdate             bool       `json:"max_attendees_do_update"`
-	MaxAttendees                     *int32     `json:"max_attendees"`
-	ApplicationOpenDoUpdate          bool       `json:"application_open_do_update"`
-	ApplicationOpen                  time.Time  `json:"application_open"`
-	ApplicationCloseDoUpdate         bool       `json:"application_close_do_update"`
-	ApplicationClose                 time.Time  `json:"application_close"`
-	RsvpDeadlineDoUpdate             bool       `json:"rsvp_deadline_do_update"`
-	RsvpDeadline                     *time.Time `json:"rsvp_deadline"`
-	DecisionReleaseDoUpdate          bool       `json:"decision_release_do_update"`
-	DecisionRelease                  *time.Time `json:"decision_release"`
-	StartTimeDoUpdate                bool       `json:"start_time_do_update"`
-	StartTime                        time.Time  `json:"start_time"`
-	EndTimeDoUpdate                  bool       `json:"end_time_do_update"`
-	EndTime                          time.Time  `json:"end_time"`
-	WebsiteUrlDoUpdate               bool       `json:"website_url_do_update"`
-	WebsiteUrl                       *string    `json:"website_url"`
-	IsPublishedDoUpdate              bool       `json:"is_published_do_update"`
-	IsPublished                      *bool      `json:"is_published"`
-	BannerDoUpdate                   bool       `json:"banner_do_update"`
-	Banner                           *string    `json:"banner"`
-	ApplicationReviewStartedDoUpdate bool       `json:"application_review_started_do_update"`
-	ApplicationReviewStarted         bool       `json:"application_review_started"`
-	ID                               uuid.UUID  `json:"id"`
+	NameDoUpdate                      bool       `json:"name_do_update"`
+	Name                              string     `json:"name"`
+	DescriptionDoUpdate               bool       `json:"description_do_update"`
+	Description                       *string    `json:"description"`
+	LocationDoUpdate                  bool       `json:"location_do_update"`
+	Location                          *string    `json:"location"`
+	LocationUrlDoUpdate               bool       `json:"location_url_do_update"`
+	LocationUrl                       *string    `json:"location_url"`
+	MaxAttendeesDoUpdate              bool       `json:"max_attendees_do_update"`
+	MaxAttendees                      *int32     `json:"max_attendees"`
+	ApplicationOpenDoUpdate           bool       `json:"application_open_do_update"`
+	ApplicationOpen                   time.Time  `json:"application_open"`
+	ApplicationCloseDoUpdate          bool       `json:"application_close_do_update"`
+	ApplicationClose                  time.Time  `json:"application_close"`
+	RsvpDeadlineDoUpdate              bool       `json:"rsvp_deadline_do_update"`
+	RsvpDeadline                      *time.Time `json:"rsvp_deadline"`
+	DecisionReleaseDoUpdate           bool       `json:"decision_release_do_update"`
+	DecisionRelease                   *time.Time `json:"decision_release"`
+	StartTimeDoUpdate                 bool       `json:"start_time_do_update"`
+	StartTime                         time.Time  `json:"start_time"`
+	EndTimeDoUpdate                   bool       `json:"end_time_do_update"`
+	EndTime                           time.Time  `json:"end_time"`
+	WebsiteUrlDoUpdate                bool       `json:"website_url_do_update"`
+	WebsiteUrl                        *string    `json:"website_url"`
+	IsPublishedDoUpdate               bool       `json:"is_published_do_update"`
+	IsPublished                       *bool      `json:"is_published"`
+	BannerDoUpdate                    bool       `json:"banner_do_update"`
+	Banner                            *string    `json:"banner"`
+	ApplicationReviewStartedDoUpdate  bool       `json:"application_review_started_do_update"`
+	ApplicationReviewStarted          bool       `json:"application_review_started"`
+	ApplicationReviewFinishedDoUpdate bool       `json:"application_review_finished_do_update"`
+	ApplicationReviewFinished         bool       `json:"application_review_finished"`
+	ID                                uuid.UUID  `json:"id"`
 }
 
 func (q *Queries) UpdateEventById(ctx context.Context, arg UpdateEventByIdParams) error {
@@ -489,6 +500,8 @@ func (q *Queries) UpdateEventById(ctx context.Context, arg UpdateEventByIdParams
 		arg.Banner,
 		arg.ApplicationReviewStartedDoUpdate,
 		arg.ApplicationReviewStarted,
+		arg.ApplicationReviewFinishedDoUpdate,
+		arg.ApplicationReviewFinished,
 		arg.ID,
 	)
 	return err
