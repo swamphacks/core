@@ -21,9 +21,8 @@ import (
 var (
 	ErrListApplicationsFailure = errors.New("Failed to retrieve applications")
 	ErrMissingRatings          = errors.New("Some applications are missing their review ratings")
-	ErrAddResultFailure        = errors.New("Failed to add generated result")
 	ErrRunConflict             = errors.New("Run already exists for this event")
-	ErrFailedToCreateRun       = errors.New("Failed to add run")
+	ErrFailedToAddRun          = errors.New("Failed to add run")
 	ErrFailedToDeleteRun       = errors.New("Failed to delete run")
 	ErrFailedToUpdateRun       = errors.New("Failed to update run")
 )
@@ -154,7 +153,13 @@ type TeamAdmissionData struct {
 func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID) error {
 	s.logger.Info().Str("eventId", eventId.String()).Msg("")
 
-	// First aggregate data necessary
+	// Create run, adds state as "running" into db
+	newRun, err := s.AddRun(ctx, eventId)
+	if err != nil {
+		return ErrFailedToAddRun
+	}
+
+	// Aggregate data necessary
 	applications, err := s.appRepo.ListAdmissionCandidatesByEvent(ctx, eventId)
 	if err != nil || len(applications) == 0 {
 		return ErrListApplicationsFailure
@@ -218,10 +223,20 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID)
 	for _, applicant := range rejected {
 		rejectedUUIDs = append(rejectedUUIDs, applicant.ID)
 	}
-	_, err = s.AddResult(ctx, eventId, acceptedUUIDs, rejectedUUIDs)
+
+	params := sqlc.UpdateRunByIdParams{
+		AcceptedApplicantsDoUpdate: true,
+		RejectedApplicantsDoUpdate: true,
+		StatusDoUpdate:             true,
+		AcceptedApplicants:         acceptedUUIDs,
+		RejectedApplicants:         rejectedUUIDs,
+		Status:                     sqlc.NullBatRunStatus{BatRunStatus: sqlc.BatRunStatusCompleted, Valid: true},
+		ID:                         newRun.ID,
+	}
+	_, err = s.UpdateRunById(ctx, params)
 
 	if err != nil {
-		return ErrAddResultFailure
+		return ErrFailedToUpdateRun
 	}
 
 	s.logger.Info().Int("Accepted", len(accepted)+len(acceptedTeams)).Int("Rejected", len(rejected)).Msg("Finished Algo")
