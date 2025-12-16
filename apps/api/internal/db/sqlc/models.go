@@ -330,6 +330,7 @@ type Application struct {
 	ExperienceRating   *int32                `json:"experience_rating"`
 	PassionRating      *int32                `json:"passion_rating"`
 	AssignedReviewerID *uuid.UUID            `json:"assigned_reviewer_id"`
+	WaitlistJoinTime   *time.Time            `json:"waitlist_join_time"`
 }
 
 type AuthAccount struct {

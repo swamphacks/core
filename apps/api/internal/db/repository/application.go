@@ -180,3 +180,10 @@ func (r *ApplicationRepository) GetApplicationStatuses(ctx context.Context, even
 func (r *ApplicationRepository) GetSubmissionTimes(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetSubmissionTimesRow, error) {
 	return r.db.Query.GetSubmissionTimes(ctx, eventId)
 }
+
+func (r *ApplicationRepository) JoinWaitlist(ctx context.Context, userId, eventId uuid.UUID) error {
+	return r.db.Query.JoinWaitlist(ctx, sqlc.JoinWaitlistParams{
+		UserID:  userId,
+		EventID: eventId,
+	})
+}

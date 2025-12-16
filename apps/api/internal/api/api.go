@@ -178,6 +178,15 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				// Review admin routes (For Event Admins only)
 				r.With(ensureEventAdmin).Post("/reset-reviews", api.Handlers.Application.ResetApplicationReviews)
 				r.With(ensureEventAdmin).Post("/assign-reviewers", api.Handlers.Application.AssignApplicationReviewers)
+
+				//withdraw Acceptance
+				r.Patch("/withdraw-acceptance", api.Handlers.Application.WithdrawAcceptance)
+
+				//Accept acceptance
+				r.Patch("/accept-acceptance", api.Handlers.Application.AcceptApplicationAcceptance)
+
+				//Waitlist application
+				r.Patch("/join-waitlist", api.Handlers.Application.JoinWaitlist)
 			})
 
 			// Team routes

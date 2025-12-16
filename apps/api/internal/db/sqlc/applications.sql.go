@@ -37,7 +37,7 @@ INSERT INTO applications (
 ) VALUES (
     $1, $2
 )
-RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id
+RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time
 `
 
 type CreateApplicationParams struct {
@@ -60,6 +60,7 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.ExperienceRating,
 		&i.PassionRating,
 		&i.AssignedReviewerID,
+		&i.WaitlistJoinTime,
 	)
 	return i, err
 }
@@ -80,7 +81,7 @@ func (q *Queries) DeleteApplication(ctx context.Context, arg DeleteApplicationPa
 }
 
 const getApplicationByUserAndEventID = `-- name: GetApplicationByUserAndEventID :one
-SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id FROM applications
+SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time FROM applications
 WHERE user_id = $1 AND event_id = $2
 `
 
@@ -104,6 +105,7 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 		&i.ExperienceRating,
 		&i.PassionRating,
 		&i.AssignedReviewerID,
+		&i.WaitlistJoinTime,
 	)
 	return i, err
 }
@@ -158,6 +160,21 @@ func (q *Queries) ListAdmissionCandidatesByEvent(ctx context.Context, eventID uu
 		return nil, err
 	}
 	return items, nil
+const joinWaitlist = `-- name: JoinWaitlist :exec
+UPDATE applications
+SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
+    status = 'waitlisted'
+WHERE user_id = $1 AND event_id = $2
+`
+
+type JoinWaitlistParams struct {
+	UserID  uuid.UUID `json:"user_id"`
+	EventID uuid.UUID `json:"event_id"`
+}
+
+func (q *Queries) JoinWaitlist(ctx context.Context, arg JoinWaitlistParams) error {
+	_, err := q.db.Exec(ctx, joinWaitlist, arg.UserID, arg.EventID)
+	return err
 }
 
 const listApplicationByReviewerAndEvent = `-- name: ListApplicationByReviewerAndEvent :many
