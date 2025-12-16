@@ -110,6 +110,23 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 	return i, err
 }
 
+const joinWaitlist = `-- name: JoinWaitlist :exec
+UPDATE applications
+SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
+    status = 'waitlisted'
+WHERE user_id = $1 AND event_id = $2
+`
+
+type JoinWaitlistParams struct {
+	UserID  uuid.UUID `json:"user_id"`
+	EventID uuid.UUID `json:"event_id"`
+}
+
+func (q *Queries) JoinWaitlist(ctx context.Context, arg JoinWaitlistParams) error {
+	_, err := q.db.Exec(ctx, joinWaitlist, arg.UserID, arg.EventID)
+	return err
+}
+
 const listAdmissionCandidatesByEvent = `-- name: ListAdmissionCandidatesByEvent :many
 SELECT a.user_id,
     a.passion_rating,
@@ -160,21 +177,6 @@ func (q *Queries) ListAdmissionCandidatesByEvent(ctx context.Context, eventID uu
 		return nil, err
 	}
 	return items, nil
-const joinWaitlist = `-- name: JoinWaitlist :exec
-UPDATE applications
-SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
-    status = 'waitlisted'
-WHERE user_id = $1 AND event_id = $2
-`
-
-type JoinWaitlistParams struct {
-	UserID  uuid.UUID `json:"user_id"`
-	EventID uuid.UUID `json:"event_id"`
-}
-
-func (q *Queries) JoinWaitlist(ctx context.Context, arg JoinWaitlistParams) error {
-	_, err := q.db.Exec(ctx, joinWaitlist, arg.UserID, arg.EventID)
-	return err
 }
 
 const listApplicationByReviewerAndEvent = `-- name: ListApplicationByReviewerAndEvent :many
