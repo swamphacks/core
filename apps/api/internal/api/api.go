@@ -150,6 +150,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
 			r.With(ensureEventAdmin).Delete("/roles/{userId}", api.Handlers.Event.RevokeEventRole)
 			r.With(ensureEventAdmin).Post("/roles/batch", api.Handlers.Event.BatchAssignEventRoles)
+			r.With(ensureEventAdmin).Get("/bat-runs", api.Handlers.Bat.GetRunsByEventId)
+			r.With(ensureEventAdmin).Delete("/bat-runs", api.Handlers.Bat.GetRunsByEventId)
 
 			// Superuser-only
 			r.With(ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)

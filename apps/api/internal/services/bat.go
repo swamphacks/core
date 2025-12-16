@@ -14,20 +14,26 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/bat"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 )
 
 var (
 	ErrListApplicationsFailure = errors.New("Failed to retrieve applications")
 	ErrMissingRatings          = errors.New("Some applications are missing their review ratings")
+	ErrRunConflict             = errors.New("Run already exists for this event")
+	ErrFailedToAddRun          = errors.New("Failed to add run")
+	ErrFailedToDeleteRun       = errors.New("Failed to delete run")
+	ErrFailedToUpdateRun       = errors.New("Failed to update run")
 )
 
 type BatService struct {
-	engine    *bat.BatEngine
-	appRepo   *repository.ApplicationRepository
-	eventRepo *repository.EventRepository
-	taskQueue *asynq.Client
-	logger    zerolog.Logger
+	engine      *bat.BatEngine
+	appRepo     *repository.ApplicationRepository
+	eventRepo   *repository.EventRepository
+	batRunsRepo *repository.BatRunsRepository
+	taskQueue   *asynq.Client
+	logger      zerolog.Logger
 }
 
 func NewBatService(engine *bat.BatEngine, appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
@@ -38,6 +44,59 @@ func NewBatService(engine *bat.BatEngine, appRepo *repository.ApplicationReposit
 		eventRepo: eventRepo,
 		logger:    logger.With().Str("service", "Bat Service").Str("component", "admissions").Logger(),
 	}
+}
+
+func (s *BatService) AddRun(ctx context.Context, eventId uuid.UUID) (*sqlc.BatRun, error) {
+
+	run, err := s.batRunsRepo.AddRun(ctx, eventId)
+	if err != nil && errors.Is(err, repository.ErrDuplicateRun) {
+		s.logger.Err(err).Msg("Could not insert result as it already exists.")
+		return nil, ErrRunConflict
+	} else if err != nil {
+		s.logger.Err(err).Msg("An unknown error was caught!")
+		return nil, ErrFailedToCreateRun
+	}
+
+	return run, nil
+}
+
+func (s *BatService) GetRunsByEventId(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetRunsByEventIdRow, error) {
+	return s.batRunsRepo.GetRunsByEventId(ctx, eventId)
+}
+
+func (s *BatService) UpdateRunById(ctx context.Context, params sqlc.UpdateRunByIdParams) (*sqlc.GetRunByEventIdRow, error) {
+	err := s.batRunsRepo.UpdateRunById(ctx, params)
+	if err != nil {
+		if errors.Is(err, repository.ErrRunNotFound) {
+			s.logger.Err(err).Msg(repository.ErrRunNotFound.Error())
+		} else {
+			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
+		}
+		return nil, ErrFailedToUpdateRun
+	}
+
+	run, err := s.batRunsRepo.GetRunByEventId(ctx, params.ID)
+
+	return run, err
+}
+
+func (s *BatService) DeleteRunById(ctx context.Context, id uuid.UUID) error {
+	err := s.batRunsRepo.DeletRunById(ctx, id)
+	if err != nil {
+		switch err {
+		case repository.ErrRunNotFound:
+			s.logger.Err(err).Msg(repository.ErrRunNotFound.Error())
+		case repository.ErrNoRunsDeleted:
+			s.logger.Err(err).Msg(repository.ErrNoRunsDeleted.Error())
+		case repository.ErrMultipleRunsDeleted:
+			s.logger.Err(err).Msg(repository.ErrMultipleRunsDeleted.Error())
+		default:
+			s.logger.Err(err).Msg(repository.ErrUnknown.Error())
+		}
+		return ErrFailedToDeleteRun
+	}
+
+	return err
 }
 
 func (s *BatService) QueueCalculateAdmissionsTask(eventId uuid.UUID) (*asynq.TaskInfo, error) {
@@ -94,21 +153,17 @@ type TeamAdmissionData struct {
 func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID) error {
 	s.logger.Info().Str("eventId", eventId.String()).Msg("")
 
-	// First aggregate data necessary
+	// Create run, adds state as "running" into db
+	newRun, err := s.AddRun(ctx, eventId)
+	if err != nil {
+		return ErrFailedToAddRun
+	}
+
+	// Aggregate data necessary
 	applications, err := s.appRepo.ListAdmissionCandidatesByEvent(ctx, eventId)
 	if err != nil || len(applications) == 0 {
 		return ErrListApplicationsFailure
 	}
-
-	// event, err := s.eventRepo.GetEventByID(ctx, eventId)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// maxAttendees := int32(500)
-	// if event.MaxAttendees != nil {
-	// 	maxAttendees = *event.MaxAttendees
-	// }
 
 	var appAdmissionsData []ApplicantAdmissionsData
 	for _, app := range applications {
@@ -157,6 +212,32 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID)
 	applyTeamSortKey(teams)
 	acceptedTeams, remaining, quota := admitTeams(teams, solo, quota)
 	accepted, rejected, quota := admitSoloApplicants(remaining, quota)
+
+	var acceptedUUIDs []uuid.UUID
+	var rejectedUUIDs []uuid.UUID
+
+	for _, applicant := range accepted {
+		acceptedUUIDs = append(acceptedUUIDs, applicant.ID)
+	}
+
+	for _, applicant := range rejected {
+		rejectedUUIDs = append(rejectedUUIDs, applicant.ID)
+	}
+
+	params := sqlc.UpdateRunByIdParams{
+		AcceptedApplicantsDoUpdate: true,
+		RejectedApplicantsDoUpdate: true,
+		StatusDoUpdate:             true,
+		AcceptedApplicants:         acceptedUUIDs,
+		RejectedApplicants:         rejectedUUIDs,
+		Status:                     sqlc.NullBatRunStatus{BatRunStatus: sqlc.BatRunStatusCompleted, Valid: true},
+		ID:                         newRun.ID,
+	}
+	_, err = s.UpdateRunById(ctx, params)
+
+	if err != nil {
+		return ErrFailedToUpdateRun
+	}
 
 	s.logger.Info().Int("Accepted", len(accepted)+len(acceptedTeams)).Int("Rejected", len(rejected)).Msg("Finished Algo")
 
