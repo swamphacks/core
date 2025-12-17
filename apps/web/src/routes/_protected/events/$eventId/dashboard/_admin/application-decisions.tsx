@@ -1,9 +1,7 @@
-import { Button } from "@/components/ui/Button";
-import { useUpdateEventAppReviewsFinishedStatus } from "@/features/ApplicationDecisions/hooks/useUpdateEventDecisions";
+import { useCheckAppReviewStatus } from "@/features/ApplicationDecisions/hooks/useCheckAppReviewStatus";
 import { useEvent } from "@/features/Event/hooks/useEvent";
 import { createFileRoute } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
-import { toast } from "react-toastify";
 
 export const Route = createFileRoute(
   "/_protected/events/$eventId/dashboard/_admin/application-decisions",
@@ -14,19 +12,16 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { eventId } = Route.useParams();
   const { user } = Route.useRouteContext();
-  const { checkAppReviewStatus } = useUpdateEventAppReviewsFinishedStatus();
+  const { checkAppReviewStatus } = useCheckAppReviewStatus(eventId);
   const event = useEvent(eventId);
 
   const checkReviewsCompleted = async () => {
     if (!event.data) return;
 
     const isCompleted = await checkAppReviewStatus(event.data);
-    if (isCompleted) {
-      toast.success(
-        "All application reviews completed. You can now proceed with calculating decisions.",
-      );
-    }
+    console.log(isCompleted);
   };
+  checkReviewsCompleted();
 
   const loading = !user || event.isLoading;
 
@@ -51,21 +46,13 @@ function RouteComponent() {
         <Heading className="text-2xl lg:text-3xl font-semibold mb-4">
           Application Decisions
         </Heading>
-
-        {event.data.application_review_finished ? (
-          <p>Show applications decision page</p>
-        ) : (
-          <>
-            <Button
-              size="sm"
-              className="m-0 h-fit w-fit"
-              onPress={checkReviewsCompleted}
-            >
-              Run Pre-Decisions Check
-            </Button>
-          </>
-        )}
       </div>
+
+      {event.data.application_review_finished ? (
+        <p>Show applications decision page</p>
+      ) : (
+        <p>Please come back after finishing application reviews!</p>
+      )}
     </main>
   );
 }
