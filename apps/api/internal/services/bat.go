@@ -55,11 +55,11 @@ func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *reposit
 
 func (s *BatService) ReleaseBatRunDecision(ctx context.Context, eventId, batRunId uuid.UUID) error {
 	// Retrieve Bat Run AND Event
-	g, ctx := errgroup.WithContext(ctx)
+	g, egCtx := errgroup.WithContext(ctx)
 
 	var event sqlc.Event
 	g.Go(func() error {
-		eventPtr, err := s.eventRepo.GetEventByID(ctx, eventId)
+		eventPtr, err := s.eventRepo.GetEventByID(egCtx, eventId)
 		if err != nil {
 			return err
 		}
@@ -70,7 +70,7 @@ func (s *BatService) ReleaseBatRunDecision(ctx context.Context, eventId, batRunI
 
 	var batRun sqlc.BatRun
 	g.Go(func() error {
-		run, err := s.batRunsRepo.GetRunById(ctx, batRunId)
+		run, err := s.batRunsRepo.GetRunById(egCtx, batRunId)
 		if err != nil {
 			return err
 		}
@@ -212,7 +212,7 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId, batRunId 
 		return ErrReviewsNotComplete
 	}
 
-	engine, err := bat.NewBatEngine(0.5, 0.5)
+	engine, err := bat.NewBatEngine(0.6, 0.4)
 	if err != nil {
 		return err
 	}

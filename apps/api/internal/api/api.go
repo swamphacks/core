@@ -154,6 +154,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventAdmin).Get("/bat-runs", api.Handlers.Bat.GetRunsByEventId)
 			r.With(ensureEventAdmin).Delete("/bat-runs", api.Handlers.Bat.GetRunsByEventId)
 			r.With(ensureEventAdmin).Get("/review-status", api.Handlers.Bat.CheckApplicationReviewsComplete)
+			r.With(ensureEventAdmin).Post("/reviews/bat-runs", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
+			r.With(ensureEventAdmin).Post("/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)
 
 			// Superuser-only
 			r.With(ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
