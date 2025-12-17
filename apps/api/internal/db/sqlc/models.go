@@ -385,25 +385,24 @@ type BatRun struct {
 }
 
 type Event struct {
-	ID                        uuid.UUID  `json:"id"`
-	Name                      string     `json:"name"`
-	Description               *string    `json:"description"`
-	Location                  *string    `json:"location"`
-	LocationUrl               *string    `json:"location_url"`
-	MaxAttendees              *int32     `json:"max_attendees"`
-	ApplicationOpen           time.Time  `json:"application_open"`
-	ApplicationClose          time.Time  `json:"application_close"`
-	RsvpDeadline              *time.Time `json:"rsvp_deadline"`
-	DecisionRelease           *time.Time `json:"decision_release"`
-	StartTime                 time.Time  `json:"start_time"`
-	EndTime                   time.Time  `json:"end_time"`
-	WebsiteUrl                *string    `json:"website_url"`
-	IsPublished               *bool      `json:"is_published"`
-	CreatedAt                 *time.Time `json:"created_at"`
-	UpdatedAt                 *time.Time `json:"updated_at"`
-	Banner                    *string    `json:"banner"`
-	ApplicationReviewStarted  bool       `json:"application_review_started"`
-	ApplicationReviewFinished bool       `json:"application_review_finished"`
+	ID                       uuid.UUID  `json:"id"`
+	Name                     string     `json:"name"`
+	Description              *string    `json:"description"`
+	Location                 *string    `json:"location"`
+	LocationUrl              *string    `json:"location_url"`
+	MaxAttendees             *int32     `json:"max_attendees"`
+	ApplicationOpen          time.Time  `json:"application_open"`
+	ApplicationClose         time.Time  `json:"application_close"`
+	RsvpDeadline             *time.Time `json:"rsvp_deadline"`
+	DecisionRelease          *time.Time `json:"decision_release"`
+	StartTime                time.Time  `json:"start_time"`
+	EndTime                  time.Time  `json:"end_time"`
+	WebsiteUrl               *string    `json:"website_url"`
+	IsPublished              *bool      `json:"is_published"`
+	CreatedAt                *time.Time `json:"created_at"`
+	UpdatedAt                *time.Time `json:"updated_at"`
+	Banner                   *string    `json:"banner"`
+	ApplicationReviewStarted bool       `json:"application_review_started"`
 }
 
 type EventInterestSubmission struct {

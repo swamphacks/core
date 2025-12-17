@@ -18,19 +18,19 @@ import (
 )
 
 var (
-	ErrListApplicationsFailure                    = errors.New("Failed to retrieve applications")
-	ErrMissingRatings                             = errors.New("Some applications are missing their review ratings")
-	ErrRunConflict                                = errors.New("Run already exists for this event")
-	ErrFailedToAddRun                             = errors.New("Failed to add run")
-	ErrFailedToDeleteRun                          = errors.New("Failed to delete run")
-	ErrFailedToUpdateRun                          = errors.New("Failed to update run")
-	ErrCouldNotDetermineAppReviewFinishStatus     = errors.New("Could not get determine if application reviews have finished.")
-	ErrCouldNotUpdateEventAppReviewFinishedStatus = errors.New("Could not update event application_review_finished status.")
-	ErrCouldNotGetEventInfo                       = errors.New("Could not retreive event info.")
-	ErrReviewsNotFinished                         = errors.New("Please make sure reviews are finished before calculating application decisions.")
-	ErrRunMismatch                                = errors.New("That bat run does not belong to this event.")
-	ErrRunStatusInvalid                           = errors.New("This run status is not valid for this action.")
-	ErrNoAcceptedApplicants                       = errors.New("No applicants marked as accepted.")
+	ErrListApplicationsFailure         = errors.New("Failed to retrieve applications")
+	ErrMissingRatings                  = errors.New("Some applications are missing their review ratings")
+	ErrRunConflict                     = errors.New("Run already exists for this event")
+	ErrFailedToAddRun                  = errors.New("Failed to add run")
+	ErrFailedToDeleteRun               = errors.New("Failed to delete run")
+	ErrFailedToUpdateRun               = errors.New("Failed to update run")
+	ErrCouldNotGetEventInfo            = errors.New("Could not retreive event info.")
+	ErrReviewsNotFinished              = errors.New("Please make sure reviews are finished before calculating application decisions.")
+	ErrRunMismatch                     = errors.New("That bat run does not belong to this event.")
+	ErrRunStatusInvalid                = errors.New("This run status is not valid for this action.")
+	ErrNoAcceptedApplicants            = errors.New("No applicants marked as accepted.")
+	ErrFailedToCheckAppReviewsComplete = errors.New("Could not get determine if application reviews have finished.")
+	ErrReviewsNotComplete              = errors.New("Please make sure reviews are finished before calculating application decisions.")
 )
 
 type BatService struct {
@@ -167,37 +167,21 @@ func (s *BatService) DeleteRunById(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-// TODO: REFACTOR
-func (s *BatService) UpdateEventApplicationReviewsFinishedStatus(ctx context.Context, eventId uuid.UUID) (bool, error) {
+func (s *BatService) CheckApplicationReviewsComplete(ctx context.Context, eventId uuid.UUID) (bool, error) {
 	// Should the returned bool be nullable and set to null if theres an error? Not sure what best practice is.
 
 	nonReviewedApplicantUUIDs, err := s.appRepo.GetNonReviewedApplications(ctx, eventId)
+	reviewsFinished := false
 
 	if err != nil {
-		return false, ErrCouldNotDetermineAppReviewFinishStatus
-	}
-
-	params := sqlc.UpdateEventByIdParams{
-		ID:                                eventId,
-		ApplicationReviewFinished:         false,
-		ApplicationReviewFinishedDoUpdate: true,
+		return false, ErrFailedToCheckAppReviewsComplete
 	}
 
 	if len(nonReviewedApplicantUUIDs) == 0 {
-		params.ApplicationReviewFinished = true
+		reviewsFinished = true
 	}
 
-	err = s.eventRepo.UpdateEventById(ctx, params)
-	if err != nil {
-		return false, ErrCouldNotUpdateEventAppReviewFinishedStatus
-	}
-
-	event, err := s.eventRepo.GetEventByID(ctx, eventId)
-	if err != nil {
-		return false, ErrCouldNotGetEventInfo
-	}
-
-	return event.ApplicationReviewFinished, nil
+	return reviewsFinished, nil
 }
 
 func (s *BatService) QueueCalculateAdmissionsTask(ctx context.Context, eventId uuid.UUID) (*asynq.TaskInfo, error) {
@@ -226,12 +210,12 @@ func (s *BatService) QueueCalculateAdmissionsTask(ctx context.Context, eventId u
 
 func (s *BatService) CalculateAdmissions(ctx context.Context, eventId, batRunId uuid.UUID) error {
 	// check to make sure reviews are done, update state if true, return error if not
-	reviewStatus, err := s.UpdateEventApplicationReviewsFinishedStatus(ctx, eventId)
+	reviewStatus, err := s.CheckApplicationReviewsComplete(ctx, eventId)
 	if err != nil {
-		return ErrCouldNotDetermineAppReviewFinishStatus
+		return ErrFailedToCheckAppReviewsComplete
 	}
 	if reviewStatus == false {
-		return ErrReviewsNotFinished
+		return ErrReviewsNotComplete
 	}
 
 	engine, err := bat.NewBatEngine(0.5, 0.5)
