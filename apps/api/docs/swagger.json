@@ -213,6 +213,17 @@
                 ],
                 "type": "object"
             },
+            "handlers.ReviewStatusResponse": {
+                "properties": {
+                    "complete": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "complete"
+                ],
+                "type": "object"
+            },
             "handlers.UpdateEmailConsentRequest": {
                 "properties": {
                     "email_consent": {
@@ -531,6 +542,9 @@
                     },
                     "user_id": {
                         "type": "string"
+                    },
+                    "waitlist_join_time": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -544,7 +558,8 @@
                     "status",
                     "submitted_at",
                     "updated_at",
-                    "user_id"
+                    "user_id",
+                    "waitlist_join_time"
                 ],
                 "type": "object"
             },
@@ -630,6 +645,19 @@
                 "x-enum-varnames": [
                     "AuthUserRoleUser",
                     "AuthUserRoleSuperuser"
+                ]
+            },
+            "sqlc.BatRunStatus": {
+                "enum": [
+                    "running",
+                    "completed",
+                    "failed"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "BatRunStatusRunning",
+                    "BatRunStatusCompleted",
+                    "BatRunStatusFailed"
                 ]
             },
             "sqlc.Event": {
@@ -1006,6 +1034,45 @@
                 ],
                 "type": "object"
             },
+            "sqlc.GetRunsByEventIdRow": {
+                "properties": {
+                    "accepted_applicants": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "completed_at": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "rejected_applicants": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/sqlc.NullBatRunStatus"
+                    }
+                },
+                "required": [
+                    "accepted_applicants",
+                    "completed_at",
+                    "created_at",
+                    "id",
+                    "rejected_applicants",
+                    "status"
+                ],
+                "type": "object"
+            },
             "sqlc.JoinRequestStatus": {
                 "enum": [
                     "PENDING",
@@ -1086,6 +1153,22 @@
                 },
                 "required": [
                     "application_status",
+                    "valid"
+                ],
+                "type": "object"
+            },
+            "sqlc.NullBatRunStatus": {
+                "properties": {
+                    "bat_run_status": {
+                        "$ref": "#/components/schemas/sqlc.BatRunStatus"
+                    },
+                    "valid": {
+                        "description": "Valid is true if BatRunStatus is not NULL",
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "bat_run_status",
                     "valid"
                 ],
                 "type": "object"
@@ -1762,6 +1845,51 @@
                 ]
             }
         },
+        "/events/{eventId}/application/accept-acceptance": {
+            "patch": {
+                "description": "Sets application status from accepted to rejected",
+                "parameters": [
+                    {
+                        "description": "ID of the event to join the waitlist for",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Acceptance withdrawn joined successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to accept"
+                    }
+                },
+                "summary": "Accept an acceptance after being accepted to an event.",
+                "tags": [
+                    "Application Event"
+                ]
+            }
+        },
         "/events/{eventId}/application/assign-reviewers": {
             "post": {
                 "description": "Assigns applications for an event to reviewers for the application review process.",
@@ -1942,6 +2070,51 @@
                     }
                 },
                 "summary": "Download the user's uploaded resume from their event application",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/join-waitlist": {
+            "patch": {
+                "description": "Adds a waitlist join time to application. Sets status to waitlisted",
+                "parameters": [
+                    {
+                        "description": "ID of the event to join the waitlist for",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event Waitlist joined successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to join waitlist"
+                    }
+                },
+                "summary": "Join event waitlist after rejected application status.",
                 "tags": [
                     "Application"
                 ]
@@ -2187,6 +2360,51 @@
                 ]
             }
         },
+        "/events/{eventId}/application/withdraw-acceptance": {
+            "patch": {
+                "description": "Sets application status from accepted to rejected",
+                "parameters": [
+                    {
+                        "description": "ID of the event to join the waitlist for",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Acceptance withdrawn joined successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to withdraw"
+                    }
+                },
+                "summary": "Withdraw an acceptance after being accepted to an event.",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
         "/events/{eventId}/application/{applicationId}": {
             "get": {
                 "description": "Retrieves an application using the user id and event id primary keys and unique constraints. Only accessible by event staff and admins.",
@@ -2374,6 +2592,82 @@
                 ]
             }
         },
+        "/events/{eventId}/bat-runs": {
+            "delete": {
+                "description": "Delete an existing event",
+                "parameters": [
+                    {
+                        "description": "Run ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "OK - Run deleted"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Delete an event",
+                "tags": [
+                    "Bat"
+                ]
+            },
+            "get": {
+                "description": "Gets BatRuns.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/sqlc.GetRunsByEventIdRow"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK: BatRuns returned"
+                    }
+                },
+                "summary": "Get BatRuns",
+                "tags": [
+                    "Bat"
+                ]
+            }
+        },
         "/events/{eventId}/interest": {
             "post": {
                 "description": "Submit email for event interest/mailing list",
@@ -2494,6 +2788,58 @@
                 "summary": "Retrieves general information about the event",
                 "tags": [
                     "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/review-status": {
+            "get": {
+                "description": "Check if application reviews complete",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handlers.ReviewStatusResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Check if application reviews complete",
+                "tags": [
+                    "Bat"
                 ]
             }
         },

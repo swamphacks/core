@@ -36,12 +36,12 @@ func NewApplicationHandler(appService *services.ApplicationService) *Application
 //	@Tags			Application
 //	@Accept			json
 //	@Produce		json
-//	@Param			eventId		path		string					true	"Event ID"
+//	@Param			eventId			path		string					true	"Event ID"
 //	@Param			sh_session_id	cookie		string					true	"The authenticated session token/id"
-//	@Success		200			{object}	sqlc.Application		"OK: An application was found"
-//	@Success		200			{object}	map[string]any			"OK: An application was found"
-//	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
-//	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving application"\
+//	@Success		200				{object}	sqlc.Application		"OK: An application was found"
+//	@Success		200				{object}	map[string]any			"OK: An application was found"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500				{object}	response.ErrorResponse	"Server Error: error retrieving application"\
 //	@Router			/events/{eventId}/application [get]
 func (h *ApplicationHandler) GetMyApplication(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
@@ -365,12 +365,12 @@ func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *
 //	@Description	Retrieves an application using the user id and event id primary keys and unique constraints. Only accessible by event staff and admins.
 //	@Tags			Application
 //	@Produce		json
-//	@Param			eventId		path		string					true	"Event ID"
+//	@Param			eventId			path		string					true	"Event ID"
 //	@Param			applicationId	path		string					true	"Application ID (Technically user ID)"
-//	@Param			sh_session	cookie		string					true	"The authenticated session token/id"
-//	@Success		200			{object}	sqlc.Application		"OK: An application was found"
-//	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
-//	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving assigned application"
+//	@Param			sh_session		cookie		string					true	"The authenticated session token/id"
+//	@Success		200				{object}	sqlc.Application		"OK: An application was found"
+//	@Failure		400				{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500				{object}	response.ErrorResponse	"Server Error: error retrieving assigned application"
 //	@Router			/events/{eventId}/application/{applicationId} [get]
 func (h *ApplicationHandler) GetApplication(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
@@ -459,11 +459,11 @@ func (h *ApplicationHandler) SubmitApplicationReview(w http.ResponseWriter, r *h
 //	@Description	Retrieves assigned applications and their review progress for the authenticated reviewer.
 //	@Tags			Application
 //	@Produce		json
-//	@Param			eventId		path		string					true	"Event ID"
-//	@Param			sh_session_id	cookie		string					true	"The authenticated session token/id"
-//	@Success		200			{array}	services.AssignedApplication		"OK: An application was found"
-//	@Failure		400			{object}	response.ErrorResponse	"Bad request/Malformed request."
-//	@Failure		500			{object}	response.ErrorResponse	"Server Error: error retrieving assigned application"
+//	@Param			eventId			path		string							true	"Event ID"
+//	@Param			sh_session_id	cookie		string							true	"The authenticated session token/id"
+//	@Success		200				{array}		services.AssignedApplication	"OK: An application was found"
+//	@Failure		400				{object}	response.ErrorResponse			"Bad request/Malformed request."
+//	@Failure		500				{object}	response.ErrorResponse			"Server Error: error retrieving assigned application"
 //	@Router			/events/{eventId}/application/assigned [get]
 func (h *ApplicationHandler) GetAssignedApplications(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
@@ -555,11 +555,11 @@ func (h *ApplicationHandler) ResetApplicationReviews(w http.ResponseWriter, r *h
 //	@Description	This handler creates a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.
 //	@Tags			Application
 //	@Produce		json
-//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
-//	@Param			applicationId path  string  true	"The application ID (userId of applicant)" Format(uuid)
-//	@Success		200		{object}	string
-//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
-//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error handling download resume request"
+//	@Param			eventId			path		string	true	"Event ID"									Format(uuid)
+//	@Param			applicationId	path		string	true	"The application ID (userId of applicant)"	Format(uuid)
+//	@Success		200				{object}	string
+//	@Failure		400				{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500				{object}	response.ErrorResponse	"Server Error: error handling download resume request"
 //	@Router			/events/{eventId}/application/{applicationId}/resume [get]
 func (h *ApplicationHandler) GetResumePresignedUrl(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")

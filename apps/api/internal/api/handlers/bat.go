@@ -29,9 +29,9 @@ func NewBatHandler(BatService *services.BatService, logger zerolog.Logger) *BatH
 //	@Summary		Get BatRuns
 //	@Description	Gets BatRuns.
 //	@Tags			Bat
-//	@Accept         json
+//	@Accept			json
 //	@Produce		json
-//	@Success		200		{array}	sqlc.GetBatRunsWithUserInfoRow	"OK: BatRuns returned"
+//	@Success		200	{array}	sqlc.GetRunsByEventIdRow	"OK: BatRuns returned"
 //	@Router			/events/{eventId}/bat-runs [get]
 func (h *BatHandler) GetRunsByEventId(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
@@ -69,6 +69,10 @@ func (h *BatHandler) GetRunsByEventId(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type ReviewStatusResponse struct {
+	Complete bool `json:"complete"`
+}
+
 // Check application reviews complete
 //
 //	@Summary		Check if application reviews complete
@@ -76,8 +80,8 @@ func (h *BatHandler) GetRunsByEventId(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Bat
 //	@Accept			json
 //	@Produce		json
-//	@Param			eventId	path	string	true	"Event ID"	Format(uuid)
-//	@Success		200		"OK"
+//	@Param			eventId	path		string					true	"Event ID"	Format(uuid)
+//	@Success		200		{object}	ReviewStatusResponse	"OK"
 //	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
 //	@Router			/events/{eventId}/review-status [get]
 func (h *BatHandler) CheckApplicationReviewsComplete(w http.ResponseWriter, r *http.Request) {
@@ -108,12 +112,9 @@ func (h *BatHandler) CheckApplicationReviewsComplete(w http.ResponseWriter, r *h
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(reviewsComplete); err != nil {
-		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
-		return
-	}
+	res.Send(w, http.StatusOK, ReviewStatusResponse{
+		Complete: reviewsComplete,
+	})
 }
 
 // Delete an event
