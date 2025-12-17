@@ -13,7 +13,9 @@ FROM base AS dev
 
 RUN go install github.com/air-verse/air@latest
 
-CMD ["air"]
+COPY .air.bat.toml .
+
+CMD ["air", "-c", ".air.bat.toml"]
 
 # Production
 FROM base AS prod
