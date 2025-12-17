@@ -25,7 +25,7 @@ func (h *AdmissionHandler) HandleCalculateAdmissionsRequest(w http.ResponseWrite
 		return
 	}
 
-	_, err = h.batService.QueueCalculateAdmissionsTask(eventId)
+	_, err = h.batService.QueueCalculateAdmissionsTask(r.Context(), eventId)
 	if err != nil {
 		res.Send(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went terribly wrong."))
 		return

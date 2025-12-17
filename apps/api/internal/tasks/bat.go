@@ -12,7 +12,8 @@ const (
 )
 
 type CalculateAdmissionsPayload struct {
-	EventID uuid.UUID
+	EventID  uuid.UUID
+	BatRunID uuid.UUID
 }
 
 func NewTaskCalculateAdmissions(payload CalculateAdmissionsPayload) (*asynq.Task, error) {

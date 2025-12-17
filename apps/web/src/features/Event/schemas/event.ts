@@ -19,6 +19,7 @@ export const EventSchema = z.object({
   updated_at: z.coerce.date().nullable(),
   banner: z.url().or(z.literal("")).nullable(),
   application_review_started: z.boolean(),
+  application_review_finished: z.boolean(),
 });
 
 export type Event = z.infer<typeof EventSchema>;

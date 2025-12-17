@@ -6,6 +6,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 )
@@ -36,10 +37,22 @@ func (w *BATWorker) HandleCalculateAdmissionsTask(ctx context.Context, t *asynq.
 		return err
 	}
 
-	// Fire off bat service
-	err := w.batService.CalculateAdmissions(ctx, p.EventID)
+	err := w.batService.CalculateAdmissions(ctx, p.EventID, p.BatRunID)
+
+	// On error, mark run as failed.
+	// To be fair, this should be handled more granulary. Like for example,
+	// what if the original run was never created? Just food for thought for now.
 	if err != nil {
 		w.logger.Err(err).Msg("Something went wrong calculating admissions.")
+		_, _ = w.batService.UpdateRunById(ctx, sqlc.UpdateRunByIdParams{
+			ID:             p.BatRunID,
+			StatusDoUpdate: true,
+			Status: sqlc.NullBatRunStatus{
+				BatRunStatus: sqlc.BatRunStatusFailed,
+				Valid:        true,
+			},
+		})
+
 		return err
 	}
 

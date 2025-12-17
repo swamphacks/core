@@ -1,15 +1,14 @@
 root = "."
 tmp_dir = "tmp"
-testdata_dir = "testdata"
 
 [build]
-  cmd = "go build -o ./tmp/main ./cmd/api"
+  cmd = "go build -o ./tmp/main ./cmd/BAT_worker"
   bin = "./tmp/main"
-  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
-  include_dir = ["cmd", "internal", "docs", "pkgs"]
+  exclude_dir = ["tmp", "vendor"]
+  include_dir = ["cmd", "internal", "docs"]  # same as API if you want
   exclude_regex = ["_test.go"]
   include_ext = ["go", "tpl", "tmpl", "html"]
-  log = "build-errors.log"
+  log = "tmp/build-errors.log"
   poll = true
 
 [color]
@@ -26,11 +25,6 @@ testdata_dir = "testdata"
 
 [misc]
   clean_on_exit = false
-
-[proxy]
-  app_port = 0
-  enabled = false
-  proxy_port = 0
 
 [screen]
   clear_on_rebuild = false

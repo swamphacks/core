@@ -4,6 +4,7 @@ import { NavLink } from "@/components/AppShell/NavLink";
 import TablerLayoutDashboard from "~icons/tabler/layout-dashboard";
 import TablerUsersGroup from "~icons/tabler/users-group";
 import TablerClipboardCheck from "~icons/tabler/clipboard-check";
+import TablerGavel from "~icons/tabler/gavel";
 import TablerMail from "~icons/tabler/mail";
 import TablerSettings from "~icons/tabler/settings";
 import TablerFileText from "~icons/tabler/file-text";
@@ -37,6 +38,8 @@ export default function StaffDashboardShell({
 
   const applicationReviewActive =
     /^\/events\/[^/]+\/dashboard\/application-review\/?$/.test(pathname);
+  const applicationDecisionsActive =
+    /^\/events\/[^/]+\/dashboard\/application-decisions\/?$/.test(pathname);
   const waitlistActive = /^\/events\/[^/]+\/dashboard\/waitlist\/?$/.test(
     pathname,
   );
@@ -87,6 +90,7 @@ export default function StaffDashboardShell({
           initialExpanded={
             waitlistActive ||
             applicationReviewActive ||
+            applicationDecisionsActive ||
             applicationStatisticsActive
           }
         >
@@ -96,6 +100,14 @@ export default function StaffDashboardShell({
             leftSection={<TablerClipboardCheck className="w-5 aspect-square" />}
             active={applicationReviewActive}
           />
+          {eventRole == "admin" && (
+            <NavLink
+              label="Application Decisions"
+              href={`/events/${eventId}/dashboard/application-decisions`}
+              leftSection={<TablerGavel className="w-5 aspect-square" />}
+              active={applicationDecisionsActive}
+            />
+          )}
           <NavLink
             label="Waitlist"
             href={`/events/${eventId}/dashboard/waitlist`}

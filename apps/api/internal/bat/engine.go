@@ -173,23 +173,23 @@ func (b *BatEngine) AcceptIndividuals(idvs []AdmissionCandidate) ([]AdmissionCan
 	buckets := []BucketConfig{
 		{
 			Type:        BucketTypeUFEarly,
-			QuotaPtr:    &b.quota.UF.EarlyLeft,
-			RolloverPtr: &b.quota.UF.LateLeft,
+			QuotaPtr:    &b.Quota.UF.EarlyLeft,
+			RolloverPtr: &b.Quota.UF.LateLeft,
 		},
 		{
 			Type:        BucketTypeUFLate,
-			QuotaPtr:    &b.quota.UF.LateLeft,
-			RolloverPtr: &b.quota.UF.EarlyLeft,
+			QuotaPtr:    &b.Quota.UF.LateLeft,
+			RolloverPtr: &b.Quota.UF.EarlyLeft,
 		},
 		{
 			Type:        BucketTypeOtherEarly,
-			QuotaPtr:    &b.quota.Other.EarlyLeft,
-			RolloverPtr: &b.quota.Other.LateLeft,
+			QuotaPtr:    &b.Quota.Other.EarlyLeft,
+			RolloverPtr: &b.Quota.Other.LateLeft,
 		},
 		{
 			Type:        BucketTypeOtherLate,
-			QuotaPtr:    &b.quota.Other.LateLeft,
-			RolloverPtr: &b.quota.Other.EarlyLeft,
+			QuotaPtr:    &b.Quota.Other.LateLeft,
+			RolloverPtr: &b.Quota.Other.EarlyLeft,
 		},
 	}
 
@@ -220,7 +220,7 @@ func (b *BatEngine) AcceptIndividuals(idvs []AdmissionCandidate) ([]AdmissionCan
 				accepted = append(accepted, candidate)
 
 				*bucket.QuotaPtr--
-				b.quota.TotalAccepted++
+				b.Quota.TotalAccepted++
 			}
 
 			// Rollover leftover slots to nearest neighbor condition
@@ -311,7 +311,7 @@ func (b *BatEngine) AcceptTeams(teams []TeamEvaluationData) ([]AdmissionCandidat
 	b.ApplyTeamSortKey(teams)
 
 	for _, team := range teams {
-		if b.quota.TeamSlotsLeft <= int32(len(team.Members)) {
+		if b.Quota.TeamSlotsLeft <= int32(len(team.Members)) {
 			remaining = append(remaining, team.Members...)
 			continue
 		}
@@ -322,14 +322,14 @@ func (b *BatEngine) AcceptTeams(teams []TeamEvaluationData) ([]AdmissionCandidat
 			accepted = append(accepted, team.Members...)
 			size := int32(len(team.Members))
 
-			b.quota.TotalAccepted += size
-			b.quota.TeamSlotsLeft -= size
+			b.Quota.TotalAccepted += size
+			b.Quota.TeamSlotsLeft -= size
 
 			// Adjust primary quota buckets
-			b.quota.UF.EarlyLeft -= requiredQuota.UF.EarlyLeft
-			b.quota.UF.LateLeft -= requiredQuota.UF.LateLeft
-			b.quota.Other.EarlyLeft -= requiredQuota.Other.EarlyLeft
-			b.quota.Other.LateLeft -= requiredQuota.Other.LateLeft
+			b.Quota.UF.EarlyLeft -= requiredQuota.UF.EarlyLeft
+			b.Quota.UF.LateLeft -= requiredQuota.UF.LateLeft
+			b.Quota.Other.EarlyLeft -= requiredQuota.Other.EarlyLeft
+			b.Quota.Other.LateLeft -= requiredQuota.Other.LateLeft
 		} else {
 			remaining = append(remaining, team.Members...)
 		}
@@ -378,10 +378,10 @@ func getTeamQuotaRequirement(team *TeamEvaluationData) QuotaState {
 // Checks whether the current quota can fullfill the required
 // quota calculated in getTeamQuotaRequirement
 func (b BatEngine) canAcceptTeam(req QuotaState) bool {
-	return req.UF.EarlyLeft <= b.quota.UF.EarlyLeft &&
-		req.UF.LateLeft <= b.quota.UF.LateLeft &&
-		req.Other.EarlyLeft <= b.quota.Other.EarlyLeft &&
-		req.Other.LateLeft <= b.quota.Other.LateLeft
+	return req.UF.EarlyLeft <= b.Quota.UF.EarlyLeft &&
+		req.UF.LateLeft <= b.Quota.UF.LateLeft &&
+		req.Other.EarlyLeft <= b.Quota.Other.EarlyLeft &&
+		req.Other.LateLeft <= b.Quota.Other.LateLeft
 }
 
 // generateSortKey generates a priority key for weighted random sampling.
