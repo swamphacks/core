@@ -346,3 +346,21 @@ func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationPa
 	)
 	return err
 }
+
+const updateApplicationStatusByEventID = `-- name: UpdateApplicationStatusByEventID :exec
+UPDATE applications
+SET status = $1::application_status
+WHERE event_id = $2::uuid
+  AND user_id = ANY($3::uuid[])
+`
+
+type UpdateApplicationStatusByEventIDParams struct {
+	Status  ApplicationStatus `json:"status"`
+	EventID uuid.UUID         `json:"event_id"`
+	UserIds []uuid.UUID       `json:"user_ids"`
+}
+
+func (q *Queries) UpdateApplicationStatusByEventID(ctx context.Context, arg UpdateApplicationStatusByEventIDParams) error {
+	_, err := q.db.Exec(ctx, updateApplicationStatusByEventID, arg.Status, arg.EventID, arg.UserIds)
+	return err
+}

@@ -66,6 +66,14 @@ func (r *ApplicationRepository) GetApplicationByUserAndEventID(ctx context.Conte
 	return &application, nil
 }
 
+func (r *ApplicationRepository) UpdateApplicationStatusByEventId(ctx context.Context, status sqlc.ApplicationStatus, eventId uuid.UUID, userIds uuid.UUIDs) error {
+	return r.db.Query.UpdateApplicationStatusByEventID(ctx, sqlc.UpdateApplicationStatusByEventIDParams{
+		EventID: eventId,
+		Status:  status,
+		UserIds: userIds,
+	})
+}
+
 // List all candidates considered for admission for an eventId.
 // This queries for all applications who are 'under_review' and have their rating fields filled out.
 // It also LEFT JOINs in their team id (if they have one) for further grouping based on teams.

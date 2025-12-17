@@ -5,16 +5,10 @@ INSERT INTO bat_runs (
     $1
 ) RETURNING *;
 
--- name: GetRunByEventId :one
-SELECT
-    id,
-    accepted_applicants,
-    rejected_applicants,
-    status,
-    created_at,
-    completed_at
+-- name: GetRunById :one
+SELECT *
 FROM bat_runs
-WHERE event_id = $1;
+WHERE id = $1;
 
 -- name: GetRunsByEventId :many
 SELECT

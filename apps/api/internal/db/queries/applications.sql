@@ -90,3 +90,9 @@ UPDATE applications
 SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
     status = 'waitlisted'
 WHERE user_id = $1 AND event_id = $2;
+
+-- name: UpdateApplicationStatusByEventID :exec
+UPDATE applications
+SET status = @status::application_status
+WHERE event_id = @event_id::uuid
+  AND user_id = ANY(@user_ids::uuid[]);

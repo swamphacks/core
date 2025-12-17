@@ -91,7 +91,7 @@ func main() {
 	emailService := services.NewEmailService(taskQueueClient, sesClient, logger)
 	applicationService := services.NewApplicationService(applicationRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, logger)
 	teamService := services.NewTeamService(teamRepo, teamMemberRepo, teamJoinRequestRepo, eventRepo, txm, logger)
-	batService := services.NewBatService(applicationRepo, eventRepo, batRunsRepo, taskQueueClient, logger)
+	batService := services.NewBatService(applicationRepo, eventRepo, batRunsRepo, txm, taskQueueClient, logger)
 
 	// Injections into handlers
 	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, batService, cfg, logger)

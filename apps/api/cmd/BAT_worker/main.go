@@ -58,11 +58,13 @@ func main() {
 	database := db.NewDB(cfg.DatabaseURL)
 	defer database.Close()
 
+	txm := db.NewTransactionManager(database)
+
 	eventRepo := repository.NewEventRespository(database)
 	applicationRepo := repository.NewApplicationRepository(database)
 	batRunsRepo := repository.NewBatRunsRepository(database)
 
-	batService := services.NewBatService(applicationRepo, eventRepo, batRunsRepo, nil, logger)
+	batService := services.NewBatService(applicationRepo, eventRepo, batRunsRepo, txm, nil, logger)
 
 	BATWorker := workers.NewBATWorker(batService, logger)
 
