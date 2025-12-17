@@ -93,7 +93,7 @@ func (h *BatHandler) CheckApplicationReviewsComplete(w http.ResponseWriter, r *h
 		return
 	}
 
-	reviewStatus, err := h.BatService.CheckApplicationReviewsComplete(r.Context(), eventId)
+	reviewsComplete, err := h.BatService.CheckApplicationReviewsComplete(r.Context(), eventId)
 	if errors.Is(err, services.ErrMissingFields) {
 		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Missing/malformed query. Available parameters:  eventId"))
 		return
@@ -110,7 +110,7 @@ func (h *BatHandler) CheckApplicationReviewsComplete(w http.ResponseWriter, r *h
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(reviewStatus); err != nil {
+	if err := json.NewEncoder(w).Encode(reviewsComplete); err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
 		return
 	}
