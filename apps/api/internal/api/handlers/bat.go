@@ -69,18 +69,18 @@ func (h *BatHandler) GetRunsByEventId(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Update event application_reviews_finished status
+// Check application reviews complete
 //
-//	@Summary		Update an event's application_reviews_finished status
-//	@Description	Update an event's application_reviews_finished status
-//	@Tags			Event
+//	@Summary		Check if application reviews complete
+//	@Description	Check if application reviews complete
+//	@Tags			Bat
 //	@Accept			json
 //	@Produce		json
 //	@Param			eventId	path	string	true	"Event ID"	Format(uuid)
-//	@Success		204		"OK - Event updated (patched)"
+//	@Success		200		"OK"
 //	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
-//	@Router			/events/{eventId}/app-review-decision-status [post]
-func (h *BatHandler) UpdateEventApplicationReviewsFinishedStatus(w http.ResponseWriter, r *http.Request) {
+//	@Router			/events/{eventId}/review-status [get]
+func (h *BatHandler) CheckApplicationReviewsComplete(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
 		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
@@ -93,7 +93,7 @@ func (h *BatHandler) UpdateEventApplicationReviewsFinishedStatus(w http.Response
 		return
 	}
 
-	reviewsNotFinished, err := h.BatService.UpdateEventApplicationReviewsFinishedStatus(r.Context(), eventId)
+	reviewsComplete, err := h.BatService.CheckApplicationReviewsComplete(r.Context(), eventId)
 	if errors.Is(err, services.ErrMissingFields) {
 		res.SendError(w, http.StatusBadRequest, res.NewError("missing_fields", "Missing/malformed query. Available parameters:  eventId"))
 		return
@@ -110,7 +110,7 @@ func (h *BatHandler) UpdateEventApplicationReviewsFinishedStatus(w http.Response
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(reviewsNotFinished); err != nil {
+	if err := json.NewEncoder(w).Encode(reviewsComplete); err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
 		return
 	}

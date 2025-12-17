@@ -43,8 +43,7 @@ SET
     website_url = CASE WHEN @website_url_do_update::boolean THEN @website_url ELSE website_url END,
     is_published = CASE WHEN @is_published_do_update::boolean THEN @is_published ELSE is_published END,
     banner = CASE WHEN @banner_do_update::boolean THEN @banner ELSE banner END,
-    application_review_started = CASE WHEN @application_review_started_do_update::boolean THEN @application_review_started ELSE application_review_started END,
-    application_review_finished = CASE WHEN @application_review_finished_do_update::boolean THEN @application_review_finished ELSE application_review_finished END
+    application_review_started = CASE WHEN @application_review_started_do_update::boolean THEN @application_review_started ELSE application_review_started END
 WHERE
     id = @id::uuid
 RETURNING *;
