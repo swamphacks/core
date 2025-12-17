@@ -19,12 +19,16 @@ import (
 )
 
 var (
-	ErrListApplicationsFailure = errors.New("Failed to retrieve applications")
-	ErrMissingRatings          = errors.New("Some applications are missing their review ratings")
-	ErrRunConflict             = errors.New("Run already exists for this event")
-	ErrFailedToAddRun          = errors.New("Failed to add run")
-	ErrFailedToDeleteRun       = errors.New("Failed to delete run")
-	ErrFailedToUpdateRun       = errors.New("Failed to update run")
+	ErrListApplicationsFailure                    = errors.New("Failed to retrieve applications")
+	ErrMissingRatings                             = errors.New("Some applications are missing their review ratings")
+	ErrRunConflict                                = errors.New("Run already exists for this event")
+	ErrFailedToAddRun                             = errors.New("Failed to add run")
+	ErrFailedToDeleteRun                          = errors.New("Failed to delete run")
+	ErrFailedToUpdateRun                          = errors.New("Failed to update run")
+	ErrCouldNotDetermineAppReviewFinishStatus     = errors.New("Could not get determine if application reviews have finished.")
+	ErrCouldNotUpdateEventAppReviewFinishedStatus = errors.New("Could not update event application_review_finished status.")
+	ErrCouldNotGetEventInfo                       = errors.New("Could not retreive event info.")
+	ErrReviewsNotFinished                         = errors.New("Please make sure reviews are finished before calculating application decisions.")
 )
 
 type BatService struct {
@@ -54,7 +58,7 @@ func (s *BatService) AddRun(ctx context.Context, eventId uuid.UUID) (*sqlc.BatRu
 		return nil, ErrRunConflict
 	} else if err != nil {
 		s.logger.Err(err).Msg("An unknown error was caught!")
-		return nil, ErrFailedToCreateRun
+		return nil, ErrFailedToAddRun
 	}
 
 	return run, nil
@@ -97,6 +101,38 @@ func (s *BatService) DeleteRunById(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return err
+}
+
+func (s *BatService) UpdateEventApplicationReviewsFinishedStatus(ctx context.Context, eventId uuid.UUID) (bool, error) {
+	// Should the returned bool be nullable and set to null if theres an error? Not sure what best practice is.
+
+	nonReviewedApplicantUUIDs, err := s.appRepo.GetNonReviewedApplications(ctx, eventId)
+
+	if err != nil {
+		return false, ErrCouldNotDetermineAppReviewFinishStatus
+	}
+
+	params := sqlc.UpdateEventByIdParams{
+		ID:                                eventId,
+		ApplicationReviewFinished:         false,
+		ApplicationReviewFinishedDoUpdate: true,
+	}
+
+	if len(nonReviewedApplicantUUIDs) == 0 {
+		params.ApplicationReviewFinished = true
+	}
+
+	err = s.eventRepo.UpdateEventById(ctx, params)
+	if err != nil {
+		return false, ErrCouldNotUpdateEventAppReviewFinishedStatus
+	}
+
+	event, err := s.eventRepo.GetEventByID(ctx, eventId)
+	if err != nil {
+		return false, ErrCouldNotGetEventInfo
+	}
+
+	return event.ApplicationReviewFinished, nil
 }
 
 func (s *BatService) QueueCalculateAdmissionsTask(eventId uuid.UUID) (*asynq.TaskInfo, error) {
@@ -152,6 +188,15 @@ type TeamAdmissionData struct {
 
 func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID) error {
 	s.logger.Info().Str("eventId", eventId.String()).Msg("")
+
+	// check to make sure reviews are done, update state if true, return error if not
+	reviewStatus, err := s.UpdateEventApplicationReviewsFinishedStatus(ctx, eventId)
+	if err != nil {
+		return ErrCouldNotDetermineAppReviewFinishStatus
+	}
+	if reviewStatus == false {
+		return ErrReviewsNotFinished
+	}
 
 	// Create run, adds state as "running" into db
 	newRun, err := s.AddRun(ctx, eventId)

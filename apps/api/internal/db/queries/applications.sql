@@ -80,6 +80,11 @@ WHERE assigned_reviewer_id = $1
     AND status IN ('under_review')
 ORDER BY user_id ASC;
 
+-- name: ListNonReviewedApplicationsByEvent :many
+SELECT user_id FROM applications
+WHERE event_id = $1
+    AND passion_rating IS NULL OR experience_rating IS NULL;
+
 -- name: JoinWaitlist :exec
 UPDATE applications
 SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),

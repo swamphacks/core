@@ -36,6 +36,9 @@ func (w *BATWorker) HandleCalculateAdmissionsTask(ctx context.Context, t *asynq.
 		return err
 	}
 
+	// TODO
+	// Check to make sure all reviews are done
+
 	// Fire off bat service
 	err := w.batService.CalculateAdmissions(ctx, p.EventID)
 	if err != nil {

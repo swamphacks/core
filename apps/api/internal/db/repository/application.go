@@ -177,6 +177,10 @@ func (r *ApplicationRepository) GetApplicationStatuses(ctx context.Context, even
 	return r.db.Query.GetApplicationStatusSplit(ctx, eventId)
 }
 
+func (r *ApplicationRepository) GetNonReviewedApplications(ctx context.Context, eventId uuid.UUID) ([]uuid.UUID, error) {
+	return r.db.Query.ListNonReviewedApplicationsByEvent(ctx, eventId)
+}
+
 func (r *ApplicationRepository) GetSubmissionTimes(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetSubmissionTimesRow, error) {
 	return r.db.Query.GetSubmissionTimes(ctx, eventId)
 }
