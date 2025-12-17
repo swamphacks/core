@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"html/template"
+	"path/filepath"
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
@@ -45,6 +46,55 @@ func (s *EmailService) SendConfirmationEmail(recipient string, name string) erro
 	}
 
 	return nil
+}
+
+func (s *EmailService) SendHtmlEmail(recipient string, subject string, name string, templateFilePath string) error {
+
+	var body bytes.Buffer
+
+	parsedFilePath, err := filepath.Abs(templateFilePath)
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to parse email template filepath")
+	}
+
+	template, err := template.ParseFiles(parsedFilePath)
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to parse email template for recipient")
+	}
+
+	err = template.Execute(&body, struct{ Name string }{Name: name})
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to inject template variables for recipient '%s'.")
+	}
+	err = s.SESClient.SendHTMLEmail([]string{recipient}, "noreply@swamphacks.com", subject, body.String())
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
+		return err
+	}
+
+	return nil
+}
+
+func (s *EmailService) QueueSendHtmlEmail(to string, subject string, name string, templateFilePath string) (*asynq.TaskInfo, error) {
+	task, err := tasks.NewTaskSendHtmlEmail(tasks.SendHtmlEmailPayload{
+		To:               to,
+		Subject:          subject,
+		Name:             name,
+		TemplateFilePath: templateFilePath,
+	})
+
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to create SendHtmlEmail task")
+		return nil, err
+	}
+
+	info, err := s.taskQueue.Enqueue(task, asynq.Queue("email"))
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to queue SendHtmlEmail task")
+		return nil, err
+	}
+
+	return info, nil
 }
 
 func (s *EmailService) QueueSendTextEmail(to []string, subject string, body string) (*asynq.TaskInfo, error) {

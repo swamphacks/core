@@ -110,6 +110,7 @@ func (s *BatService) ReleaseBatRunDecision(ctx context.Context, eventId, batRunI
 	}
 
 	// Send emails here probably...
+	// Make sure the email used for decision preferred>discord
 
 	return nil
 }
