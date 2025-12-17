@@ -1,3 +1,4 @@
+import ApplicationDecisionsPage from "@/features/ApplicationDecisions/components/Decisions/ApplicationDecisionsPage";
 import { useCheckAppReviewStatus } from "@/features/ApplicationDecisions/hooks/useCheckAppReviewStatus";
 import { useEvent } from "@/features/Event/hooks/useEvent";
 import { createFileRoute } from "@tanstack/react-router";
@@ -49,7 +50,7 @@ function RouteComponent() {
       </div>
 
       {event.data.application_review_finished ? (
-        <p>Show applications decision page</p>
+        <ApplicationDecisionsPage eventId={eventId} />
       ) : (
         <p>Please come back after finishing application reviews!</p>
       )}
