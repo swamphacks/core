@@ -28,7 +28,6 @@ var (
 )
 
 type BatService struct {
-	engine      *bat.BatEngine
 	appRepo     *repository.ApplicationRepository
 	eventRepo   *repository.EventRepository
 	batRunsRepo *repository.BatRunsRepository
@@ -38,7 +37,6 @@ type BatService struct {
 
 func NewBatService(engine *bat.BatEngine, appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
 	return &BatService{
-		engine:    engine,
 		taskQueue: taskQueue,
 		appRepo:   appRepo,
 		eventRepo: eventRepo,
@@ -117,46 +115,16 @@ func (s *BatService) QueueCalculateAdmissionsTask(eventId uuid.UUID) (*asynq.Tas
 	return info, nil
 }
 
-type ApplicantAdmissionsData struct {
-	ID            uuid.UUID
-	TeamID        uuid.NullUUID
-	WeightedScore float64
-	SortKey       float64
-	IsUFStudent   bool // Is a University of Florida student?
-	IsEarlyCareer bool // Is a freshman to sophomore?
-}
-
-// Unmarshal into this reduced struct since
-// our application fields are fucked
-// beyond all fuck man. TODO: FIX OUR APP FIELDS!
-type ApplicationSchoolAndYear struct {
-	School string `json:"school"`
-	Year   string `json:"year"`
-}
-
-type QuotaState struct {
-	TotalAccepted  int32
-	TeamSlotsLeft  int32
-	UFEarlyLeft    int32
-	UFLateLeft     int32
-	OtherEarlyLeft int32
-	OtherLateLeft  int32
-}
-
-type TeamAdmissionData struct {
-	TeamID               uuid.UUID
-	MembersAdmissionData []ApplicantAdmissionsData
-	AverageWeightedScore float64
-	SortKey              float64
-}
-
 func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID) error {
-	s.logger.Info().Str("eventId", eventId.String()).Msg("")
-
 	// Create run, adds state as "running" into db
-	newRun, err := s.AddRun(ctx, eventId)
+	// newRun, err := s.AddRun(ctx, eventId)
+	// if err != nil {
+	// 	return ErrFailedToAddRun
+	// }
+
+	engine, err := bat.NewBatEngine(0.5, 0.5)
 	if err != nil {
-		return ErrFailedToAddRun
+		return err
 	}
 
 	// Aggregate data necessary
@@ -165,16 +133,54 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID)
 		return ErrListApplicationsFailure
 	}
 
-	var appAdmissionsData []ApplicantAdmissionsData
+	admissionCandidates, err := s.mapToCandidates(engine, applications)
+	if err != nil {
+		return err
+	}
+
+	teams, idvs := engine.GroupCandidates(admissionCandidates)
+	acceptedTeamMembers, remainder := engine.AcceptTeams(teams)
+
+	idvs = append(idvs, remainder...)
+	acceptedIdvs, rejected := engine.AcceptIndividuals(idvs)
+
+	accepted := append(acceptedTeamMembers, acceptedIdvs...)
+
+	_ = make([]uuid.UUID, 0, len(accepted))
+	_ = make([]uuid.UUID, 0, len(rejected))
+
+	// params := sqlc.UpdateRunByIdParams{
+	// 	AcceptedApplicantsDoUpdate: true,
+	// 	RejectedApplicantsDoUpdate: true,
+	// 	StatusDoUpdate:             true,
+	// 	AcceptedApplicants:         acceptedIDs,
+	// 	RejectedApplicants:         rejectedIDs,
+	// 	Status:                     sqlc.NullBatRunStatus{BatRunStatus: sqlc.BatRunStatusCompleted, Valid: true},
+	// 	ID:                         newRun.ID,
+	// }
+
+	// _, err = s.UpdateRunById(ctx, params)
+	// if err != nil {
+	// 	return ErrFailedToUpdateRun
+	// }
+
+	s.logger.Info().Int("Accepted", int(engine.Quota.TotalAccepted)).Int("Rejected", len(rejected)).Msg("Finished Algo")
+
+	return nil
+}
+
+// This could be moved into the engine instead, or some mapping function within the bat package.
+func (s *BatService) mapToCandidates(engine *bat.BatEngine, applications []sqlc.ListAdmissionCandidatesByEventRow) ([]bat.AdmissionCandidate, error) {
+	var appAdmissionsData []bat.AdmissionCandidate
 	for _, app := range applications {
 		if app.ExperienceRating == nil || app.PassionRating == nil {
-			return ErrMissingRatings
+			return []bat.AdmissionCandidate{}, ErrMissingRatings
 		}
 
 		var applicationShoolAndYear ApplicationSchoolAndYear
 		if err := json.Unmarshal(app.Application, &applicationShoolAndYear); err != nil {
 			s.logger.Debug().Bytes("App", app.Application).Msg("Application data")
-			return err
+			return []bat.AdmissionCandidate{}, err
 		}
 
 		var teamId uuid.UUID
@@ -182,12 +188,12 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID)
 			teamId = *app.TeamID
 		}
 
-		wScore, err := s.engine.CalculateWeightedScore(*app.PassionRating, *app.ExperienceRating)
+		wScore, err := engine.CalculateWeightedScore(*app.PassionRating, *app.ExperienceRating)
 		if err != nil {
-			return err
+			return []bat.AdmissionCandidate{}, err
 		}
-		appAdmissionsData = append(appAdmissionsData, ApplicantAdmissionsData{
-			ID: app.UserID,
+		appAdmissionsData = append(appAdmissionsData, bat.AdmissionCandidate{
+			UserID: app.UserID,
 			TeamID: uuid.NullUUID{
 				UUID:  teamId,
 				Valid: app.TeamID != nil,
@@ -199,49 +205,7 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId uuid.UUID)
 		})
 	}
 
-	quota := QuotaState{
-		TotalAccepted:  0,
-		TeamSlotsLeft:  50,
-		UFEarlyLeft:    210,
-		UFLateLeft:     140,
-		OtherEarlyLeft: 90,
-		OtherLateLeft:  60,
-	}
-
-	teams, solo := groupAndSortTeams(appAdmissionsData)
-	applyTeamSortKey(teams)
-	acceptedTeams, remaining, quota := admitTeams(teams, solo, quota)
-	accepted, rejected, quota := admitSoloApplicants(remaining, quota)
-
-	var acceptedUUIDs []uuid.UUID
-	var rejectedUUIDs []uuid.UUID
-
-	for _, applicant := range accepted {
-		acceptedUUIDs = append(acceptedUUIDs, applicant.ID)
-	}
-
-	for _, applicant := range rejected {
-		rejectedUUIDs = append(rejectedUUIDs, applicant.ID)
-	}
-
-	params := sqlc.UpdateRunByIdParams{
-		AcceptedApplicantsDoUpdate: true,
-		RejectedApplicantsDoUpdate: true,
-		StatusDoUpdate:             true,
-		AcceptedApplicants:         acceptedUUIDs,
-		RejectedApplicants:         rejectedUUIDs,
-		Status:                     sqlc.NullBatRunStatus{BatRunStatus: sqlc.BatRunStatusCompleted, Valid: true},
-		ID:                         newRun.ID,
-	}
-	_, err = s.UpdateRunById(ctx, params)
-
-	if err != nil {
-		return ErrFailedToUpdateRun
-	}
-
-	s.logger.Info().Int("Accepted", len(accepted)+len(acceptedTeams)).Int("Rejected", len(rejected)).Msg("Finished Algo")
-
-	return nil
+	return appAdmissionsData, nil
 }
 
 func admitTeams(teams []TeamAdmissionData, solo []ApplicantAdmissionsData, initialQuota QuotaState) (
