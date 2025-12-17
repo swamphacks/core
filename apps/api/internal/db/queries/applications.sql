@@ -39,6 +39,24 @@ WHERE event_id = $1
 ORDER BY 
     user_id ASC;
 
+-- name: ListAdmissionCandidatesByEvent :many
+SELECT a.user_id,
+    a.passion_rating,
+    a.experience_rating,
+    a.application,
+    t.id as team_id
+FROM applications a
+LEFT JOIN team_members tm
+    ON tm.user_id = a.user_id
+LEFT JOIN teams t
+    ON t.id = tm.team_id
+    AND t.event_id = a.event_id
+WHERE a.event_id = $1
+    AND a.status = 'under_review'
+    AND a.passion_rating IS NOT NULL
+    AND a.experience_rating IS NOT NULL;
+    
+
 -- name: AssignApplicationsToReviewer :exec
 UPDATE applications
 SET assigned_reviewer_id = @reviewer_id::uuid,

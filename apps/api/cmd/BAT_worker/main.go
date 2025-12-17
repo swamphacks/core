@@ -4,8 +4,13 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
+	"github.com/swamphacks/core/apps/api/internal/bat"
 	"github.com/swamphacks/core/apps/api/internal/config"
+	"github.com/swamphacks/core/apps/api/internal/db"
+	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/logger"
+	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/tasks"
 	"github.com/swamphacks/core/apps/api/internal/workers"
 )
 
@@ -51,9 +56,23 @@ func main() {
 		},
 	)
 
-	_ = workers.NewBATWorker(logger)
+	batEngine, err := bat.NewBatEngine(0.5, 0.5)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Bat engine failed to initialize.")
+	}
+
+	database := db.NewDB(cfg.DatabaseURL)
+	defer database.Close()
+
+	eventRepo := repository.NewEventRespository(database)
+	applicationRepo := repository.NewApplicationRepository(database)
+
+	batService := services.NewBatService(batEngine, applicationRepo, eventRepo, nil, logger)
+
+	BATWorker := workers.NewBATWorker(batService, logger)
 
 	mux := asynq.NewServeMux()
+	mux.HandleFunc(tasks.TypeCalculateAdmissions, BATWorker.HandleCalculateAdmissionsTask)
 
 	if err := srv.Run(mux); err != nil {
 		logger.Fatal().Msg("Failed to run BAT worker")

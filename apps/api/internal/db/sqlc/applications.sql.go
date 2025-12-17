@@ -127,6 +127,58 @@ func (q *Queries) JoinWaitlist(ctx context.Context, arg JoinWaitlistParams) erro
 	return err
 }
 
+const listAdmissionCandidatesByEvent = `-- name: ListAdmissionCandidatesByEvent :many
+SELECT a.user_id,
+    a.passion_rating,
+    a.experience_rating,
+    a.application,
+    t.id as team_id
+FROM applications a
+LEFT JOIN team_members tm
+    ON tm.user_id = a.user_id
+LEFT JOIN teams t
+    ON t.id = tm.team_id
+    AND t.event_id = a.event_id
+WHERE a.event_id = $1
+    AND a.status = 'under_review'
+    AND a.passion_rating IS NOT NULL
+    AND a.experience_rating IS NOT NULL
+`
+
+type ListAdmissionCandidatesByEventRow struct {
+	UserID           uuid.UUID  `json:"user_id"`
+	PassionRating    *int32     `json:"passion_rating"`
+	ExperienceRating *int32     `json:"experience_rating"`
+	Application      []byte     `json:"application"`
+	TeamID           *uuid.UUID `json:"team_id"`
+}
+
+func (q *Queries) ListAdmissionCandidatesByEvent(ctx context.Context, eventID uuid.UUID) ([]ListAdmissionCandidatesByEventRow, error) {
+	rows, err := q.db.Query(ctx, listAdmissionCandidatesByEvent, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAdmissionCandidatesByEventRow{}
+	for rows.Next() {
+		var i ListAdmissionCandidatesByEventRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.PassionRating,
+			&i.ExperienceRating,
+			&i.Application,
+			&i.TeamID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listApplicationByReviewerAndEvent = `-- name: ListApplicationByReviewerAndEvent :many
 SELECT user_id, passion_rating, experience_rating FROM applications
 WHERE assigned_reviewer_id = $1
