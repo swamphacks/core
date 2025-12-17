@@ -656,6 +656,68 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/application/{applicationId}/review": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit application review
+     * @description Handles ratings submissions from staff during the application review process.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description An object containing the passion and experience ratings */
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["handlers.ReviewRatings"];
+        };
+      };
+      responses: {
+        /** @description Created */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": Record<string, never>;
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error submitting application review */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/events/{eventId}/application/assign-reviewers": {
     parameters: {
       query?: never;
@@ -1077,68 +1139,6 @@ export interface paths {
           };
         };
         /** @description Server Error: error submitting application */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/submit-review": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Submit application review
-     * @description Handles ratings submissions from staff during the application review process.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description An object containing the passion and experience ratings */
-      requestBody: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error submitting application review */
         500: {
           headers: {
             [name: string]: unknown;
@@ -2966,6 +2966,10 @@ export interface components {
       body: string;
       subject: string;
       to: string[];
+    };
+    "handlers.ReviewRatings": {
+      experience_rating: number;
+      passion_rating: number;
     };
     "handlers.UpdateEmailConsentRequest": {
       email_consent: boolean;

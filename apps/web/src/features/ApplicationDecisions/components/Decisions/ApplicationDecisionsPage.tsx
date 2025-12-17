@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import WeightField from "./WeightField";
 import { useState } from "react";
+// import RunContainer from "./RunContainer";
 
 interface ApplicationReviewPageProps {
   eventId: string;
@@ -31,10 +32,11 @@ export default function ApplicationDecisionsPage({
         />
       </div>
       <div className="flex flex-row gap-2 items-center">
-        <Button className="w-fit" varient="primary" onPress={handleCalculate}>
+        <Button className="w-fit" variant="primary" onPress={handleCalculate}>
           Calculate
         </Button>
       </div>
+      // <RunContainer eventId={eventId} />
     </div>
   );
 }
