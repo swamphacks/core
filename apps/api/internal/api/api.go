@@ -123,8 +123,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
 		r.Post("/{eventId}/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
-		r.Post("/{eventId}/app-review-decision-status", api.Handlers.Bat.UpdateEventApplicationReviewsFinishedStatus)
-
+		r.Post("/{eventId}/review-status", api.Handlers.Bat.CheckApplicationReviewsComplete)
 		// Superuser-only
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
 
