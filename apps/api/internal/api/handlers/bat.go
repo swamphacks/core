@@ -79,7 +79,7 @@ func (h *BatHandler) GetRunsByEventId(w http.ResponseWriter, r *http.Request) {
 //	@Param			eventId	path	string	true	"Event ID"	Format(uuid)
 //	@Success		204		"OK - Event updated (patched)"
 //	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
-//	@Router			/events/{eventId} [patch]
+//	@Router			/events/{eventId}/app-review-decision-status [post]
 func (h *BatHandler) UpdateEventApplicationReviewsFinishedStatus(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
