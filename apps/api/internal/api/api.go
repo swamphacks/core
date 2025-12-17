@@ -122,8 +122,6 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
-		r.Post("/{eventId}/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
-		r.Post("/{eventId}/review-status", api.Handlers.Bat.CheckApplicationReviewsComplete)
 		// Superuser-only
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
 
@@ -152,6 +150,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventAdmin).Post("/roles/batch", api.Handlers.Event.BatchAssignEventRoles)
 			r.With(ensureEventAdmin).Get("/bat-runs", api.Handlers.Bat.GetRunsByEventId)
 			r.With(ensureEventAdmin).Delete("/bat-runs", api.Handlers.Bat.GetRunsByEventId)
+			r.With(ensureEventAdmin).Get("/review-status", api.Handlers.Bat.CheckApplicationReviewsComplete)
+			r.With(ensureEventAdmin).Post("/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
 
 			// Superuser-only
 			r.With(ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)

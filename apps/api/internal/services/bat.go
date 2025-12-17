@@ -104,7 +104,7 @@ func (s *BatService) CheckApplicationReviewsComplete(ctx context.Context, eventI
 	reviewsFinished := false
 
 	if err != nil {
-		return false, ErrCouldNotDetermineAppReviewFinishStatus
+		return false, ErrFailedToCheckAppReviewsComplete
 	}
 
 	if len(nonReviewedApplicantUUIDs) == 0 {
