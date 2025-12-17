@@ -656,6 +656,126 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/application/{applicationId}/review": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit application review
+     * @description Handles ratings submissions from staff during the application review process.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description An object containing the passion and experience ratings */
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["handlers.ReviewRatings"];
+        };
+      };
+      responses: {
+        /** @description Created */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": Record<string, never>;
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error submitting application review */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/application/accept-acceptance": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Accept an acceptance after being accepted to an event.
+     * @description Sets application status from accepted to rejected
+     */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID of the event to join the waitlist for */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Acceptance withdrawn joined successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request: invalid event ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server error: failed to accept */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
   "/events/{eventId}/application/assign-reviewers": {
     parameters: {
       query?: never;
@@ -842,6 +962,64 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/application/join-waitlist": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Join event waitlist after rejected application status.
+     * @description Adds a waitlist join time to application. Sets status to waitlisted
+     */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID of the event to join the waitlist for */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Event Waitlist joined successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request: invalid event ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server error: failed to join waitlist */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
     trace?: never;
   };
   "/events/{eventId}/application/reset-reviews": {
@@ -1093,7 +1271,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/events/{eventId}/application/submit-review": {
+  "/events/{eventId}/application/withdraw-acceptance": {
     parameters: {
       query?: never;
       header?: never;
@@ -1102,34 +1280,34 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
     /**
-     * Submit application review
-     * @description Handles ratings submissions from staff during the application review process.
+     * Withdraw an acceptance after being accepted to an event.
+     * @description Sets application status from accepted to rejected
      */
-    post: {
+    patch: {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          /** @description ID of the event to join the waitlist for */
+          eventId: string;
+        };
         cookie?: never;
       };
-      /** @description An object containing the passion and experience ratings */
-      requestBody: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
+      requestBody?: never;
       responses: {
-        /** @description OK */
+        /** @description Acceptance withdrawn joined successfully */
         200: {
           headers: {
             [name: string]: unknown;
           };
-          content: {
-            "application/json": Record<string, never>;
-          };
+          content?: never;
         };
-        /** @description Bad request/Malformed request. */
+        /** @description Bad request: invalid event ID */
         400: {
           headers: {
             [name: string]: unknown;
@@ -1138,7 +1316,7 @@ export interface paths {
             "application/json": components["schemas"]["response.ErrorResponse"];
           };
         };
-        /** @description Server Error: error submitting application review */
+        /** @description Server error: failed to withdraw */
         500: {
           headers: {
             [name: string]: unknown;
@@ -1149,7 +1327,83 @@ export interface paths {
         };
       };
     };
-    delete?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/bat-runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get BatRuns
+     * @description Gets BatRuns.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK: BatRuns returned */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.GetRunsByEventIdRow"][];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    /**
+     * Delete an event
+     * @description Delete an existing event
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Run ID */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK - Run deleted */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Server Error: Something went terribly wrong on our end. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
     options?: never;
     head?: never;
     patch?: never;
@@ -1270,6 +1524,61 @@ export interface paths {
           };
         };
         /** @description Server Error: error getting statistics */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/review-status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Check if application reviews complete
+     * @description Check if application reviews complete
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["handlers.ReviewStatusResponse"];
+          };
+        };
+        /** @description Server Error: Something went terribly wrong on our end. */
         500: {
           headers: {
             [name: string]: unknown;
@@ -2967,6 +3276,13 @@ export interface components {
       subject: string;
       to: string[];
     };
+    "handlers.ReviewRatings": {
+      experience_rating: number;
+      passion_rating: number;
+    };
+    "handlers.ReviewStatusResponse": {
+      complete: boolean;
+    };
     "handlers.UpdateEmailConsentRequest": {
       email_consent: boolean;
     };
@@ -3074,6 +3390,7 @@ export interface components {
       submitted_at: string;
       updated_at: string;
       user_id: string;
+      waitlist_join_time: string;
     };
     /** @enum {string} */
     "sqlc.ApplicationStatus":
@@ -3102,6 +3419,8 @@ export interface components {
      * @enum {string}
      */
     "sqlc.AuthUserRole": "user" | "superuser";
+    /** @enum {string} */
+    "sqlc.BatRunStatus": "running" | "completed" | "failed";
     "sqlc.Event": {
       application_close: string;
       application_open: string;
@@ -3196,6 +3515,14 @@ export interface components {
       updated_at: string;
       website_url: string;
     };
+    "sqlc.GetRunsByEventIdRow": {
+      accepted_applicants: string[];
+      completed_at: string;
+      created_at: string;
+      id: string;
+      rejected_applicants: string[];
+      status: components["schemas"]["sqlc.NullBatRunStatus"];
+    };
     /** @enum {string} */
     "sqlc.JoinRequestStatus": "PENDING" | "APPROVED" | "REJECTED";
     "sqlc.ListJoinRequestsByTeamAndStatusWithUserRow": {
@@ -3215,6 +3542,11 @@ export interface components {
     "sqlc.NullApplicationStatus": {
       application_status: components["schemas"]["sqlc.ApplicationStatus"];
       /** @description Valid is true if ApplicationStatus is not NULL */
+      valid: boolean;
+    };
+    "sqlc.NullBatRunStatus": {
+      bat_run_status: components["schemas"]["sqlc.BatRunStatus"];
+      /** @description Valid is true if BatRunStatus is not NULL */
       valid: boolean;
     };
     "sqlc.NullEventRoleType": {

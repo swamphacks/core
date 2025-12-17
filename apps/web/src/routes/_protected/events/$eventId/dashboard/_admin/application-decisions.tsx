@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/Button";
-import { useUpdateEventAppReviewsFinishedStatus } from "@/features/ApplicationDecisions/hooks/useUpdateEventDecisions";
-import { useEvent } from "@/features/Event/hooks/useEvent";
+import { useApplicationReviewComplete } from "@/features/ApplicationDecisions/hooks/useApplicationReviewStatus";
+import { useDecisionRuns } from "@/features/ApplicationDecisions/hooks/useDecisionRuns";
 import { createFileRoute } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
-import { toast } from "react-toastify";
 
 export const Route = createFileRoute(
   "/_protected/events/$eventId/dashboard/_admin/application-decisions",
@@ -14,56 +13,70 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { eventId } = Route.useParams();
   const { user } = Route.useRouteContext();
-  const { checkAppReviewStatus } = useUpdateEventAppReviewsFinishedStatus();
-  const event = useEvent(eventId);
+  const appReviewComplete = useApplicationReviewComplete(eventId);
+  const runs = useDecisionRuns(eventId);
 
-  const checkReviewsCompleted = async () => {
-    if (!event.data) return;
-
-    const isCompleted = await checkAppReviewStatus(event.data);
-    if (isCompleted) {
-      toast.success(
-        "All application reviews completed. You can now proceed with calculating decisions.",
-      );
-    }
-  };
-
-  const loading = !user || event.isLoading;
+  const loading =
+    !user ||
+    appReviewComplete.isLoading ||
+    runs.isLoading ||
+    !appReviewComplete.data ||
+    !runs.data;
 
   if (loading) {
     return (
       <main>
         <Heading className="text-2xl lg:text-3xl font-semibold mb-6">
-          Application Decisions
+          Decision Runs
         </Heading>
         <div className="h-84 w-full max-w-xl bg-neutral-300 dark:bg-neutral-800 rounded animate-pulse" />
       </main>
     );
   }
 
-  if (!event.data || event.isError) {
-    return <div>Event not found</div>;
+  if (
+    appReviewComplete.isError ||
+    appReviewComplete.error ||
+    runs.isError ||
+    runs.error
+  ) {
+    return (
+      <main>
+        <Heading className="text-2xl lg:text-3xl font-semibold mb-6">
+          Decision Runs
+        </Heading>
+
+        <p className="text-red-500">
+          Something wen&apos;t wrong... please refresh the page.
+        </p>
+      </main>
+    );
   }
 
   return (
-    <main className="h-full">
-      <div className="w-full flex flex-row justify-between items-center">
-        <Heading className="text-2xl lg:text-3xl font-semibold mb-4">
-          Application Decisions
+    <main>
+      <div className="flex flex-row items-center justify-between">
+        <Heading className="text-2xl lg:text-3xl font-semibold mb-6">
+          Decision Runs
         </Heading>
 
-        {event.data.application_review_finished ? (
-          <p>Show applications decision page</p>
+        <Button>New Run</Button>
+      </div>
+      <div className="w-full md:max-w-1/3">
+        {appReviewComplete.data ? (
+          runs.data.length !== 0 ? (
+            // Render your runs component or list here
+            // <RunsList runs={runs.data} />
+            <></>
+          ) : (
+            <div>
+              <p>No decision runs yet. Start a new run!</p>
+            </div>
+          )
         ) : (
-          <>
-            <Button
-              size="sm"
-              className="m-0 h-fit w-fit"
-              onPress={checkReviewsCompleted}
-            >
-              Run Pre-Decisions Check
-            </Button>
-          </>
+          <div>
+            <p>Not all reviews have been completed, come back later...</p>
+          </div>
         )}
       </div>
     </main>
