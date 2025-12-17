@@ -124,6 +124,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Route("/events", func(r chi.Router) {
 		r.Post("/{eventId}/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
 		r.Post("/{eventId}/app-review-decision-status", api.Handlers.Bat.UpdateEventApplicationReviewsFinishedStatus)
+		r.Post("/{eventId}/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)
 
 		// Superuser-only
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)

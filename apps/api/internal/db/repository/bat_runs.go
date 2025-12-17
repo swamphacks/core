@@ -38,9 +38,8 @@ func (r *BatRunsRepository) AddRun(ctx context.Context, eventId uuid.UUID) (*sql
 	return &run, nil
 }
 
-func (r *BatRunsRepository) GetRunByEventId(ctx context.Context, eventId uuid.UUID) (*sqlc.GetRunByEventIdRow, error) {
-	run, err := r.db.Query.GetRunByEventId(ctx, eventId)
-	return &run, err
+func (r *BatRunsRepository) GetRunById(ctx context.Context, id uuid.UUID) (sqlc.BatRun, error) {
+	return r.db.Query.GetRunById(ctx, id)
 }
 
 func (r *BatRunsRepository) GetRunsByEventId(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetRunsByEventIdRow, error) {

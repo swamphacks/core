@@ -48,32 +48,18 @@ func (q *Queries) DeleteRunById(ctx context.Context, id uuid.UUID) (int64, error
 	return result.RowsAffected(), nil
 }
 
-const getRunByEventId = `-- name: GetRunByEventId :one
-SELECT
-    id,
-    accepted_applicants,
-    rejected_applicants,
-    status,
-    created_at,
-    completed_at
+const getRunById = `-- name: GetRunById :one
+SELECT id, event_id, accepted_applicants, rejected_applicants, status, created_at, completed_at
 FROM bat_runs
-WHERE event_id = $1
+WHERE id = $1
 `
 
-type GetRunByEventIdRow struct {
-	ID                 uuid.UUID        `json:"id"`
-	AcceptedApplicants []uuid.UUID      `json:"accepted_applicants"`
-	RejectedApplicants []uuid.UUID      `json:"rejected_applicants"`
-	Status             NullBatRunStatus `json:"status"`
-	CreatedAt          time.Time        `json:"created_at"`
-	CompletedAt        *time.Time       `json:"completed_at"`
-}
-
-func (q *Queries) GetRunByEventId(ctx context.Context, eventID uuid.UUID) (GetRunByEventIdRow, error) {
-	row := q.db.QueryRow(ctx, getRunByEventId, eventID)
-	var i GetRunByEventIdRow
+func (q *Queries) GetRunById(ctx context.Context, id uuid.UUID) (BatRun, error) {
+	row := q.db.QueryRow(ctx, getRunById, id)
+	var i BatRun
 	err := row.Scan(
 		&i.ID,
+		&i.EventID,
 		&i.AcceptedApplicants,
 		&i.RejectedApplicants,
 		&i.Status,

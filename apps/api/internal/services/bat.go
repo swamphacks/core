@@ -7,11 +7,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/bat"
+	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -25,24 +28,90 @@ var (
 	ErrCouldNotUpdateEventAppReviewFinishedStatus = errors.New("Could not update event application_review_finished status.")
 	ErrCouldNotGetEventInfo                       = errors.New("Could not retreive event info.")
 	ErrReviewsNotFinished                         = errors.New("Please make sure reviews are finished before calculating application decisions.")
+	ErrRunMismatch                                = errors.New("That bat run does not belong to this event.")
+	ErrRunStatusInvalid                           = errors.New("This run status is not valid for this action.")
+	ErrNoAcceptedApplicants                       = errors.New("No applicants marked as accepted.")
 )
 
 type BatService struct {
 	appRepo     *repository.ApplicationRepository
 	eventRepo   *repository.EventRepository
 	batRunsRepo *repository.BatRunsRepository
+	txm         *db.TransactionManager
 	taskQueue   *asynq.Client
 	logger      zerolog.Logger
 }
 
-func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, batRunsRepo *repository.BatRunsRepository, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
+func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, batRunsRepo *repository.BatRunsRepository, txm *db.TransactionManager, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
 	return &BatService{
 		taskQueue:   taskQueue,
 		appRepo:     appRepo,
 		eventRepo:   eventRepo,
 		batRunsRepo: batRunsRepo,
+		txm:         txm,
 		logger:      logger.With().Str("service", "Bat Service").Str("component", "admissions").Logger(),
 	}
+}
+
+func (s *BatService) ReleaseBatRunDecision(ctx context.Context, eventId, batRunId uuid.UUID) error {
+	// Retrieve Bat Run AND Event
+	g, ctx := errgroup.WithContext(ctx)
+
+	var event sqlc.Event
+	g.Go(func() error {
+		eventPtr, err := s.eventRepo.GetEventByID(ctx, eventId)
+		if err != nil {
+			return err
+		}
+
+		event = *eventPtr
+		return nil
+	})
+
+	var batRun sqlc.BatRun
+	g.Go(func() error {
+		run, err := s.batRunsRepo.GetRunById(ctx, batRunId)
+		if err != nil {
+			return err
+		}
+
+		batRun = run
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return err
+	}
+
+	if event.ID != batRun.EventID {
+		return ErrRunMismatch
+	}
+
+	if batRun.Status.Valid != true || (batRun.Status.Valid == true && batRun.Status.BatRunStatus != sqlc.BatRunStatusCompleted) {
+		return ErrRunStatusInvalid
+	}
+
+	if len(batRun.AcceptedApplicants) == 0 {
+		return ErrNoAcceptedApplicants
+	}
+
+	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+
+		err := txAppRepo.UpdateApplicationStatusByEventId(ctx, sqlc.ApplicationStatusAccepted, event.ID, batRun.AcceptedApplicants)
+		if err != nil {
+			return err
+		}
+
+		return txAppRepo.UpdateApplicationStatusByEventId(ctx, sqlc.ApplicationStatusRejected, event.ID, batRun.RejectedApplicants)
+	})
+	if err != nil {
+		return err
+	}
+
+	// Send emails here probably...
+
+	return nil
 }
 
 func (s *BatService) AddRun(ctx context.Context, eventId uuid.UUID) (*sqlc.BatRun, error) {
@@ -63,7 +132,7 @@ func (s *BatService) GetRunsByEventId(ctx context.Context, eventId uuid.UUID) (*
 	return s.batRunsRepo.GetRunsByEventId(ctx, eventId)
 }
 
-func (s *BatService) UpdateRunById(ctx context.Context, params sqlc.UpdateRunByIdParams) (*sqlc.GetRunByEventIdRow, error) {
+func (s *BatService) UpdateRunById(ctx context.Context, params sqlc.UpdateRunByIdParams) (*sqlc.BatRun, error) {
 	err := s.batRunsRepo.UpdateRunById(ctx, params)
 	if err != nil {
 		if errors.Is(err, repository.ErrRunNotFound) {
@@ -74,9 +143,9 @@ func (s *BatService) UpdateRunById(ctx context.Context, params sqlc.UpdateRunByI
 		return nil, ErrFailedToUpdateRun
 	}
 
-	run, err := s.batRunsRepo.GetRunByEventId(ctx, params.ID)
+	run, err := s.batRunsRepo.GetRunById(ctx, params.ID)
 
-	return run, err
+	return &run, err
 }
 
 func (s *BatService) DeleteRunById(ctx context.Context, id uuid.UUID) error {
