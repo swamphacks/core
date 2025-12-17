@@ -168,20 +168,12 @@ func (s *BatService) DeleteRunById(ctx context.Context, id uuid.UUID) error {
 }
 
 func (s *BatService) CheckApplicationReviewsComplete(ctx context.Context, eventId uuid.UUID) (bool, error) {
-	// Should the returned bool be nullable and set to null if theres an error? Not sure what best practice is.
-
 	nonReviewedApplicantUUIDs, err := s.appRepo.GetNonReviewedApplications(ctx, eventId)
-	reviewsFinished := false
-
 	if err != nil {
 		return false, ErrFailedToCheckAppReviewsComplete
 	}
 
-	if len(nonReviewedApplicantUUIDs) == 0 {
-		reviewsFinished = true
-	}
-
-	return reviewsFinished, nil
+	return len(nonReviewedApplicantUUIDs) == 0, nil
 }
 
 func (s *BatService) QueueCalculateAdmissionsTask(ctx context.Context, eventId uuid.UUID) (*asynq.TaskInfo, error) {
@@ -209,6 +201,8 @@ func (s *BatService) QueueCalculateAdmissionsTask(ctx context.Context, eventId u
 }
 
 func (s *BatService) CalculateAdmissions(ctx context.Context, eventId, batRunId uuid.UUID) error {
+	s.logger.Debug().Str("RunID", batRunId.String()).Msg("")
+
 	// check to make sure reviews are done, update state if true, return error if not
 	reviewStatus, err := s.CheckApplicationReviewsComplete(ctx, eventId)
 	if err != nil {
@@ -245,6 +239,14 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId, batRunId 
 	acceptedIDs := make([]uuid.UUID, 0, len(accepted))
 	rejectedIDs := make([]uuid.UUID, 0, len(rejected))
 
+	for _, app := range accepted {
+		acceptedIDs = append(acceptedIDs, app.UserID)
+	}
+
+	for _, app := range rejected {
+		rejectedIDs = append(rejectedIDs, app.UserID)
+	}
+
 	params := sqlc.UpdateRunByIdParams{
 		AcceptedApplicantsDoUpdate: true,
 		RejectedApplicantsDoUpdate: true,
@@ -258,7 +260,7 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId, batRunId 
 		ID: batRunId,
 	}
 
-	_, err = s.UpdateRunById(ctx, params)
+	err = s.batRunsRepo.UpdateRunById(ctx, params)
 	if err != nil {
 		return ErrFailedToUpdateRun
 	}
