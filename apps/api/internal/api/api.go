@@ -122,6 +122,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
+		r.Post("/{event-id}/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
+
 		// Superuser-only
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
 
@@ -132,7 +134,6 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 		// Event-specific routes
 		r.Route("/{eventId}", func(r chi.Router) {
-			r.Post("/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
 			r.Use(mw.Auth.RequireAuth) // routes below this are protected
 
 			r.Get("/", api.Handlers.Event.GetEventByID)
