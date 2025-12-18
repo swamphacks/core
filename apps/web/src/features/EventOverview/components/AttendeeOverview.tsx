@@ -1,3 +1,3 @@
 export default function AttendeeOverview() {
-  return <div>Attendee Overview Component</div>;
+  return <div>More here coming soon!</div>;
 }
