@@ -83,7 +83,7 @@ ORDER BY user_id ASC;
 -- name: ListNonReviewedApplicationsByEvent :many
 SELECT user_id FROM applications
 WHERE event_id = $1
-    AND passion_rating IS NULL OR experience_rating IS NULL;
+    AND status = 'under_review' AND passion_rating IS NULL AND experience_rating IS NULL;
 
 -- name: JoinWaitlist :exec
 UPDATE applications
