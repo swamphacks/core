@@ -153,6 +153,8 @@ func (b *BatEngine) GroupCandidates(admissionsData []AdmissionCandidate) ([]Team
 	for key, team := range teamMap {
 		if len(team) > 1 {
 			filtered[key] = team
+		} else {
+			individualCandidates = append(individualCandidates, filtered[key]...)
 		}
 	}
 	teamMap = filtered
