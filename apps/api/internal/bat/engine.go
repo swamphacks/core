@@ -148,6 +148,14 @@ func (b *BatEngine) GroupCandidates(admissionsData []AdmissionCandidate) ([]Team
 		}
 	}
 
+	// Check for teams with only one member and move them to individualCandidates
+	for teamID, candidates := range teamMap {
+		if len(candidates) == 1 {
+			individualCandidates = append(individualCandidates, candidates[0])
+			delete(teamMap, teamID)
+		}
+	}
+
 	teamsEvalData := make([]TeamEvaluationData, 0)
 	for teamId, members := range teamMap {
 		var totalScore float64

@@ -57,7 +57,6 @@ func (s *EmailService) SendHtmlEmail(recipient string, subject string, name stri
 		s.logger.Err(err).Msg("Failed to parse email template for recipient")
 	}
 
-	s.logger.Info().Str("Name", name)
 	err = template.Execute(&body, struct{ Name string }{Name: name})
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to inject template variables for recipient '%s'.")
@@ -68,6 +67,7 @@ func (s *EmailService) SendHtmlEmail(recipient string, subject string, name stri
 		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
 		return err
 	}
+	s.logger.Info().Str("Template", templateFilePath).Msg("Sent email")
 
 	return nil
 }
