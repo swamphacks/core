@@ -95,7 +95,7 @@ services:
     env_file:
       - ./secrets/.env.api
     depends_on:
-      - redis-dev
+      - redis
 
   redis:
     image: redis:8.2.1-alpine
