@@ -65,11 +65,11 @@ func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *reposit
 
 func (s *BatService) ReleaseBatRunDecision(ctx context.Context, eventId, batRunId uuid.UUID) error {
 	// Retrieve Bat Run AND Event
-	g, gCtx := errgroup.WithContext(ctx)
+	g, egCtx := errgroup.WithContext(ctx)
 
 	var event sqlc.Event
 	g.Go(func() error {
-		eventPtr, err := s.eventRepo.GetEventByID(gCtx, eventId)
+		eventPtr, err := s.eventRepo.GetEventByID(egCtx, eventId)
 		if err != nil {
 			return err
 		}
@@ -80,7 +80,7 @@ func (s *BatService) ReleaseBatRunDecision(ctx context.Context, eventId, batRunI
 
 	var batRun sqlc.BatRun
 	g.Go(func() error {
-		run, err := s.batRunsRepo.GetRunById(gCtx, batRunId)
+		run, err := s.batRunsRepo.GetRunById(egCtx, batRunId)
 		if err != nil {
 			return err
 		}
@@ -219,20 +219,12 @@ func (s *BatService) DeleteRunById(ctx context.Context, id uuid.UUID) error {
 }
 
 func (s *BatService) CheckApplicationReviewsComplete(ctx context.Context, eventId uuid.UUID) (bool, error) {
-	// Should the returned bool be nullable and set to null if theres an error? Not sure what best practice is.
-
 	nonReviewedApplicantUUIDs, err := s.appRepo.GetNonReviewedApplications(ctx, eventId)
-	reviewsFinished := false
-
 	if err != nil {
 		return false, ErrFailedToCheckAppReviewsComplete
 	}
 
-	if len(nonReviewedApplicantUUIDs) == 0 {
-		reviewsFinished = true
-	}
-
-	return reviewsFinished, nil
+	return len(nonReviewedApplicantUUIDs) == 0, nil
 }
 
 func (s *BatService) QueueCalculateAdmissionsTask(ctx context.Context, eventId uuid.UUID) (*asynq.TaskInfo, error) {
@@ -260,6 +252,8 @@ func (s *BatService) QueueCalculateAdmissionsTask(ctx context.Context, eventId u
 }
 
 func (s *BatService) CalculateAdmissions(ctx context.Context, eventId, batRunId uuid.UUID) error {
+	s.logger.Debug().Str("RunID", batRunId.String()).Msg("")
+
 	// check to make sure reviews are done, update state if true, return error if not
 	reviewStatus, err := s.CheckApplicationReviewsComplete(ctx, eventId)
 	if err != nil {
@@ -317,7 +311,7 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId, batRunId 
 		ID: batRunId,
 	}
 
-	_, err = s.UpdateRunById(ctx, params)
+	err = s.batRunsRepo.UpdateRunById(ctx, params)
 	if err != nil {
 		return ErrFailedToUpdateRun
 	}
