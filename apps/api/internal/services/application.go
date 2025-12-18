@@ -522,3 +522,42 @@ func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewer
 
 	return nil
 }
+
+func (s *ApplicationService) JoinWaitlist(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	err := s.appRepo.JoinWaitlist(ctx, userId, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	err := s.appRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+		UserID:  userId,
+		EventID: eventId,
+		//TODO: Make it so I don't have to set this!
+		StatusDoUpdate: true,
+		Status:         sqlc.ApplicationStatusRejected,
+	})
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	// is a check for a user being accepted necessary here? or is the frontend enough
+
+	err := s.eventsService.eventRepo.UpdateRole(ctx,
+		userId,
+		eventId,
+		sqlc.EventRoleTypeAttendee,
+	)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}

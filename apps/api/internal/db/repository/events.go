@@ -143,6 +143,15 @@ func (r *EventRepository) RevokeRole(ctx context.Context, userId uuid.UUID, even
 	return r.db.Query.RemoveRole(ctx, params)
 }
 
+func (r *EventRepository) UpdateRole(ctx context.Context, userId uuid.UUID, eventId uuid.UUID, role sqlc.EventRoleType) error {
+	params := sqlc.UpdateRoleParams{
+		UserID:  userId,
+		EventID: eventId,
+		Role:    role,
+	}
+	return r.db.Query.UpdateRole(ctx, params)
+}
+
 func (r *EventRepository) GetApplicationStatuses(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationStatusSplitRow, error) {
 	return r.db.Query.GetApplicationStatusSplit(ctx, eventId)
 }

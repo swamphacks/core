@@ -34,7 +34,7 @@ const applicationStatus = defineStatus({
     button: {
       className:
         "bg-event-button-bg-rejected text-event-button-text-rejected hover:bg-event-button-bg-rejected-hover",
-      text: "Learn more",
+      text: "Join Waitlist",
     },
   },
   attending: {

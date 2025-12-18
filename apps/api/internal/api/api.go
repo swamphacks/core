@@ -122,8 +122,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
-		// r.Post("/{eventId}/application/reset-reviews", api.Handlers.Application.ResetApplicationReviews)
-		// r.Post("/{eventId}/application/assign-reviewers", api.Handlers.Application.AssignApplicationReviewers)
+		r.Post("/{eventId}/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
+		r.Post("/{eventId}/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)
 
 		// Superuser-only
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
@@ -151,6 +151,11 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
 			r.With(ensureEventAdmin).Delete("/roles/{userId}", api.Handlers.Event.RevokeEventRole)
 			r.With(ensureEventAdmin).Post("/roles/batch", api.Handlers.Event.BatchAssignEventRoles)
+			r.With(ensureEventAdmin).Get("/bat-runs", api.Handlers.Bat.GetRunsByEventId)
+			r.With(ensureEventAdmin).Delete("/bat-runs", api.Handlers.Bat.GetRunsByEventId)
+			r.With(ensureEventAdmin).Get("/review-status", api.Handlers.Bat.CheckApplicationReviewsComplete)
+			r.With(ensureEventAdmin).Post("/reviews/bat-runs", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
+			r.With(ensureEventAdmin).Post("/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)
 
 			// Superuser-only
 			r.With(ensureSuperuser).Delete("/", api.Handlers.Event.DeleteEventById)
@@ -177,6 +182,15 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				// Review admin routes (For Event Admins only)
 				r.With(ensureEventAdmin).Post("/reset-reviews", api.Handlers.Application.ResetApplicationReviews)
 				r.With(ensureEventAdmin).Post("/assign-reviewers", api.Handlers.Application.AssignApplicationReviewers)
+
+				//withdraw Acceptance
+				r.Patch("/withdraw-acceptance", api.Handlers.Application.WithdrawAcceptance)
+
+				//Accept acceptance
+				r.Patch("/accept-acceptance", api.Handlers.Application.AcceptApplicationAcceptance)
+
+				//Waitlist application
+				r.Patch("/join-waitlist", api.Handlers.Application.JoinWaitlist)
 			})
 
 			// Team routes

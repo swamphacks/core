@@ -4,6 +4,9 @@ local:
 api:
 	docker compose up api
 
+bat:
+	docker compose up api bat_worker asynqmon
+
 storage:
 	docker compose up postgres redis
 

@@ -65,6 +65,17 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*sqlc.Au
 	return &user, nil
 }
 
+func (r *UserRepository) GetUserEmailInfoById(ctx context.Context, id uuid.UUID) (*sqlc.GetUserEmailInfoByIdRow, error) {
+	row, err := r.db.Query.GetUserEmailInfoById(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrUserNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	return &row, nil
+}
+
 func (r *UserRepository) UpdateUser(ctx context.Context, params sqlc.UpdateUserParams) error {
 	err := r.db.Query.UpdateUser(ctx, params)
 	if err != nil {

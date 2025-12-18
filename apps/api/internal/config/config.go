@@ -54,11 +54,12 @@ type CoreBuckets struct {
 }
 
 type Config struct {
-	DatabaseURL          string   `env:"DATABASE_URL"`
-	RedisURL             string   `env:"REDIS_URL"`
-	Port                 string   `env:"PORT" envDefault:"8080"`
-	AllowedOriginsString string   `env:"ALLOWED_ORIGINS"`
-	AllowedOrigins       []string ``
+	DatabaseURL            string   `env:"DATABASE_URL"`
+	RedisURL               string   `env:"REDIS_URL"`
+	Port                   string   `env:"PORT" envDefault:"8080"`
+	AllowedOriginsString   string   `env:"ALLOWED_ORIGINS"`
+	EmailTemplateDirectory string   `env:"EMAIL_TEMPLATE_DIRECTORY"`
+	AllowedOrigins         []string ``
 
 	Auth      AuthConfig   `envPrefix:"AUTH_"`
 	Cookie    CookieConfig `envPrefix:"COOKIE_"`

@@ -37,7 +37,7 @@ INSERT INTO applications (
 ) VALUES (
     $1, $2
 )
-RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id
+RETURNING user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time
 `
 
 type CreateApplicationParams struct {
@@ -60,6 +60,7 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.ExperienceRating,
 		&i.PassionRating,
 		&i.AssignedReviewerID,
+		&i.WaitlistJoinTime,
 	)
 	return i, err
 }
@@ -80,7 +81,7 @@ func (q *Queries) DeleteApplication(ctx context.Context, arg DeleteApplicationPa
 }
 
 const getApplicationByUserAndEventID = `-- name: GetApplicationByUserAndEventID :one
-SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id FROM applications
+SELECT user_id, event_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time FROM applications
 WHERE user_id = $1 AND event_id = $2
 `
 
@@ -104,8 +105,78 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 		&i.ExperienceRating,
 		&i.PassionRating,
 		&i.AssignedReviewerID,
+		&i.WaitlistJoinTime,
 	)
 	return i, err
+}
+
+const joinWaitlist = `-- name: JoinWaitlist :exec
+UPDATE applications
+SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
+    status = 'waitlisted'
+WHERE user_id = $1 AND event_id = $2
+`
+
+type JoinWaitlistParams struct {
+	UserID  uuid.UUID `json:"user_id"`
+	EventID uuid.UUID `json:"event_id"`
+}
+
+func (q *Queries) JoinWaitlist(ctx context.Context, arg JoinWaitlistParams) error {
+	_, err := q.db.Exec(ctx, joinWaitlist, arg.UserID, arg.EventID)
+	return err
+}
+
+const listAdmissionCandidatesByEvent = `-- name: ListAdmissionCandidatesByEvent :many
+SELECT a.user_id,
+    a.passion_rating,
+    a.experience_rating,
+    a.application,
+    t.id as team_id
+FROM applications a
+LEFT JOIN team_members tm
+    ON tm.user_id = a.user_id
+LEFT JOIN teams t
+    ON t.id = tm.team_id
+    AND t.event_id = a.event_id
+WHERE a.event_id = $1
+    AND a.status = 'under_review'
+    AND a.passion_rating IS NOT NULL
+    AND a.experience_rating IS NOT NULL
+`
+
+type ListAdmissionCandidatesByEventRow struct {
+	UserID           uuid.UUID  `json:"user_id"`
+	PassionRating    *int32     `json:"passion_rating"`
+	ExperienceRating *int32     `json:"experience_rating"`
+	Application      []byte     `json:"application"`
+	TeamID           *uuid.UUID `json:"team_id"`
+}
+
+func (q *Queries) ListAdmissionCandidatesByEvent(ctx context.Context, eventID uuid.UUID) ([]ListAdmissionCandidatesByEventRow, error) {
+	rows, err := q.db.Query(ctx, listAdmissionCandidatesByEvent, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAdmissionCandidatesByEventRow{}
+	for rows.Next() {
+		var i ListAdmissionCandidatesByEventRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.PassionRating,
+			&i.ExperienceRating,
+			&i.Application,
+			&i.TeamID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listApplicationByReviewerAndEvent = `-- name: ListApplicationByReviewerAndEvent :many
@@ -162,6 +233,34 @@ ORDER BY
 // For optimization purposes, we only select the application IDs.
 func (q *Queries) ListAvailableApplicationsForEvent(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
 	rows, err := q.db.Query(ctx, listAvailableApplicationsForEvent, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listNonReviewedApplicationsByEvent = `-- name: ListNonReviewedApplicationsByEvent :many
+SELECT user_id
+FROM applications
+WHERE event_id = $1
+  AND status = 'under_review'
+  AND (passion_rating IS NULL OR experience_rating IS NULL)
+`
+
+func (q *Queries) ListNonReviewedApplicationsByEvent(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listNonReviewedApplicationsByEvent, eventID)
 	if err != nil {
 		return nil, err
 	}
@@ -247,5 +346,23 @@ func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationPa
 		arg.UserID,
 		arg.EventID,
 	)
+	return err
+}
+
+const updateApplicationStatusByEventID = `-- name: UpdateApplicationStatusByEventID :exec
+UPDATE applications
+SET status = $1::application_status
+WHERE event_id = $2::uuid
+  AND user_id = ANY($3::uuid[])
+`
+
+type UpdateApplicationStatusByEventIDParams struct {
+	Status  ApplicationStatus `json:"status"`
+	EventID uuid.UUID         `json:"event_id"`
+	UserIds []uuid.UUID       `json:"user_ids"`
+}
+
+func (q *Queries) UpdateApplicationStatusByEventID(ctx context.Context, arg UpdateApplicationStatusByEventIDParams) error {
+	_, err := q.db.Exec(ctx, updateApplicationStatusByEventID, arg.Status, arg.EventID, arg.UserIds)
 	return err
 }

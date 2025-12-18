@@ -37,6 +37,14 @@ services:
     depends_on:
       - redis-dev
 
+  bat-worker-dev:
+    image: ghcr.io/swamphacks/core-bat-worker:dev
+    restart: always
+    env_file:
+      - ./secrets/.env.dev.api
+    depends_on:
+      - redis-dev
+
   redis-dev:
     image: redis:8.2.1-alpine
     container_name: redis-dev

@@ -1,6 +1,15 @@
 package workers
 
-import "github.com/rs/zerolog"
+import (
+	"context"
+	"encoding/json"
+
+	"github.com/hibiken/asynq"
+	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/tasks"
+)
 
 // BAT Worker
 // The BAT worker runs the background execution pipeline for our
@@ -10,11 +19,42 @@ import "github.com/rs/zerolog"
 // other decision heuristics. It operates asynchronously to ensure
 // fair, consistent, and scalable admissions handling.
 type BATWorker struct {
-	logger zerolog.Logger
+	batService *services.BatService
+	logger     zerolog.Logger
 }
 
-func NewBATWorker(logger zerolog.Logger) *BATWorker {
+func NewBATWorker(batService *services.BatService, logger zerolog.Logger) *BATWorker {
 	return &BATWorker{
-		logger: logger.With().Str("worker", "BATWorker").Str("component", "BAT").Logger(),
+		batService: batService,
+		logger:     logger.With().Str("worker", "BATWorker").Str("component", "BAT").Logger(),
 	}
+}
+
+func (w *BATWorker) HandleCalculateAdmissionsTask(ctx context.Context, t *asynq.Task) error {
+	var p tasks.CalculateAdmissionsPayload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		w.logger.Err(err).Msg("Failed to unmarshal payload.")
+		return err
+	}
+
+	err := w.batService.CalculateAdmissions(ctx, p.EventID, p.BatRunID)
+
+	// On error, mark run as failed.
+	// To be fair, this should be handled more granulary. Like for example,
+	// what if the original run was never created? Just food for thought for now.
+	if err != nil {
+		w.logger.Err(err).Msg("Something went wrong calculating admissions.")
+		_, _ = w.batService.UpdateRunById(ctx, sqlc.UpdateRunByIdParams{
+			ID:             p.BatRunID,
+			StatusDoUpdate: true,
+			Status: sqlc.NullBatRunStatus{
+				BatRunStatus: sqlc.BatRunStatusFailed,
+				Valid:        true,
+			},
+		})
+
+		return err
+	}
+
+	return nil
 }
