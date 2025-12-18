@@ -148,6 +148,15 @@ func (b *BatEngine) GroupCandidates(admissionsData []AdmissionCandidate) ([]Team
 		}
 	}
 
+	// Comb out all 1 person teams
+	filtered := make(map[uuid.UUID][]AdmissionCandidate)
+	for key, team := range teamMap {
+		if len(team) > 1 {
+			filtered[key] = team
+		}
+	}
+	teamMap = filtered
+
 	teamsEvalData := make([]TeamEvaluationData, 0)
 	for teamId, members := range teamMap {
 		var totalScore float64
