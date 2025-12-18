@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -48,7 +49,12 @@ func main() {
 	mux.HandleFunc(tasks.TypeSendConfirmationEmail, emailWorker.HandleSendConfirmationEmailTask)
 	mux.HandleFunc(tasks.TypeSendHtmlEmail, emailWorker.HandleSendHtmlEmailTask)
 
-	logger.Info().Msg("Starting email worker")
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to run email worker (could not get working directory)")
+	}
+
+	logger.Info().Str("Working dir", wd).Msg("Starting email worker")
 
 	if err := srv.Run(mux); err != nil {
 		log.Fatalf("Failed to run email worker")

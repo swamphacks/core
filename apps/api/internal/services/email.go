@@ -3,7 +3,6 @@ package services
 import (
 	"bytes"
 	"html/template"
-	"os"
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
@@ -53,11 +52,6 @@ func (s *EmailService) SendConfirmationEmail(recipient string, name string) erro
 func (s *EmailService) SendHtmlEmail(recipient string, subject string, name string, templateFilePath string) error {
 	var body bytes.Buffer
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	s.logger.Info().Str("Working dir", wd)
 	template, err := template.ParseFiles(templateFilePath)
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to parse email template for recipient")
