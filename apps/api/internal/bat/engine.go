@@ -141,10 +141,18 @@ func (b *BatEngine) GroupCandidates(admissionsData []AdmissionCandidate) ([]Team
 
 	// Sort admissions candidates on a valid TeamID
 	for _, app := range admissionsData {
-		if app.TeamID.Valid && len(teamMap[app.TeamID.UUID]) > 1 {
+		if app.TeamID.Valid {
 			teamMap[app.TeamID.UUID] = append(teamMap[app.TeamID.UUID], app)
 		} else {
 			individualCandidates = append(individualCandidates, app)
+		}
+	}
+
+	// Check for teams with only one member and move them to individualCandidates
+	for teamID, candidates := range teamMap {
+		if len(candidates) == 1 {
+			individualCandidates = append(individualCandidates, candidates[0])
+			delete(teamMap, teamID)
 		}
 	}
 
