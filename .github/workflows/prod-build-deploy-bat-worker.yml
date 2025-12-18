@@ -3,7 +3,7 @@ name: Deploy BAT Worker to Production
 on:
   push:
     branches:
-      - dev
+      - master
     paths:
       - 'apps/api/**'
       - 'infra/docker-compose.api.yml'
@@ -53,10 +53,10 @@ jobs:
 
       - name: Run migrations
         run: |
-          goose -dir ./apps/api/internal/db/migrations postgres "${{ secrets.DEV_DB_URL }}" up
+          goose -dir ./apps/api/internal/db/migrations postgres "${{ secrets.PROD_DB_URL }}" up
 
   deploy:
-    name: Deploy to Development Server
+    name: Deploy to Production Server
     runs-on: ubuntu-latest
     needs: [build-and-push, run-migrations]
 
@@ -70,8 +70,8 @@ jobs:
           script: |
             cd /root/core/infra
             git fetch
-            git checkout dev
-            git reset --hard origin/dev
+            git checkout master
+            git reset --hard origin/master
             git pull
 
             export INFISICAL_TOKEN=$(infisical login \
@@ -83,7 +83,7 @@ jobs:
 
             infisical export \
               --token=$INFISICAL_TOKEN \
-              --env=dev \
+              --env=prod \
               --format=dotenv \
               --path="/api" \
               --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
