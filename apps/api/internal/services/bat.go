@@ -200,7 +200,7 @@ func (s *BatService) UpdateRunById(ctx context.Context, params sqlc.UpdateRunByI
 }
 
 func (s *BatService) DeleteRunById(ctx context.Context, id uuid.UUID) error {
-	err := s.batRunsRepo.DeletRunById(ctx, id)
+	err := s.batRunsRepo.DeleteRunById(ctx, id)
 	if err != nil {
 		switch err {
 		case repository.ErrRunNotFound:
