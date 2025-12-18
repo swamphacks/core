@@ -256,7 +256,8 @@ SELECT user_id
 FROM applications
 WHERE event_id = $1
   AND status = 'under_review'
-  AND (passion_rating IS NULL OR experience_rating IS NULL)`
+  AND (passion_rating IS NULL OR experience_rating IS NULL)
+`
 
 func (q *Queries) ListNonReviewedApplicationsByEvent(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
 	rows, err := q.db.Query(ctx, listNonReviewedApplicationsByEvent, eventID)
