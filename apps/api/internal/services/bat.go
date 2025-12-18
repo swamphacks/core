@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/bat"
+	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
@@ -31,25 +32,34 @@ var (
 	ErrNoAcceptedApplicants            = errors.New("No applicants marked as accepted.")
 	ErrFailedToCheckAppReviewsComplete = errors.New("Could not get determine if application reviews have finished.")
 	ErrReviewsNotComplete              = errors.New("Please make sure reviews are finished before calculating application decisions.")
+	ErrCouldNotGetEmailInfo            = errors.New("Could not get email info for applicant.")
+	ErrParseTemplateFilepathFailed     = errors.New("Could not parse filepath for template.")
+	ErrFailedToSendDecisionEmails      = errors.New("Failed to send decision emails")
+	ErrTestErr                         = errors.New("Err while testing")
+	ErrFailedToGetContactEmail         = errors.New("Failed to get contact email")
 )
 
 type BatService struct {
-	appRepo     *repository.ApplicationRepository
-	eventRepo   *repository.EventRepository
-	batRunsRepo *repository.BatRunsRepository
-	txm         *db.TransactionManager
-	taskQueue   *asynq.Client
-	logger      zerolog.Logger
+	appRepo      *repository.ApplicationRepository
+	eventRepo    *repository.EventRepository
+	userRepo     *repository.UserRepository
+	batRunsRepo  *repository.BatRunsRepository
+	emailService *EmailService
+	txm          *db.TransactionManager
+	taskQueue    *asynq.Client
+	logger       zerolog.Logger
 }
 
-func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, batRunsRepo *repository.BatRunsRepository, txm *db.TransactionManager, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
+func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
 	return &BatService{
-		taskQueue:   taskQueue,
-		appRepo:     appRepo,
-		eventRepo:   eventRepo,
-		batRunsRepo: batRunsRepo,
-		txm:         txm,
-		logger:      logger.With().Str("service", "Bat Service").Str("component", "admissions").Logger(),
+		taskQueue:    taskQueue,
+		appRepo:      appRepo,
+		eventRepo:    eventRepo,
+		userRepo:     userRepo,
+		batRunsRepo:  batRunsRepo,
+		emailService: emailService,
+		txm:          txm,
+		logger:       logger.With().Str("service", "Bat Service").Str("component", "admissions").Logger(),
 	}
 }
 
@@ -109,7 +119,48 @@ func (s *BatService) ReleaseBatRunDecision(ctx context.Context, eventId, batRunI
 		return err
 	}
 
-	// Send emails here probably...
+	err = s.SendDecisionEmails(ctx, batRun)
+	if err != nil {
+		return ErrFailedToSendDecisionEmails
+	}
+
+	return nil
+}
+
+func (s *BatService) SendDecisionEmails(ctx context.Context, batRun sqlc.BatRun) error {
+	cfg := config.Load()
+	accepetedEmailTemplatePath := cfg.EmailTemplateDirectory + "ApplicationAcceptedEmail.html"
+	rejectedEmailTemplatePath := cfg.EmailTemplateDirectory + "ApplicationRejectedEmail.html"
+	acceptedEmailSubject := "Congratulations on being accepted to hack in SwampHacks XI!"
+	rejectedEmailSubject := "Update on Your SwampHacks XI Application"
+
+	for _, uuid := range batRun.AcceptedApplicants {
+		emailInfo, err := s.userRepo.GetUserEmailInfoById(ctx, uuid)
+		if err != nil {
+			return ErrCouldNotGetEmailInfo
+		}
+
+		contactEmail, ok := emailInfo.ContactEmail.(string)
+		if !ok {
+			return ErrFailedToGetContactEmail
+		}
+		taskInfo, err := s.emailService.QueueSendHtmlEmailTask(contactEmail, acceptedEmailSubject, emailInfo.Name, accepetedEmailTemplatePath)
+		s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued acceptance email")
+	}
+
+	for _, uuid := range batRun.RejectedApplicants {
+		emailInfo, err := s.userRepo.GetUserEmailInfoById(ctx, uuid)
+		if err != nil {
+			return ErrCouldNotGetEmailInfo
+		}
+
+		contactEmail, ok := emailInfo.ContactEmail.(string)
+		if !ok {
+			return ErrFailedToGetContactEmail
+		}
+		taskInfo, err := s.emailService.QueueSendHtmlEmailTask(contactEmail, rejectedEmailSubject, emailInfo.Name, rejectedEmailTemplatePath)
+		s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued rejection email")
+	}
 
 	return nil
 }
@@ -239,15 +290,15 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId, batRunId 
 	acceptedIDs := make([]uuid.UUID, 0, len(accepted))
 	rejectedIDs := make([]uuid.UUID, 0, len(rejected))
 
-	for _, app := range accepted {
-		acceptedIDs = append(acceptedIDs, app.UserID)
+	for _, applicant := range accepted {
+		acceptedIDs = append(acceptedIDs, applicant.UserID)
 	}
-
-	for _, app := range rejected {
-		rejectedIDs = append(rejectedIDs, app.UserID)
+	for _, applicant := range rejected {
+		rejectedIDs = append(rejectedIDs, applicant.UserID)
 	}
 
 	params := sqlc.UpdateRunByIdParams{
+		// TODO: add UF/other/early/late info?
 		AcceptedApplicantsDoUpdate: true,
 		RejectedApplicantsDoUpdate: true,
 		StatusDoUpdate:             true,

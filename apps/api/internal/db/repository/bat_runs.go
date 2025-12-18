@@ -57,7 +57,7 @@ func (r *BatRunsRepository) UpdateRunById(ctx context.Context, params sqlc.Updat
 	return err
 }
 
-func (r *BatRunsRepository) DeletRunById(ctx context.Context, id uuid.UUID) error {
+func (r *BatRunsRepository) DeleteRunById(ctx context.Context, id uuid.UUID) error {
 	affectedRows, err := r.db.Query.DeleteRunById(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

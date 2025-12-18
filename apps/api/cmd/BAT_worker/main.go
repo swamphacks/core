@@ -7,6 +7,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/db"
 	"github.com/swamphacks/core/apps/api/internal/db/repository"
+	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
@@ -60,11 +61,14 @@ func main() {
 
 	txm := db.NewTransactionManager(database)
 
-	eventRepo := repository.NewEventRespository(database)
 	applicationRepo := repository.NewApplicationRepository(database)
+	eventRepo := repository.NewEventRespository(database)
+	userRepo := repository.NewUserRepository(database)
 	batRunsRepo := repository.NewBatRunsRepository(database)
 
-	batService := services.NewBatService(applicationRepo, eventRepo, batRunsRepo, txm, nil, logger)
+	sesClient := email.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
+	emailService := services.NewEmailService(nil, sesClient, logger)
+	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, nil, logger)
 
 	BATWorker := workers.NewBATWorker(batService, logger)
 

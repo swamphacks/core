@@ -11,6 +11,18 @@ WHERE id = $1;
 SELECT * FROM auth.users
 WHERE email = $1;
 
+-- name: GetUserEmailInfoById :one
+SELECT
+    id,
+    name,
+    email_consent,
+    CASE
+        WHEN preferred_email IS NOT NULL AND preferred_email != '' THEN preferred_email
+        ELSE email
+    END AS contact_email
+FROM auth.users
+WHERE id = $1;
+
 -- name: UpdateUserOnboarded :exec
 UPDATE auth.users
 SET onboarded = TRUE
