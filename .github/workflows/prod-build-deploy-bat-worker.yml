@@ -83,7 +83,7 @@ jobs:
 
             infisical export \
               --token=$INFISICAL_TOKEN \
-              --env=master \
+              --env=prod \
               --format=dotenv \
               --path="/api" \
               --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
