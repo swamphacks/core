@@ -141,23 +141,12 @@ func (b *BatEngine) GroupCandidates(admissionsData []AdmissionCandidate) ([]Team
 
 	// Sort admissions candidates on a valid TeamID
 	for _, app := range admissionsData {
-		if app.TeamID.Valid {
+		if app.TeamID.Valid && len(teamMap[app.TeamID.UUID]) > 1 {
 			teamMap[app.TeamID.UUID] = append(teamMap[app.TeamID.UUID], app)
 		} else {
 			individualCandidates = append(individualCandidates, app)
 		}
 	}
-
-	// Comb out all 1 person teams
-	filtered := make(map[uuid.UUID][]AdmissionCandidate)
-	for key, team := range teamMap {
-		if len(team) > 1 {
-			filtered[key] = team
-		} else {
-			individualCandidates = append(individualCandidates, filtered[key]...)
-		}
-	}
-	teamMap = filtered
 
 	teamsEvalData := make([]TeamEvaluationData, 0)
 	for teamId, members := range teamMap {
