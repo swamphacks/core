@@ -87,7 +87,7 @@ jobs:
               --format=dotenv \
               --path="/api" \
               --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
-              > ./secrets/.env.dev.api
+              > ./secrets/.env.api
             
             docker compose -f docker-compose.api.yml pull bat-worker
             docker compose -f docker-compose.api.yml up -d --no-deps --force-recreate bat-worker
