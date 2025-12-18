@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/web"
@@ -11,11 +12,13 @@ import (
 
 type AdmissionHandler struct {
 	batService *services.BatService
+	logger     zerolog.Logger
 }
 
-func NewAdmissionHandler(batService *services.BatService) *AdmissionHandler {
+func NewAdmissionHandler(batService *services.BatService, logger zerolog.Logger) *AdmissionHandler {
 	return &AdmissionHandler{
 		batService: batService,
+		logger:     logger.With().Str("handler", "AdmissionHandler").Logger(),
 	}
 }
 

@@ -3,10 +3,10 @@ package services
 import (
 	"bytes"
 	"html/template"
-	"path/filepath"
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 )
@@ -25,12 +25,13 @@ func NewEmailService(taskQueue *asynq.Client, SESClient *email.SESClient, logger
 	}
 }
 
-// TODO: Make this generic for any event
+// TODO: Refactor
 func (s *EmailService) SendConfirmationEmail(recipient string, name string) error {
 
 	var body bytes.Buffer
 
-	template, err := template.ParseFiles("./internal/email/templates/ConfirmationEmail.html")
+	cfg := config.Load()
+	template, err := template.ParseFiles(cfg.EmailTemplateDirectory + "ConfirmationEmail.html")
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to parse email template for recipient")
 	}
@@ -49,23 +50,19 @@ func (s *EmailService) SendConfirmationEmail(recipient string, name string) erro
 }
 
 func (s *EmailService) SendHtmlEmail(recipient string, subject string, name string, templateFilePath string) error {
-
 	var body bytes.Buffer
 
-	parsedFilePath, err := filepath.Abs(templateFilePath)
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to parse email template filepath")
-	}
-
-	template, err := template.ParseFiles(parsedFilePath)
+	template, err := template.ParseFiles(templateFilePath)
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to parse email template for recipient")
 	}
 
+	s.logger.Info().Str("Name", name)
 	err = template.Execute(&body, struct{ Name string }{Name: name})
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to inject template variables for recipient '%s'.")
 	}
+
 	err = s.SESClient.SendHTMLEmail([]string{recipient}, "noreply@swamphacks.com", subject, body.String())
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
@@ -75,7 +72,8 @@ func (s *EmailService) SendHtmlEmail(recipient string, subject string, name stri
 	return nil
 }
 
-func (s *EmailService) QueueSendHtmlEmail(to string, subject string, name string, templateFilePath string) (*asynq.TaskInfo, error) {
+// TODO: refactor other queue functions to use a similar naming scheme
+func (s *EmailService) QueueSendHtmlEmailTask(to string, subject string, name string, templateFilePath string) (*asynq.TaskInfo, error) {
 	task, err := tasks.NewTaskSendHtmlEmail(tasks.SendHtmlEmailPayload{
 		To:               to,
 		Subject:          subject,

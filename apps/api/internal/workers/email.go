@@ -30,7 +30,7 @@ func (w *EmailWorker) HandleSendHtmlEmailTask(ctx context.Context, t *asynq.Task
 		return fmt.Errorf("HandleSendHtmlEmailTask: json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
 
-	if err := w.emailService.SendHtmlEmail(p.To, p.Name, p.Subject, p.TemplateFilePath); err != nil {
+	if err := w.emailService.SendHtmlEmail(p.To, p.Subject, p.Name, p.TemplateFilePath); err != nil {
 		w.logger.Err(err).Msg("Failed to send ConfirmationEmail from worker")
 		return err
 	}

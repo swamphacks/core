@@ -38,7 +38,7 @@ func NewHandlers(
 		Email:         NewEmailHandler(emailService, logger),
 		Application:   NewApplicationHandler(appService),
 		Teams:         NewTeamHandler(teamService, logger),
-		Admission:     NewAdmissionHandler(batService),
+		Admission:     NewAdmissionHandler(batService, logger),
 		Bat:           NewBatHandler(batService, logger),
 	}
 }
