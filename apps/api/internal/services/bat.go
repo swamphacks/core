@@ -304,6 +304,7 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, eventId, batRunId 
 	}
 
 	params := sqlc.UpdateRunByIdParams{
+		// TODO: add UF/other/early/late info?
 		AcceptedApplicantsDoUpdate: true,
 		RejectedApplicantsDoUpdate: true,
 		StatusDoUpdate:             true,
