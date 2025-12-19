@@ -85,19 +85,18 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
             
         # get available mentors from all acceptable roles
         available_mentors = get_available_mentors(interaction.guild)
-        if not available_mentors:
-            await interaction.response.send_message(
-                "Error: No available mentors at this time. Please try again later.",
-                ephemeral=True
-            )
-            return
         
-        # implement round-robin pinging of mentors
-        if last_pinged_mentor_index >= len(available_mentors):
-            last_pinged_mentor_index = 0
-        selected_mentor = available_mentors[last_pinged_mentor_index]
-        last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
-        action_text = f"{selected_mentor.mention} Please join the thread to assist the user."
+        # Handle mentor selection - allow requests even if no mentors are available
+        if available_mentors:
+            # implement round-robin pinging of mentors
+            if last_pinged_mentor_index >= len(available_mentors):
+                last_pinged_mentor_index = 0
+            selected_mentor = available_mentors[last_pinged_mentor_index]
+            last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
+            action_text = f"{selected_mentor.mention} Please join the thread to assist the user."
+        else:
+            # No mentors available, but still allow the request
+            action_text = "No available mentors at this time. A mentor will assist when available."
         
         # create the thread with the next available name and add the initialuser to the thread
         thread_name = get_next_thread_name(support_channel)
@@ -252,26 +251,25 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             print("Voice channel does not have an associated text channel.")
             return
 
-        # get available mentors from all acceptable roles
-        available_mentors = get_available_mentors(interaction.guild)
-        if not available_mentors:
-            await interaction.response.send_message(
-                "Error: No available mentors at this time. Please try again later.",
-                ephemeral=True
-            )
-            return
-        
         # ping the user who created the thread
         await interaction.response.send_message(
             f"Voice channel created: {voice_channel.mention}",
             ephemeral=True
         )
+
+        # get available mentors from all acceptable roles
+        available_mentors = get_available_mentors(interaction.guild)
         
-        if last_pinged_mentor_index >= len(available_mentors):
-            last_pinged_mentor_index = 0
-        selected_mentor = available_mentors[last_pinged_mentor_index]
-        last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
-        action_text = f"{selected_mentor.mention} Please join the vc to assist the user."
+        # Handle mentor selection - allow requests even if no mentors are available
+        if available_mentors:
+            if last_pinged_mentor_index >= len(available_mentors):
+                last_pinged_mentor_index = 0
+            selected_mentor = available_mentors[last_pinged_mentor_index]
+            last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
+            action_text = f"{selected_mentor.mention} Please join the vc to assist the user."
+        else:
+            # No mentors available, but still allow the request
+            action_text = "No available mentors at this time. A mentor will assist when available."
         
         # create embed for reports channel
         reports_embed = discord.Embed(
