@@ -1,12 +1,11 @@
 from discord.ext import commands
 from discord import app_commands
 import discord
-from typing import Literal
+from typing import Literal, Union
 from utils.checks import has_bot_full_access
 from utils.mentor_functions import set_all_mentors_available
 from utils.get_next_support_vc_name import get_next_support_vc_name
 from chatbot.llm import llm_response
-
 
 class General(commands.Cog):
     """A cog containing general utility commands for the server
@@ -389,6 +388,56 @@ class General(commands.Cog):
         await interaction.response.defer(thinking=True)
         answer = llm_response(prompt)
         await interaction.followup.send(answer, ephemeral=True)
+    
+    @app_commands.command(name="create_announcement", description="Create an announcement message that the bot will send")
+    @app_commands.describe(
+        message="The announcement message to send (supports Discord markdown formatting)",
+        attachment="Optional image or file attachment to include with the announcement",
+        mention_user="User to mention at the bottom of the announcement (optional)",
+        mention_role="Role to mention at the bottom of the announcement (optional)"
+    )
+    @has_bot_full_access()
+    async def create_announcement(
+        self, 
+        interaction: discord.Interaction, 
+        message: str,
+        attachment: discord.Attachment = None,
+        mention_user: discord.Member = None,
+        mention_role: discord.Role = None
+    ) -> None:
+        """Create an announcement message that the bot will send in the current channel
+        
+        Args:
+            interaction: The interaction that triggered this command
+            message: The announcement message to send (supports Discord markdown formatting)
+            attachment: Optional image or file attachment to include with the announcement
+            mention_user: Optional user to mention at the bottom
+            mention_role: Optional role to mention at the bottom
+        """
+        await interaction.response.defer(ephemeral=True)
+        
+        file = None
+        if attachment:
+            file = await attachment.to_file()
+        
+        mentions_list = []
+        if mention_user:
+            mentions_list.append(mention_user.mention)
+        if mention_role:
+            mentions_list.append(mention_role.mention)
+        
+        final_message = message
+        if mentions_list:
+            final_message = f"{message}\n\n{' '.join(mentions_list)}"
+        
+        allowed_mentions = discord.AllowedMentions(everyone=True, users=True, roles=True)
+        
+        if file:
+            await interaction.channel.send(final_message, file=file, allowed_mentions=allowed_mentions)
+        else:
+            await interaction.channel.send(final_message, allowed_mentions=allowed_mentions)
+        
+        await interaction.delete_original_response()
         
 async def setup(bot: commands.Bot) -> None:
     """Add the General cog to the bot
