@@ -1,6 +1,7 @@
 from discord.ext import commands
 from discord import app_commands
 import discord
+import re
 from typing import Literal, Union
 from utils.checks import has_bot_full_access
 from utils.mentor_functions import set_all_mentors_available
@@ -391,19 +392,15 @@ class General(commands.Cog):
     
     @app_commands.command(name="create_announcement", description="Create an announcement message that the bot will send")
     @app_commands.describe(
-        message="The announcement message to send (supports Discord markdown formatting)",
-        attachment="Optional image or file attachment to include with the announcement",
-        mention_user="User to mention at the bottom of the announcement (optional)",
-        mention_role="Role to mention at the bottom of the announcement (optional)"
+        message="The announcement message to send (supports Discord markdown formatting). Use @username or @rolename to mention users/roles.",
+        attachment="Optional image or file attachment to include with the announcement"
     )
     @has_bot_full_access()
     async def create_announcement(
         self, 
         interaction: discord.Interaction, 
         message: str,
-        attachment: discord.Attachment = None,
-        mention_user: discord.Member = None,
-        mention_role: discord.Role = None
+        attachment: discord.Attachment = None
     ) -> None:
         """Create an announcement message that the bot will send in the current channel
         
@@ -411,8 +408,6 @@ class General(commands.Cog):
             interaction: The interaction that triggered this command
             message: The announcement message to send (supports Discord markdown formatting)
             attachment: Optional image or file attachment to include with the announcement
-            mention_user: Optional user to mention at the bottom
-            mention_role: Optional role to mention at the bottom
         """
         await interaction.response.defer(ephemeral=True)
         
@@ -420,22 +415,32 @@ class General(commands.Cog):
         if attachment:
             file = await attachment.to_file()
         
-        mentions_list = []
-        if mention_user:
-            mentions_list.append(mention_user.mention)
-        if mention_role:
-            mentions_list.append(mention_role.mention)
+        processed_message = message.encode().decode('unicode_escape')
         
-        final_message = message
-        if mentions_list:
-            final_message = f"{message}\n\n{' '.join(mentions_list)}"
+        if interaction.guild:
+            mention_pattern = r'@(\w+)'
+            
+            def replace_mention(match):
+                name = match.group(1).lower()
+                member = discord.utils.find(lambda m: m.name.lower() == name, interaction.guild.members)
+                if member:
+                    return member.mention
+                member = discord.utils.find(lambda m: m.display_name.lower() == name, interaction.guild.members)
+                if member:
+                    return member.mention
+                role = discord.utils.find(lambda r: r.name.lower() == name, interaction.guild.roles)
+                if role:
+                    return role.mention
+                return match.group(0)
+            
+            processed_message = re.sub(mention_pattern, replace_mention, processed_message)
         
         allowed_mentions = discord.AllowedMentions(everyone=True, users=True, roles=True)
         
         if file:
-            await interaction.channel.send(final_message, file=file, allowed_mentions=allowed_mentions)
+            await interaction.channel.send(processed_message, file=file, allowed_mentions=allowed_mentions)
         else:
-            await interaction.channel.send(final_message, allowed_mentions=allowed_mentions)
+            await interaction.channel.send(processed_message, allowed_mentions=allowed_mentions)
         
         await interaction.delete_original_response()
         
