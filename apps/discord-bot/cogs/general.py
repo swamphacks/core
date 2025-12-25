@@ -1,10 +1,11 @@
 from discord.ext import commands
 from discord import app_commands
 import discord
-from typing import Literal
+from typing import Literal, Optional
 from utils.checks import is_mod_slash
 from utils.mentor_functions import set_all_mentors_available
-
+from utils.role_assignment import (get_attendees_for_event, assign_roles_to_attendees, format_assignment_summary)
+import os
 
 class General(commands.Cog):
     """A cog containing general utility commands for the server
@@ -22,7 +23,7 @@ class General(commands.Cog):
         """
         self.bot: commands.Bot = bot
     
-    def get_role(self, guild: discord.Guild, role_name: str) -> discord.Role:
+    def get_role(self, guild: discord.Guild, role_name: str) -> Optional[discord.Role]:
         """Helper to get a role by name from a guild."""
         return discord.utils.get(guild.roles, name=role_name)
     
@@ -280,6 +281,111 @@ class General(commands.Cog):
             await interaction.response.send_message("I don't have permission to grant access to this voice channel.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+    
+    @app_commands.command(
+        name="assign_hacker_roles",
+        description="Assign hacker role to all attendees from database using webhook"
+    )
+    @app_commands.describe(
+        event_id="UUID of event",
+        hacker_role="Discord role to assign to hackers"
+    )
+    @is_mod_slash()
+    async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, hacker_role: discord.Role) -> None:
+        """Assign hacker role to all attendees from database using webhook
+        
+        Args:
+            interaction: The interaction that triggered this command
+            event_id: UUID of event
+            hacker_role: Discord role to assign to hackers
+        """
+        
+        await interaction.response.defer(ephemeral=True)
+        
+        try:
+            guild_id = interaction.guild.id if interaction.guild else None
+            if not guild_id:
+                await interaction.followup.send("Error: Could not determine guild.", ephemeral=True)
+                return
+            attendees = await get_attendees_for_event(event_id)
+            if not attendees:
+                await interaction.followup.send(f"No attendees found for event {event_id}.", ephemeral=True)
+                return
+            webhook_url = os.getenv("WEBHOOK_URL")
+            if not webhook_url:
+                await interaction.followup.send("Error: WEBHOOK_URL is not set.", ephemeral=True)
+                return
+            
+            newly_assigned, already_had, failed, errors = await assign_roles_to_attendees(webhook_url, attendees, hacker_role.name, str(guild_id))
+            summary = format_assignment_summary(len(attendees), newly_assigned, already_had, failed, errors)
+            await interaction.followup.send(summary, ephemeral=True)
+        except Exception as e:
+            await interaction.followup.send(f"An error occurred: {str(e)}", ephemeral=True)
+            
+    @app_commands.command(name="remove_role_from_all", description="Remove a specific role from all members in the server")
+    @app_commands.describe(role="The role to remove from all members")
+    @is_mod_slash()
+    async def remove_role_from_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
+        """Remove a specific role from all members in the server
+        """
+        await interaction.response.defer(ephemeral=True)
+        try:
+            guild = interaction.guild
+            if not guild:
+                await interaction.followup.send("Error: Could not determine guild.", ephemeral=True)
+                return
+            
+            await interaction.followup.send(
+                f"Fetching all members and removing **{role.name}** role... This may take a moment.",
+                ephemeral=True
+            )
+            
+            members_with_role = [member for member in guild.members if role in member.roles]
+            
+            if not members_with_role:
+                await interaction.followup.send(
+                    f"No members found with the **{role.name}** role.",
+                    ephemeral=True
+                )
+                return
+            
+            removed = 0
+            failed = 0
+            errors = []
+            
+            for member in members_with_role:
+                try:
+                    await member.remove_roles(role, reason=f'Role removal via command by {interaction.user}')
+                    removed += 1
+                except discord.Forbidden:
+                    failed += 1
+                    errors.append(f"Permission denied for {member.mention}")
+                except discord.HTTPException as e:
+                    failed += 1
+                    errors.append(f"Error removing role from {member.mention}: {str(e)}")
+                except Exception as e:
+                    failed += 1
+                    errors.append(f"Unexpected error for {member.mention}: {str(e)}")
+            
+            message = f"**Role Removal Complete**\n\n"
+            message += f"**Summary:**\n"
+            message += f"- Total members with **{role.name}** role: {len(members_with_role)}\n"
+            message += f"- Roles removed successfully: {removed}\n"
+            message += f"- Failed removals: {failed}\n"
+            
+            if errors:
+                message += f"\n**Errors ({len(errors)}):**\n"
+                for error in errors[:10]:
+                    message += f"- {error}\n"
+                if len(errors) > 10:
+                    message += f"- ... and {len(errors) - 10} more errors\n"
+            
+            await interaction.followup.send(message, ephemeral=True)
+        except Exception as e:
+            await interaction.followup.send(
+                f"An error occurred: {str(e)}",
+                ephemeral=True
+            )
         
 async def setup(bot: commands.Bot) -> None:
     """Add the General cog to the bot

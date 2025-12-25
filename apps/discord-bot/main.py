@@ -7,6 +7,7 @@ import pathlib
 import asyncio
 from typing import Optional
 from discord.app_commands import CheckFailure, AppCommandError
+from utils.db import Database
 
 
 # Set up logging configuration
@@ -113,6 +114,16 @@ async def main() -> None:
     
     This function calls functions to load cogs and start the bot given the api token from environment variables
     """
+    
+    # initialize database connection
+    try:
+        Database.initialize()
+        logging.info("Database connection initialized")
+        print("Database connection initialized")
+    except Exception as e:
+        logging.error(f"Failed to initialize database connection: {e}")
+        print(f"Failed to initialize database connection: {e}")
+    
     await load_cogs()
     await bot.start(token)
 
