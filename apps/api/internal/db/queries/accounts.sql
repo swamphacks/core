@@ -31,3 +31,8 @@ WHERE provider_id = $1 AND account_id = $2;
 -- name: DeleteAccount :exec
 DELETE FROM auth.accounts
 WHERE provider_id = $1 AND account_id = $2;
+
+-- name: GetUserIDByDiscordAccountID :one
+SELECT user_id
+FROM auth.accounts
+WHERE provider_id = 'discord' AND account_id = $1;
