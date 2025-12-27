@@ -120,6 +120,12 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		r.Post("/join/{requestId}/reject", api.Handlers.Teams.RejectTeamJoinRequest)
 	})
 
+	// --- Discord routes (for Discord bot) ---
+	api.Router.Route("/discord", func(r chi.Router) {
+		r.Use(mw.Auth.RequireAuth)
+		r.Get("/user/{discord_id}/role", api.Handlers.Discord.GetUserEventRoleByDiscordID)
+	})
+
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
 		r.Post("/{eventId}/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)

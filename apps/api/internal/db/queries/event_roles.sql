@@ -25,3 +25,10 @@ WHERE er.event_id = $1;
 UPDATE event_roles
 SET role = $3
 WHERE event_id = $1 AND user_id = $2;
+
+-- name: GetEventRoleByUserID :one
+SELECT event_id, role
+FROM event_roles
+WHERE user_id = $1
+ORDER BY assigned_at DESC
+LIMIT 1;

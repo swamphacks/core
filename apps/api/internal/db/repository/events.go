@@ -159,3 +159,14 @@ func (r *EventRepository) GetApplicationStatuses(ctx context.Context, eventId uu
 func (r *EventRepository) GetSubmissionTimes(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetSubmissionTimesRow, error) {
 	return r.db.Query.GetSubmissionTimes(ctx, eventId)
 }
+
+func (r *EventRepository) GetEventRoleByUserID(ctx context.Context, userID uuid.UUID) (*sqlc.GetEventRoleByUserIDRow, error) {
+	eventRole, err := r.db.Query.GetEventRoleByUserID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrEventRoleNotFound
+		}
+		return nil, err
+	}
+	return &eventRole, nil
+}

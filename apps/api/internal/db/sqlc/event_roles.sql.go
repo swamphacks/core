@@ -29,6 +29,26 @@ func (q *Queries) AssignRole(ctx context.Context, arg AssignRoleParams) error {
 	return err
 }
 
+const getEventRoleByUserID = `-- name: GetEventRoleByUserID :one
+SELECT event_id, role
+FROM event_roles
+WHERE user_id = $1
+ORDER BY assigned_at DESC
+LIMIT 1
+`
+
+type GetEventRoleByUserIDRow struct {
+	EventID uuid.UUID     `json:"event_id"`
+	Role    EventRoleType `json:"role"`
+}
+
+func (q *Queries) GetEventRoleByUserID(ctx context.Context, userID uuid.UUID) (GetEventRoleByUserIDRow, error) {
+	row := q.db.QueryRow(ctx, getEventRoleByUserID, userID)
+	var i GetEventRoleByUserIDRow
+	err := row.Scan(&i.EventID, &i.Role)
+	return i, err
+}
+
 const getEventStaff = `-- name: GetEventStaff :many
 SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.role AS event_role
 FROM auth.users u
