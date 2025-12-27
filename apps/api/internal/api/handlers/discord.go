@@ -4,6 +4,7 @@ import (
     "net/http"
     
     "github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
     "github.com/rs/zerolog"
     res "github.com/swamphacks/core/apps/api/internal/api/response"
     "github.com/swamphacks/core/apps/api/internal/services"
@@ -57,4 +58,42 @@ func (h *DiscordHandler) GetUserEventRoleByDiscordID(w http.ResponseWriter, r *h
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+// GetEventAttendeesWithDiscord
+//
+//	@Summary		Get event attendees with Discord IDs
+//	@Description	Get all attendees for an event who have Discord accounts linked
+//	@Tags			Discord
+//	@Param			event_id	path		string	true	"Event ID (UUID)"
+//	@Success		200			{array}		sqlc.GetEventAttendeesWithDiscordRow	"List of attendees with Discord IDs"
+//	@Failure		400			{object}	response.ErrorResponse	"Invalid event ID"
+//	@Failure		500			{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/discord/event/{event_id}/attendees [get]
+func (h *DiscordHandler) GetEventAttendeesWithDiscord(w http.ResponseWriter, r *http.Request) {
+	eventIDStr := chi.URLParam(r, "event_id")
+	if eventIDStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("bad_request", "event_id is required"))
+		return
+	}
+
+	eventID, err := uuid.Parse(eventIDStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("bad_request", "invalid event ID format"))
+		return
+	}
+
+	attendees, err := h.discordService.GetEventAttendeesWithDiscord(r.Context(), eventID)
+	if err != nil {
+		h.logger.Err(err).Msg("failed to get event attendees with discord")
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_error", "Failed to get attendees"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(attendees); err != nil {
+		h.logger.Err(err).Msg("failed to encode response")
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_error", "Failed to encode response"))
+		return
+	}
 }

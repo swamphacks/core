@@ -32,3 +32,16 @@ FROM event_roles
 WHERE user_id = $1
 ORDER BY assigned_at DESC
 LIMIT 1;
+
+-- name: GetEventAttendeesWithDiscord :many
+SELECT 
+    a.account_id as discord_id,
+    u.id as user_id,
+    u.name,
+    u.email
+FROM auth.users u
+JOIN event_roles er ON u.id = er.user_id
+JOIN auth.accounts a ON u.id = a.user_id
+WHERE er.event_id = $1
+    AND er.role = 'attendee'
+    AND a.provider_id = 'discord';

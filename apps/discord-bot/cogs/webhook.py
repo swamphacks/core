@@ -4,6 +4,7 @@ import json
 from aiohttp import web
 from typing import Optional
 import os
+import logging
 
 
 class Webhooks(commands.Cog):
@@ -19,11 +20,15 @@ class Webhooks(commands.Cog):
         self.webhook_port: int = int(os.getenv('WEBHOOK_PORT', '8081'))
         self.webhook_app: Optional[web.Application] = None
         self.webhook_runner: Optional[web.AppRunner] = None
+        self.logger = logging.getLogger(__name__)
         
     async def setup_webhook_server(self) -> None:
         """Set up the webhook HTTP server"""
         self.webhook_app = web.Application()
         self.webhook_app.router.add_post('/webhook', self.handle_webhook)
+        
+        aiohttp_access_logger = logging.getLogger('aiohttp.access')
+        aiohttp_access_logger.setLevel(logging.WARNING)
         
         self.webhook_runner = web.AppRunner(self.webhook_app)
         await self.webhook_runner.setup()

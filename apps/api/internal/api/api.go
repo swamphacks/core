@@ -124,6 +124,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	api.Router.Route("/discord", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
 		r.Get("/user/{discord_id}/role", api.Handlers.Discord.GetUserEventRoleByDiscordID)
+		r.Get("/event/{event_id}/attendees", api.Handlers.Discord.GetEventAttendeesWithDiscord)
 	})
 
 	// --- Event routes ---

@@ -6,7 +6,7 @@ import logging
 from typing import Literal, Optional
 from utils.checks import is_mod_slash
 from utils.mentor_functions import set_all_mentors_available
-from utils.role_assignment import (assign_roles_to_attendees, format_assignment_summary)
+from utils.role_assignment import (get_attendees_for_event, format_assignment_summary, assign_roles_to_attendees)
 import os
 
 class General(commands.Cog):
@@ -309,10 +309,26 @@ class General(commands.Cog):
             if not guild_id:
                 await interaction.followup.send("Error: Could not determine guild.", ephemeral=True)
                 return
+            
+            api_url = os.getenv("API_URL", "http://localhost:8080")
+            session_cookie = os.getenv("SESSION_COOKIE")
+            if not session_cookie:
+                await interaction.followup.send("Error: SESSION_COOKIE is not set.", ephemeral=True)
+                return
+            
             webhook_url = os.getenv("WEBHOOK_URL")
             if not webhook_url:
                 await interaction.followup.send("Error: WEBHOOK_URL is not set.", ephemeral=True)
                 return
+            
+            attendees = await get_attendees_for_event(api_url, session_cookie, event_id)
+            if not attendees:
+                await interaction.followup.send("Error: No attendees found for event.", ephemeral=True)
+                return
+            
+            newly_assigned, already_had, failed, errors = await assign_roles_to_attendees(webhook_url, attendees, hacker_role.name, str(guild_id))
+            summary = format_assignment_summary(len(attendees), newly_assigned, already_had, failed, errors)
+            await interaction.followup.send(summary, ephemeral=True)
             
         except Exception as e:
             await interaction.followup.send(f"An error occurred: {str(e)}", ephemeral=True)

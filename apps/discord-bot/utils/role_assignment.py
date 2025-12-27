@@ -1,42 +1,48 @@
 import logging
-import uuid
 import aiohttp
 from typing import List, Tuple, Optional
-from utils.db import Database
-
-GET_ATTENDEES_WITH_DISCORD = """
-SELECT
-    a.account_id as discord_id,
-    u.id as user_id,
-    u.name,
-    u.email
-FROM auth.users u
-JOIN event_roles er ON u.id = er.user_id
-JOIN auth.accounts a ON u.id = a.user_id
-WHERE er.event_id = %s
-    AND er.role = 'attendee'
-    AND a.provider_id = 'discord'
-"""
 
 logger = logging.getLogger(__name__)
 
-async def get_attendees_for_event(event_id: str) -> List[Tuple[str, str, str, Optional[str]]]:
-    """Query database for all attendees with Discord accounts for given event"""
+async def get_attendees_for_event(api_url: str, session_cookie: str, event_id: str) -> List[Tuple[str, str, str, Optional[str]]]:
+    """Get attendees with Discord IDs for an event from API
+    
+    Args:
+        api_url: Base URL of the API
+        session_cookie: Session cookie for authentication
+        event_id: Event ID (UUID)
+        
+    Returns:
+        List of tuples (discord_id, user_id, name, email)
+    """
     
     try:
-        event_uuid = uuid.UUID(event_id)
-    except ValueError:
-        raise ValueError(f"Invalid event ID format: {event_id}")
-        
-    conn = Database.get_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute(GET_ATTENDEES_WITH_DISCORD, (str(event_uuid),))
-        attendees = cursor.fetchall()
-        cursor.close()
-        return attendees
-    finally:
-        Database.return_connection(conn)
+        async with aiohttp.ClientSession() as session:
+            headers = {"Cookie": f"sh_session_id={session_cookie}"}
+            async with session.get(
+                f"{api_url}/discord/event/{event_id}/attendees",
+                headers=headers
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    attendees = []
+                    for attendee in data:
+                        attendees.append((
+                            attendee.get("discord_id", ""),
+                            attendee.get("user_id", ""),
+                            attendee.get("name", ""),
+                            attendee.get("email")
+                        ))
+                    return attendees
+                elif response.status == 404:
+                    return []
+                else:
+                    text = await response.text()
+                    logger.error(f"API error: {response.status} - {text}")
+                    raise Exception(f"API error: {response.status}")
+    except Exception as e:
+        logger.error(f"Error fetching attendees from API: {e}")
+        raise
         
 async def assign_role_via_webhook(
     webhook_url: str, 
@@ -82,7 +88,6 @@ async def assign_role_via_webhook(
                     text = await response.text()
                     return ("failed", text)
         else:
-            # Create a new session if none provided (for backwards compatibility)
             async with aiohttp.ClientSession() as new_session:
                 async with new_session.post(webhook_url, json=payload) as response:
                     if response.status == 200:

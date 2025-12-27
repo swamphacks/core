@@ -54,3 +54,12 @@ func (s *DiscordService) GetUserEventRoleByDiscordID(ctx context.Context, discor
 
 	return &eventRole.EventID, &eventRole.Role, nil
 }
+
+func (s *DiscordService) GetEventAttendeesWithDiscord(ctx context.Context, eventID uuid.UUID) (*[]sqlc.GetEventAttendeesWithDiscordRow, error) {
+	attendees, err := s.eventRepo.GetEventAttendeesWithDiscord(ctx, eventID)
+	if err != nil {
+		s.logger.Err(err).Msg("failed to get event attendees with discord")
+		return nil, err
+	}
+	return attendees, nil
+}

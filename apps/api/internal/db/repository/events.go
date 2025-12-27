@@ -170,3 +170,11 @@ func (r *EventRepository) GetEventRoleByUserID(ctx context.Context, userID uuid.
 	}
 	return &eventRole, nil
 }
+
+func (r *EventRepository) GetEventAttendeesWithDiscord(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetEventAttendeesWithDiscordRow, error) {
+	attendees, err := r.db.Query.GetEventAttendeesWithDiscord(ctx, eventId)
+	if err != nil {
+		return nil, err
+	}
+	return &attendees, nil
+}

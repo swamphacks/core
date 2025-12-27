@@ -29,6 +29,52 @@ func (q *Queries) AssignRole(ctx context.Context, arg AssignRoleParams) error {
 	return err
 }
 
+const getEventAttendeesWithDiscord = `-- name: GetEventAttendeesWithDiscord :many
+SELECT 
+    a.account_id as discord_id,
+    u.id as user_id,
+    u.name,
+    u.email
+FROM auth.users u
+JOIN event_roles er ON u.id = er.user_id
+JOIN auth.accounts a ON u.id = a.user_id
+WHERE er.event_id = $1
+    AND er.role = 'attendee'
+    AND a.provider_id = 'discord'
+`
+
+type GetEventAttendeesWithDiscordRow struct {
+	DiscordID string    `json:"discord_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Name      string    `json:"name"`
+	Email     *string   `json:"email"`
+}
+
+func (q *Queries) GetEventAttendeesWithDiscord(ctx context.Context, eventID uuid.UUID) ([]GetEventAttendeesWithDiscordRow, error) {
+	rows, err := q.db.Query(ctx, getEventAttendeesWithDiscord, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetEventAttendeesWithDiscordRow{}
+	for rows.Next() {
+		var i GetEventAttendeesWithDiscordRow
+		if err := rows.Scan(
+			&i.DiscordID,
+			&i.UserID,
+			&i.Name,
+			&i.Email,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getEventRoleByUserID = `-- name: GetEventRoleByUserID :one
 SELECT event_id, role
 FROM event_roles
