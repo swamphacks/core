@@ -286,7 +286,7 @@ class General(commands.Cog):
     
     @app_commands.command(
         name="assign_hacker_roles",
-        description="Assign hacker role to all attendees from database using webhook"
+        description="Assign hacker role to all attendees from API using webhook"
     )
     @app_commands.describe(
         event_id="UUID of event",
@@ -294,7 +294,7 @@ class General(commands.Cog):
     )
     @is_mod_slash()
     async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, hacker_role: discord.Role) -> None:
-        """Assign hacker role to all attendees from database using webhook
+        """Assign hacker role to all attendees from API using webhook
         
         Args:
             interaction: The interaction that triggered this command

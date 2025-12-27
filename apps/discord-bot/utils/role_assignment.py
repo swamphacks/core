@@ -168,7 +168,7 @@ def format_assignment_summary(
     """
     message = f"**Role Assignment Complete**\n\n"
     message += f"**Summary:**\n"
-    message += f"- Total attendees in database: {total_attendees}\n"
+    message += f"- Total attendees: {total_attendees}\n"
     message += f"- Newly assigned: {newly_assigned}\n"
     message += f"- Already had role: {already_had}\n"
     message += f"- Failed assignments: {failed}\n"
