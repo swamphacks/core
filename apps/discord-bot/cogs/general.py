@@ -1,6 +1,8 @@
 from discord.ext import commands
 from discord import app_commands
 import discord
+import aiohttp
+import logging
 from typing import Literal, Optional
 from utils.checks import is_mod_slash
 from utils.mentor_functions import set_all_mentors_available
@@ -386,7 +388,47 @@ class General(commands.Cog):
                 f"An error occurred: {str(e)}",
                 ephemeral=True
             )
+    
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member) -> None:
+        """Automatically assign roles wheen a member joins the server"""
         
+        logger = logging.getLogger(__name__)
+        guild_id = member.guild.id
+        if not guild_id:
+            return
+        
+        api_url = os.getenv("API_URL", "http://localhost:8080")
+        session_cookie =  os.getenv("SESSION_COOKIE")
+        
+        if not session_cookie:
+            logger.error("SESSION_COOKIE is not set")
+            return
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                headers = {"Cookie": f"sh_session_id={session_cookie}"}
+                async with session.get(
+                    f"{api_url}/discord/user/{member.id}/role",
+                    headers=headers
+                ) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        event_role = data.get("role")
+                        discord_role_name = "Hacker"
+                        if event_role == "attendee":
+                            role = discord.utils.get(member.guild.roles, name=discord_role_name)
+                            if role:
+                                await member.add_roles(role, reason="Auto assigned: User has attendee role")
+                                logger.info(f"Auto assigned {discord_role_name} role to {member.name} ({member.id})")
+                    elif response.status == 404:
+                        pass
+                    else:
+                        logger.info(f"Auto assigned {discord_role_name} role to {member.name} ({member.id})")
+                        
+
+        except Exception as e:
+            logger.error(f"Error assigning roles: {str(e)}")
 async def setup(bot: commands.Bot) -> None:
     """Add the General cog to the bot
     
