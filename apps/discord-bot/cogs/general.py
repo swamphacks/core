@@ -290,16 +290,16 @@ class General(commands.Cog):
     )
     @app_commands.describe(
         event_id="UUID of event",
-        hacker_role="Discord role to assign to hackers"
+        role="Discord role to assign to attendees"
     )
     @is_mod_slash()
-    async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, hacker_role: discord.Role) -> None:
-        """Assign hacker role to all attendees from API using webhook
+    async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, role: discord.Role) -> None:
+        """Assign role to all attendees from API using webhook
         
         Args:
             interaction: The interaction that triggered this command
             event_id: UUID of event
-            hacker_role: Discord role to assign to hackers
+            role: Discord role to assign to attendees
         """
         
         await interaction.response.defer(ephemeral=True)
@@ -326,7 +326,7 @@ class General(commands.Cog):
                 await interaction.followup.send("Error: No attendees found for event.", ephemeral=True)
                 return
             
-            newly_assigned, already_had, failed, errors = await assign_roles_to_attendees(webhook_url, attendees, hacker_role.name, str(guild_id))
+            newly_assigned, already_had, failed, errors = await assign_roles_to_attendees(webhook_url, attendees, role.name, str(guild_id))
             summary = format_assignment_summary(len(attendees), newly_assigned, already_had, failed, errors)
             await interaction.followup.send(summary, ephemeral=True)
             
