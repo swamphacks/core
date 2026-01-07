@@ -199,3 +199,14 @@ func (r *ApplicationRepository) JoinWaitlist(ctx context.Context, userId, eventI
 		EventID: eventId,
 	})
 }
+
+func (r *ApplicationRepository) TransitionAcceptedApplicationsToWaitlistByEventID(ctx context.Context, eventId uuid.UUID) error {
+	return r.db.Query.TransitionAcceptedApplicationsToWaitlistByEventID(ctx, eventId)
+}
+
+func (r *ApplicationRepository) TransitionWaitlistedApplicationsToAcceptedByEventID(ctx context.Context, eventId uuid.UUID, acceptanceCount uint32) error {
+	return r.db.Query.TransitionWaitlistedApplicationsToAcceptedByEventID(ctx, sqlc.TransitionWaitlistedApplicationsToAcceptedByEventIDParams{
+		EventID:         eventId,
+		Acceptancecount: int32(acceptanceCount),
+	})
+}

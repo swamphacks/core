@@ -321,12 +321,12 @@ WHERE id IN (
 `
 
 type TransitionWaitlistedApplicationsToAcceptedByEventIDParams struct {
-	EventID uuid.UUID `json:"event_id"`
-	Num     int32     `json:"num"`
+	EventID         uuid.UUID `json:"event_id"`
+	Acceptancecount int32     `json:"acceptancecount"`
 }
 
 func (q *Queries) TransitionWaitlistedApplicationsToAcceptedByEventID(ctx context.Context, arg TransitionWaitlistedApplicationsToAcceptedByEventIDParams) error {
-	_, err := q.db.Exec(ctx, transitionWaitlistedApplicationsToAcceptedByEventID, arg.EventID, arg.Num)
+	_, err := q.db.Exec(ctx, transitionWaitlistedApplicationsToAcceptedByEventID, arg.EventID, arg.Acceptancecount)
 	return err
 }
 

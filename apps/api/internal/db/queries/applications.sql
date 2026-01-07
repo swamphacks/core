@@ -115,5 +115,5 @@ WHERE id IN (
   WHERE event_id = @event_id::uuid
       AND status = 'waitlisted'
   ORDER BY waitlist_join_time ASC
-  LIMIT @num::int
+  LIMIT @acceptanceCount::int
 );
