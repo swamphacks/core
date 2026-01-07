@@ -98,3 +98,22 @@ UPDATE applications
 SET status = @status::application_status
 WHERE event_id = @event_id::uuid
   AND user_id = ANY(@user_ids::uuid[]);
+
+-- name: TransitionAcceptedApplicationsToWaitlistByEventID :exec
+UPDATE applications
+SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
+    status = 'waitlisted'
+WHERE event_id = @event_id::uuid
+  AND status = 'accepted';
+
+-- name: TransitionWaitlistedApplicationsToAcceptedByEventID :exec
+UPDATE applications
+SET waitlist_join_time = NULL,
+    status = 'accepted'
+WHERE id IN (
+  SELECT id FROM applications
+  WHERE event_id = @event_id::uuid
+      AND status = 'waitlisted'
+  ORDER BY waitlist_join_time ASC
+  LIMIT @num::int
+);
