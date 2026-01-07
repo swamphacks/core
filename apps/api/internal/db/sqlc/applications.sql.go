@@ -294,6 +294,42 @@ func (q *Queries) ResetApplicationReviews(ctx context.Context, eventID uuid.UUID
 	return err
 }
 
+const transitionAcceptedApplicationsToWaitlistByEventID = `-- name: TransitionAcceptedApplicationsToWaitlistByEventID :exec
+UPDATE applications
+SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
+    status = 'waitlisted'
+WHERE event_id = $1::uuid
+  AND status = 'accepted'
+`
+
+func (q *Queries) TransitionAcceptedApplicationsToWaitlistByEventID(ctx context.Context, eventID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, transitionAcceptedApplicationsToWaitlistByEventID, eventID)
+	return err
+}
+
+const transitionWaitlistedApplicationsToAcceptedByEventID = `-- name: TransitionWaitlistedApplicationsToAcceptedByEventID :exec
+UPDATE applications
+SET waitlist_join_time = NULL,
+    status = 'accepted'
+WHERE id IN (
+  SELECT id FROM applications
+  WHERE event_id = $1::uuid
+      AND status = 'waitlisted'
+  ORDER BY waitlist_join_time ASC
+  LIMIT $2::int
+)
+`
+
+type TransitionWaitlistedApplicationsToAcceptedByEventIDParams struct {
+	EventID uuid.UUID `json:"event_id"`
+	Num     int32     `json:"num"`
+}
+
+func (q *Queries) TransitionWaitlistedApplicationsToAcceptedByEventID(ctx context.Context, arg TransitionWaitlistedApplicationsToAcceptedByEventIDParams) error {
+	_, err := q.db.Exec(ctx, transitionWaitlistedApplicationsToAcceptedByEventID, arg.EventID, arg.Num)
+	return err
+}
+
 const updateApplication = `-- name: UpdateApplication :exec
 UPDATE applications
 SET
