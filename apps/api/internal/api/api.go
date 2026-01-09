@@ -122,9 +122,6 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
-		r.Post("/{eventId}/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
-		r.Post("/{eventId}/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)
-
 		// Superuser-only
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
 
@@ -143,6 +140,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventStaff).Get("/overview", api.Handlers.Event.GetEventOverview)
 
 			// Admin-only
+			r.With(ensureEventAdmin).Post("/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
+			r.With(ensureEventAdmin).Post("/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)
 			r.With(ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
 			r.With(ensureEventAdmin).Post("/banner", api.Handlers.Event.UploadEventBanner)
 			r.With(ensureEventAdmin).Delete("/banner", api.Handlers.Event.DeleteBanner)
