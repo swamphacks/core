@@ -51,6 +51,7 @@
     "react-dom": "^19.1.0",
     "react-error-boundary": "^6.0.0",
     "react-pdf": "^10.2.0",
+    "react-qr-code": "^2.0.18",
     "react-select": "^5.10.2",
     "react-stately": "^3.39.0",
     "react-toastify": "^11.0.5",

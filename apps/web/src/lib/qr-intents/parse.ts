@@ -20,7 +20,7 @@ export type QRIntent = CheckInIntent | RedeemIntent;
 export type IntentParseError = "MALFORMED_INTENT_HEADER" | "MALFORMED_BODY";
 
 // Can be abstracted away later
-type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
+export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 
 export function parseQrIntent(
   input: string,
