@@ -10,7 +10,6 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/services"
-	"github.com/swamphacks/core/apps/api/internal/tasks"
 	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
@@ -172,7 +171,7 @@ func (h *BatHandler) QueueWaitlistTransitionTask(w http.ResponseWriter, r *http.
 		return
 	}
 
-	_, err = h.BatService.QueueWaitlistTransitionTask(r.Context(), eventId)
+	err = h.BatService.QueueWaitlistTransitionTask(r.Context(), eventId)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Failed to create waitlist transition task."))
 	}
