@@ -83,7 +83,7 @@ func main() {
 	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, nil, scheduler, logger)
 	applicationService := services.NewApplicationService(applicationRepo, userRepo, eventService, emailService, txm, nil, nil, scheduler, logger)
 
-	BATWorker := workers.NewBATWorker(batService, applicationService, logger)
+	BATWorker := workers.NewBATWorker(batService, applicationService, scheduler, logger)
 
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(tasks.TypeCalculateAdmissions, BATWorker.HandleCalculateAdmissionsTask)
