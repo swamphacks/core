@@ -359,3 +359,18 @@ func (s *BatService) mapToCandidates(engine *bat.BatEngine, applications []sqlc.
 
 	return appAdmissionsData, nil
 }
+
+func (s *BatService) StartWaitlistAutomationManually(ctx context.Context, eventId uuid.UUID) error {
+	// First, move all remaining accepted but not attending into back of waitlist
+	s.appRepo.GetApplicationStatuses()
+
+	// Find remaining slots from 500
+
+	// Mark as accepted
+
+	// Send email
+
+	// Schedule timer
+
+	return nil
+}

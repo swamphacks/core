@@ -96,3 +96,12 @@ func (h *AdmissionHandler) HandleCalculateAdmissionsRequest(w http.ResponseWrite
 	w.WriteHeader(http.StatusCreated)
 
 }
+
+func (h *AdmissionHandler) HandleStartWaitlistAutomation(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Missing event id in path"))
+		return
+	}
+
+}
