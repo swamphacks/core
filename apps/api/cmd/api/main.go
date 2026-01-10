@@ -89,7 +89,7 @@ func main() {
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
 	eventService := services.NewEventService(eventRepo, userRepo, r2Client, &cfg.CoreBuckets, logger)
 	emailService := services.NewEmailService(taskQueueClient, sesClient, logger)
-	applicationService := services.NewApplicationService(applicationRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, logger)
+	applicationService := services.NewApplicationService(applicationRepo, userRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, logger)
 	teamService := services.NewTeamService(teamRepo, teamMemberRepo, teamJoinRequestRepo, eventRepo, txm, logger)
 	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, taskQueueClient, logger)
 

@@ -31,6 +31,7 @@ type CloudflareConfig struct {
 	AccessKeySecret string `env:"ACCESS_KEY_SECRET"`
 }
 
+// TODO: deprecate.
 type SmtpConfig struct {
 	Username    string `env:"USERNAME"`
 	Password    string `env:"PASSWORD"`
@@ -54,12 +55,14 @@ type CoreBuckets struct {
 }
 
 type Config struct {
-	DatabaseURL            string   `env:"DATABASE_URL"`
-	RedisURL               string   `env:"REDIS_URL"`
-	Port                   string   `env:"PORT" envDefault:"8080"`
-	AllowedOriginsString   string   `env:"ALLOWED_ORIGINS"`
-	EmailTemplateDirectory string   `env:"EMAIL_TEMPLATE_DIRECTORY"`
-	AllowedOrigins         []string ``
+	DatabaseURL                   string   `env:"DATABASE_URL"`
+	RedisURL                      string   `env:"REDIS_URL"`
+	Port                          string   `env:"PORT" envDefault:"8080"`
+	AllowedOriginsString          string   `env:"ALLOWED_ORIGINS"`
+	EmailTemplateDirectory        string   `env:"EMAIL_TEMPLATE_DIRECTORY"`
+	AllowedOrigins                []string ``
+	ApiOrigin                     string   `env:"API_ORIGIN"`
+	WaitlistWorkerSessionIdCookie string   `env:WAITLIST_WORKER_SESSION_ID_COOKIE`
 
 	Auth      AuthConfig   `envPrefix:"AUTH_"`
 	Cookie    CookieConfig `envPrefix:"COOKIE_"`

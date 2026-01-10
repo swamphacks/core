@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
 type BatHandler struct {
@@ -150,4 +151,19 @@ func (h *BatHandler) DeleteRunById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *BatHandler) QueueWaitlistTransitionTask(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, "invalid_event_id", "The event ID is not valid.")
+		return
+	}
+	
+	err = h.ApplicationService.
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Confirmation email could not be queued."))
+	}
+
+	res.Send(w, http.StatusOK, nil)
 }

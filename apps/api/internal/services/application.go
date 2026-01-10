@@ -73,6 +73,7 @@ var (
 
 type ApplicationService struct {
 	appRepo       *repository.ApplicationRepository
+	userRepo      *repository.UserRepository
 	eventsService *EventService
 	emailService  *EmailService
 	storage       storage.Storage
@@ -81,9 +82,10 @@ type ApplicationService struct {
 	logger        zerolog.Logger
 }
 
-func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
+func NewApplicationService(appRepo *repository.ApplicationRepository, userRepo *repository.UserRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
 	return &ApplicationService{
 		appRepo:       appRepo,
+		userRepo:      userRepo,
 		eventsService: eventsService,
 		emailService:  emailService,
 		storage:       storage,
@@ -562,7 +564,8 @@ func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, us
 }
 
 func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Context, eventId uuid.UUID, acceptanceCount uint32) error {
-	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+	var acceptedUserIds []uuid.UUID
+	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.appRepo.NewTx(tx)
 
 		err := txAppRepo.TransitionAcceptedApplicationsToWaitlistByEventID(ctx, eventId)
@@ -571,14 +574,41 @@ func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Contex
 			return err
 		}
 
-		acceptedUserIds, err := txAppRepo.TransitionWaitlistedApplicationsToAcceptedByEventID(ctx, eventId, acceptanceCount)
+		// TODO: add logic for when there are less spots available than acceptanceCount
+
+		acceptedUserIds, err = txAppRepo.TransitionWaitlistedApplicationsToAcceptedByEventID(ctx, eventId, acceptanceCount)
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
 			return err
 		}
 
-		// sendWaitlistAcceptanceEmails([]uuid.UUID)
 		s.logger.Debug().Msgf("Statuses transitioned: %s", acceptedUserIds)
 		return nil
 	})
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+
+	for _, userId := range acceptedUserIds {
+		userContactInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userId)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		contactEmail, ok := userContactInfo.ContactEmail.(string)
+		if !ok {
+			return ErrFailedToGetContactEmail
+		}
+
+		err = s.emailService.QueueWaitlistAcceptanceEmail(contactEmail, userContactInfo.Name)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+	}
+
+	return nil
 }

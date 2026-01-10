@@ -31,11 +31,26 @@ func (s *EmailService) QueueConfirmationEmail(recipient string, name string) err
 	subject := "SwampHacks XI: we received your application!"
 	templateEmailFilepath := cfg.EmailTemplateDirectory + "ConfirmationEmail.html"
 
-	taskInfo, err := s.QueueSendHtmlEmailTask(recipient, subject, name, templateEmailFilepath)
-	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendConfirmationEmail task!")
+	_, err := s.QueueSendHtmlEmailTask(recipient, subject, name, templateEmailFilepath)
 
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
+		return err
+	}
+
+	return nil
+}
+
+func (s *EmailService) QueueWaitlistAcceptanceEmail(recipient string, name string) error {
+	cfg := config.Load()
+
+	subject := "Congratulations! You're in – confirm in 72 hours to keep your spot in SwampHacks XI"
+	templateEmailFilepath := cfg.EmailTemplateDirectory + "WaitlistAcceptanceEmail.html"
+
+	_, err := s.QueueSendHtmlEmailTask(recipient, subject, name, templateEmailFilepath)
+
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to send waitlist acceptance email to recipient")
 		return err
 	}
 
@@ -79,13 +94,14 @@ func (s *EmailService) QueueSendHtmlEmailTask(to string, subject string, name st
 		return nil, err
 	}
 
-	info, err := s.taskQueue.Enqueue(task, asynq.Queue("email"))
+	taskInfo, err := s.taskQueue.Enqueue(task, asynq.Queue("email"))
+	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendHtmlEmail task!")
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to queue SendHtmlEmail task")
 		return nil, err
 	}
 
-	return info, nil
+	return taskInfo, nil
 }
 
 func (s *EmailService) QueueSendTextEmail(to []string, subject string, body string) (*asynq.TaskInfo, error) {

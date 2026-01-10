@@ -10,6 +10,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/email"
 	"github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/storage"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 	"github.com/swamphacks/core/apps/api/internal/workers"
 )
@@ -64,16 +65,19 @@ func main() {
 	applicationRepo := repository.NewApplicationRepository(database)
 	eventRepo := repository.NewEventRespository(database)
 	userRepo := repository.NewUserRepository(database)
+	eventService := services.NewEventService(eventRepo, userRepo, nil, nil, logger)
 	batRunsRepo := repository.NewBatRunsRepository(database)
 
 	sesClient := email.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
 	emailService := services.NewEmailService(nil, sesClient, logger)
 	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, nil, logger)
+	applicationService := services.NewApplicationService(applicationRepo, userRepo, eventService, emailService, txm, nil, nil, logger)
 
-	BATWorker := workers.NewBATWorker(batService, logger)
+	BATWorker := workers.NewBATWorker(batService, applicationService, logger)
 
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(tasks.TypeCalculateAdmissions, BATWorker.HandleCalculateAdmissionsTask)
+	mux.HandleFunc(tasks.TypeTransitionWaitlist, BATWorker.HandleTransitionWaitlistTask)
 
 	if err := srv.Run(mux); err != nil {
 		logger.Fatal().Msg("Failed to run BAT worker")

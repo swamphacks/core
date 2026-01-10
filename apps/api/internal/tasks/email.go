@@ -47,13 +47,3 @@ func NewTaskSendHtmlEmail(payload SendHtmlEmailPayload) (*asynq.Task, error) {
 
 	return asynq.NewTask(TypeSendHtmlEmail, data), nil
 }
-
-// TODO: refactor
-func NewTaskSendConfirmationEmail(payload SendConfirmationEmailPayload) (*asynq.Task, error) {
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	return asynq.NewTask(TypeSendConfirmationEmail, data), nil
-}

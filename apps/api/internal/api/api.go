@@ -143,6 +143,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventAdmin).Post("/queue-confirmation-email", api.Handlers.Email.QueueConfirmationEmail)
 			r.With(ensureEventAdmin).Post("/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
 			r.With(ensureEventAdmin).Patch("/transition-waitlisted-applications", api.Handlers.Application.TransitionWaitlistedApplications)
+			r.With(ensureEventAdmin).Post("/queue-transition-waitlist-task", api.Handlers.Application.TransitionWaitlistedApplications)
 			r.With(ensureEventAdmin).Post("/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)
 			r.With(ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
 			r.With(ensureEventAdmin).Post("/banner", api.Handlers.Event.UploadEventBanner)

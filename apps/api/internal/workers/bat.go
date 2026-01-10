@@ -19,11 +19,12 @@ import (
 // other decision heuristics. It operates asynchronously to ensure
 // fair, consistent, and scalable admissions handling.
 type BATWorker struct {
-	batService *services.BatService
-	logger     zerolog.Logger
+	batService         *services.BatService
+	applicationService *services.ApplicationService
+	logger             zerolog.Logger
 }
 
-func NewBATWorker(batService *services.BatService, logger zerolog.Logger) *BATWorker {
+func NewBATWorker(batService *services.BatService, applicationService *services.ApplicationService, logger zerolog.Logger) *BATWorker {
 	return &BATWorker{
 		batService: batService,
 		logger:     logger.With().Str("worker", "BATWorker").Str("component", "BAT").Logger(),
@@ -54,6 +55,21 @@ func (w *BATWorker) HandleCalculateAdmissionsTask(ctx context.Context, t *asynq.
 		})
 
 		return err
+	}
+
+	return nil
+}
+func (w *BATWorker) HandleTransitionWaitlistTask(ctx context.Context, t *asynq.Task) error {
+	var payload tasks.TransitionWaitlistPayload
+	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+		w.logger.Err(err).Msg("Failed to unmarshal payload.")
+		return err
+	}
+
+	err := w.applicationService.TransitionWaitlistedApplications(ctx, payload.EventID, 50)
+	if err != nil {
+		w.logger.Err(err)
+		return nil
 	}
 
 	return nil
