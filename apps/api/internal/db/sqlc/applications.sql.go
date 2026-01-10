@@ -307,17 +307,18 @@ func (q *Queries) TransitionAcceptedApplicationsToWaitlistByEventID(ctx context.
 	return err
 }
 
-const transitionWaitlistedApplicationsToAcceptedByEventID = `-- name: TransitionWaitlistedApplicationsToAcceptedByEventID :exec
+const transitionWaitlistedApplicationsToAcceptedByEventID = `-- name: TransitionWaitlistedApplicationsToAcceptedByEventID :many
 UPDATE applications
 SET waitlist_join_time = NULL,
     status = 'accepted'
-WHERE id IN (
-  SELECT id FROM applications
+WHERE user_id IN (
+  SELECT user_id FROM applications
   WHERE event_id = $1::uuid
       AND status = 'waitlisted'
   ORDER BY waitlist_join_time ASC
   LIMIT $2::int
 )
+RETURNING user_id
 `
 
 type TransitionWaitlistedApplicationsToAcceptedByEventIDParams struct {
@@ -325,9 +326,24 @@ type TransitionWaitlistedApplicationsToAcceptedByEventIDParams struct {
 	Acceptancecount int32     `json:"acceptancecount"`
 }
 
-func (q *Queries) TransitionWaitlistedApplicationsToAcceptedByEventID(ctx context.Context, arg TransitionWaitlistedApplicationsToAcceptedByEventIDParams) error {
-	_, err := q.db.Exec(ctx, transitionWaitlistedApplicationsToAcceptedByEventID, arg.EventID, arg.Acceptancecount)
-	return err
+func (q *Queries) TransitionWaitlistedApplicationsToAcceptedByEventID(ctx context.Context, arg TransitionWaitlistedApplicationsToAcceptedByEventIDParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, transitionWaitlistedApplicationsToAcceptedByEventID, arg.EventID, arg.Acceptancecount)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateApplication = `-- name: UpdateApplication :exec
