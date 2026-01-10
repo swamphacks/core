@@ -67,7 +67,8 @@ func (w *BATWorker) HandleTransitionWaitlistTask(ctx context.Context, t *asynq.T
 	}
 
 	var acceptanceCount uint32 = 50
-	err := w.applicationService.TransitionWaitlistedApplications(ctx, payload.EventID, acceptanceCount)
+	var acceptanceQuota uint32 = 500
+	err := w.applicationService.TransitionWaitlistedApplications(ctx, payload.EventID, acceptanceCount, acceptanceQuota)
 	if err != nil {
 		w.logger.Err(err)
 		return nil

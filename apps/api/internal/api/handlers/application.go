@@ -691,7 +691,9 @@ func (h *ApplicationHandler) TransitionWaitlistedApplications(w http.ResponseWri
 		return
 	}
 
-	err = h.appService.TransitionWaitlistedApplications(r.Context(), eventId, 50)
+	var acceptanceCount uint32 = 50
+	var acceptanceQuota uint32 = 500
+	err = h.appService.TransitionWaitlistedApplications(r.Context(), eventId, acceptanceCount, acceptanceQuota)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("transition-waitlisted-applications-error", "Something went wrong while transitioning waitlisted applications."))
 		return
