@@ -106,14 +106,15 @@ SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
 WHERE event_id = @event_id::uuid
   AND status = 'accepted';
 
--- name: TransitionWaitlistedApplicationsToAcceptedByEventID :exec
+-- name: TransitionWaitlistedApplicationsToAcceptedByEventID :many
 UPDATE applications
 SET waitlist_join_time = NULL,
     status = 'accepted'
-WHERE id IN (
-  SELECT id FROM applications
+WHERE user_id IN (
+  SELECT user_id FROM applications
   WHERE event_id = @event_id::uuid
       AND status = 'waitlisted'
   ORDER BY waitlist_join_time ASC
   LIMIT @acceptanceCount::int
-);
+)
+RETURNING user_id;
