@@ -652,7 +652,7 @@ func (h *ApplicationHandler) WithdrawAcceptance(w http.ResponseWriter, r *http.R
 //	@Tags			Application Event
 //
 //	@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
-//	@Success		200		"Acceptance withdrawn joined successfully"
+//	@Success		200		"Acceptance successful"
 //	@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
 //	@Failure		500		{object}	res.ErrorResponse	"Server error: failed to accept"
 //	@Router			/events/{eventId}/application/accept-acceptance [patch]
@@ -667,6 +667,33 @@ func (h *ApplicationHandler) AcceptApplicationAcceptance(w http.ResponseWriter, 
 	err = h.appService.AcceptApplicationAcceptance(r.Context(), *userId, eventId)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("accept-acceptance-error", "Something went wrong while accepting acceptance"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+//	 Transition waitlisted applications
+//
+//		@Summary		Sets application status from accepted to rejected
+//		@Description	Transitions all accepted users to waitlist, and accepts 50 from the waitlist.
+//		@Tags			Application Event
+//
+//		@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
+//		@Success		200		"Transitioned application statuses successfully"
+//		@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to transition application statuses"
+//		@Router			/events/{eventId}/application/transition-waitlisted-applications [patch]
+func (h *ApplicationHandler) TransitionWaitlistedApplications(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		return
+	}
+
+	err = h.appService.TransitionWaitlistedApplications(r.Context(), eventId, 50)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("transition-waitlisted-applications-error", "Something went wrong while transitioning waitlisted applications."))
 		return
 	}
 
