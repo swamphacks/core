@@ -98,3 +98,15 @@ UPDATE applications
 SET status = @status::application_status
 WHERE event_id = @event_id::uuid
   AND user_id = ANY(@user_ids::uuid[]);
+
+-- name: ListAcceptedNonAttendeeIDs :many
+SELECT app.user_id
+FROM applications app
+WHERE app.status = 'accepted'
+AND app.event_id = $1
+  AND NOT EXISTS (
+    SELECT 1
+    FROM event_roles er
+    WHERE er.user_id = app.user_id
+      AND er.role = 'attendee'
+  );

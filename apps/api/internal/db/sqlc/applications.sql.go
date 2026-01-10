@@ -127,6 +127,39 @@ func (q *Queries) JoinWaitlist(ctx context.Context, arg JoinWaitlistParams) erro
 	return err
 }
 
+const listAcceptedNonAttendeeIDs = `-- name: ListAcceptedNonAttendeeIDs :many
+SELECT app.user_id
+FROM applications app
+WHERE app.status = 'accepted'
+AND app.event_id = $1
+  AND NOT EXISTS (
+    SELECT 1
+    FROM event_roles er
+    WHERE er.user_id = app.user_id
+      AND er.role = 'attendee'
+  )
+`
+
+func (q *Queries) ListAcceptedNonAttendeeIDs(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listAcceptedNonAttendeeIDs, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listAdmissionCandidatesByEvent = `-- name: ListAdmissionCandidatesByEvent :many
 SELECT a.user_id,
     a.passion_rating,

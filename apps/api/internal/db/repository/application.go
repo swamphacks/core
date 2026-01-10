@@ -199,3 +199,7 @@ func (r *ApplicationRepository) JoinWaitlist(ctx context.Context, userId, eventI
 		EventID: eventId,
 	})
 }
+
+func (r *ApplicationRepository) ListAcceptedNonAttendeeIDs(ctx context.Context, eventId uuid.UUID) ([]uuid.UUID, error) {
+	return r.db.Query.ListAcceptedNonAttendeeIDs(ctx, eventId)
+}
