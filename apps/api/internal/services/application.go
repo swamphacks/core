@@ -562,11 +562,9 @@ func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, us
 	return nil
 }
 
-func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Context, eventId uuid.UUID) error {
+func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Context, eventId uuid.UUID, acceptanceCount uint32) error {
 	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.appRepo.NewTx(tx)
-
-		var acceptanceCount uint32 = 50
 
 		err := txAppRepo.TransitionAcceptedApplicationsToWaitlistByEventID(ctx, eventId)
 		if err != nil {
@@ -574,14 +572,14 @@ func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Contex
 			return err
 		}
 
-		err = txAppRepo.TransitionWaitlistedApplicationsToAcceptedByEventID(ctx, eventId, acceptanceCount)
+		acceptedUserIds, err := txAppRepo.TransitionWaitlistedApplicationsToAcceptedByEventID(ctx, eventId, acceptanceCount)
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
 			return err
 		}
-		return nil
 
-		// TODO: maybe this should be done for each application individually? we are going to need to send an acceptance email to each newly transitioned one.
-		// Perhaps we could do a SELECT query for the ones to transition, and pass it into the Waitlisted->Accepted query AND into a function that handles sending emails.
+		// sendWaitlistAcceptanceEmails([]uuid.UUID)
+		s.logger.Debug().Msgf("Statuses transitioned: %s", acceptedUserIds)
+		return nil
 	})
 }
