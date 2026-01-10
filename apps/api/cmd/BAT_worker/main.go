@@ -88,6 +88,7 @@ func main() {
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(tasks.TypeCalculateAdmissions, BATWorker.HandleCalculateAdmissionsTask)
 	mux.HandleFunc(tasks.TypeTransitionWaitlist, BATWorker.HandleTransitionWaitlistTask)
+	mux.HandleFunc(tasks.TypeScheduleTransitionWaitlist, BATWorker.HandleScheduleTransitionWaitlistTask)
 
 	if err := srv.Run(mux); err != nil {
 		logger.Fatal().Msg("Failed to run BAT worker")

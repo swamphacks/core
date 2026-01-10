@@ -362,19 +362,19 @@ func (s *BatService) mapToCandidates(engine *bat.BatEngine, applications []sqlc.
 	return appAdmissionsData, nil
 }
 
-func (s *BatService) QueueWaitlistTransitionTask(ctx context.Context, eventId uuid.UUID) error {
+func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, eventId uuid.UUID) error {
 
-	_, err := tasks.NewTaskTransitionWaitlist(tasks.TransitionWaitlistPayload{
+	_, err := tasks.NewTaskScheduleTransitionWaitlist(tasks.ScheduleTransitionWaitlistPayload{
 		EventID: eventId,
 		Period:  "@every 10s",
 	})
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to create TransitionWaitlist task")
+		s.logger.Err(err).Msg("Failed to create ScheduleTransitionWaitlist task")
 		return err
 	}
 
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to queue TransitionWaitlist task")
+		s.logger.Err(err).Msg("Failed to queue ScheduleTransitionWaitlist task")
 		return err
 	}
 	s.logger.Info().Msg("Queued TransitionWaitlist task")

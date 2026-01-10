@@ -164,16 +164,16 @@ func (h *BatHandler) DeleteRunById(w http.ResponseWriter, r *http.Request) {
 //		@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
 //		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to transition application statuses"
 //		@Router			/events/{eventId}/queue-transition-waitlist-task [post]
-func (h *BatHandler) QueueWaitlistTransitionTask(w http.ResponseWriter, r *http.Request) {
+func (h *BatHandler) QueueScheduleWaitlistTransitionTask(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
 
-	err = h.BatService.QueueWaitlistTransitionTask(r.Context(), eventId)
+	err = h.BatService.QueueScheduleWaitlistTransitionTask(r.Context(), eventId)
 	if err != nil {
-		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Failed to create waitlist transition task."))
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Failed to create ScheduleWaitlistTransition task."))
 	}
 
 	res.Send(w, http.StatusCreated, nil)
