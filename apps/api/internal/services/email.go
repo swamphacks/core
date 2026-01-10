@@ -25,22 +25,15 @@ func NewEmailService(taskQueue *asynq.Client, SESClient *email.SESClient, logger
 	}
 }
 
-// TODO: Refactor
-func (s *EmailService) SendConfirmationEmail(recipient string, name string) error {
-
-	var body bytes.Buffer
-
+func (s *EmailService) QueueConfirmationEmail(recipient string, name string) error {
 	cfg := config.Load()
-	template, err := template.ParseFiles(cfg.EmailTemplateDirectory + "ConfirmationEmail.html")
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to parse email template for recipient")
-	}
 
-	err = template.Execute(&body, struct{ Name string }{Name: name})
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to inject template variables for recipient '%s'.")
-	}
-	err = s.SESClient.SendHTMLEmail([]string{recipient}, "noreply@swamphacks.com", "SwampHacks XI: we received your application!", body.String())
+	subject := "SwampHacks XI: we received your application!"
+	templateEmailFilepath := cfg.EmailTemplateDirectory + "ConfirmationEmail.html"
+
+	taskInfo, err := s.QueueSendHtmlEmailTask(recipient, subject, name, templateEmailFilepath)
+	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendConfirmationEmail task!")
+
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
 		return err
@@ -64,7 +57,7 @@ func (s *EmailService) SendHtmlEmail(recipient string, subject string, name stri
 
 	err = s.SESClient.SendHTMLEmail([]string{recipient}, "noreply@swamphacks.com", subject, body.String())
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
+		s.logger.Err(err).Msg("Failed to send html email to recipient")
 		return err
 	}
 	s.logger.Info().Str("Template", templateFilePath).Msg("Sent email")
@@ -110,26 +103,6 @@ func (s *EmailService) QueueSendTextEmail(to []string, subject string, body stri
 	info, err := s.taskQueue.Enqueue(task, asynq.Queue("email"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to queue SendTextEmail task")
-		return nil, err
-	}
-
-	return info, nil
-}
-
-func (s *EmailService) QueueSendConfirmationEmail(to string, name string) (*asynq.TaskInfo, error) {
-	task, err := tasks.NewTaskSendConfirmationEmail(tasks.SendConfirmationEmailPayload{
-		To:   to,
-		Name: name,
-	})
-
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to create SendConfirmationEmail task")
-		return nil, err
-	}
-
-	info, err := s.taskQueue.Enqueue(task, asynq.Queue("email"))
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to queue SendConfirmationEmail task")
 		return nil, err
 	}
 

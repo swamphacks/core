@@ -140,6 +140,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventStaff).Get("/overview", api.Handlers.Event.GetEventOverview)
 
 			// Admin-only
+			r.With(ensureEventAdmin).Post("/queue-confirmation-email", api.Handlers.Email.QueueConfirmationEmail)
 			r.With(ensureEventAdmin).Post("/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
 			r.With(ensureEventAdmin).Patch("/transition-waitlisted-applications", api.Handlers.Application.TransitionWaitlistedApplications)
 			r.With(ensureEventAdmin).Post("/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)

@@ -164,8 +164,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		return nil
 	})
 
-	taskInfo, err := s.emailService.QueueSendConfirmationEmail(data.PreferredEmail, data.FirstName)
-	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendConfirmationEmail task!")
+	err = s.emailService.QueueConfirmationEmail(data.PreferredEmail, data.FirstName)
 
 	// Non-blocking error
 	if err != nil {
