@@ -210,3 +210,8 @@ func (r *ApplicationRepository) TransitionWaitlistedApplicationsToAcceptedByEven
 		Acceptancecount: int32(acceptanceCount),
 	})
 }
+
+func (r *ApplicationRepository) GetTotalAcceptedApplicationsByEventId(ctx context.Context, eventId uuid.UUID) (uint32, error) {
+	amount, err := r.db.Query.GetTotalAcceptedApplicationsByEventId(ctx, eventId)
+	return uint32(amount), err
+}

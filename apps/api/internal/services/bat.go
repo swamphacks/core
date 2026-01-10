@@ -47,10 +47,11 @@ type BatService struct {
 	emailService *EmailService
 	txm          *db.TransactionManager
 	taskQueue    *asynq.Client
+	scheduler    *asynq.Scheduler
 	logger       zerolog.Logger
 }
 
-func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
+func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, scheduler *asynq.Scheduler, logger zerolog.Logger) *BatService {
 	return &BatService{
 		taskQueue:    taskQueue,
 		appRepo:      appRepo,
@@ -59,6 +60,7 @@ func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *reposit
 		batRunsRepo:  batRunsRepo,
 		emailService: emailService,
 		txm:          txm,
+		scheduler:    scheduler,
 		logger:       logger.With().Str("service", "Bat Service").Str("component", "admissions").Logger(),
 	}
 }
@@ -358,4 +360,25 @@ func (s *BatService) mapToCandidates(engine *bat.BatEngine, applications []sqlc.
 	}
 
 	return appAdmissionsData, nil
+}
+
+func (s *BatService) QueueWaitlistTransitionTask(ctx context.Context, eventId uuid.UUID) error {
+
+	task, err := tasks.NewTaskTransitionWaitlist(tasks.TransitionWaitlistPayload{
+		EventID: eventId,
+	})
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to create TransitionWaitlist task")
+		return err
+	}
+
+	period := "@every 30s"
+	_, err = s.scheduler.Register(period, task, asynq.Queue("bat"))
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to schedule TransitionWaitlist task")
+		return err
+	}
+	s.logger.Info().Msg("Scheduled TransitionWaitlist task")
+
+	return nil
 }

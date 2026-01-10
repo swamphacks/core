@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/tasks"
 	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
@@ -117,10 +118,10 @@ func (h *BatHandler) CheckApplicationReviewsComplete(w http.ResponseWriter, r *h
 	}
 }
 
-// Delete an event
+// Delete a run
 //
-//	@Summary		Delete an event
-//	@Description	Delete an existing event
+//	@Summary		Delete a run
+//	@Description	Delete an existing BAT run
 //	@Tags			Bat
 //	@Accept			json
 //	@Produce		json
@@ -153,17 +154,28 @@ func (h *BatHandler) DeleteRunById(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+//	 Queue transition waitlist task
+//
+//		@Summary		Queues a waitlist transition task
+//		@Description	Queues an asynq task that transitions waitlisted applications, running every 3 days.
+//		@Tags
+//
+//		@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
+//		@Success		200		"Transitioned application statuses successfully"
+//		@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to transition application statuses"
+//		@Router			/events/{eventId}/queue-transition-waitlist-task [post]
 func (h *BatHandler) QueueWaitlistTransitionTask(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, "invalid_event_id", "The event ID is not valid.")
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
-	
-	err = h.ApplicationService.
+
+	_, err = h.BatService.QueueWaitlistTransitionTask(r.Context(), eventId)
 	if err != nil {
-		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Confirmation email could not be queued."))
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Failed to create waitlist transition task."))
 	}
 
-	res.Send(w, http.StatusOK, nil)
+	res.Send(w, http.StatusCreated, nil)
 }

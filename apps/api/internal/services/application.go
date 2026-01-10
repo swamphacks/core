@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/config"
@@ -79,10 +80,11 @@ type ApplicationService struct {
 	storage       storage.Storage
 	buckets       *config.CoreBuckets
 	txm           *db.TransactionManager
+	scheduler     *asynq.Scheduler
 	logger        zerolog.Logger
 }
 
-func NewApplicationService(appRepo *repository.ApplicationRepository, userRepo *repository.UserRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
+func NewApplicationService(appRepo *repository.ApplicationRepository, userRepo *repository.UserRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, scheduler *asynq.Scheduler, logger zerolog.Logger) *ApplicationService {
 	return &ApplicationService{
 		appRepo:       appRepo,
 		userRepo:      userRepo,
@@ -91,6 +93,7 @@ func NewApplicationService(appRepo *repository.ApplicationRepository, userRepo *
 		storage:       storage,
 		buckets:       buckets,
 		txm:           txm,
+		scheduler:     scheduler,
 		logger:        logger,
 	}
 }
@@ -563,7 +566,7 @@ func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, us
 	return nil
 }
 
-func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Context, eventId uuid.UUID, acceptanceCount uint32) error {
+func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Context, eventId uuid.UUID, acceptanceCount uint32, acceptanceQuota uint32) error {
 	var acceptedUserIds []uuid.UUID
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.appRepo.NewTx(tx)
@@ -575,6 +578,14 @@ func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Contex
 		}
 
 		// TODO: add logic for when there are less spots available than acceptanceCount
+		totalAccepted, err := s.appRepo.GetTotalAcceptedApplicationsByEventId(ctx, eventId)
+		if err != nil {
+			s.logger.Err(err).Msg("Failed to get total accepted application amount.")
+		}
+		if (acceptanceQuota - totalAccepted) <= acceptanceCount {
+			s.scheduler.Shutdown()
+			acceptanceCount = acceptanceQuota - totalAccepted
+		}
 
 		acceptedUserIds, err = txAppRepo.TransitionWaitlistedApplicationsToAcceptedByEventID(ctx, eventId, acceptanceCount)
 		if err != nil {

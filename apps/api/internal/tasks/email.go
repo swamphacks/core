@@ -7,9 +7,8 @@ import (
 )
 
 const (
-	TypeSendTextEmail         = "textemail:send"
-	TypeSendHtmlEmail         = "htmlemail:send"
-	TypeSendConfirmationEmail = "confirmationemail:send"
+	TypeSendTextEmail = "textemail:send"
+	TypeSendHtmlEmail = "htmlemail:send"
 )
 
 type SendTextEmailPayload struct {
@@ -23,11 +22,6 @@ type SendHtmlEmailPayload struct {
 	Name             string
 	Subject          string
 	TemplateFilePath string
-}
-
-type SendConfirmationEmailPayload struct {
-	To   string
-	Name string
 }
 
 func NewTaskSendTextEmail(payload SendTextEmailPayload) (*asynq.Task, error) {
