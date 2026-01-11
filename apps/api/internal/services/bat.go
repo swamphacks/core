@@ -364,7 +364,7 @@ func (s *BatService) mapToCandidates(engine *bat.BatEngine, applications []sqlc.
 
 func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, eventId uuid.UUID) error {
 
-	_, err := tasks.NewTaskScheduleTransitionWaitlist(tasks.ScheduleTransitionWaitlistPayload{
+	task, err := tasks.NewTaskScheduleTransitionWaitlist(tasks.ScheduleTransitionWaitlistPayload{
 		EventID: eventId,
 		Period:  "@every 10s",
 	})
@@ -373,6 +373,7 @@ func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, ev
 		return err
 	}
 
+	_, err = s.taskQueue.Enqueue(task, asynq.Queue("bat"))
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to queue ScheduleTransitionWaitlist task")
 		return err
