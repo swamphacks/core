@@ -110,19 +110,6 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 	return i, err
 }
 
-const getTotalAcceptedApplicationsByEventId = `-- name: GetTotalAcceptedApplicationsByEventId :one
-SELECT COUNT(*) FROM applications
-WHERE event_id = $1::uuid
-  AND status = 'accepted'
-`
-
-func (q *Queries) GetTotalAcceptedApplicationsByEventId(ctx context.Context, eventID uuid.UUID) (int64, error) {
-	row := q.db.QueryRow(ctx, getTotalAcceptedApplicationsByEventId, eventID)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const joinWaitlist = `-- name: JoinWaitlist :exec
 UPDATE applications
 SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),

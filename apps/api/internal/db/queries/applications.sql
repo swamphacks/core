@@ -124,7 +124,3 @@ WHERE user_id IN (
 )
 RETURNING user_id;
 
--- name: GetTotalAcceptedApplicationsByEventId :one
-SELECT COUNT(*) FROM applications
-WHERE event_id = @event_id::uuid
-  AND status = 'accepted';

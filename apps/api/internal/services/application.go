@@ -591,6 +591,7 @@ func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Contex
 			acceptanceCount = acceptanceQuota - totalAccepted
 		}
 
+		s.logger.Info().Msgf("Acceptance count: %v", acceptanceCount)
 		acceptedUserIds, err = txAppRepo.TransitionWaitlistedApplicationsToAcceptedByEventID(ctx, eventId, acceptanceCount)
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
