@@ -47,11 +47,10 @@ type BatService struct {
 	emailService *EmailService
 	txm          *db.TransactionManager
 	taskQueue    *asynq.Client
-	scheduler    *asynq.Scheduler
 	logger       zerolog.Logger
 }
 
-func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, scheduler *asynq.Scheduler, logger zerolog.Logger) *BatService {
+func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
 	return &BatService{
 		taskQueue:    taskQueue,
 		appRepo:      appRepo,
@@ -60,7 +59,6 @@ func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *reposit
 		batRunsRepo:  batRunsRepo,
 		emailService: emailService,
 		txm:          txm,
-		scheduler:    scheduler,
 		logger:       logger.With().Str("service", "Bat Service").Str("component", "admissions").Logger(),
 	}
 }
