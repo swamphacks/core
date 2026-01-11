@@ -582,10 +582,10 @@ func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Contex
 			s.logger.Err(err).Msg("Failed to get total accepted application amount.")
 		}
 		if (acceptanceQuota - attendeeCount) <= acceptanceCount {
-			s.logger.Info().Msgf("%v - %v <= %v", acceptanceQuota, attendeeCount, acceptanceCount)
+			s.logger.Info().Msgf("Acceptance quota is close, shutting down waitlist transition scheduler. Remaining acceptances: %v - %v <= %v", acceptanceQuota, attendeeCount, acceptanceCount)
 			if s.scheduler != nil {
 				// The API also uses this file, and this function can be run from an endpoint so we have to check that the scheduler exists.
-				// Technically the task should be removed from the scheduler. However the scheduler is only running for this task.
+				// Technically the task should be removed from the scheduler via an scheduler ENTRY_ID. However the scheduler is only running for this task.
 				s.scheduler.Shutdown()
 			}
 			acceptanceCount = acceptanceQuota - attendeeCount
