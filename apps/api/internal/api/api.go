@@ -144,7 +144,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventAdmin).Post("/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
 			r.With(ensureEventAdmin).Patch("/transition-waitlisted-applications", api.Handlers.Application.TransitionWaitlistedApplications)
 			r.With(ensureEventAdmin).Post("/begin-waitlist-transition", api.Handlers.Bat.QueueScheduleWaitlistTransitionTask)
-			r.With(ensureEventAdmin).Post("/shutdown-waitlist-scheduler", api.Handlers.Bat.ShutdownWaitlistScheduler)
+			r.With(ensureEventAdmin).Post("/shutdown-waitlist-scheduler", api.Handlers.Bat.QueueShutdownWaitlistSchedulerTask)
 			r.With(ensureEventAdmin).Post("/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)
 			r.With(ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
 			r.With(ensureEventAdmin).Post("/banner", api.Handlers.Event.UploadEventBanner)

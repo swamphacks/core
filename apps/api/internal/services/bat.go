@@ -384,9 +384,19 @@ func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, ev
 	return nil
 }
 
-func (s *BatService) ShutdownWaitlistScheduler() error {
-	s.scheduler.Shutdown()
-	// Error is output by logging.
+func (s *BatService) QueueShutdownWaitlistScheduler() error {
+	task, err := tasks.NewTaskShutdownScheduler()
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to create ShutdownWaitlistScheduler task")
+		return err
+	}
+
+	_, err = s.taskQueue.Enqueue(task, asynq.Queue("bat"))
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to queue ShutdownWaitlistScheduler task")
+		return err
+	}
+	s.logger.Info().Msg("Queued ShutdownWaitlistScheduler task")
 
 	return nil
 }

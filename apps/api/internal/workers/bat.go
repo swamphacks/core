@@ -106,3 +106,10 @@ func (w *BATWorker) HandleTransitionWaitlistTask(ctx context.Context, t *asynq.T
 
 	return nil
 }
+
+func (w *BATWorker) HandleShutdownScheduler(ctx context.Context, t *asynq.Task) error {
+	w.scheduler.Shutdown()
+	// Error returned by logging.
+
+	return nil
+}

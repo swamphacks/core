@@ -179,7 +179,7 @@ func (h *BatHandler) QueueScheduleWaitlistTransitionTask(w http.ResponseWriter, 
 	res.Send(w, http.StatusCreated, nil)
 }
 
-//	 Shutdown scheduler
+//	 Queue Shutdown scheduler task
 //
 //		@Summary		Shutsdown an asynq scheduler
 //		@Description	Shutsdown the scheduler used for the waitlist transition task. Error returned through logs if a scheduler is not active.
@@ -188,8 +188,8 @@ func (h *BatHandler) QueueScheduleWaitlistTransitionTask(w http.ResponseWriter, 
 //		@Success		200		"Scheduler shutdown successfully"
 //		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to shutdown scheduler"
 //		@Router			/events/{eventId}/queue-transition-waitlist-task [post]
-func (h *BatHandler) ShutdownWaitlistScheduler(w http.ResponseWriter, r *http.Request) {
-	err := h.BatService.ShutdownWaitlistScheduler()
+func (h *BatHandler) QueueShutdownWaitlistSchedulerTask(w http.ResponseWriter, r *http.Request) {
+	err := h.BatService.QueueShutdownWaitlistScheduler()
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Failed to shutdown scheduler."))
 	}

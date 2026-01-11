@@ -91,6 +91,7 @@ func main() {
 	mux.HandleFunc(tasks.TypeCalculateAdmissions, BATWorker.HandleCalculateAdmissionsTask)
 	mux.HandleFunc(tasks.TypeTransitionWaitlist, BATWorker.HandleTransitionWaitlistTask)
 	mux.HandleFunc(tasks.TypeScheduleTransitionWaitlist, BATWorker.HandleScheduleTransitionWaitlistTask)
+	mux.HandleFunc(tasks.TypeShutdownScheduler, BATWorker.HandleShutdownScheduler)
 
 	if err := srv.Run(mux); err != nil {
 		logger.Fatal().Msg("Failed to run BAT worker")

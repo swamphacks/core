@@ -11,6 +11,7 @@ const (
 	TypeCalculateAdmissions        = "admissions:calculate"
 	TypeScheduleTransitionWaitlist = "waitlist:scheduletransition"
 	TypeTransitionWaitlist         = "waitlist:transition"
+	TypeShutdownScheduler          = "waitlist:shutdownscheduler"
 )
 
 type CalculateAdmissionsPayload struct {
@@ -54,4 +55,8 @@ func NewTaskTransitionWaitlist(payload TransitionWaitlistPayload) (*asynq.Task, 
 	}
 
 	return asynq.NewTask(TypeTransitionWaitlist, data), nil
+}
+
+func NewTaskShutdownScheduler() (*asynq.Task, error) {
+	return asynq.NewTask(TypeShutdownScheduler, nil), nil
 }
