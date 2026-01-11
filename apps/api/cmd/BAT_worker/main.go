@@ -82,10 +82,10 @@ func main() {
 
 	sesClient := email.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
 	emailService := services.NewEmailService(taskQueueClient, sesClient, logger)
-	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, nil, logger)
+	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, nil, scheduler, logger)
 	applicationService := services.NewApplicationService(applicationRepo, userRepo, eventService, emailService, txm, nil, nil, scheduler, logger)
 
-	BATWorker := workers.NewBATWorker(batService, applicationService, scheduler, logger)
+	BATWorker := workers.NewBATWorker(batService, applicationService, scheduler, taskQueueClient, logger)
 
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(tasks.TypeCalculateAdmissions, BATWorker.HandleCalculateAdmissionsTask)

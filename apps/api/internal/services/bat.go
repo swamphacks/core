@@ -47,12 +47,14 @@ type BatService struct {
 	emailService *EmailService
 	txm          *db.TransactionManager
 	taskQueue    *asynq.Client
+	scheduler    *asynq.Scheduler
 	logger       zerolog.Logger
 }
 
-func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
+func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, scheduler *asynq.Scheduler, logger zerolog.Logger) *BatService {
 	return &BatService{
 		taskQueue:    taskQueue,
+		scheduler:    scheduler,
 		appRepo:      appRepo,
 		eventRepo:    eventRepo,
 		userRepo:     userRepo,
@@ -378,6 +380,13 @@ func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, ev
 		return err
 	}
 	s.logger.Info().Msg("Queued TransitionWaitlist task")
+
+	return nil
+}
+
+func (s *BatService) ShutdownWaitlistScheduler() error {
+	s.scheduler.Shutdown()
+	// Error is output by logging.
 
 	return nil
 }
