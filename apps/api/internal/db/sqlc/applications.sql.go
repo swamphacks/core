@@ -110,6 +110,19 @@ func (q *Queries) GetApplicationByUserAndEventID(ctx context.Context, arg GetApp
 	return i, err
 }
 
+const getTotalAcceptedApplicationsByEventId = `-- name: GetTotalAcceptedApplicationsByEventId :one
+SELECT COUNT(*) FROM applications
+WHERE event_id = $1::uuid
+  AND status = 'accepted'
+`
+
+func (q *Queries) GetTotalAcceptedApplicationsByEventId(ctx context.Context, eventID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalAcceptedApplicationsByEventId, eventID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const joinWaitlist = `-- name: JoinWaitlist :exec
 UPDATE applications
 SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
@@ -292,6 +305,58 @@ WHERE status NOT IN ('submitted', 'started')
 func (q *Queries) ResetApplicationReviews(ctx context.Context, eventID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, resetApplicationReviews, eventID)
 	return err
+}
+
+const transitionAcceptedApplicationsToWaitlistByEventID = `-- name: TransitionAcceptedApplicationsToWaitlistByEventID :exec
+UPDATE applications
+SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
+    status = 'waitlisted'
+WHERE event_id = $1::uuid
+  AND status = 'accepted'
+`
+
+func (q *Queries) TransitionAcceptedApplicationsToWaitlistByEventID(ctx context.Context, eventID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, transitionAcceptedApplicationsToWaitlistByEventID, eventID)
+	return err
+}
+
+const transitionWaitlistedApplicationsToAcceptedByEventID = `-- name: TransitionWaitlistedApplicationsToAcceptedByEventID :many
+UPDATE applications
+SET waitlist_join_time = NULL,
+    status = 'accepted'
+WHERE user_id IN (
+  SELECT user_id FROM applications
+  WHERE event_id = $1::uuid
+      AND status = 'waitlisted'
+  ORDER BY waitlist_join_time ASC
+  LIMIT $2::int
+)
+RETURNING user_id
+`
+
+type TransitionWaitlistedApplicationsToAcceptedByEventIDParams struct {
+	EventID         uuid.UUID `json:"event_id"`
+	Acceptancecount int32     `json:"acceptancecount"`
+}
+
+func (q *Queries) TransitionWaitlistedApplicationsToAcceptedByEventID(ctx context.Context, arg TransitionWaitlistedApplicationsToAcceptedByEventIDParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, transitionWaitlistedApplicationsToAcceptedByEventID, arg.EventID, arg.Acceptancecount)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateApplication = `-- name: UpdateApplication :exec

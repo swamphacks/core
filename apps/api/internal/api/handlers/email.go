@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/email"
@@ -26,10 +27,6 @@ type QueueTextEmailRequest struct {
 	To      []string `json:"to"`
 	Subject string   `json:"subject"`
 	Body    string   `json:"body"`
-}
-type QueueConfirmationEmailRequest struct {
-	To   string `json:"to"`
-	Name string `json:"name"`
 }
 
 // Queue an Email Request
@@ -78,4 +75,31 @@ func (h *EmailHandler) QueueTextEmail(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendTextEmail task!")
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+type QueueConfirmationEmailFields struct {
+	Email     string `json:"email" validate:"required"`
+	FirstName string `json:"firstName" validate:"required"`
+}
+
+func (h *EmailHandler) QueueConfirmationEmail(w http.ResponseWriter, r *http.Request) {
+	var req QueueConfirmationEmailFields
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&req)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Could not parse request body"))
+		return
+	}
+	validate := validator.New()
+	if err := validate.Struct(req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", err.Error()))
+	}
+
+	err = h.emailService.QueueConfirmationEmail(req.Email, req.FirstName)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Confirmation email could not be queued."))
+	}
+
+	res.Send(w, http.StatusOK, nil)
 }
