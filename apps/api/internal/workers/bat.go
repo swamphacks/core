@@ -27,9 +27,10 @@ type BATWorker struct {
 
 func NewBATWorker(batService *services.BatService, applicationService *services.ApplicationService, scheduler *asynq.Scheduler, logger zerolog.Logger) *BATWorker {
 	return &BATWorker{
-		batService: batService,
-		logger:     logger.With().Str("worker", "BATWorker").Str("component", "BAT").Logger(),
-		scheduler:  scheduler,
+		batService:         batService,
+		applicationService: applicationService,
+		logger:             logger.With().Str("worker", "BATWorker").Str("component", "BAT").Logger(),
+		scheduler:          scheduler,
 	}
 }
 
