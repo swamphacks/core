@@ -104,7 +104,12 @@ UPDATE applications
 SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
     status = 'waitlisted'
 WHERE event_id = @event_id::uuid
-  AND status = 'accepted';
+  AND status = 'accepted'
+  AND user_id IN (
+    SELECT user_id from event_roles AS er
+    WHERE er.role = 'applicant'
+)
+;
 
 -- name: TransitionWaitlistedApplicationsToAcceptedByEventID :many
 UPDATE applications

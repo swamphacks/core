@@ -313,6 +313,10 @@ SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
     status = 'waitlisted'
 WHERE event_id = $1::uuid
   AND status = 'accepted'
+  AND user_id IN (
+    SELECT user_id from event_roles AS er
+    WHERE er.role = 'applicant'
+)
 `
 
 func (q *Queries) TransitionAcceptedApplicationsToWaitlistByEventID(ctx context.Context, eventID uuid.UUID) error {
