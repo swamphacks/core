@@ -82,6 +82,13 @@ func (s *EmailService) SendHtmlEmail(recipient string, subject string, name stri
 
 // TODO: refactor other queue functions to use a similar naming scheme
 func (s *EmailService) QueueSendHtmlEmailTask(to string, subject string, name string, templateFilePath string) (*asynq.TaskInfo, error) {
+	if len(to) == 0 {
+		s.logger.Warn().Msgf("No recipient email found for email being sent from template '%s'", templateFilePath)
+	}
+	if len(name) == 0 {
+		s.logger.Warn().Msgf("No recipient name found for email being sent from template '%s'", templateFilePath)
+	}
+
 	task, err := tasks.NewTaskSendHtmlEmail(tasks.SendHtmlEmailPayload{
 		To:               to,
 		Subject:          subject,
