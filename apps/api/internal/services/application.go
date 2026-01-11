@@ -577,18 +577,18 @@ func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Contex
 			return err
 		}
 
-		totalAccepted, err := s.appRepo.GetTotalAcceptedApplicationsByEventId(ctx, eventId)
+		attendeeCount, err := s.appRepo.GetAttendeeCountByEventId(ctx, eventId)
 		if err != nil {
 			s.logger.Err(err).Msg("Failed to get total accepted application amount.")
 		}
-		if (acceptanceQuota - totalAccepted) <= acceptanceCount {
-			s.logger.Info().Msgf("%v - %v <= %v", acceptanceQuota, totalAccepted, acceptanceCount)
+		if (acceptanceQuota - attendeeCount) <= acceptanceCount {
+			s.logger.Info().Msgf("%v - %v <= %v", acceptanceQuota, attendeeCount, acceptanceCount)
 			if s.scheduler != nil {
 				// The API also uses this file, and this function can be run from an endpoint so we have to check that the scheduler exists.
 				// Technically the task should be removed from the scheduler. However the scheduler is only running for this task.
 				s.scheduler.Shutdown()
 			}
-			acceptanceCount = acceptanceQuota - totalAccepted
+			acceptanceCount = acceptanceQuota - attendeeCount
 		}
 
 		s.logger.Info().Msgf("Acceptance count: %v", acceptanceCount)
