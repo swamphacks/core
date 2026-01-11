@@ -74,6 +74,7 @@ func (w *BATWorker) HandleScheduleTransitionWaitlistTask(ctx context.Context, t 
 		AcceptanceQuota: 500,
 	})
 
+	w.scheduler.Start()
 	_, err = w.scheduler.Register(payload.Period, task, asynq.Queue("bat"))
 	if err != nil {
 		w.logger.Err(err)
