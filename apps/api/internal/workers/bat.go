@@ -6,6 +6,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
@@ -69,10 +70,11 @@ func (w *BATWorker) HandleScheduleTransitionWaitlistTask(ctx context.Context, t 
 		return err
 	}
 
+	cfg := config.Load()
 	task, err := tasks.NewTaskTransitionWaitlist(tasks.TransitionWaitlistPayload{
-		EventID:         payload.EventID,
-		AcceptanceCount: 50,
-		AcceptanceQuota: 500,
+		EventID:                 payload.EventID,
+		AcceptFromWaitlistCount: cfg.AcceptFromWaitlistCount,
+		MaxAcceptedApplications: cfg.MaxAcceptedApplications,
 	})
 
 	w.scheduler.Start()
@@ -92,7 +94,7 @@ func (w *BATWorker) HandleTransitionWaitlistTask(ctx context.Context, t *asynq.T
 		return err
 	}
 
-	err := w.applicationService.TransitionWaitlistedApplications(ctx, payload.EventID, payload.AcceptanceCount, payload.AcceptanceQuota)
+	err := w.applicationService.TransitionWaitlistedApplications(ctx, payload.EventID, payload.AcceptFromWaitlistCount, payload.MaxAcceptedApplications)
 	if err != nil {
 		w.logger.Err(err)
 		return nil

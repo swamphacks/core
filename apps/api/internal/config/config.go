@@ -55,14 +55,15 @@ type CoreBuckets struct {
 }
 
 type Config struct {
-	DatabaseURL                   string   `env:"DATABASE_URL"`
-	RedisURL                      string   `env:"REDIS_URL"`
-	Port                          string   `env:"PORT" envDefault:"8080"`
-	AllowedOriginsString          string   `env:"ALLOWED_ORIGINS"`
-	EmailTemplateDirectory        string   `env:"EMAIL_TEMPLATE_DIRECTORY"`
-	AllowedOrigins                []string ``
-	ApiOrigin                     string   `env:"API_ORIGIN"`
-	WaitlistWorkerSessionIdCookie string   `env:WAITLIST_WORKER_SESSION_ID_COOKIE`
+	DatabaseURL              string   `env:"DATABASE_URL"`
+	RedisURL                 string   `env:"REDIS_URL"`
+	Port                     string   `env:"PORT" envDefault:"8080"`
+	AllowedOriginsString     string   `env:"ALLOWED_ORIGINS"`
+	EmailTemplateDirectory   string   `env:"EMAIL_TEMPLATE_DIRECTORY"`
+	AllowedOrigins           []string ``
+	MaxAcceptedApplications  uint32   `env:"MAX_ACCEPTED_APPLICATIONS"`
+	AcceptFromWaitlistCount  uint32   `env:"ACCEPT_FROM_WAITLIST_COUNT"`
+	AcceptFromWaitlistPeriod string   `env:"ACCEPT_FROM_WAITLIST_PERIOD"`
 
 	Auth      AuthConfig   `envPrefix:"AUTH_"`
 	Cookie    CookieConfig `envPrefix:"COOKIE_"`

@@ -24,9 +24,9 @@ type ScheduleTransitionWaitlistPayload struct {
 }
 
 type TransitionWaitlistPayload struct {
-	EventID         uuid.UUID
-	AcceptanceCount uint32
-	AcceptanceQuota uint32
+	EventID                 uuid.UUID
+	AcceptFromWaitlistCount uint32
+	MaxAcceptedApplications uint32
 }
 
 func NewTaskCalculateAdmissions(payload CalculateAdmissionsPayload) (*asynq.Task, error) {
