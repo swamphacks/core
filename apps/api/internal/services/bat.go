@@ -362,9 +362,10 @@ func (s *BatService) mapToCandidates(engine *bat.BatEngine, applications []sqlc.
 
 func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, eventId uuid.UUID) error {
 
+	// TODO: add period to config?
 	task, err := tasks.NewTaskScheduleTransitionWaitlist(tasks.ScheduleTransitionWaitlistPayload{
 		EventID: eventId,
-		Period:  "@every 10s",
+		Period:  "@every 72h",
 	})
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create ScheduleTransitionWaitlist task")
