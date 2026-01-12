@@ -74,7 +74,7 @@ services:
     ports:
       - "6768:6767"
     environment:
-      - REDIS_ADDR=redis:6380
+      - REDIS_ADDR=redis-dev:6379
       - PORT=6767
     depends_on:
       - redis-dev
