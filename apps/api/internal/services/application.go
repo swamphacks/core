@@ -542,7 +542,34 @@ func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userId uuid
 		EventID: eventId,
 		//TODO: Make it so I don't have to set this!
 		StatusDoUpdate: true,
-		Status:         sqlc.ApplicationStatusRejected,
+		Status:         sqlc.ApplicationStatusWithdrawn,
+	})
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	// Make atomic
+	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+		txEventRepo := s.eventsService.eventRepo.NewTx(tx)
+		if err := txAppRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+			UserID:         userId,
+			EventID:        eventId,
+			StatusDoUpdate: true,
+			Status:         sqlc.ApplicationStatusWithdrawn,
+		}); err != nil {
+			return err
+		}
+
+		return txEventRepo.UpdateRole(ctx,
+			userId,
+			eventId,
+			sqlc.EventRoleTypeApplicant,
+		)
 	})
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())
