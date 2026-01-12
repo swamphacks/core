@@ -68,6 +68,17 @@ services:
       retries: 5
       start_period: 5s
 
+  asynqmon-dev:
+    image: hibiken/asynqmon:latest
+    platform: linux/amd64
+    ports:
+      - "6768:6767"
+    environment:
+      - REDIS_ADDR=redis:6380
+      - PORT=6767
+    depends_on:
+      - redis-dev
+
   # ========================
   # Production Services
   # ========================
