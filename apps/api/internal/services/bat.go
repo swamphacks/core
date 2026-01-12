@@ -47,12 +47,14 @@ type BatService struct {
 	emailService *EmailService
 	txm          *db.TransactionManager
 	taskQueue    *asynq.Client
+	scheduler    *asynq.Scheduler
 	logger       zerolog.Logger
 }
 
-func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
+func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, scheduler *asynq.Scheduler, logger zerolog.Logger) *BatService {
 	return &BatService{
 		taskQueue:    taskQueue,
+		scheduler:    scheduler,
 		appRepo:      appRepo,
 		eventRepo:    eventRepo,
 		userRepo:     userRepo,
@@ -362,10 +364,10 @@ func (s *BatService) mapToCandidates(engine *bat.BatEngine, applications []sqlc.
 
 func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, eventId uuid.UUID) error {
 
-	// TODO: add period to config?
+	cfg := config.Load()
 	task, err := tasks.NewTaskScheduleTransitionWaitlist(tasks.ScheduleTransitionWaitlistPayload{
 		EventID: eventId,
-		Period:  "@every 72h",
+		Period:  cfg.AcceptFromWaitlistPeriod,
 	})
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create ScheduleTransitionWaitlist task")
@@ -378,6 +380,23 @@ func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, ev
 		return err
 	}
 	s.logger.Info().Msg("Queued TransitionWaitlist task")
+
+	return nil
+}
+
+func (s *BatService) QueueShutdownWaitlistScheduler() error {
+	task, err := tasks.NewTaskShutdownScheduler()
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to create ShutdownWaitlistScheduler task")
+		return err
+	}
+
+	_, err = s.taskQueue.Enqueue(task, asynq.Queue("bat"))
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to queue ShutdownWaitlistScheduler task")
+		return err
+	}
+	s.logger.Info().Msg("Queued ShutdownWaitlistScheduler task")
 
 	return nil
 }

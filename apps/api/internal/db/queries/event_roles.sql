@@ -25,3 +25,8 @@ WHERE er.event_id = $1;
 UPDATE event_roles
 SET role = $3
 WHERE event_id = $1 AND user_id = $2;
+
+-- name: GetAttendeeCountByEventId :one
+SELECT COUNT(*) FROM event_roles AS er
+WHERE er.event_id = @event_id::uuid
+  AND er.role = 'attendee';

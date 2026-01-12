@@ -11,6 +11,7 @@ const (
 	TypeCalculateAdmissions        = "admissions:calculate"
 	TypeScheduleTransitionWaitlist = "waitlist:scheduletransition"
 	TypeTransitionWaitlist         = "waitlist:transition"
+	TypeShutdownScheduler          = "waitlist:shutdownscheduler"
 )
 
 type CalculateAdmissionsPayload struct {
@@ -24,9 +25,9 @@ type ScheduleTransitionWaitlistPayload struct {
 }
 
 type TransitionWaitlistPayload struct {
-	EventID         uuid.UUID
-	AcceptanceCount uint32
-	AcceptanceQuota uint32
+	EventID                 uuid.UUID
+	AcceptFromWaitlistCount uint32
+	MaxAcceptedApplications uint32
 }
 
 func NewTaskCalculateAdmissions(payload CalculateAdmissionsPayload) (*asynq.Task, error) {
@@ -54,4 +55,8 @@ func NewTaskTransitionWaitlist(payload TransitionWaitlistPayload) (*asynq.Task, 
 	}
 
 	return asynq.NewTask(TypeTransitionWaitlist, data), nil
+}
+
+func NewTaskShutdownScheduler() (*asynq.Task, error) {
+	return asynq.NewTask(TypeShutdownScheduler, nil), nil
 }

@@ -211,7 +211,7 @@ func (r *ApplicationRepository) TransitionWaitlistedApplicationsToAcceptedByEven
 	})
 }
 
-func (r *ApplicationRepository) GetTotalAcceptedApplicationsByEventId(ctx context.Context, eventId uuid.UUID) (uint32, error) {
-	amount, err := r.db.Query.GetTotalAcceptedApplicationsByEventId(ctx, eventId)
+func (r *ApplicationRepository) GetAttendeeCountByEventId(ctx context.Context, eventId uuid.UUID) (uint32, error) {
+	amount, err := r.db.Query.GetAttendeeCountByEventId(ctx, eventId)
 	return uint32(amount), err
 }
