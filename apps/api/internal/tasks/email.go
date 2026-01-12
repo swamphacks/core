@@ -7,9 +7,8 @@ import (
 )
 
 const (
-	TypeSendTextEmail         = "textemail:send"
-	TypeSendHtmlEmail         = "htmlemail:send"
-	TypeSendConfirmationEmail = "confirmationemail:send"
+	TypeSendTextEmail = "textemail:send"
+	TypeSendHtmlEmail = "htmlemail:send"
 )
 
 type SendTextEmailPayload struct {
@@ -23,11 +22,6 @@ type SendHtmlEmailPayload struct {
 	Name             string
 	Subject          string
 	TemplateFilePath string
-}
-
-type SendConfirmationEmailPayload struct {
-	To   string
-	Name string
 }
 
 func NewTaskSendTextEmail(payload SendTextEmailPayload) (*asynq.Task, error) {
@@ -46,14 +40,4 @@ func NewTaskSendHtmlEmail(payload SendHtmlEmailPayload) (*asynq.Task, error) {
 	}
 
 	return asynq.NewTask(TypeSendHtmlEmail, data), nil
-}
-
-// TODO: refactor
-func NewTaskSendConfirmationEmail(payload SendConfirmationEmailPayload) (*asynq.Task, error) {
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	return asynq.NewTask(TypeSendConfirmationEmail, data), nil
 }

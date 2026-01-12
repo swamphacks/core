@@ -1,0 +1,45 @@
+name: Deploy Caddy 
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH proxy command
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.API_HOST }}
+          username: root
+          password: ${{ secrets.API_PASSWORD }}
+          script: |
+            cd /root/core/infra
+            git fetch
+            git checkout dev
+            git reset --hard origin/dev
+            git pull
+
+            export INFISICAL_TOKEN=$(infisical login \
+              --method=universal-auth \
+              --client-id='${{ secrets.INFISICAL_CLIENT_ID }}' \
+              --client-secret='${{ secrets.INFISICAL_CLIENT_SECRET }}' \
+              --silent \
+              --plain)
+
+            infisical export \
+              --token=$INFISICAL_TOKEN \
+              --env=dev \
+              --format=dotenv \
+              --path="/api" \
+              --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
+              > ./secrets/.env.dev.api
+
+            docker compose -f docker-compose.api.yml pull caddy
+            docker compose -f docker-compose.api.yml up -d --no-deps --force-recreate caddy

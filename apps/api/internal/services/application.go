@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/config"
@@ -73,22 +74,26 @@ var (
 
 type ApplicationService struct {
 	appRepo       *repository.ApplicationRepository
+	userRepo      *repository.UserRepository
 	eventsService *EventService
 	emailService  *EmailService
 	storage       storage.Storage
 	buckets       *config.CoreBuckets
 	txm           *db.TransactionManager
+	scheduler     *asynq.Scheduler
 	logger        zerolog.Logger
 }
 
-func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
+func NewApplicationService(appRepo *repository.ApplicationRepository, userRepo *repository.UserRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, scheduler *asynq.Scheduler, logger zerolog.Logger) *ApplicationService {
 	return &ApplicationService{
 		appRepo:       appRepo,
+		userRepo:      userRepo,
 		eventsService: eventsService,
 		emailService:  emailService,
 		storage:       storage,
 		buckets:       buckets,
 		txm:           txm,
+		scheduler:     scheduler,
 		logger:        logger,
 	}
 }
@@ -164,8 +169,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		return nil
 	})
 
-	taskInfo, err := s.emailService.QueueSendConfirmationEmail(data.PreferredEmail, data.FirstName)
-	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendConfirmationEmail task!")
+	err = s.emailService.QueueConfirmationEmail(data.PreferredEmail, data.FirstName)
 
 	// Non-blocking error
 	if err != nil {
@@ -559,5 +563,68 @@ func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, us
 		s.logger.Err(err).Msg(err.Error())
 		return err
 	}
+	return nil
+}
+
+func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Context, eventId uuid.UUID, acceptanceCount uint32, acceptanceQuota uint32) error {
+	var acceptedUserIds []uuid.UUID
+	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+
+		err := txAppRepo.TransitionAcceptedApplicationsToWaitlistByEventID(ctx, eventId)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		attendeeCount, err := s.appRepo.GetAttendeeCountByEventId(ctx, eventId)
+		if err != nil {
+			s.logger.Err(err).Msg("Failed to get total accepted application amount.")
+		}
+		if (acceptanceQuota - attendeeCount) <= acceptanceCount {
+			s.logger.Info().Msgf("Acceptance quota is close, shutting down waitlist transition scheduler. Remaining acceptances: %v - %v <= %v", acceptanceQuota, attendeeCount, acceptanceCount)
+			if s.scheduler != nil {
+				// The API also uses this file, and this function can be run from an endpoint so we have to check that the scheduler exists.
+				// Technically the task should be removed from the scheduler via an scheduler ENTRY_ID. However the scheduler is only running for this task.
+				s.scheduler.Shutdown()
+			}
+			acceptanceCount = acceptanceQuota - attendeeCount
+		}
+
+		s.logger.Info().Msgf("Acceptance count: %v", acceptanceCount)
+		acceptedUserIds, err = txAppRepo.TransitionWaitlistedApplicationsToAcceptedByEventID(ctx, eventId, acceptanceCount)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		s.logger.Debug().Msgf("Statuses transitioned: %s", acceptedUserIds)
+		return nil
+	})
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+
+	for _, userId := range acceptedUserIds {
+		userContactInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userId)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		contactEmail, ok := userContactInfo.ContactEmail.(string)
+		if !ok {
+			return ErrFailedToGetContactEmail
+		}
+
+		err = s.emailService.QueueWaitlistAcceptanceEmail(contactEmail, userContactInfo.Name)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+	}
+
 	return nil
 }

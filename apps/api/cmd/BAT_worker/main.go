@@ -56,6 +56,19 @@ func main() {
 		},
 	)
 
+	schedulerLocation, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		panic(err)
+	}
+	scheduler := asynq.NewScheduler(
+		redisOpt,
+		&asynq.SchedulerOpts{
+			Location: schedulerLocation,
+		},
+	)
+
+	taskQueueClient := asynq.NewClient(redisOpt)
+
 	database := db.NewDB(cfg.DatabaseURL)
 	defer database.Close()
 
@@ -64,16 +77,21 @@ func main() {
 	applicationRepo := repository.NewApplicationRepository(database)
 	eventRepo := repository.NewEventRespository(database)
 	userRepo := repository.NewUserRepository(database)
+	eventService := services.NewEventService(eventRepo, userRepo, nil, nil, logger)
 	batRunsRepo := repository.NewBatRunsRepository(database)
 
 	sesClient := email.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
-	emailService := services.NewEmailService(nil, sesClient, logger)
-	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, nil, logger)
+	emailService := services.NewEmailService(taskQueueClient, sesClient, logger)
+	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, nil, scheduler, logger)
+	applicationService := services.NewApplicationService(applicationRepo, userRepo, eventService, emailService, txm, nil, nil, scheduler, logger)
 
-	BATWorker := workers.NewBATWorker(batService, logger)
+	BATWorker := workers.NewBATWorker(batService, applicationService, scheduler, taskQueueClient, logger)
 
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(tasks.TypeCalculateAdmissions, BATWorker.HandleCalculateAdmissionsTask)
+	mux.HandleFunc(tasks.TypeTransitionWaitlist, BATWorker.HandleTransitionWaitlistTask)
+	mux.HandleFunc(tasks.TypeScheduleTransitionWaitlist, BATWorker.HandleScheduleTransitionWaitlistTask)
+	mux.HandleFunc(tasks.TypeShutdownScheduler, BATWorker.HandleShutdownScheduler)
 
 	if err := srv.Run(mux); err != nil {
 		logger.Fatal().Msg("Failed to run BAT worker")

@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
 type BatHandler struct {
@@ -116,10 +117,10 @@ func (h *BatHandler) CheckApplicationReviewsComplete(w http.ResponseWriter, r *h
 	}
 }
 
-// Delete an event
+// Delete a run
 //
-//	@Summary		Delete an event
-//	@Description	Delete an existing event
+//	@Summary		Delete a run
+//	@Description	Delete an existing BAT run
 //	@Tags			Bat
 //	@Accept			json
 //	@Produce		json
@@ -150,4 +151,48 @@ func (h *BatHandler) DeleteRunById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+//	 Queue transition waitlist task
+//
+//		@Summary		Queues a waitlist transition task
+//		@Description	Queues an asynq task that transitions waitlisted applications, running every 3 days.
+//		@Tags
+//
+//		@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
+//		@Success		200		"Transitioned application statuses successfully"
+//		@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to transition application statuses"
+//		@Router			/events/{eventId}/queue-transition-waitlist-task [post]
+func (h *BatHandler) QueueScheduleWaitlistTransitionTask(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
+		return
+	}
+
+	err = h.BatService.QueueScheduleWaitlistTransitionTask(r.Context(), eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Failed to create ScheduleWaitlistTransition task."))
+	}
+
+	res.Send(w, http.StatusCreated, nil)
+}
+
+//	 Queue Shutdown scheduler task
+//
+//		@Summary		Shutsdown an asynq scheduler
+//		@Description	Shutsdown the scheduler used for the waitlist transition task. Error returned through logs if a scheduler is not active.
+//		@Tags
+//
+//		@Success		200		"Scheduler shutdown successfully"
+//		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to shutdown scheduler"
+//		@Router			/events/{eventId}/queue-transition-waitlist-task [post]
+func (h *BatHandler) QueueShutdownWaitlistSchedulerTask(w http.ResponseWriter, r *http.Request) {
+	err := h.BatService.QueueShutdownWaitlistScheduler()
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Failed to shutdown scheduler."))
+	}
+
+	res.Send(w, http.StatusOK, nil)
 }
