@@ -140,7 +140,7 @@ services:
       - REDIS_ADDR=redis:6379
       - PORT=6767
     depends_on:
-      - redis-dev
+      - redis
 
 
 volumes:

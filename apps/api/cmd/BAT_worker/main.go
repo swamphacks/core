@@ -56,6 +56,8 @@ func main() {
 		},
 	)
 
+	logger.Info().Msg("Debug test")
+
 	schedulerLocation, err := time.LoadLocation("America/New_York")
 	if err != nil {
 		panic(err)
