@@ -56,7 +56,7 @@ func main() {
 		},
 	)
 
-	logger.Debug().Msg("Debug test")
+	logger.Info().Msg("Debug test")
 
 	schedulerLocation, err := time.LoadLocation("America/New_York")
 	if err != nil {
