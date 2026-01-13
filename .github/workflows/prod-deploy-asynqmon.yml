@@ -22,8 +22,8 @@ jobs:
           script: |
             cd /root/core/infra
             git fetch
-            git checkout dev
-            git reset --hard origin/dev
+            git checkout master
+            git reset --hard origin/master
             git pull
 
             docker compose -f docker-compose.api.yml pull asynqmon
