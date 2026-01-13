@@ -375,14 +375,14 @@ func (h *ApplicationHandler) GetApplicationStatistics(w http.ResponseWriter, r *
 func (h *ApplicationHandler) GetApplication(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
 
 	// So funny story, there is no ID in the application table, this is just an abstracted user_id.
 	applicationId, err := web.PathParamToUUID(r, "applicationId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_application_id", "The application ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_application_id", "The application ID is not valid."))
 		return
 	}
 
@@ -417,13 +417,13 @@ type ReviewRatings struct {
 func (h *ApplicationHandler) SubmitApplicationReview(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
 
 	applicationId, err := web.PathParamToUUID(r, "applicationId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_application_id", "The application ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_application_id", "The application ID is not valid."))
 		return
 	}
 
@@ -468,7 +468,7 @@ func (h *ApplicationHandler) SubmitApplicationReview(w http.ResponseWriter, r *h
 func (h *ApplicationHandler) GetAssignedApplications(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
 
@@ -502,7 +502,7 @@ func (h *ApplicationHandler) GetAssignedApplications(w http.ResponseWriter, r *h
 func (h *ApplicationHandler) AssignApplicationReviewers(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
 
@@ -536,7 +536,7 @@ func (h *ApplicationHandler) AssignApplicationReviewers(w http.ResponseWriter, r
 func (h *ApplicationHandler) ResetApplicationReviews(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
 
@@ -603,7 +603,7 @@ func (h *ApplicationHandler) GetResumePresignedUrl(w http.ResponseWriter, r *htt
 func (h *ApplicationHandler) JoinWaitlist(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
 	userId := ctxutils.GetUserIdFromCtx(r.Context())
@@ -623,15 +623,15 @@ func (h *ApplicationHandler) JoinWaitlist(w http.ResponseWriter, r *http.Request
 //	@Description	Sets application status from accepted to rejected
 //	@Tags			Application
 //
-//	@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
-//	@Success		200		"Acceptance withdrawn joined successfully"
+//	@Param			eventId	path	string	true	"ID of the event to withdraw acceptance from"
+//	@Success		200		"Acceptance withdrawn successfully"
 //	@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
-//	@Failure		500		{object}	res.ErrorResponse	"Server error: failed to withdraw"
+//	@Failure		500		{object}	res.ErrorResponse	"Server error: failed to withdraw acceptance"
 //	@Router			/events/{eventId}/application/withdraw-acceptance [patch]
 func (h *ApplicationHandler) WithdrawAcceptance(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
 	userId := ctxutils.GetUserIdFromCtx(r.Context())
@@ -645,10 +645,38 @@ func (h *ApplicationHandler) WithdrawAcceptance(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusOK)
 }
 
+// Withdraw attendance to an event
+//
+//	@Summary		Withdraw attendance after accepting to go to an event.
+//	@Description	Sets application status from accepted to withdrawn. Sets event role from attendee, back to applicant.
+//	@Tags			Application
+//
+//	@Param			eventId	path	string	true	"ID of the event to withdraw attendance from"
+//	@Success		200		"Attendance withdrawn successfully"
+//	@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//	@Failure		500		{object}	res.ErrorResponse	"Server error: failed to withdraw attendance"
+//	@Router			/events/{eventId}/application/withdraw-attendance [patch]
+func (h *ApplicationHandler) WithdrawAttendance(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
+		return
+	}
+	userId := ctxutils.GetUserIdFromCtx(r.Context())
+
+	err = h.appService.WithdrawAttendance(r.Context(), *userId, eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("withdraw_attendance_error", "Something went wrong while withdrawing attendance"))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+
+}
+
 // Accept an Acceptance for an Event/Application
 //
 //	@Summary		Accept an acceptance after being accepted to an event.
-//	@Description	Sets application status from accepted to rejected
+//	@Description	Sets event role to attendee, from applicant
 //	@Tags			Application Event
 //
 //	@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
@@ -659,7 +687,7 @@ func (h *ApplicationHandler) WithdrawAcceptance(w http.ResponseWriter, r *http.R
 func (h *ApplicationHandler) AcceptApplicationAcceptance(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
 	userId := ctxutils.GetUserIdFromCtx(r.Context())
@@ -687,7 +715,7 @@ func (h *ApplicationHandler) AcceptApplicationAcceptance(w http.ResponseWriter, 
 func (h *ApplicationHandler) TransitionWaitlistedApplications(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid."))
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
 		return
 	}
 
