@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -57,6 +58,7 @@ func main() {
 	)
 
 	logger.Info().Msg("Debug test")
+	fmt.Print("Debug test")
 
 	schedulerLocation, err := time.LoadLocation("America/New_York")
 	if err != nil {
@@ -68,6 +70,9 @@ func main() {
 			Location: schedulerLocation,
 		},
 	)
+
+	logger.Info().Msg("Debug test")
+	fmt.Print("Debug test")
 
 	taskQueueClient := asynq.NewClient(redisOpt)
 

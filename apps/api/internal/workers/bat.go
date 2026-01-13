@@ -79,14 +79,15 @@ func (w *BATWorker) HandleScheduleTransitionWaitlistTask(ctx context.Context, t 
 		MaxAcceptedApplications: cfg.MaxAcceptedApplications,
 	})
 
-	w.scheduler.Start()
 	// The scheduler will make its first run after the period cycles once. So we queue our task immediately as well.
+	_, err = w.taskQueue.Enqueue(task, asynq.Queue("bat"))
+
+	w.scheduler.Start()
 	_, err = w.scheduler.Register(payload.Period, task, asynq.Queue("bat"))
 	if err != nil {
 		w.logger.Err(err)
 		return nil
 	}
-	_, err = w.taskQueue.Enqueue(task, asynq.Queue("bat"))
 
 	return nil
 }
