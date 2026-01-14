@@ -148,6 +148,10 @@ const coreFeaturesData: AccordionItem[] = [
         url: "https://learn.adafruit.com/",
       },
       {
+        text: "Basic breadboarding guide",
+        url: "https://learn.sparkfun.com/tutorials/how-to-use-a-breadboard/all",
+      },
+      {
         text: "Arduino Tutorials",
         url: "https://www.arduino.cc/en/Tutorial/HomePage",
       },
@@ -169,7 +173,7 @@ const debuggingData: AccordionItem[] = [
     description: "Get help from our mentors and other hackers in real-time:",
     links: [
       {
-        text: "Join the SwampHacks Discord server and create request in #support channel",
+        text: "Join the SwampHacks Discord server and create request in the #support channel",
         url: "https://discord.gg/qMKXgKhU",
       },
     ],
@@ -249,12 +253,12 @@ const debuggingData: AccordionItem[] = [
         url: "https://learning.postman.com/",
       },
       {
-        text: "Jest - JavaScript Testing Framework",
-        url: "https://jestjs.io/docs/getting-started",
+        text: "Using the debugger in VS Code",
+        url: "https://code.visualstudio.com/docs/debugtest/debugging",
       },
       {
-        text: "Python unittest - Built-in Testing",
-        url: "https://docs.python.org/3/library/unittest.html",
+        text: "Debugging on the web with Chrome DevTools",
+        url: "https://developer.chrome.com/docs/devtools/javascript",
       },
     ],
   },
@@ -298,7 +302,7 @@ function AccordionItem({
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-text-link underline decoration-2 underline-offset-2 hover:decoration-4 transition-all"
+                    className="text-text-link underline decoration-1 underline-offset-4 hover:decoration-2 hover:underline-offset-6 transition-all"
                   >
                     {link.text}
                   </a>
@@ -349,7 +353,7 @@ function RouteComponent() {
                     e.preventDefault();
                     scrollToSection(id);
                   }}
-                  className="text-text-link underline decoration-2 underline-offset-2 hover:decoration-4 transition-all"
+                  className="text-text-link underline decoration-1 underline-offset-4 hover:decoration-2 hover:underline-offset-8 transition-all"
                 >
                   {label}
                 </a>
@@ -397,7 +401,7 @@ function RouteComponent() {
                           href={item.nameLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-text-link underline decoration-2 underline-offset-2 hover:decoration-4 transition-all"
+                          className="text-text-link underline decoration-1 underline-offset-4 hover:decoration-2 hover:underline-offset-6 transition-all"
                         >
                           {item.name}
                         </a>
@@ -407,7 +411,7 @@ function RouteComponent() {
                           href={item.technologyLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-text-link underline decoration-2 underline-offset-2 hover:decoration-4 transition-all"
+                          className="text-text-link underline decoration-1 underline-offset-4 hover:decoration-2 hover:underline-offset-6 transition-all"
                         >
                           {item.technology}
                         </a>
@@ -568,7 +572,7 @@ function RouteComponent() {
                   href="https://swamphacksx.devpost.com/project-gallery"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-text-link underline decoration-2 underline-offset-2 hover:decoration-4 transition-all"
+                  className="text-text-link underline decoration-1 underline-offset-4 hover:decoration-2 hover:underline-offset-8 transition-all"
                 >
                   Explore SwampHacks X Winning Projects
                 </a>
@@ -578,7 +582,7 @@ function RouteComponent() {
                   href="https://www.youtube.com/watch?v=5WQgLboa_I8"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-text-link underline decoration-2 underline-offset-2 hover:decoration-4 transition-all"
+                  className="text-text-link underline decoration-1 underline-offset-4 hover:decoration-2 hover:underline-offset-8 transition-all"
                 >
                   MIT Global AI Hackathon Presentations 2025
                 </a>
