@@ -16,6 +16,7 @@ type Handlers struct {
 	Teams         *TeamHandler
 	Admission     *AdmissionHandler
 	Bat           *BatHandler
+	Redeemables   *RedeemablesHandler
 }
 
 func NewHandlers(
@@ -27,6 +28,7 @@ func NewHandlers(
 	appService *services.ApplicationService,
 	teamService *services.TeamService,
 	batService *services.BatService,
+	redeemablesService *services.RedeemablesService,
 	cfg *config.Config,
 	logger zerolog.Logger,
 ) *Handlers {
@@ -40,5 +42,6 @@ func NewHandlers(
 		Teams:         NewTeamHandler(teamService, logger),
 		Admission:     NewAdmissionHandler(batService, logger),
 		Bat:           NewBatHandler(batService, logger),
+		Redeemables:   NewRedeemablesHandler(redeemablesService, cfg, logger),
 	}
 }

@@ -199,6 +199,21 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				r.Patch("/join-waitlist", api.Handlers.Application.JoinWaitlist)
 			})
 
+			r.Route("/redeemables", func(r chi.Router) {
+				r.With(ensureEventStaff).Get("/", api.Handlers.Redeemables.GetRedeemables)
+
+				r.With(ensureEventStaff).Post("/", api.Handlers.Redeemables.CreateRedeemable)
+
+				r.Route("/{redeemableId}", func(r chi.Router) {
+					r.With(ensureEventStaff).Patch("/", api.Handlers.Redeemables.UpdateRedeemable)
+
+					r.With(ensureEventStaff).Delete("/", api.Handlers.Redeemables.DeleteRedeemable)
+
+					r.With(ensureEventStaff).Post("/redeem", api.Handlers.Redeemables.RedeemRedeemable)
+					r.With(ensureEventStaff).Patch("/users/{user_id}", api.Handlers.Redeemables.UpdateRedemption)
+				})
+			})
+
 			// Team routes
 			r.Route("/teams", func(r chi.Router) {
 				r.Post("/", api.Handlers.Teams.CreateTeam)
