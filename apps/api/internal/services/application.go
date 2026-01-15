@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
@@ -22,7 +21,6 @@ var (
 	ErrGetApplicationStatistics = errors.New("failed to aggregate application stats")
 	ErrMismatchedReviewerCounts = errors.New("the total number of applications does not match the total number of assigned reviews")
 	ErrWrongReviewerAssignment  = errors.New("an application has been assigned to a reviewer who is not authorized to review it")
-	ErrEventAlreadyStarted      = errors.New("the event has already started")
 )
 
 // TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
@@ -600,19 +598,7 @@ func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Contex
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.appRepo.NewTx(tx)
 
-		// Get event start date, error if past the start of the event.
-		event, err := s.eventsService.GetEventByID(ctx, eventId)
-		if err != nil {
-			s.logger.Err(err).Msg(err.Error())
-			return err
-		}
-		currentTime := time.Now()
-		if event.StartTime.After(currentTime) {
-			s.logger.Err(ErrEventAlreadyStarted).Msg("Could not transition waitlisted applications: the event has already started.")
-			return ErrEventAlreadyStarted
-		}
-
-		err = txAppRepo.TransitionAcceptedApplicationsToWaitlistByEventID(ctx, eventId)
+		err := txAppRepo.TransitionAcceptedApplicationsToWaitlistByEventID(ctx, eventId)
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
 			return err

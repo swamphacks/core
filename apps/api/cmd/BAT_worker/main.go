@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -57,9 +56,6 @@ func main() {
 		},
 	)
 
-	logger.Info().Msg("Debug test")
-	fmt.Print("Debug test")
-
 	schedulerLocation, err := time.LoadLocation("America/New_York")
 	if err != nil {
 		panic(err)
@@ -71,10 +67,8 @@ func main() {
 		},
 	)
 
-	logger.Info().Msg("Debug test")
-	fmt.Print("Debug test")
-
 	taskQueueClient := asynq.NewClient(redisOpt)
+	defer taskQueueClient.Close()
 
 	database := db.NewDB(cfg.DatabaseURL)
 	defer database.Close()
@@ -92,7 +86,7 @@ func main() {
 	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, nil, scheduler, logger)
 	applicationService := services.NewApplicationService(applicationRepo, userRepo, eventService, emailService, txm, nil, nil, scheduler, logger)
 
-	BATWorker := workers.NewBATWorker(batService, applicationService, scheduler, taskQueueClient, logger)
+	BATWorker := workers.NewBATWorker(batService, applicationService, eventService, scheduler, taskQueueClient, logger)
 
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(tasks.TypeCalculateAdmissions, BATWorker.HandleCalculateAdmissionsTask)
