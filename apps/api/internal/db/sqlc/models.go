@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type ApplicationStatus string
@@ -420,6 +421,16 @@ type EventRole struct {
 	AssignedAt *time.Time    `json:"assigned_at"`
 }
 
+type Redeemable struct {
+	ID            uuid.UUID          `json:"id"`
+	EventID       uuid.UUID          `json:"event_id"`
+	Name          string             `json:"name"`
+	Amount        int32              `json:"amount"`
+	MaxUserAmount int32              `json:"max_user_amount"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Team struct {
 	ID        uuid.UUID  `json:"id"`
 	Name      string     `json:"name"`
@@ -457,4 +468,12 @@ type TeamMember struct {
 	UserID   uuid.UUID  `json:"user_id"`
 	TeamID   uuid.UUID  `json:"team_id"`
 	JoinedAt *time.Time `json:"joined_at"`
+}
+
+type UserRedemption struct {
+	UserID       uuid.UUID          `json:"user_id"`
+	RedeemableID uuid.UUID          `json:"redeemable_id"`
+	Amount       int32              `json:"amount"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
