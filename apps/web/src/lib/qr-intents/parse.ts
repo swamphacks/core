@@ -2,14 +2,14 @@ import * as z from "zod";
 import { Intent } from "./intent";
 
 // Used for checking attendees into an event
-type CheckInIntent = {
+export type CheckInIntent = {
   intent: typeof Intent.CHECK_IN;
   user_id: string;
   event_id: string;
 };
 
 // Used for redeeming redeemables (food, t-shirts, etc)
-type RedeemIntent = {
+export type RedeemIntent = {
   intent: typeof Intent.REDEEM;
   redeemable_id: string;
   user_id: string;
