@@ -92,7 +92,7 @@ func main() {
 	applicationService := services.NewApplicationService(applicationRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, logger)
 	teamService := services.NewTeamService(teamRepo, teamMemberRepo, teamJoinRequestRepo, eventRepo, txm, logger)
 	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, taskQueueClient, logger)
-	discordService := services.NewDiscordService(accountRepo, eventRepo, logger)
+	discordService := services.NewDiscordService(eventRepo, logger)
 
 	// Injections into handlers
 	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, batService, discordService, cfg, logger)

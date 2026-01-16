@@ -123,7 +123,6 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 	// --- Discord routes (for Discord bot) ---
 	api.Router.Route("/discord", func(r chi.Router) {
 		r.Use(mw.Auth.RequireAuth)
-		r.Get("/user/{discord_id}/role", api.Handlers.Discord.GetUserEventRoleByDiscordID)
 		r.Get("/event/{event_id}/attendees", api.Handlers.Discord.GetEventAttendeesWithDiscord)
 	})
 
@@ -146,6 +145,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Get("/role", api.Handlers.Event.GetEventRole)
+			r.Get("/discord/{discordId}", api.Handlers.Discord.GetUserEventRoleByDiscordIDAndEventId)
 
 			r.With(ensureEventStaff).Get("/overview", api.Handlers.Event.GetEventOverview)
 

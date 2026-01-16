@@ -75,22 +75,28 @@ func (q *Queries) GetEventAttendeesWithDiscord(ctx context.Context, eventID uuid
 	return items, nil
 }
 
-const getEventRoleByUserID = `-- name: GetEventRoleByUserID :one
-SELECT event_id, role
-FROM event_roles
-WHERE user_id = $1
-ORDER BY assigned_at DESC
-LIMIT 1
+const getEventRoleByDiscordIDAndEventId = `-- name: GetEventRoleByDiscordIDAndEventId :one
+SELECT er.event_id, er.role
+FROM event_roles er
+JOIN auth.accounts a ON er.user_id = a.user_id
+WHERE a.provider_id = 'discord'
+    AND a.account_id = $1
+    AND er.event_id = $2
 `
 
-type GetEventRoleByUserIDRow struct {
+type GetEventRoleByDiscordIDAndEventIdParams struct {
+	AccountID string    `json:"account_id"`
+	EventID   uuid.UUID `json:"event_id"`
+}
+
+type GetEventRoleByDiscordIDAndEventIdRow struct {
 	EventID uuid.UUID     `json:"event_id"`
 	Role    EventRoleType `json:"role"`
 }
 
-func (q *Queries) GetEventRoleByUserID(ctx context.Context, userID uuid.UUID) (GetEventRoleByUserIDRow, error) {
-	row := q.db.QueryRow(ctx, getEventRoleByUserID, userID)
-	var i GetEventRoleByUserIDRow
+func (q *Queries) GetEventRoleByDiscordIDAndEventId(ctx context.Context, arg GetEventRoleByDiscordIDAndEventIdParams) (GetEventRoleByDiscordIDAndEventIdRow, error) {
+	row := q.db.QueryRow(ctx, getEventRoleByDiscordIDAndEventId, arg.AccountID, arg.EventID)
+	var i GetEventRoleByDiscordIDAndEventIdRow
 	err := row.Scan(&i.EventID, &i.Role)
 	return i, err
 }

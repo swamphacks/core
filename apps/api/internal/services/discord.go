@@ -11,48 +11,35 @@ import (
 )
 
 var (
-    ErrDiscordAccountNotFound = errors.New("discord account not found")
     ErrNoEventRole = errors.New("user has no event role")
 )
 
 type DiscordService struct {
-	accountRepo *repository.AccountRepository
 	eventRepo *repository.EventRepository
 	logger zerolog.Logger
 }
 
 func NewDiscordService(
-	accountRepo *repository.AccountRepository,
 	eventRepo *repository.EventRepository,
 	logger zerolog.Logger,
 ) *DiscordService {
 	return &DiscordService{
-		accountRepo: accountRepo,
 		eventRepo: eventRepo,
 		logger: logger.With().Str("service", "DiscordService").Str("component", "discord").Logger(),
 	}
 }
 
-func (s *DiscordService) GetUserEventRoleByDiscordID(ctx context.Context, discordID string) (*uuid.UUID, *sqlc.EventRoleType, error) {
-	userID, err := s.accountRepo.GetUserIDByDiscordAccountID(ctx, discordID)
-	if err != nil {
-		if err == repository.ErrAccountNotFound {
-			return nil, nil, ErrDiscordAccountNotFound
-		}
-		s.logger.Err(err).Msg("failed to get user ID from discord account")
-		return nil, nil, err
-	}
-
-	eventRole, err := s.eventRepo.GetEventRoleByUserID(ctx, *userID)
+func (s *DiscordService) GetUserEventRoleByDiscordIDAndEventId(ctx context.Context, discordID string, eventID uuid.UUID) (*sqlc.EventRoleType, error) {
+	eventRole, err := s.eventRepo.GetEventRoleByDiscordIDAndEventId(ctx, discordID, eventID)
 	if err != nil {
 		if err == repository.ErrEventRoleNotFound {
-			return nil, nil, ErrNoEventRole
+			return nil, ErrNoEventRole
 		}
-		s.logger.Err(err).Msg("failed to get event role")
-		return nil, nil, err
+		s.logger.Err(err).Msg("failed to get event role by discord ID and event ID")
+		return nil, err
 	}
 
-	return &eventRole.EventID, &eventRole.Role, nil
+	return &eventRole.Role, nil
 }
 
 func (s *DiscordService) GetEventAttendeesWithDiscord(ctx context.Context, eventID uuid.UUID) (*[]sqlc.GetEventAttendeesWithDiscordRow, error) {

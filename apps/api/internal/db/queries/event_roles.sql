@@ -26,13 +26,6 @@ UPDATE event_roles
 SET role = $3
 WHERE event_id = $1 AND user_id = $2;
 
--- name: GetEventRoleByUserID :one
-SELECT event_id, role
-FROM event_roles
-WHERE user_id = $1
-ORDER BY assigned_at DESC
-LIMIT 1;
-
 -- name: GetEventAttendeesWithDiscord :many
 SELECT 
     a.account_id as discord_id,
@@ -45,3 +38,11 @@ JOIN auth.accounts a ON u.id = a.user_id
 WHERE er.event_id = $1
     AND er.role = 'attendee'
     AND a.provider_id = 'discord';
+
+-- name: GetEventRoleByDiscordIDAndEventId :one
+SELECT er.event_id, er.role
+FROM event_roles er
+JOIN auth.accounts a ON er.user_id = a.user_id
+WHERE a.provider_id = 'discord'
+    AND a.account_id = $1
+    AND er.event_id = $2;
