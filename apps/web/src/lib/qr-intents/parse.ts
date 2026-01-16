@@ -2,21 +2,13 @@ import * as z from "zod";
 import { Intent } from "./intent";
 
 // Used for checking attendees into an event
-export type CheckInIntent = {
+export type IdentifyIntent = {
   intent: typeof Intent.CHECK_IN;
   user_id: string;
   event_id: string;
 };
 
-// Used for redeeming redeemables (food, t-shirts, etc)
-export type RedeemIntent = {
-  intent: typeof Intent.REDEEM;
-  redeemable_id: string;
-  user_id: string;
-  event_id: string;
-};
-
-export type QRIntent = CheckInIntent | RedeemIntent;
+export type QRIntent = IdentifyIntent;
 export type IntentParseError = "MALFORMED_INTENT_HEADER" | "MALFORMED_BODY";
 
 // Can be abstracted away later
@@ -35,7 +27,7 @@ export function parseQrIntent(
   const [head, body] = input.trim().split("::");
 
   switch (head.toUpperCase()) {
-    case "CHECKIN": {
+    case "IDENT": {
       const res = parseCheckIn(body);
 
       if (!res.ok) {
@@ -53,12 +45,6 @@ export function parseQrIntent(
         },
       };
     }
-
-    case "REDEEM": {
-      console.log("REDEEM detected");
-      break;
-    }
-
     default: {
       console.log(`Header not recognized : ${head.toUpperCase()}`);
       return {
@@ -67,8 +53,6 @@ export function parseQrIntent(
       };
     }
   }
-
-  return { ok: false, error: "MALFORMED_INTENT_HEADER" };
 }
 
 const CheckInSchema = z.object({

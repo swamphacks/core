@@ -10,8 +10,8 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const eventId = Route.useParams().eventId;
-  const { isScannerActive, onScan } = useCheckInScanner(eventId);
+  // const eventId = Route.useParams().eventId;
+  const { isScannerActive, onScan } = useCheckInScanner();
 
   return (
     <main>

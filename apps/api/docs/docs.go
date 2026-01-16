@@ -155,6 +155,21 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "handlers.EventCheckInRequest": {
+                "properties": {
+                    "rfid": {
+                        "type": "string"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "rfid",
+                    "user_id"
+                ],
+                "type": "object"
+            },
             "handlers.NullableEventRole": {
                 "properties": {
                     "assigned_at": {
@@ -538,6 +553,9 @@ const docTemplate = `{
                     },
                     "user_id": {
                         "type": "string"
+                    },
+                    "waitlist_join_time": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -551,7 +569,8 @@ const docTemplate = `{
                     "status",
                     "submitted_at",
                     "updated_at",
-                    "user_id"
+                    "user_id",
+                    "waitlist_join_time"
                 ],
                 "type": "object"
             },
@@ -637,6 +656,19 @@ const docTemplate = `{
                 "x-enum-varnames": [
                     "AuthUserRoleUser",
                     "AuthUserRoleSuperuser"
+                ]
+            },
+            "sqlc.BatRunStatus": {
+                "enum": [
+                    "running",
+                    "completed",
+                    "failed"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "BatRunStatusRunning",
+                    "BatRunStatusCompleted",
+                    "BatRunStatusFailed"
                 ]
             },
             "sqlc.Event": {
@@ -1013,6 +1045,45 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "sqlc.GetRunsByEventIdRow": {
+                "properties": {
+                    "accepted_applicants": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "completed_at": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "rejected_applicants": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/sqlc.NullBatRunStatus"
+                    }
+                },
+                "required": [
+                    "accepted_applicants",
+                    "completed_at",
+                    "created_at",
+                    "id",
+                    "rejected_applicants",
+                    "status"
+                ],
+                "type": "object"
+            },
             "sqlc.JoinRequestStatus": {
                 "enum": [
                     "PENDING",
@@ -1093,6 +1164,22 @@ const docTemplate = `{
                 },
                 "required": [
                     "application_status",
+                    "valid"
+                ],
+                "type": "object"
+            },
+            "sqlc.NullBatRunStatus": {
+                "properties": {
+                    "bat_run_status": {
+                        "$ref": "#/components/schemas/sqlc.BatRunStatus"
+                    },
+                    "valid": {
+                        "description": "Valid is true if BatRunStatus is not NULL",
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "bat_run_status",
                     "valid"
                 ],
                 "type": "object"
@@ -1769,6 +1856,51 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/application/accept-acceptance": {
+            "patch": {
+                "description": "Sets application status from accepted to rejected",
+                "parameters": [
+                    {
+                        "description": "ID of the event to join the waitlist for",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Acceptance withdrawn joined successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to accept"
+                    }
+                },
+                "summary": "Accept an acceptance after being accepted to an event.",
+                "tags": [
+                    "Application Event"
+                ]
+            }
+        },
         "/events/{eventId}/application/assign-reviewers": {
             "post": {
                 "description": "Assigns applications for an event to reviewers for the application review process.",
@@ -1949,6 +2081,51 @@ const docTemplate = `{
                     }
                 },
                 "summary": "Download the user's uploaded resume from their event application",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/join-waitlist": {
+            "patch": {
+                "description": "Adds a waitlist join time to application. Sets status to waitlisted",
+                "parameters": [
+                    {
+                        "description": "ID of the event to join the waitlist for",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event Waitlist joined successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to join waitlist"
+                    }
+                },
+                "summary": "Join event waitlist after rejected application status.",
                 "tags": [
                     "Application"
                 ]
@@ -2194,6 +2371,51 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/application/withdraw-acceptance": {
+            "patch": {
+                "description": "Sets application status from accepted to rejected",
+                "parameters": [
+                    {
+                        "description": "ID of the event to join the waitlist for",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Acceptance withdrawn joined successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to withdraw"
+                    }
+                },
+                "summary": "Withdraw an acceptance after being accepted to an event.",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
         "/events/{eventId}/application/{applicationId}": {
             "get": {
                 "description": "Retrieves an application using the user id and event id primary keys and unique constraints. Only accessible by event staff and admins.",
@@ -2381,6 +2603,159 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{eventId}/bat-runs": {
+            "delete": {
+                "description": "Delete an existing event",
+                "parameters": [
+                    {
+                        "description": "Run ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "OK - Run deleted"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Delete an event",
+                "tags": [
+                    "Bat"
+                ]
+            },
+            "get": {
+                "description": "Gets BatRuns.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/sqlc.GetRunsByEventIdRow"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK: BatRuns returned"
+                    }
+                },
+                "summary": "Get BatRuns",
+                "tags": [
+                    "Bat"
+                ]
+            }
+        },
+        "/events/{eventId}/checkin": {
+            "post": {
+                "description": "Staff route for checking a user to an event. The user to check in must be an attendee and have never been checked in yet.",
+                "parameters": [
+                    {
+                        "description": "The authenticated session token/id",
+                        "in": "cookie",
+                        "name": "sh_session_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The ID of the event",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handlers.EventCheckInRequest",
+                                "summary": "request",
+                                "description": "Event check in data"
+                            }
+                        }
+                    },
+                    "description": "Event check in data",
+                    "required": true
+                },
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Malformed request body."
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unauthenticated: Requester is not currently authenticated."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Something went seriously wrong."
+                    }
+                },
+                "summary": "Check a user into an event",
+                "tags": [
+                    "Admissions"
+                ]
+            }
+        },
         "/events/{eventId}/interest": {
             "post": {
                 "description": "Submit email for event interest/mailing list",
@@ -2501,6 +2876,58 @@ const docTemplate = `{
                 "summary": "Retrieves general information about the event",
                 "tags": [
                     "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/review-status": {
+            "get": {
+                "description": "Check if application reviews complete",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: Something went terribly wrong on our end."
+                    }
+                },
+                "summary": "Check if application reviews complete",
+                "tags": [
+                    "Bat"
                 ]
             }
         },

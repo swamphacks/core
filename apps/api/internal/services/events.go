@@ -211,6 +211,27 @@ func (s *EventService) UpdateEventRole(ctx context.Context, userId uuid.UUID, ev
 	return s.eventRepo.UpdateRole(ctx, userId, eventId, role)
 }
 
+// If you need to set any of these fields to nil, then you need to find a different function.
+// If you pass in nil, it will mark that field as do not update.
+func (s *EventService) UpdateEventRoleByIds(ctx context.Context, userId, eventId uuid.UUID, role *sqlc.EventRoleType, checkedInAt *time.Time, RFID *string) error {
+	if role == nil && checkedInAt == nil && RFID == nil {
+		return errors.New("no fields provided to update")
+	}
+
+	return s.eventRepo.UpdateEventRoleByIds(ctx, sqlc.UpdateEventRoleByIdsParams{
+		EventID:      eventId,
+		UserID:       userId,
+		Role:         *role,
+		RoleDoUpdate: role != nil,
+
+		CheckedInAt:         checkedInAt,
+		CheckedInAtDoUpdate: checkedInAt != nil,
+
+		Rfid:         RFID,
+		RfidDoUpdate: RFID != nil,
+	})
+}
+
 func (s *EventService) IsApplicationsOpen(ctx context.Context, eventId uuid.UUID) (bool, error) {
 	event, err := s.GetEventByID(ctx, eventId)
 	if err != nil {

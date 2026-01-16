@@ -29,9 +29,9 @@ func NewBatHandler(BatService *services.BatService, logger zerolog.Logger) *BatH
 //	@Summary		Get BatRuns
 //	@Description	Gets BatRuns.
 //	@Tags			Bat
-//	@Accept         json
+//	@Accept			json
 //	@Produce		json
-//	@Success		200		{array}	sqlc.GetBatRunsWithUserInfoRow	"OK: BatRuns returned"
+//	@Success		200 {array} sqlc.GetRunsByEventIdRow	"OK: BatRuns returned"
 //	@Router			/events/{eventId}/bat-runs [get]
 func (h *BatHandler) GetRunsByEventId(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
@@ -67,6 +67,7 @@ func (h *BatHandler) GetRunsByEventId(w http.ResponseWriter, r *http.Request) {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong encoding response"))
 		return
 	}
+
 }
 
 // Check application reviews complete

@@ -35,11 +35,11 @@ func NewAuthHandler(authService *services.AuthService, cfg *config.Config, logge
 //	@Description	Get the currently authenticated user's information.
 //	@Tags			Authentication
 //	@Produce		json
-//	@Param			sh_session	cookie		string	true	"The authenticated session token/id"
-//	@Success		200			{object}	middleware.UserContext
-//	@Failure		401			{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
-//	@Failure		500			{object}	response.ErrorResponse
-//	@Router			/auth/me [get]																																											[get]
+//	@Param			sh_session		cookie		string	true	"The authenticated session token/id"
+//	@Success		200				{object}	middleware.UserContext
+//	@Failure		401				{object}	response.ErrorResponse	"Unauthenticated: Requester is not currently authenticated."
+//	@Failure		500				{object}	response.ErrorResponse
+//	@Router			/auth/me [get]																																																	[get]
 func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	user, err := h.authService.GetMe(r.Context())
 	if err != nil {
