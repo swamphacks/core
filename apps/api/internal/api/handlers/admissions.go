@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/services"
@@ -94,5 +96,25 @@ func (h *AdmissionHandler) HandleCalculateAdmissionsRequest(w http.ResponseWrite
 	}
 
 	w.WriteHeader(http.StatusCreated)
+
+}
+
+type EventCheckInRequest struct {
+	UserID uuid.UUID `json:"user_id"`
+	RFID   string    `json:"rfid"`
+}
+
+func (h *AdmissionHandler) HandleEventCheckIn(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_param", "Missing event id"))
+		return
+	}
+
+	var req EventCheckInRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Could not parse request body"))
+		return
+	}
 
 }

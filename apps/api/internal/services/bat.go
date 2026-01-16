@@ -37,6 +37,7 @@ var (
 	ErrFailedToSendDecisionEmails      = errors.New("Failed to send decision emails")
 	ErrTestErr                         = errors.New("Err while testing")
 	ErrFailedToGetContactEmail         = errors.New("Failed to get contact email")
+	Err
 )
 
 type BatService struct {
@@ -358,4 +359,16 @@ func (s *BatService) mapToCandidates(engine *bat.BatEngine, applications []sqlc.
 	}
 
 	return appAdmissionsData, nil
+}
+
+func (s *BatService) CheckInAttendee(ctx context.Context, eventId, userId uuid.UUID, RFID string) error {
+	// Retrieve user with their current event role
+	role, err := s.eventRepo.GetEventRoleByIds(ctx, userId, eventId)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	if role.Role != sqlc.EventRoleTypeAttendee {
+		return
+	}
 }
