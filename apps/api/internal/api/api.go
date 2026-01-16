@@ -200,17 +200,21 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			})
 
 			r.Route("/redeemables", func(r chi.Router) {
-				r.With(ensureEventStaff).Get("/", api.Handlers.Redeemables.GetRedeemables)
+				r.Use(ensureEventStaff)
+				r.Route("/events/{eventID}", func(r chi.Router) {
 
-				r.With(ensureEventStaff).Post("/", api.Handlers.Redeemables.CreateRedeemable)
+					r.Get("/", api.Handlers.Redeemables.GetRedeemables)
+					r.Post("/", api.Handlers.Redeemables.CreateRedeemable)
+				})
 
 				r.Route("/{redeemableId}", func(r chi.Router) {
-					r.With(ensureEventStaff).Patch("/", api.Handlers.Redeemables.UpdateRedeemable)
+					r.Patch("/", api.Handlers.Redeemables.UpdateRedeemable)
+					r.Delete("/", api.Handlers.Redeemables.DeleteRedeemable)
 
-					r.With(ensureEventStaff).Delete("/", api.Handlers.Redeemables.DeleteRedeemable)
-
-					r.With(ensureEventStaff).Post("/redeem", api.Handlers.Redeemables.RedeemRedeemable)
-					r.With(ensureEventStaff).Patch("/users/{user_id}", api.Handlers.Redeemables.UpdateRedemption)
+					r.Route("/users/{userID}", func(r chi.Router) {
+						r.Post("/", api.Handlers.Redeemables.RedeemRedeemable)
+						r.Patch("/", api.Handlers.Redeemables.UpdateRedemption)
+					})
 				})
 			})
 
