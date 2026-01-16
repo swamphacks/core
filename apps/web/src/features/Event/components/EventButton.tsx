@@ -6,7 +6,7 @@ import { cn } from "@/utils/cn";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "react-toastify";
 import { DialogTrigger } from "react-aria-components";
-import { EventWithdrawalModal } from "./EventWithdrawalModal";
+import { EventAcceptanceWithdrawalModal } from "./EventAcceptanceWithdrawalModal";
 import { EventWaitlistModal } from "./EventWaitlistModal";
 import { api } from "@/lib/ky";
 import { auth } from "@/lib/authClient";
@@ -76,7 +76,7 @@ const EventButton = ({
         to: `/events/${eventId}/dashboard`,
       });
     } catch (error) {
-      console.error("Failed to join waitlist", error);
+      console.error("Failed to Accept", error);
       showToast({
         title: "Acceptance Failed",
         message: "Failed to Accept. Please try again.",
@@ -127,6 +127,10 @@ const EventButton = ({
           position: "bottom-right",
         });
         break;
+      case "withdrawn":
+        window.location.href =
+          "https://swamphack.notion.site/2e73b41de22f806da958fa548a176725?pvs=105";
+        break;
     }
   };
 
@@ -139,7 +143,9 @@ const EventButton = ({
         >
           {text || applicationStatus[statusProp].button.text}
         </Button>
-        <EventWithdrawalModal eventId={eventId}></EventWithdrawalModal>
+        <EventAcceptanceWithdrawalModal
+          eventId={eventId}
+        ></EventAcceptanceWithdrawalModal>
       </DialogTrigger>
     );
   } else if (statusProp === "rejected") {

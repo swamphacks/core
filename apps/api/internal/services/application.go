@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
@@ -21,6 +22,7 @@ var (
 	ErrGetApplicationStatistics = errors.New("failed to aggregate application stats")
 	ErrMismatchedReviewerCounts = errors.New("the total number of applications does not match the total number of assigned reviews")
 	ErrWrongReviewerAssignment  = errors.New("an application has been assigned to a reviewer who is not authorized to review it")
+	ErrEventAlreadyStarted      = errors.New("the event has already started")
 )
 
 // TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
@@ -94,7 +96,7 @@ func NewApplicationService(appRepo *repository.ApplicationRepository, userRepo *
 		buckets:       buckets,
 		txm:           txm,
 		scheduler:     scheduler,
-		logger:        logger,
+		logger:        logger.With().Str("component", "applicationService").Logger(),
 	}
 }
 
@@ -542,7 +544,34 @@ func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userId uuid
 		EventID: eventId,
 		//TODO: Make it so I don't have to set this!
 		StatusDoUpdate: true,
-		Status:         sqlc.ApplicationStatusRejected,
+		Status:         sqlc.ApplicationStatusWithdrawn,
+	})
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	// Make atomic
+	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+		txEventRepo := s.eventsService.eventRepo.NewTx(tx)
+		if err := txAppRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+			UserID:         userId,
+			EventID:        eventId,
+			StatusDoUpdate: true,
+			Status:         sqlc.ApplicationStatusWithdrawn,
+		}); err != nil {
+			return err
+		}
+
+		return txEventRepo.UpdateRole(ctx,
+			userId,
+			eventId,
+			sqlc.EventRoleTypeApplicant,
+		)
 	})
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())
@@ -568,7 +597,19 @@ func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, us
 
 func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Context, eventId uuid.UUID, acceptanceCount uint32, acceptanceQuota uint32) error {
 	var acceptedUserIds []uuid.UUID
-	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+
+	event, err := s.eventsService.GetEventByID(ctx, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	currentTime := time.Now()
+	if currentTime.After(event.StartTime) {
+		s.logger.Err(ErrEventAlreadyStarted).Msg("Could not transition waitlisted applications: the event has already started.")
+		return ErrEventAlreadyStarted
+	}
+
+	err = s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.appRepo.NewTx(tx)
 
 		err := txAppRepo.TransitionAcceptedApplicationsToWaitlistByEventID(ctx, eventId)

@@ -28,7 +28,7 @@ function RouteComponent() {
   }
 
   if (eventRole === "attendee") {
-    return <AttendeeOverview />;
+    return <AttendeeOverview eventId={eventId} />;
   }
 
   // Should never reach here due to the redirect in beforeLoad

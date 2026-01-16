@@ -26,7 +26,7 @@ const statusMap: Record<string, keyof typeof applicationStatus> = {
   submitted: "underReview",
   under_review: "underReview",
   started: "notApplied",
-  withdrawn: "notGoing",
+  withdrawn: "withdrawn",
   staff: "staff",
   admin: "admin",
   attendee: "attending",

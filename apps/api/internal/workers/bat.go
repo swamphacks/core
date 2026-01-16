@@ -3,6 +3,8 @@ package workers
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
@@ -10,6 +12,10 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
+)
+
+var (
+	ErrEventAlreadyStarted = errors.New("the event has already started")
 )
 
 // BAT Worker
@@ -22,15 +28,17 @@ import (
 type BATWorker struct {
 	batService         *services.BatService
 	applicationService *services.ApplicationService
+	eventService       *services.EventService
 	scheduler          *asynq.Scheduler
 	taskQueue          *asynq.Client
 	logger             zerolog.Logger
 }
 
-func NewBATWorker(batService *services.BatService, applicationService *services.ApplicationService, scheduler *asynq.Scheduler, taskQueue *asynq.Client, logger zerolog.Logger) *BATWorker {
+func NewBATWorker(batService *services.BatService, applicationService *services.ApplicationService, eventService *services.EventService, scheduler *asynq.Scheduler, taskQueue *asynq.Client, logger zerolog.Logger) *BATWorker {
 	return &BATWorker{
 		batService:         batService,
 		applicationService: applicationService,
+		eventService:       eventService,
 		logger:             logger.With().Str("worker", "BATWorker").Str("component", "BAT").Logger(),
 		scheduler:          scheduler,
 		taskQueue:          taskQueue,
@@ -70,6 +78,18 @@ func (w *BATWorker) HandleScheduleTransitionWaitlistTask(ctx context.Context, t 
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
 		w.logger.Err(err).Msg("Failed to unmarshal payload.")
 		return err
+	}
+
+	// Get event start date, error if past the start of the event.
+	event, err := w.eventService.GetEventByID(ctx, payload.EventID)
+	if err != nil {
+		w.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	currentTime := time.Now()
+	if currentTime.After(event.StartTime) {
+		w.logger.Err(ErrEventAlreadyStarted).Msg("Could not transition waitlisted applications: the event has already started.")
+		return ErrEventAlreadyStarted
 	}
 
 	cfg := config.Load()
