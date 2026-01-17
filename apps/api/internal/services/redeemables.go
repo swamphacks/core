@@ -33,13 +33,7 @@ func (s *RedeemablesService) GetRedeemablesByEventID(ctx context.Context, eventI
 }
 
 func (s *RedeemablesService) CreateRedeemable(ctx context.Context, eventID uuid.UUID, name string, amount int, maxUserAmount int) (*sqlc.Redeemable, error) {
-	params := sqlc.CreateRedeemableParams{
-		EventID:       eventID,
-		Name:          name,
-		Amount:        int32(amount),
-		MaxUserAmount: int32(maxUserAmount),
-	}
-	redeemable, err := s.redeemablesRepo.CreateRedeemable(ctx, params)
+	redeemable, err := s.redeemablesRepo.CreateRedeemable(ctx, eventID, name, amount, maxUserAmount)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to create redeemable")
 		return nil, err
@@ -57,27 +51,29 @@ func (s *RedeemablesService) DeleteRedeemable(ctx context.Context, redeemableID 
 }
 
 func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID uuid.UUID, name *string, amount *int, maxUserAmount *int) (*sqlc.Redeemable, error) {
-	// need to convert to int32, extra code because they are nullable pointers
-	var amount32 *int32
-	if amount != nil {
-		v := int32(*amount)
-		amount32 = &v
-	}
-	var maxUserAmount32 *int32
-	if maxUserAmount != nil {
-		v := int32(*maxUserAmount)
-		maxUserAmount32 = &v
-	}
-	params := sqlc.UpdateRedeemableParams{
-		ID:            redeemableID,
-		Name:          name,
-		Amount:        amount32,
-		MaxUserAmount: maxUserAmount32,
-	}
-	redeemable, err := s.redeemablesRepo.UpdateRedeemable(ctx, params)
+	redeemable, err := s.redeemablesRepo.UpdateRedeemable(ctx, redeemableID, name, amount, maxUserAmount)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to update redeemable")
 		return nil, err
 	}
 	return redeemable, nil
+}
+
+func (s *RedeemablesService) RedeemRedeemable(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID) error {
+	_, err := s.redeemablesRepo.RedeemRedeemable(ctx, redeemableID, userID)
+
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to redeem redeemable")
+		return err
+	}
+	return nil
+}
+
+func (s *RedeemablesService) UpdateRedemption(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID) error {
+	err := s.redeemablesRepo.UpdateRedemption(ctx, redeemableID, userID)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to update redemption")
+		return err
+	}
+	return nil
 }

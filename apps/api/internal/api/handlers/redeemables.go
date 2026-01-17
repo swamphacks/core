@@ -143,10 +143,60 @@ func (h *RedeemablesHandler) DeleteRedeemable(w http.ResponseWriter, r *http.Req
 
 func (h *RedeemablesHandler) RedeemRedeemable(w http.ResponseWriter, r *http.Request) {
 	// user id, redeemable id
-	return
+	userIdStr := chi.URLParam(r, "userId")
+	if userIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
+		return
+	}
+	userId, err := uuid.Parse(userIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID"))
+		return
+	}
+	redeemableIdStr := chi.URLParam(r, "redeemableId")
+	if redeemableIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_redeemable_id", "The redeemable ID is missing from the URL!"))
+		return
+	}
+	redeemableId, err := uuid.Parse(redeemableIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_redeemable_id", "The redeemable ID is not a valid UUID"))
+		return
+	}
+	err = h.redeemablesService.RedeemRedeemable(r.Context(), userId, redeemableId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_server_error", "internal service error, failed to redeem redeemable"))
+		return
+	}
+	res.Send(w, http.StatusNoContent, nil)
 }
 
 func (h *RedeemablesHandler) UpdateRedemption(w http.ResponseWriter, r *http.Request) {
 	// user id, redeemable id
-	return
+	userIdStr := chi.URLParam(r, "userId")
+	if userIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
+		return
+	}
+	userId, err := uuid.Parse(userIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID"))
+		return
+	}
+	redeemableIdStr := chi.URLParam(r, "redeemableId")
+	if redeemableIdStr == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_redeemable_id", "The redeemable ID is missing from the URL!"))
+		return
+	}
+	redeemableId, err := uuid.Parse(redeemableIdStr)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_redeemable_id", "The redeemable ID is not a valid UUID"))
+		return
+	}
+	err = h.redeemablesService.UpdateRedemption(r.Context(), userId, redeemableId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_server_error", "internal service error, failed to update redemption"))
+		return
+	}
+	res.Send(w, http.StatusNoContent, nil)
 }
