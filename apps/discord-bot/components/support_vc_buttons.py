@@ -2,11 +2,13 @@ from discord.ui import View, Button
 from discord import ButtonStyle, Interaction
 import discord
 from discord.errors import NotFound
-from utils.checks import is_mod_slash
 from utils.mentor_functions import set_busy_mentor, set_available_mentor
 from components.ticket_state import claimed_tickets
 
 class SupportVCButtons(View):
+    """
+    View for support voice channel buttons which is used in ThreadSupportModal to add buttons onto the embed sent to the reports channel.
+    """
     def __init__(self, voice_channel: discord.VoiceChannel, description_input: discord.ui.TextInput) -> None:
         super().__init__(timeout=None)
         self.voice_channel = voice_channel
@@ -16,7 +18,15 @@ class SupportVCButtons(View):
 
 
 class CloseTicketButton(Button):
+    """Button to close a support voice channel ticket."""
     def __init__(self, voice_channel: discord.VoiceChannel, description_input: discord.ui.TextInput):
+        """
+        Initializes the CloseTicketButton with the given voice channel and description input.
+
+        Args:
+            voice_channel (discord.VoiceChannel): The support voice channel to be closed.
+            description_input (discord.ui.TextInput): The text input containing the description of the issue.
+        """
         super().__init__(label="Close Ticket", style=ButtonStyle.primary, custom_id="close_ticket", emoji="❌")
         self.voice_channel = voice_channel
         self.description_input = description_input
@@ -27,8 +37,12 @@ class CloseTicketButton(Button):
         try:
             await self.voice_channel.delete()
             await interaction.response.send_message(f"Voice channel: {self.voice_channel.mention} has been deleted.", ephemeral=True)
-            await set_available_mentor(interaction.user, True)
-            await set_busy_mentor(interaction.user, False)
+            
+            # Set mentor status - only mark as available if they have no more tickets
+            mentor_ticket_count = sum(1 for mentor_id in claimed_tickets.values() if mentor_id == interaction.user.id)
+            if mentor_ticket_count == 0:
+                await set_available_mentor(interaction.user, True)
+                await set_busy_mentor(interaction.user, False)
             
             # edit original message to disable claim button
             message = interaction.message
@@ -60,7 +74,15 @@ class CloseTicketButton(Button):
             await interaction.response.send_message(f"Failed to delete the voice channel. Error: {e}", ephemeral=True)
 
 class ClaimTicketButton(Button):
+    """Button to claim a support voice channel ticket."""
     def __init__(self, voice_channel: discord.VoiceChannel, description_input: discord.ui.TextInput):
+        """
+        Initializes the ClaimTicketButton with the given voice channel and description input.
+
+        Args:
+            voice_channel (discord.VoiceChannel): The support voice channel to be claimed.
+            description_input (discord.ui.TextInput): The text input containing the description of the issue.
+        """
         super().__init__(label="Claim Ticket", style=ButtonStyle.primary, custom_id="claim_ticket", emoji="📥")
         self.voice_channel = voice_channel
         self.description_input = description_input
@@ -71,14 +93,6 @@ class ClaimTicketButton(Button):
             if claimed_tickets.get(self.voice_channel.id):
                 await interaction.response.send_message(
                     "This ticket has already been claimed by another mentor.",
-                    ephemeral=True
-                )
-                return
-            
-            # check if mentor already has an active ticket
-            if interaction.user.id in claimed_tickets.values():
-                await interaction.response.send_message(
-                    "You already have an active support thread or VC. Please close it before claiming a new one.",
                     ephemeral=True
                 )
                 return
