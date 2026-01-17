@@ -515,6 +515,37 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "services.UserInfoForEvent": {
+                "properties": {
+                    "checked_in_at": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "event_role": {
+                        "$ref": "#/components/schemas/sqlc.EventRoleType"
+                    },
+                    "image": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "platform_role": {
+                        "$ref": "#/components/schemas/sqlc.AuthUserRole"
+                    }
+                },
+                "required": [
+                    "checked_in_at",
+                    "email",
+                    "event_role",
+                    "image",
+                    "name",
+                    "platform_role"
+                ],
+                "type": "object"
+            },
             "sqlc.Application": {
                 "properties": {
                     "application": {
@@ -3731,6 +3762,47 @@ const docTemplate = `{
                     }
                 },
                 "summary": "Get all users for an event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/users/{userId}": {
+            "get": {
+                "description": "A user's information along with their event details such as check in state, role, and more. Must be validated on the frontend.",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/services.UserInfoForEvent"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error getting user info for event"
+                    }
+                },
+                "summary": "Retrieves a user's information along with their event information",
                 "tags": [
                     "Event"
                 ]

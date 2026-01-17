@@ -801,9 +801,9 @@ func (h *EventHandler) GetEventOverview(w http.ResponseWriter, r *http.Request) 
 //	@Description	A user's information along with their event details such as check in state, role, and more. Must be validated on the frontend.
 //	@Tags			Event
 //	@Produce		json
-//	@Success		200	{object}	services.EventOverview
+//	@Success		200	{object}	services.UserInfoForEvent
 //	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
-//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error getting statistics"
+//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error getting user info for event"
 //	@Router			/events/{eventId}/users/{userId} [get]
 func (h *EventHandler) GetUserForEvent(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
@@ -817,4 +817,12 @@ func (h *EventHandler) GetUserForEvent(w http.ResponseWriter, r *http.Request) {
 		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
 		return
 	}
+
+	info, err := h.eventService.GetUserInfoForEvent(r.Context(), userId, eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("user_info_err", "Something went wrong while querying user info for event"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, info)
 }

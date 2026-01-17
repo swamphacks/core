@@ -363,9 +363,15 @@ func (s *EventService) GetEventOverview(ctx context.Context, eventId uuid.UUID) 
 }
 
 type UserInfoForEvent struct {
+	Name         string             `json:"name"`
+	Email        *string            `json:"email"`
+	PlatformRole sqlc.AuthUserRole  `json:"platform_role"`
+	EventRole    sqlc.EventRoleType `json:"event_role"`
+	Image        *string            `json:"image"`
+	CheckedInAt  time.Time          `json:"checked_in_at"`
 }
 
-func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId uuid.UUID) error {
+func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId uuid.UUID) (*UserInfoForEvent, error) {
 	g, ctx := errgroup.WithContext(ctx)
 
 	var user *sqlc.AuthUser
@@ -377,11 +383,26 @@ func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId 
 		return err
 	})
 
+	//TODO: This may not run very nicely if the user doesn't have an associated event_role
 	g.Go(func() error {
 		var err error
-		role, err = s.eventRepo.GetEventRoleByIds()
+		role, err = s.eventRepo.GetEventRoleByIds(ctx, userId, eventId)
 		return err
 	})
 
-	return nil
+	if err := g.Wait(); err != nil {
+		s.logger.Err(err).Msg("Something went wrong while getting event overview stats")
+		return nil, err
+	}
+
+	result := &UserInfoForEvent{
+		Name:         user.Name,
+		Email:        user.Email,
+		PlatformRole: user.Role,
+		EventRole:    role.Role,
+		Image:        user.Image,
+		CheckedInAt:  *role.CheckedInAt,
+	}
+
+	return result, nil
 }

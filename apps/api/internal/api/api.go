@@ -145,7 +145,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			// Check in and event day of routes (STAFF+)
 			r.With(ensureEventStaff).Post("/checkin", api.Handlers.Admission.HandleEventCheckIn)
 			// Used to fetch user info for checking in
-			r.With(ensureEventStaff).Get("/users/{userId}", func(w http.ResponseWriter, r *http.Request) {})
+			r.With(ensureEventStaff).Get("/users/{userId}", api.Handlers.Event.GetUserForEvent)
 
 			// Admin-only
 			r.With(ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
