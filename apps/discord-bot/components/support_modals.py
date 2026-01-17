@@ -149,8 +149,8 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
     Support modal for creating a support vc and embeds.
     
     This modal provides a form interface for users to submit support requests.
-    It creates a private vc in the Support-VCs category and notifies staff members
-    through the reports channel.
+        It creates a private vc in the --- SwampHacks XI (Support-VCs) --- category and notifies staff members
+        through the reports channel.
     """
     def __init__(self) -> None:
         """
@@ -172,7 +172,7 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         
         This method:
         1. Validates the existence of required channels and roles
-        2. Creates a private voice channel in the Support-VCs category for the user and mentors to discuss the issue
+        2. Creates a private voice channel in the --- SwampHacks XI (Support-VCs) --- category for the user and mentors to discuss the issue
         3. Sends an embed with the support request details to both the voice channel and reports channel
         4. Notifies staff members and provides them with a button to join the voice channel
         
@@ -195,7 +195,7 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         else:
             mod_role = discord.utils.get(interaction.guild.roles, name=mod_role_name)
         
-        category = discord.utils.get(interaction.guild.categories, name="Support-VCs")
+        category = discord.utils.get(interaction.guild.categories, name="--- SwampHacks XI (Support-VCs) ---")
         vc_author = interaction.user
         
         if not mod_role:
@@ -209,7 +209,7 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             )
             return
         if category is None:
-            await interaction.response.send_message("Category **Support-VCs** not found.", ephemeral=True)
+            await interaction.response.send_message("Category **--- SwampHacks XI (Support-VCs) ---** not found.", ephemeral=True)
             return
         
          # truncate description in case it's too long

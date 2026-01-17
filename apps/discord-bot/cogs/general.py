@@ -264,7 +264,8 @@ class General(commands.Cog):
             return
         # next ensure the thread is in the support channel specifically (check if the thread's parent exists as well)
         if not interaction.channel.parent or interaction.channel.parent.name != "support":
-            await interaction.response.send_message("This command can only be used in the support channel thread.", ephemeral=True)
+            if not interaction.channel.category or interaction.channel.category.name != "--- SwampHacks XI (Support-VCs) ---":
+                await interaction.response.send_message('This command can only be used in the "--- SwampHacks XI (Support-VCs) ---" category.', ephemeral=True)
             return
         
         # check if user is already in the thread
@@ -287,13 +288,13 @@ class General(commands.Cog):
     @has_bot_full_access()
     async def create_vc(self, interaction: discord.Interaction) -> None:
         """
-        Create a voice channel for support, requires a Support-VCs category and a Mentor role
+        Create a voice channel for support, requires a --- SwampHacks XI (Support-VCs) --- category and a Mentor role
 
         Args:
             interaction: The interaction that triggered this command
         """
         mentor_role = discord.utils.get(interaction.guild.roles, name="Mentor")
-        category = discord.utils.get(interaction.guild.categories, name="Support-VCs")
+        category = discord.utils.get(interaction.guild.categories, name="--- SwampHacks XI (Support-VCs) ---")
         vc_author = interaction.user
         if not mentor_role:
             await interaction.response.send_message(
@@ -303,7 +304,7 @@ class General(commands.Cog):
             return
         if not category:
             await interaction.response.send_message(
-                "Error: Could not find the Support-VCs category. Please create it before using this command.",
+                "Error: Could not find the --- SwampHacks XI (Support-VCs) --- category. Please create it before using this command.",
                 ephemeral=True
             )
             return
