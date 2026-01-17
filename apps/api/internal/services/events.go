@@ -361,3 +361,27 @@ func (s *EventService) GetEventOverview(ctx context.Context, eventId uuid.UUID) 
 		SubmissionTimesStatistics:   submissionTimesStats,
 	}, nil
 }
+
+type UserInfoForEvent struct {
+}
+
+func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId uuid.UUID) error {
+	g, ctx := errgroup.WithContext(ctx)
+
+	var user *sqlc.AuthUser
+	var role *sqlc.EventRole
+
+	g.Go(func() error {
+		var err error
+		user, err = s.userRepo.GetByID(ctx, userId)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		role, err = s.eventRepo.GetEventRoleByIds()
+		return err
+	})
+
+	return nil
+}
