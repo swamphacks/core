@@ -16,6 +16,15 @@ export default function ApplicationOverview({
 }: ApplicationOverviewProps) {
   const router = useRouter();
 
+  const total_applications =
+    data.application_status_stats.submitted +
+    data.application_status_stats.under_review +
+    data.application_status_stats.accepted +
+    data.application_status_stats.rejected +
+    data.application_status_stats.waitlisted +
+    data.application_status_stats.withdrawn +
+    data.application_status_stats.started;
+
   return (
     <div className="border border-input-border rounded-md px-4 py-3 w-full">
       <div className="space-y-2 md:space-y-0 md:flex justify-between items-start relative">
@@ -39,10 +48,7 @@ export default function ApplicationOverview({
         <div className="flex gap-3 mt-3 items-center min-w-0">
           <div className="bg-surface py-2 px-4 rounded-md">
             <p className="text-text-secondary">Total</p>
-            <p className="text-xl md:text-2xl">
-              {data.application_status_stats.started +
-                data.application_status_stats.submitted}
-            </p>
+            <p className="text-xl md:text-2xl">{total_applications}</p>
           </div>
 
           <div>
@@ -64,7 +70,7 @@ export default function ApplicationOverview({
             <div className="bg-surface py-2 px-4 rounded-md">
               <p className="text-text-secondary">Submitted</p>
               <p className="text-xl md:text-2xl">
-                {data.application_status_stats.submitted}
+                {total_applications - data.application_status_stats.started}
               </p>
             </div>
           </div>

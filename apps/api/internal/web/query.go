@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -58,4 +60,44 @@ func ParseParamString(queryParams url.Values, key string, defaultVal *string) *s
 	}
 
 	return &v
+}
+
+// This deprecates functions from above.
+func ParseParam[T any](query url.Values, key string, def *T) (*T, error) {
+	v := query.Get(key)
+	if v == "" {
+		return def, nil
+	}
+
+	var out T
+	switch any(out).(type) {
+	case bool:
+		parsed, err := strconv.ParseBool(v)
+		if err != nil {
+			return nil, ErrMalformedField
+		}
+		out = any(parsed).(T)
+
+	case int32:
+		parsed, err := strconv.ParseInt(v, 10, 32)
+		if err != nil {
+			return nil, ErrMalformedField
+		}
+		out = any(int32(parsed)).(T)
+
+	case string:
+		out = any(v).(T)
+
+	case uuid.UUID:
+		parsed, err := uuid.Parse(v)
+		if err != nil {
+			return nil, ErrMalformedField
+		}
+		out = any(parsed).(T)
+
+	default:
+		return nil, errors.New("unsupported type for ParseParam")
+	}
+
+	return &out, nil
 }

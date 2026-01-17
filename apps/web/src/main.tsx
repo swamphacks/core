@@ -8,6 +8,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { auth } from "./lib/authClient";
 import { ToastContainer } from "react-toastify";
 import * as TanStackQueryProvider from "./integrations/tanstack-query/root-provider.tsx";
+import "@smastrom/react-rating/style.css";
 
 const TanStackQueryProviderContext = TanStackQueryProvider.getContext();
 const router = createRouter({

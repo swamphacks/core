@@ -95,9 +95,11 @@ class CloseThreadButton(Button):
             await self.thread.edit(name=new_name,archived=True, locked=True)
 
             
-            # Set mentor status
-            await set_available_mentor(interaction.user, True)
-            await set_busy_mentor(interaction.user, False)
+            # Set mentor status - only mark as available if they have no more tickets
+            mentor_ticket_count = sum(1 for mentor_id in claimed_tickets.values() if mentor_id == interaction.user.id)
+            if mentor_ticket_count == 0:
+                await set_available_mentor(interaction.user, True)
+                await set_busy_mentor(interaction.user, False)
             
             # edit original message to disable claim button
             message = interaction.message
@@ -171,14 +173,6 @@ class ClaimThreadButton(Button):
             if claimed_tickets.get(self.thread.id):
                 await interaction.response.send_message(
                     "This thread has already been claimed by another mentor.",
-                    ephemeral=True
-                )
-                return
-            
-            # Check if mentor already has an active ticket
-            if interaction.user.id in claimed_tickets.values():
-                await interaction.response.send_message(
-                    "You already have an active support thread or VC. Please close it before claiming a new one.",
                     ephemeral=True
                 )
                 return
