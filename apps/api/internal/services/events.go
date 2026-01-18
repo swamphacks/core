@@ -363,6 +363,7 @@ func (s *EventService) GetEventOverview(ctx context.Context, eventId uuid.UUID) 
 }
 
 type UserInfoForEvent struct {
+	UserID       uuid.UUID          `json:"user_id"`
 	Name         string             `json:"name"`
 	Email        *string            `json:"email"`
 	PlatformRole sqlc.AuthUserRole  `json:"platform_role"`
@@ -396,6 +397,7 @@ func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId 
 	}
 
 	result := &UserInfoForEvent{
+		UserID:       user.ID,
 		Name:         user.Name,
 		Email:        user.Email,
 		PlatformRole: user.Role,

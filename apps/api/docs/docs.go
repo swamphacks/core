@@ -534,6 +534,9 @@ const docTemplate = `{
                     },
                     "platform_role": {
                         "$ref": "#/components/schemas/sqlc.AuthUserRole"
+                    },
+                    "user_id": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -542,7 +545,8 @@ const docTemplate = `{
                     "event_role",
                     "image",
                     "name",
-                    "platform_role"
+                    "platform_role",
+                    "user_id"
                 ],
                 "type": "object"
             },

@@ -373,6 +373,8 @@ components:
           type: string
         platform_role:
           $ref: '#/components/schemas/sqlc.AuthUserRole'
+        user_id:
+          type: string
       required:
       - checked_in_at
       - email
@@ -380,6 +382,7 @@ components:
       - image
       - name
       - platform_role
+      - user_id
       type: object
     sqlc.Application:
       properties:
