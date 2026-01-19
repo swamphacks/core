@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/config"
@@ -20,6 +22,7 @@ var (
 	ErrGetApplicationStatistics = errors.New("failed to aggregate application stats")
 	ErrMismatchedReviewerCounts = errors.New("the total number of applications does not match the total number of assigned reviews")
 	ErrWrongReviewerAssignment  = errors.New("an application has been assigned to a reviewer who is not authorized to review it")
+	ErrEventAlreadyStarted      = errors.New("the event has already started")
 )
 
 // TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
@@ -73,23 +76,27 @@ var (
 
 type ApplicationService struct {
 	appRepo       *repository.ApplicationRepository
+	userRepo      *repository.UserRepository
 	eventsService *EventService
 	emailService  *EmailService
 	storage       storage.Storage
 	buckets       *config.CoreBuckets
 	txm           *db.TransactionManager
+	scheduler     *asynq.Scheduler
 	logger        zerolog.Logger
 }
 
-func NewApplicationService(appRepo *repository.ApplicationRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, logger zerolog.Logger) *ApplicationService {
+func NewApplicationService(appRepo *repository.ApplicationRepository, userRepo *repository.UserRepository, eventsService *EventService, emailService *EmailService, txm *db.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets, scheduler *asynq.Scheduler, logger zerolog.Logger) *ApplicationService {
 	return &ApplicationService{
 		appRepo:       appRepo,
+		userRepo:      userRepo,
 		eventsService: eventsService,
 		emailService:  emailService,
 		storage:       storage,
 		buckets:       buckets,
 		txm:           txm,
-		logger:        logger,
+		scheduler:     scheduler,
+		logger:        logger.With().Str("component", "applicationService").Logger(),
 	}
 }
 
@@ -164,8 +171,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		return nil
 	})
 
-	taskInfo, err := s.emailService.QueueSendConfirmationEmail(data.PreferredEmail, data.FirstName)
-	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendConfirmationEmail task!")
+	err = s.emailService.QueueConfirmationEmail(data.PreferredEmail, data.FirstName)
 
 	// Non-blocking error
 	if err != nil {
@@ -518,6 +524,147 @@ func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewer
 		Status:         sqlc.ApplicationStatusUnderReview,
 	}); err != nil {
 		s.logger.Err(err).Msg("Something went wrong Updating the application")
+	}
+
+	return nil
+}
+
+func (s *ApplicationService) JoinWaitlist(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	err := s.appRepo.JoinWaitlist(ctx, userId, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	err := s.appRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+		UserID:  userId,
+		EventID: eventId,
+		//TODO: Make it so I don't have to set this!
+		StatusDoUpdate: true,
+		Status:         sqlc.ApplicationStatusWithdrawn,
+	})
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	// Make atomic
+	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+		txEventRepo := s.eventsService.eventRepo.NewTx(tx)
+		if err := txAppRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+			UserID:         userId,
+			EventID:        eventId,
+			StatusDoUpdate: true,
+			Status:         sqlc.ApplicationStatusWithdrawn,
+		}); err != nil {
+			return err
+		}
+
+		return txEventRepo.UpdateRole(ctx,
+			userId,
+			eventId,
+			sqlc.EventRoleTypeApplicant,
+		)
+	})
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) error {
+	// is a check for a user being accepted necessary here? or is the frontend enough
+
+	err := s.eventsService.eventRepo.UpdateRole(ctx,
+		userId,
+		eventId,
+		sqlc.EventRoleTypeAttendee,
+	)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Context, eventId uuid.UUID, acceptanceCount uint32, acceptanceQuota uint32) error {
+	var acceptedUserIds []uuid.UUID
+
+	event, err := s.eventsService.GetEventByID(ctx, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+	currentTime := time.Now()
+	if currentTime.After(event.StartTime) {
+		s.logger.Err(ErrEventAlreadyStarted).Msg("Could not transition waitlisted applications: the event has already started.")
+		return ErrEventAlreadyStarted
+	}
+
+	err = s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.appRepo.NewTx(tx)
+
+		err := txAppRepo.TransitionAcceptedApplicationsToWaitlistByEventID(ctx, eventId)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		attendeeCount, err := s.appRepo.GetAttendeeCountByEventId(ctx, eventId)
+		if err != nil {
+			s.logger.Err(err).Msg("Failed to get total accepted application amount.")
+		}
+		if (acceptanceQuota - attendeeCount) <= acceptanceCount {
+			s.logger.Info().Msgf("Acceptance quota is close, shutting down waitlist transition scheduler. Remaining acceptances: %v - %v <= %v", acceptanceQuota, attendeeCount, acceptanceCount)
+			if s.scheduler != nil {
+				// The API also uses this file, and this function can be run from an endpoint so we have to check that the scheduler exists.
+				// Technically the task should be removed from the scheduler via an scheduler ENTRY_ID. However the scheduler is only running for this task.
+				s.scheduler.Shutdown()
+			}
+			acceptanceCount = acceptanceQuota - attendeeCount
+		}
+
+		s.logger.Info().Msgf("Acceptance count: %v", acceptanceCount)
+		acceptedUserIds, err = txAppRepo.TransitionWaitlistedApplicationsToAcceptedByEventID(ctx, eventId, acceptanceCount)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		s.logger.Debug().Msgf("Statuses transitioned: %s", acceptedUserIds)
+		return nil
+	})
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return err
+	}
+
+	for _, userId := range acceptedUserIds {
+		userContactInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userId)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
+
+		contactEmail, ok := userContactInfo.ContactEmail.(string)
+		if !ok {
+			return ErrFailedToGetContactEmail
+		}
+
+		err = s.emailService.QueueWaitlistAcceptanceEmail(contactEmail, userContactInfo.Name)
+		if err != nil {
+			s.logger.Err(err).Msg(err.Error())
+			return err
+		}
 	}
 
 	return nil

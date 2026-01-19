@@ -5,7 +5,14 @@ import { Button, button, type ButtonProps } from "@/components/ui/Button";
 import { cn } from "@/utils/cn";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "react-toastify";
-
+import { DialogTrigger } from "react-aria-components";
+import { EventAcceptanceWithdrawalModal } from "./EventAcceptanceWithdrawalModal";
+import { EventWaitlistModal } from "./EventWaitlistModal";
+import { api } from "@/lib/ky";
+import { auth } from "@/lib/authClient";
+import { showToast } from "@/lib/toast/toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { eventsQueryKey } from "../hooks/useEventsWithUserInfo";
 type ApplicationStatusTypes = keyof typeof applicationStatus;
 
 const applicationStatusVariants = Object.fromEntries(
@@ -37,21 +44,52 @@ const EventButton = ({
   className,
   text,
 }: EventButtonProps) => {
+  const queryClient = useQueryClient();
+
+  const router = useRouter();
+  const { data: userData } = auth.useUser();
+  if (!userData?.user) {
+    return <div>Loading...</div>;
+  }
+
+  const { user } = userData;
+
   const eventButtonClassName = eventButton({
     status: statusProp,
     variant: "skeleton",
     className,
   });
-  const router = useRouter();
+
+  const handleAcceptAcceptance = async (userId: string, eventId: string) => {
+    try {
+      console.log("Accepted button clicked for event");
+      await api.patch(
+        `events/${eventId}/application/accept-acceptance?userId=${userId}`,
+      );
+      await queryClient.invalidateQueries({ queryKey: eventsQueryKey });
+      showToast({
+        title: "Acceptance Accepted",
+        message: "Successfully Joined Event as Attendee.",
+        type: "success",
+      });
+      router.navigate({
+        to: `/events/${eventId}/dashboard`,
+      });
+    } catch (error) {
+      console.error("Failed to Accept", error);
+      showToast({
+        title: "Acceptance Failed",
+        message: "Failed to Accept. Please try again.",
+        type: "error",
+      });
+    }
+  };
 
   const onClick = () => {
     switch (statusProp) {
       case "accepted":
         // Make API call and then navigate to dashboard with accepted query param
-        console.log("Accepted button clicked for event");
-        router.navigate({
-          to: `/events/${eventId}/dashboard`,
-        });
+        handleAcceptAcceptance(user.userId, eventId);
         break;
       case "attending":
       case "staff":
@@ -69,10 +107,6 @@ const EventButton = ({
         });
         break;
       case "rejected":
-        // Navigate to the rejected info page
-        router.navigate({
-          to: `/events/${eventId}/rejected`,
-        });
         break;
       case "notApplied":
         // Navigate to the application page
@@ -81,10 +115,6 @@ const EventButton = ({
         });
         break;
       case "notGoing":
-        // Navigate to the decline feedback page
-        router.navigate({
-          to: `/events/${eventId}/feedback/decline`,
-        });
         break;
       case "completed":
         // Navigate to the event summary
@@ -97,18 +127,50 @@ const EventButton = ({
           position: "bottom-right",
         });
         break;
+      case "withdrawn":
+        window.location.href =
+          "https://swamphack.notion.site/2e73b41de22f806da958fa548a176725?pvs=105";
+        break;
     }
   };
 
-  return (
-    <Button
-      variant="skeleton"
-      className={cn(eventButtonClassName, "font-semibold")}
-      onClick={onClick}
-    >
-      {text || applicationStatus[statusProp].button.text}
-    </Button>
-  );
+  if (statusProp === "notGoing") {
+    return (
+      <DialogTrigger>
+        <Button
+          variant="skeleton"
+          className={cn(eventButtonClassName, "font-semibold")}
+        >
+          {text || applicationStatus[statusProp].button.text}
+        </Button>
+        <EventAcceptanceWithdrawalModal
+          eventId={eventId}
+        ></EventAcceptanceWithdrawalModal>
+      </DialogTrigger>
+    );
+  } else if (statusProp === "rejected") {
+    return (
+      <DialogTrigger>
+        <Button
+          variant="skeleton"
+          className={cn(eventButtonClassName, "font-semibold")}
+        >
+          {text || applicationStatus[statusProp].button.text}
+        </Button>
+        <EventWaitlistModal eventId={eventId}></EventWaitlistModal>
+      </DialogTrigger>
+    );
+  } else {
+    return (
+      <Button
+        variant="skeleton"
+        className={cn(eventButtonClassName, "font-semibold")}
+        onClick={onClick}
+      >
+        {text || applicationStatus[statusProp].button.text}
+      </Button>
+    );
+  }
 };
 
 export { EventButton };

@@ -100,6 +100,38 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, erro
 	return i, err
 }
 
+const getUserEmailInfoById = `-- name: GetUserEmailInfoById :one
+SELECT
+    id,
+    name,
+    email_consent,
+    CASE
+        WHEN preferred_email IS NOT NULL AND preferred_email != '' THEN preferred_email
+        ELSE email
+    END AS contact_email
+FROM auth.users
+WHERE id = $1
+`
+
+type GetUserEmailInfoByIdRow struct {
+	ID           uuid.UUID   `json:"id"`
+	Name         string      `json:"name"`
+	EmailConsent bool        `json:"email_consent"`
+	ContactEmail interface{} `json:"contact_email"`
+}
+
+func (q *Queries) GetUserEmailInfoById(ctx context.Context, id uuid.UUID) (GetUserEmailInfoByIdRow, error) {
+	row := q.db.QueryRow(ctx, getUserEmailInfoById, id)
+	var i GetUserEmailInfoByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.EmailConsent,
+		&i.ContactEmail,
+	)
+	return i, err
+}
+
 const getUsers = `-- name: GetUsers :many
 SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent
 FROM auth.users

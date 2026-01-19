@@ -39,6 +39,24 @@ WHERE event_id = $1
 ORDER BY 
     user_id ASC;
 
+-- name: ListAdmissionCandidatesByEvent :many
+SELECT a.user_id,
+    a.passion_rating,
+    a.experience_rating,
+    a.application,
+    t.id as team_id
+FROM applications a
+LEFT JOIN team_members tm
+    ON tm.user_id = a.user_id
+LEFT JOIN teams t
+    ON t.id = tm.team_id
+    AND t.event_id = a.event_id
+WHERE a.event_id = $1
+    AND a.status = 'under_review'
+    AND a.passion_rating IS NOT NULL
+    AND a.experience_rating IS NOT NULL;
+    
+
 -- name: AssignApplicationsToReviewer :exec
 UPDATE applications
 SET assigned_reviewer_id = @reviewer_id::uuid,
@@ -61,3 +79,48 @@ WHERE assigned_reviewer_id = $1
     AND event_id = $2
     AND status IN ('under_review')
 ORDER BY user_id ASC;
+
+-- name: ListNonReviewedApplicationsByEvent :many
+SELECT user_id
+FROM applications
+WHERE event_id = $1
+  AND status = 'under_review'
+  AND (passion_rating IS NULL OR experience_rating IS NULL);
+
+-- name: JoinWaitlist :exec
+UPDATE applications
+SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
+    status = 'waitlisted'
+WHERE user_id = $1 AND event_id = $2;
+
+-- name: UpdateApplicationStatusByEventID :exec
+UPDATE applications
+SET status = @status::application_status
+WHERE event_id = @event_id::uuid
+  AND user_id = ANY(@user_ids::uuid[]);
+
+-- name: TransitionAcceptedApplicationsToWaitlistByEventID :exec
+UPDATE applications
+SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
+    status = 'waitlisted'
+WHERE event_id = @event_id::uuid
+  AND status = 'accepted'
+  AND user_id IN (
+    SELECT user_id from event_roles AS er
+    WHERE er.role = 'applicant'
+)
+;
+
+-- name: TransitionWaitlistedApplicationsToAcceptedByEventID :many
+UPDATE applications
+SET waitlist_join_time = NULL,
+    status = 'accepted'
+WHERE user_id IN (
+  SELECT user_id FROM applications
+  WHERE event_id = @event_id::uuid
+      AND status = 'waitlisted'
+  ORDER BY waitlist_join_time ASC
+  LIMIT @acceptanceCount::int
+)
+RETURNING user_id;
+

@@ -34,7 +34,7 @@ const applicationStatus = defineStatus({
     button: {
       className:
         "bg-event-button-bg-rejected text-event-button-text-rejected hover:bg-event-button-bg-rejected-hover",
-      text: "Learn more",
+      text: "Join Waitlist",
     },
   },
   attending: {
@@ -114,7 +114,7 @@ const applicationStatus = defineStatus({
     button: {
       className:
         "bg-event-button-bg-not-going text-event-button-text-not-going hover:bg-event-button-bg-not-going-hover",
-      text: "Help Us Improve",
+      text: "Withdraw",
     },
   },
   completed: {
@@ -135,6 +135,16 @@ const applicationStatus = defineStatus({
       className:
         "bg-event-button-bg-completed text-event-button-text-completed hover:bg-event-button-bg-completed-hover",
       text: "Coming Soon",
+    },
+  },
+  withdrawn: {
+    className: "bg-badge-bg-not-applied text-badge-text-withdrawn",
+    text: "Withdrawn",
+    icon: TablerBan,
+    button: {
+      className:
+        "bg-event-button-bg-completed text-event-button-text-completed hover:bg-event-button-bg-completed-hover",
+      text: "Help Us Improve",
     },
   },
 });

@@ -23,14 +23,14 @@ func NewEmailWorker(emailService *services.EmailService, logger zerolog.Logger) 
 	}
 }
 
-func (w *EmailWorker) HandleSendConfirmationEmailTask(ctx context.Context, t *asynq.Task) error {
-	var p tasks.SendConfirmationEmailPayload
+func (w *EmailWorker) HandleSendHtmlEmailTask(ctx context.Context, t *asynq.Task) error {
+	var p tasks.SendHtmlEmailPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
 		w.logger.Err(err)
-		return fmt.Errorf("HandleSendConfirmationEmailTask: json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+		return fmt.Errorf("HandleSendHtmlEmailTask: json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
 
-	if err := w.emailService.SendConfirmationEmail(p.To, p.Name); err != nil {
+	if err := w.emailService.SendHtmlEmail(p.To, p.Subject, p.Name, p.TemplateFilePath); err != nil {
 		w.logger.Err(err).Msg("Failed to send ConfirmationEmail from worker")
 		return err
 	}

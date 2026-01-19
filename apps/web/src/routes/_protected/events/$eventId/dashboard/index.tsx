@@ -17,18 +17,22 @@ export const Route = createFileRoute("/_protected/events/$eventId/dashboard/")({
 });
 
 function RouteComponent() {
-  const { eventRole } = Route.useRouteContext();
-  const { eventId } = Route.useParams()
+  const { eventRole, user } = Route.useRouteContext();
+  const { eventId } = Route.useParams();
 
   // Both staff and admin are technically "staff" for dashboard purposes
   const isStaff = eventRole === "staff" || eventRole === "admin";
+
+  if (!user) {
+    return null;
+  }
 
   if (isStaff) {
     return <StaffOverview eventId={eventId} />;
   }
 
   if (eventRole === "attendee") {
-    return <AttendeeOverview />;
+    return <AttendeeOverview userId={user.userId} eventId={eventId} />;
   }
 
   // Should never reach here due to the redirect in beforeLoad

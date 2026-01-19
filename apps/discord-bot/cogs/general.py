@@ -1,10 +1,16 @@
 from discord.ext import commands
 from discord import app_commands
 import discord
+import aiohttp
+import logging
+from typing import Literal, Optional
+from utils.checks import is_mod_slash
 import re
 from typing import Literal, Union
 from utils.checks import has_bot_full_access
 from utils.mentor_functions import set_all_mentors_available
+from utils.role_assignment import (get_attendees_for_event, format_assignment_summary, assign_roles_to_attendees)
+import os
 from utils.get_next_support_vc_name import get_next_support_vc_name
 from chatbot.llm import llm_response
 
@@ -24,7 +30,7 @@ class General(commands.Cog):
         """
         self.bot: commands.Bot = bot
     
-    def get_role(self, guild: discord.Guild, role_name: str) -> discord.Role:
+    def get_role(self, guild: discord.Guild, role_name: str) -> Optional[discord.Role]:
         """Helper to get a role by name from a guild."""
         return discord.utils.get(guild.roles, name=role_name)
     
@@ -445,6 +451,166 @@ class General(commands.Cog):
         
         await interaction.delete_original_response()
         
+    
+    @app_commands.command(
+        name="assign_hacker_roles",
+        description="Assign hacker role to all attendees from API using webhook"
+    )
+    @app_commands.describe(
+        event_id="UUID of event",
+        role="Discord role to assign to attendees"
+    )
+    @is_mod_slash()
+    async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, role: discord.Role) -> None:
+        """Assign role to all attendees from API using webhook
+        
+        Args:
+            interaction: The interaction that triggered this command
+            event_id: UUID of event
+            role: Discord role to assign to attendees
+        """
+        
+        await interaction.response.defer(ephemeral=True)
+        
+        try:
+            guild_id = interaction.guild.id if interaction.guild else None
+            if not guild_id:
+                await interaction.followup.send("Error: Could not determine guild.", ephemeral=True)
+                return
+            
+            api_url = os.getenv("API_URL", "http://localhost:8080")
+            session_cookie = os.getenv("SESSION_COOKIE")
+            if not session_cookie:
+                await interaction.followup.send("Error: SESSION_COOKIE is not set.", ephemeral=True)
+                return
+            
+            webhook_url = os.getenv("WEBHOOK_URL")
+            if not webhook_url:
+                await interaction.followup.send("Error: WEBHOOK_URL is not set.", ephemeral=True)
+                return
+            
+            attendees = await get_attendees_for_event(api_url, session_cookie, event_id)
+            if not attendees:
+                await interaction.followup.send("Error: No attendees found for event.", ephemeral=True)
+                return
+            
+            newly_assigned, already_had, failed, errors = await assign_roles_to_attendees(webhook_url, attendees, role.name, str(guild_id))
+            summary = format_assignment_summary(len(attendees), newly_assigned, already_had, failed, errors)
+            await interaction.followup.send(summary, ephemeral=True)
+            
+        except Exception as e:
+            await interaction.followup.send(f"An error occurred: {str(e)}", ephemeral=True)
+            
+    @app_commands.command(name="remove_role_from_all", description="Remove a specific role from all members in the server")
+    @app_commands.describe(role="The role to remove from all members")
+    @is_mod_slash()
+    async def remove_role_from_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
+        """Remove a specific role from all members in the server
+        """
+        await interaction.response.defer(ephemeral=True)
+        try:
+            guild = interaction.guild
+            if not guild:
+                await interaction.followup.send("Error: Could not determine guild.", ephemeral=True)
+                return
+            
+            await interaction.followup.send(
+                f"Fetching all members and removing **{role.name}** role... This may take a moment.",
+                ephemeral=True
+            )
+            
+            members_with_role = [member for member in guild.members if role in member.roles]
+            
+            if not members_with_role:
+                await interaction.followup.send(
+                    f"No members found with the **{role.name}** role.",
+                    ephemeral=True
+                )
+                return
+            
+            removed = 0
+            failed = 0
+            errors = []
+            
+            for member in members_with_role:
+                try:
+                    await member.remove_roles(role, reason=f'Role removal via command by {interaction.user}')
+                    removed += 1
+                except discord.Forbidden:
+                    failed += 1
+                    errors.append(f"Permission denied for {member.mention}")
+                except discord.HTTPException as e:
+                    failed += 1
+                    errors.append(f"Error removing role from {member.mention}: {str(e)}")
+                except Exception as e:
+                    failed += 1
+                    errors.append(f"Unexpected error for {member.mention}: {str(e)}")
+            
+            message = f"**Role Removal Complete**\n\n"
+            message += f"**Summary:**\n"
+            message += f"- Total members with **{role.name}** role: {len(members_with_role)}\n"
+            message += f"- Roles removed successfully: {removed}\n"
+            message += f"- Failed removals: {failed}\n"
+            
+            if errors:
+                message += f"\n**Errors ({len(errors)}):**\n"
+                for error in errors[:10]:
+                    message += f"- {error}\n"
+                if len(errors) > 10:
+                    message += f"- ... and {len(errors) - 10} more errors\n"
+            
+            await interaction.followup.send(message, ephemeral=True)
+        except Exception as e:
+            await interaction.followup.send(
+                f"An error occurred: {str(e)}",
+                ephemeral=True
+            )
+    
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member) -> None:
+        """Automatically assign roles wheen a member joins the server"""
+        
+        logger = logging.getLogger(__name__)
+        guild_id = member.guild.id
+        if not guild_id:
+            return
+        
+        api_url = os.getenv("API_URL", "http://localhost:8080")
+        session_cookie =  os.getenv("SESSION_COOKIE")
+        event_id = os.getenv("EVENT_ID")
+        
+        if not session_cookie:
+            logger.error("SESSION_COOKIE is not set")
+            return
+        
+        if not event_id:
+            logger.error("EVENT_ID is not set")
+            return
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                headers = {"Cookie": f"sh_session_id={session_cookie}"}
+                async with session.get(
+                    f"{api_url}/events/{event_id}/discord/{member.id}",
+                    headers=headers
+                ) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        event_role = data.get("role")
+                        discord_role_name = "Hacker"
+                        if event_role == "attendee":
+                            role = discord.utils.get(member.guild.roles, name=discord_role_name)
+                            if role:
+                                await member.add_roles(role, reason="Auto assigned: User has attendee role")
+                                logger.info(f"Auto assigned {discord_role_name} role to {member.name} ({member.id})")
+                    elif response.status == 404:
+                        pass
+                    else:
+                        logger.error(f"Unexpected response status {response.status} when checking role for {member.name} ({member.id})")
+                        
+
+        except Exception as e:
+            logger.error(f"Error assigning roles: {str(e)}")
 async def setup(bot: commands.Bot) -> None:
     """Add the General cog to the bot
     

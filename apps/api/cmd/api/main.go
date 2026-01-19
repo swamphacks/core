@@ -81,6 +81,7 @@ func main() {
 	teamRepo := repository.NewTeamRespository(database)
 	teamMemberRepo := repository.NewTeamMemberRespository(database)
 	teamJoinRequestRepo := repository.NewTeamJoinRequestRepository(database)
+	batRunsRepo := repository.NewBatRunsRepository(database)
 
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
@@ -88,11 +89,13 @@ func main() {
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
 	eventService := services.NewEventService(eventRepo, userRepo, r2Client, &cfg.CoreBuckets, logger)
 	emailService := services.NewEmailService(taskQueueClient, sesClient, logger)
-	applicationService := services.NewApplicationService(applicationRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, logger)
+	applicationService := services.NewApplicationService(applicationRepo, userRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, nil, logger)
 	teamService := services.NewTeamService(teamRepo, teamMemberRepo, teamJoinRequestRepo, eventRepo, txm, logger)
+	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, taskQueueClient, nil, logger)
+	discordService := services.NewDiscordService(eventRepo, logger)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, cfg, logger)
+	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, batService, discordService, cfg, logger)
 
 	api := api.NewAPI(&logger, apiHandlers, mw)
 

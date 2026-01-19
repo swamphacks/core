@@ -29,6 +29,91 @@ func (q *Queries) AssignRole(ctx context.Context, arg AssignRoleParams) error {
 	return err
 }
 
+const getAttendeeCountByEventId = `-- name: GetAttendeeCountByEventId :one
+SELECT COUNT(*) FROM event_roles AS er
+WHERE er.event_id = $1::uuid
+  AND er.role = 'attendee'
+`
+
+func (q *Queries) GetAttendeeCountByEventId(ctx context.Context, eventID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, getAttendeeCountByEventId, eventID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getEventAttendeesWithDiscord = `-- name: GetEventAttendeesWithDiscord :many
+SELECT 
+    a.account_id as discord_id,
+    u.id as user_id,
+    u.name,
+    u.email
+FROM auth.users u
+JOIN event_roles er ON u.id = er.user_id
+JOIN auth.accounts a ON u.id = a.user_id
+WHERE er.event_id = $1
+    AND er.role = 'attendee'
+    AND a.provider_id = 'discord'
+`
+
+type GetEventAttendeesWithDiscordRow struct {
+	DiscordID string    `json:"discord_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Name      string    `json:"name"`
+	Email     *string   `json:"email"`
+}
+
+func (q *Queries) GetEventAttendeesWithDiscord(ctx context.Context, eventID uuid.UUID) ([]GetEventAttendeesWithDiscordRow, error) {
+	rows, err := q.db.Query(ctx, getEventAttendeesWithDiscord, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetEventAttendeesWithDiscordRow{}
+	for rows.Next() {
+		var i GetEventAttendeesWithDiscordRow
+		if err := rows.Scan(
+			&i.DiscordID,
+			&i.UserID,
+			&i.Name,
+			&i.Email,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getEventRoleByDiscordIDAndEventId = `-- name: GetEventRoleByDiscordIDAndEventId :one
+SELECT er.event_id, er.role
+FROM event_roles er
+JOIN auth.accounts a ON er.user_id = a.user_id
+WHERE a.provider_id = 'discord'
+    AND a.account_id = $1
+    AND er.event_id = $2
+`
+
+type GetEventRoleByDiscordIDAndEventIdParams struct {
+	AccountID string    `json:"account_id"`
+	EventID   uuid.UUID `json:"event_id"`
+}
+
+type GetEventRoleByDiscordIDAndEventIdRow struct {
+	EventID uuid.UUID     `json:"event_id"`
+	Role    EventRoleType `json:"role"`
+}
+
+func (q *Queries) GetEventRoleByDiscordIDAndEventId(ctx context.Context, arg GetEventRoleByDiscordIDAndEventIdParams) (GetEventRoleByDiscordIDAndEventIdRow, error) {
+	row := q.db.QueryRow(ctx, getEventRoleByDiscordIDAndEventId, arg.AccountID, arg.EventID)
+	var i GetEventRoleByDiscordIDAndEventIdRow
+	err := row.Scan(&i.EventID, &i.Role)
+	return i, err
+}
+
 const getEventStaff = `-- name: GetEventStaff :many
 SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.role AS event_role
 FROM auth.users u
@@ -153,5 +238,57 @@ type RemoveRoleParams struct {
 
 func (q *Queries) RemoveRole(ctx context.Context, arg RemoveRoleParams) error {
 	_, err := q.db.Exec(ctx, removeRole, arg.EventID, arg.UserID)
+	return err
+}
+
+const updateEventRoleByIds = `-- name: UpdateEventRoleByIds :exec
+UPDATE event_roles
+SET
+  role = CASE WHEN $1::boolean THEN $2 ELSE role END,
+  rfid = CASE WHEN $3::boolean THEN $4 ELSE rfid END,
+  checked_in_at = CASE WHEN $5::boolean THEN $6 ELSE checked_in_at END
+WHERE user_id = $7
+  AND event_id = $8
+`
+
+type UpdateEventRoleByIdsParams struct {
+	RoleDoUpdate        bool          `json:"role_do_update"`
+	Role                EventRoleType `json:"role"`
+	RfidDoUpdate        bool          `json:"rfid_do_update"`
+	Rfid                *string       `json:"rfid"`
+	CheckedInAtDoUpdate bool          `json:"checked_in_at_do_update"`
+	CheckedInAt         *time.Time    `json:"checked_in_at"`
+	UserID              uuid.UUID     `json:"user_id"`
+	EventID             uuid.UUID     `json:"event_id"`
+}
+
+func (q *Queries) UpdateEventRoleByIds(ctx context.Context, arg UpdateEventRoleByIdsParams) error {
+	_, err := q.db.Exec(ctx, updateEventRoleByIds,
+		arg.RoleDoUpdate,
+		arg.Role,
+		arg.RfidDoUpdate,
+		arg.Rfid,
+		arg.CheckedInAtDoUpdate,
+		arg.CheckedInAt,
+		arg.UserID,
+		arg.EventID,
+	)
+	return err
+}
+
+const updateRole = `-- name: UpdateRole :exec
+UPDATE event_roles
+SET role = $3
+WHERE event_id = $1 AND user_id = $2
+`
+
+type UpdateRoleParams struct {
+	EventID uuid.UUID     `json:"event_id"`
+	UserID  uuid.UUID     `json:"user_id"`
+	Role    EventRoleType `json:"role"`
+}
+
+func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) error {
+	_, err := q.db.Exec(ctx, updateRole, arg.EventID, arg.UserID, arg.Role)
 	return err
 }

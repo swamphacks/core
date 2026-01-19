@@ -101,6 +101,49 @@ func (ns NullAuthUserRole) Value() (driver.Value, error) {
 	return string(ns.AuthUserRole), nil
 }
 
+type BatRunStatus string
+
+const (
+	BatRunStatusRunning   BatRunStatus = "running"
+	BatRunStatusCompleted BatRunStatus = "completed"
+	BatRunStatusFailed    BatRunStatus = "failed"
+)
+
+func (e *BatRunStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = BatRunStatus(s)
+	case string:
+		*e = BatRunStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for BatRunStatus: %T", src)
+	}
+	return nil
+}
+
+type NullBatRunStatus struct {
+	BatRunStatus BatRunStatus `json:"bat_run_status"`
+	Valid        bool         `json:"valid"` // Valid is true if BatRunStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullBatRunStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.BatRunStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.BatRunStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullBatRunStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.BatRunStatus), nil
+}
+
 type EventRoleType string
 
 const (
@@ -287,6 +330,7 @@ type Application struct {
 	ExperienceRating   *int32                `json:"experience_rating"`
 	PassionRating      *int32                `json:"passion_rating"`
 	AssignedReviewerID *uuid.UUID            `json:"assigned_reviewer_id"`
+	WaitlistJoinTime   *time.Time            `json:"waitlist_join_time"`
 }
 
 type AuthAccount struct {
@@ -330,6 +374,16 @@ type AuthUser struct {
 	EmailConsent   bool         `json:"email_consent"`
 }
 
+type BatRun struct {
+	ID                 uuid.UUID        `json:"id"`
+	EventID            uuid.UUID        `json:"event_id"`
+	AcceptedApplicants []uuid.UUID      `json:"accepted_applicants"`
+	RejectedApplicants []uuid.UUID      `json:"rejected_applicants"`
+	Status             NullBatRunStatus `json:"status"`
+	CreatedAt          time.Time        `json:"created_at"`
+	CompletedAt        *time.Time       `json:"completed_at"`
+}
+
 type Event struct {
 	ID                       uuid.UUID  `json:"id"`
 	Name                     string     `json:"name"`
@@ -360,10 +414,12 @@ type EventInterestSubmission struct {
 }
 
 type EventRole struct {
-	UserID     uuid.UUID     `json:"user_id"`
-	EventID    uuid.UUID     `json:"event_id"`
-	Role       EventRoleType `json:"role"`
-	AssignedAt *time.Time    `json:"assigned_at"`
+	UserID      uuid.UUID     `json:"user_id"`
+	EventID     uuid.UUID     `json:"event_id"`
+	Role        EventRoleType `json:"role"`
+	AssignedAt  *time.Time    `json:"assigned_at"`
+	CheckedInAt *time.Time    `json:"checked_in_at"`
+	Rfid        *string       `json:"rfid"`
 }
 
 type Team struct {

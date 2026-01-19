@@ -143,10 +143,50 @@ func (r *EventRepository) RevokeRole(ctx context.Context, userId uuid.UUID, even
 	return r.db.Query.RemoveRole(ctx, params)
 }
 
+// **Deprecated**. Use `UpdateEventRoleByIds` instead.
+// Only kept for backwards compatibility. TODO: Refactor all current implementations to use new function.
+func (r *EventRepository) UpdateRole(ctx context.Context, userId uuid.UUID, eventId uuid.UUID, role sqlc.EventRoleType) error {
+	params := sqlc.UpdateRoleParams{
+		UserID:  userId,
+		EventID: eventId,
+		Role:    role,
+	}
+	return r.db.Query.UpdateRole(ctx, params)
+}
+
+func (r *EventRepository) UpdateEventRoleByIds(ctx context.Context, params sqlc.UpdateEventRoleByIdsParams) error {
+	return r.db.Query.UpdateEventRoleByIds(ctx, params)
+}
+
 func (r *EventRepository) GetApplicationStatuses(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationStatusSplitRow, error) {
 	return r.db.Query.GetApplicationStatusSplit(ctx, eventId)
 }
 
 func (r *EventRepository) GetSubmissionTimes(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetSubmissionTimesRow, error) {
 	return r.db.Query.GetSubmissionTimes(ctx, eventId)
+}
+
+func (r *EventRepository) GetEventAttendeesWithDiscord(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetEventAttendeesWithDiscordRow, error) {
+	attendees, err := r.db.Query.GetEventAttendeesWithDiscord(ctx, eventId)
+	if err != nil {
+		return nil, err
+	}
+	return &attendees, nil
+}
+
+func (r *EventRepository) GetEventRoleByDiscordIDAndEventId(ctx context.Context, discordID string, eventID uuid.UUID) (*sqlc.GetEventRoleByDiscordIDAndEventIdRow, error) {
+	params := sqlc.GetEventRoleByDiscordIDAndEventIdParams{
+		AccountID: discordID,
+		EventID:   eventID,
+	}
+
+	eventRole, err := r.db.Query.GetEventRoleByDiscordIDAndEventId(ctx, params)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrEventRoleNotFound
+		}
+		return nil, err
+	}
+
+	return &eventRole, nil
 }

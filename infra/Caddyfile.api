@@ -47,3 +47,52 @@ api.swamphacks.com {
 		Referrer-Policy "strict-origin-when-cross-origin"
 	}
 }
+
+# Development Asynqmon
+
+dev-asynqmon.swamphacks.com {
+	reverse_proxy asynqmon-dev:6767 {
+		header_up X-Real-IP {remote}
+		header_up X-Forwarded-For {remote}
+		header_up X-Forwarded-Port {server_port}
+		header_up X-Forwarded-Proto {scheme}
+	}
+	
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+	
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
+
+# Production Asynqmon
+
+asynqmon.swamphacks.com {
+	reverse_proxy asynqmon:6767 {
+		header_up X-Real-IP {remote}
+		header_up X-Forwarded-For {remote}
+		header_up X-Forwarded-Port {server_port}
+		header_up X-Forwarded-Proto {scheme}
+	}
+	
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+	
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
+

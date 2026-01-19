@@ -66,6 +66,21 @@ func (r *ApplicationRepository) GetApplicationByUserAndEventID(ctx context.Conte
 	return &application, nil
 }
 
+func (r *ApplicationRepository) UpdateApplicationStatusByEventId(ctx context.Context, status sqlc.ApplicationStatus, eventId uuid.UUID, userIds uuid.UUIDs) error {
+	return r.db.Query.UpdateApplicationStatusByEventID(ctx, sqlc.UpdateApplicationStatusByEventIDParams{
+		EventID: eventId,
+		Status:  status,
+		UserIds: userIds,
+	})
+}
+
+// List all candidates considered for admission for an eventId.
+// This queries for all applications who are 'under_review' and have their rating fields filled out.
+// It also LEFT JOINs in their team id (if they have one) for further grouping based on teams.
+func (r *ApplicationRepository) ListAdmissionCandidatesByEvent(ctx context.Context, eventId uuid.UUID) ([]sqlc.ListAdmissionCandidatesByEventRow, error) {
+	return r.db.Query.ListAdmissionCandidatesByEvent(ctx, eventId)
+}
+
 func (r *ApplicationRepository) SubmitApplication(ctx context.Context, data any, userId, eventId uuid.UUID) error {
 	jsonBytes, err := json.Marshal(data)
 
@@ -170,6 +185,33 @@ func (r *ApplicationRepository) GetApplicationStatuses(ctx context.Context, even
 	return r.db.Query.GetApplicationStatusSplit(ctx, eventId)
 }
 
+func (r *ApplicationRepository) GetNonReviewedApplications(ctx context.Context, eventId uuid.UUID) ([]uuid.UUID, error) {
+	return r.db.Query.ListNonReviewedApplicationsByEvent(ctx, eventId)
+}
+
 func (r *ApplicationRepository) GetSubmissionTimes(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetSubmissionTimesRow, error) {
 	return r.db.Query.GetSubmissionTimes(ctx, eventId)
+}
+
+func (r *ApplicationRepository) JoinWaitlist(ctx context.Context, userId, eventId uuid.UUID) error {
+	return r.db.Query.JoinWaitlist(ctx, sqlc.JoinWaitlistParams{
+		UserID:  userId,
+		EventID: eventId,
+	})
+}
+
+func (r *ApplicationRepository) TransitionAcceptedApplicationsToWaitlistByEventID(ctx context.Context, eventId uuid.UUID) error {
+	return r.db.Query.TransitionAcceptedApplicationsToWaitlistByEventID(ctx, eventId)
+}
+
+func (r *ApplicationRepository) TransitionWaitlistedApplicationsToAcceptedByEventID(ctx context.Context, eventId uuid.UUID, acceptanceCount uint32) ([]uuid.UUID, error) {
+	return r.db.Query.TransitionWaitlistedApplicationsToAcceptedByEventID(ctx, sqlc.TransitionWaitlistedApplicationsToAcceptedByEventIDParams{
+		EventID:         eventId,
+		Acceptancecount: int32(acceptanceCount),
+	})
+}
+
+func (r *ApplicationRepository) GetAttendeeCountByEventId(ctx context.Context, eventId uuid.UUID) (uint32, error) {
+	amount, err := r.db.Query.GetAttendeeCountByEventId(ctx, eventId)
+	return uint32(amount), err
 }
