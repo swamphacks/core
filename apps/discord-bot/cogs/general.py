@@ -409,16 +409,21 @@ class General(commands.Cog):
         
         api_url = os.getenv("API_URL", "http://localhost:8080")
         session_cookie =  os.getenv("SESSION_COOKIE")
+        event_id = os.getenv("EVENT_ID")
         
         if not session_cookie:
             logger.error("SESSION_COOKIE is not set")
+            return
+        
+        if not event_id:
+            logger.error("EVENT_ID is not set")
             return
         
         try:
             async with aiohttp.ClientSession() as session:
                 headers = {"Cookie": f"sh_session_id={session_cookie}"}
                 async with session.get(
-                    f"{api_url}/discord/user/{member.id}/role",
+                    f"{api_url}/events/{event_id}/discord/{member.id}",
                     headers=headers
                 ) as response:
                     if response.status == 200:
@@ -433,7 +438,7 @@ class General(commands.Cog):
                     elif response.status == 404:
                         pass
                     else:
-                        logger.info(f"Auto assigned {discord_role_name} role to {member.name} ({member.id})")
+                        logger.error(f"Unexpected response status {response.status} when checking role for {member.name} ({member.id})")
                         
 
         except Exception as e:
