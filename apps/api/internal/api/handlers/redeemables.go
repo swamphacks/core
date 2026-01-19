@@ -163,7 +163,7 @@ func (h *RedeemablesHandler) RedeemRedeemable(w http.ResponseWriter, r *http.Req
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_redeemable_id", "The redeemable ID is not a valid UUID"))
 		return
 	}
-	err = h.redeemablesService.RedeemRedeemable(r.Context(), userId, redeemableId)
+	err = h.redeemablesService.RedeemRedeemable(r.Context(), redeemableId, userId)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_server_error", "internal service error, failed to redeem redeemable"))
 		return
@@ -193,7 +193,7 @@ func (h *RedeemablesHandler) UpdateRedemption(w http.ResponseWriter, r *http.Req
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_redeemable_id", "The redeemable ID is not a valid UUID"))
 		return
 	}
-	err = h.redeemablesService.UpdateRedemption(r.Context(), userId, redeemableId)
+	err = h.redeemablesService.UpdateRedemption(r.Context(), redeemableId, userId)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_server_error", "internal service error, failed to update redemption"))
 		return

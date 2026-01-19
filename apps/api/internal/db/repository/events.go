@@ -120,6 +120,21 @@ func (r *EventRepository) GetEventRoleByIds(ctx context.Context, userId uuid.UUI
 	return &eventRole, err
 }
 
+func (r *EventRepository) GetUserByRFID(ctx context.Context, eventId uuid.UUID, rfid string) (*sqlc.AuthUser, error) {
+	params := sqlc.GetUserByRFIDParams{
+		EventID: eventId,
+		Rfid:    &rfid,
+	}
+	user, err := r.db.Query.GetUserByRFID(ctx, params)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrEventRoleNotFound
+		}
+		return nil, ErrUnknown
+	}
+	return &user, nil
+}
+
 func (r *EventRepository) GetEventStaff(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetEventStaffRow, error) {
 	users, err := r.db.Query.GetEventStaff(ctx, eventId)
 	return &users, err

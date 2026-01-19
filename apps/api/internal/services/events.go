@@ -372,6 +372,19 @@ type UserInfoForEvent struct {
 	CheckedInAt  *time.Time         `json:"checked_in_at"`
 }
 
+func (s *EventService) GetUserByRFID(ctx context.Context, eventId uuid.UUID, rfid string) (*sqlc.AuthUser, error) {
+	user, err := s.eventRepo.GetUserByRFID(ctx, eventId, rfid)
+	if err != nil {
+		if errors.Is(err, repository.ErrEventRoleNotFound) {
+			s.logger.Err(err).Msg("User not found with RFID")
+			return nil, repository.ErrUserNotFound
+		}
+		s.logger.Err(err).Msg("Failed to get user by RFID")
+		return nil, err
+	}
+	return user, nil
+}
+
 func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId uuid.UUID) (*UserInfoForEvent, error) {
 	g, ctx := errgroup.WithContext(ctx)
 

@@ -153,6 +153,38 @@ func (q *Queries) GetEventUsers(ctx context.Context, eventID uuid.UUID) ([]GetEv
 	return items, nil
 }
 
+const getUserByRFID = `-- name: GetUserByRFID :one
+SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent
+FROM auth.users u
+JOIN event_roles er ON u.id = er.user_id
+WHERE er.event_id = $1
+  AND er.rfid = $2
+`
+
+type GetUserByRFIDParams struct {
+	EventID uuid.UUID `json:"event_id"`
+	Rfid    *string   `json:"rfid"`
+}
+
+func (q *Queries) GetUserByRFID(ctx context.Context, arg GetUserByRFIDParams) (AuthUser, error) {
+	row := q.db.QueryRow(ctx, getUserByRFID, arg.EventID, arg.Rfid)
+	var i AuthUser
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.EmailVerified,
+		&i.Onboarded,
+		&i.Image,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Role,
+		&i.PreferredEmail,
+		&i.EmailConsent,
+	)
+	return i, err
+}
+
 const removeRole = `-- name: RemoveRole :exec
 DELETE FROM event_roles
 WHERE event_id = $1
