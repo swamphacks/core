@@ -1,3 +1,3 @@
-export function generateCheckInIntent(userId: string, eventId: string) {
-  return `checkin::${userId}+${eventId}`;
+export function generateIdentifyIntent(userId: string) {
+  return `IDENT::${userId}`;
 }

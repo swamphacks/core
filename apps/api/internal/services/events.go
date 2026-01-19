@@ -369,7 +369,7 @@ type UserInfoForEvent struct {
 	PlatformRole sqlc.AuthUserRole  `json:"platform_role"`
 	EventRole    sqlc.EventRoleType `json:"event_role"`
 	Image        *string            `json:"image"`
-	CheckedInAt  time.Time          `json:"checked_in_at"`
+	CheckedInAt  *time.Time         `json:"checked_in_at"`
 }
 
 func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId uuid.UUID) (*UserInfoForEvent, error) {
@@ -385,6 +385,7 @@ func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId 
 	})
 
 	//TODO: This may not run very nicely if the user doesn't have an associated event_role
+	// Oh well... for now!
 	g.Go(func() error {
 		var err error
 		role, err = s.eventRepo.GetEventRoleByIds(ctx, userId, eventId)
@@ -403,7 +404,7 @@ func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId 
 		PlatformRole: user.Role,
 		EventRole:    role.Role,
 		Image:        user.Image,
-		CheckedInAt:  *role.CheckedInAt,
+		CheckedInAt:  role.CheckedInAt,
 	}
 
 	return result, nil

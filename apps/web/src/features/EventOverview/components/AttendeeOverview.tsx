@@ -1,15 +1,14 @@
 import { Card } from "@/components/ui/Card";
-import { generateCheckInIntent } from "@/lib/qr-intents/generate";
+import { generateIdentifyIntent } from "@/lib/qr-intents/generate";
 import { Heading } from "react-aria-components";
 import QRCode from "react-qr-code";
 
 interface Props {
   userId: string;
-  eventId: string;
 }
 
-export default function AttendeeOverview({ eventId, userId }: Props) {
-  const identificationIntentString = generateCheckInIntent(userId, eventId);
+export default function AttendeeOverview({ userId }: Props) {
+  const identificationIntentString = generateIdentifyIntent(userId);
 
   // Used to get the right colors for QR Code
   const styles = getComputedStyle(document.documentElement);
@@ -22,7 +21,7 @@ export default function AttendeeOverview({ eventId, userId }: Props) {
         Overview
       </Heading>
 
-      <Card className="p-5 w-full md: w-64">
+      <Card className="p-5 w-full md:w-64">
         <QRCode
           bgColor={bg}
           fgColor={fg}

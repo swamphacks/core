@@ -3,9 +3,8 @@ import { Intent } from "./intent";
 
 // Used for checking attendees into an event
 export type IdentifyIntent = {
-  intent: typeof Intent.CHECK_IN;
+  intent: typeof Intent.IDENT;
   user_id: string;
-  event_id: string;
 };
 
 export type QRIntent = IdentifyIntent;
@@ -40,7 +39,7 @@ export function parseQrIntent(
       return {
         ok: true,
         value: {
-          intent: Intent.CHECK_IN,
+          intent: Intent.IDENT,
           ...res.value,
         },
       };
@@ -57,7 +56,6 @@ export function parseQrIntent(
 
 const CheckInSchema = z.object({
   user_id: z.uuid(),
-  event_id: z.uuid(),
 });
 
 type CheckInFields = z.infer<typeof CheckInSchema>;
@@ -65,11 +63,8 @@ type CheckInFields = z.infer<typeof CheckInSchema>;
 type CheckInParseError = "CHECK_IN_PARSE_ERROR";
 
 function parseCheckIn(input: string): Result<CheckInFields, CheckInParseError> {
-  const [user_id, event_id] = input.split("+");
-
   const { success, data } = CheckInSchema.safeParse({
-    user_id,
-    event_id,
+    user_id: input,
   });
 
   if (!success) {
