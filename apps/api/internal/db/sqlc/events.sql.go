@@ -212,7 +212,7 @@ func (q *Queries) GetEventByID(ctx context.Context, id uuid.UUID) (Event, error)
 }
 
 const getEventRoleByIds = `-- name: GetEventRoleByIds :one
-SELECT user_id, event_id, role, assigned_at FROM event_roles
+SELECT user_id, event_id, role, assigned_at, checked_in_at, rfid FROM event_roles
 WHERE user_id = $1::uuid AND event_id = $2::uuid
 `
 
@@ -229,6 +229,8 @@ func (q *Queries) GetEventRoleByIds(ctx context.Context, arg GetEventRoleByIdsPa
 		&i.EventID,
 		&i.Role,
 		&i.AssignedAt,
+		&i.CheckedInAt,
+		&i.Rfid,
 	)
 	return i, err
 }
