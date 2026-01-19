@@ -230,7 +230,7 @@ func (h *RedeemablesHandler) RedeemRedeemable(w http.ResponseWriter, r *http.Req
 }
 
 type UpdateRedemptionRequest struct {
-	amount int `json:"new_amount,omitempty"`
+	Amount int `json:"new_amount,omitempty"`
 }
 
 func (h *RedeemablesHandler) UpdateRedemption(w http.ResponseWriter, r *http.Request) {
@@ -263,7 +263,7 @@ func (h *RedeemablesHandler) UpdateRedemption(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err = h.redeemablesService.UpdateRedemption(r.Context(), redeemableId, userId, req.amount)
+	err = h.redeemablesService.UpdateRedemption(r.Context(), redeemableId, userId, req.Amount)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_server_error", "internal service error, failed to update redemption"))
 		return
