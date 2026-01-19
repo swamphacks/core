@@ -415,10 +415,12 @@ type EventInterestSubmission struct {
 }
 
 type EventRole struct {
-	UserID     uuid.UUID     `json:"user_id"`
-	EventID    uuid.UUID     `json:"event_id"`
-	Role       EventRoleType `json:"role"`
-	AssignedAt *time.Time    `json:"assigned_at"`
+	UserID      uuid.UUID     `json:"user_id"`
+	EventID     uuid.UUID     `json:"event_id"`
+	Role        EventRoleType `json:"role"`
+	AssignedAt  *time.Time    `json:"assigned_at"`
+	CheckedInAt *time.Time    `json:"checked_in_at"`
+	Rfid        *string       `json:"rfid"`
 }
 
 type Redeemable struct {

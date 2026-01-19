@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
@@ -37,6 +38,8 @@ var (
 	ErrFailedToSendDecisionEmails      = errors.New("Failed to send decision emails")
 	ErrTestErr                         = errors.New("Err while testing")
 	ErrFailedToGetContactEmail         = errors.New("Failed to get contact email")
+	ErrUserNotAttendee                 = errors.New("user is not an attendee")
+	ErrUserCheckedIn                   = errors.New("user already checked in")
 )
 
 type BatService struct {
@@ -360,6 +363,38 @@ func (s *BatService) mapToCandidates(engine *bat.BatEngine, applications []sqlc.
 	}
 
 	return appAdmissionsData, nil
+}
+
+func (s *BatService) CheckInAttendee(ctx context.Context, eventId, userId uuid.UUID, RFID *string) error {
+	// Retrieve user with their current event role
+	role, err := s.eventRepo.GetEventRoleByIds(ctx, userId, eventId)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	if role.Role != sqlc.EventRoleTypeAttendee {
+		return ErrUserNotAttendee
+	}
+
+	if role.CheckedInAt != nil {
+		return ErrUserCheckedIn
+	}
+
+	now := time.Now()
+	// Update user role checked in AND rfid
+	return s.eventRepo.UpdateEventRoleByIds(ctx, sqlc.UpdateEventRoleByIdsParams{
+		EventID: eventId,
+		UserID:  userId,
+
+		Role:         sqlc.EventRoleTypeAttendee,
+		RoleDoUpdate: false,
+
+		CheckedInAt:         &now,
+		CheckedInAtDoUpdate: true,
+
+		Rfid:         RFID,
+		RfidDoUpdate: RFID != nil,
+	})
 }
 
 func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, eventId uuid.UUID) error {

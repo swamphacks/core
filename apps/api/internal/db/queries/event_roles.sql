@@ -26,6 +26,15 @@ UPDATE event_roles
 SET role = $3
 WHERE event_id = $1 AND user_id = $2;
 
+-- name: UpdateEventRoleByIds :exec
+UPDATE event_roles
+SET
+  role = CASE WHEN @role_do_update::boolean THEN @role ELSE role END,
+  rfid = CASE WHEN @rfid_do_update::boolean THEN @rfid ELSE rfid END,
+  checked_in_at = CASE WHEN @checked_in_at_do_update::boolean THEN @checked_in_at ELSE checked_in_at END
+WHERE user_id = @user_id
+  AND event_id = @event_id;
+
 -- name: GetAttendeeCountByEventId :one
 SELECT COUNT(*) FROM event_roles AS er
 WHERE er.event_id = @event_id::uuid
