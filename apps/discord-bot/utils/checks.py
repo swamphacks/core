@@ -36,3 +36,14 @@ def has_bot_full_access() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
             return False
        
     return app_commands.check(predicate)
+
+def is_mod_slash() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
+    """
+    Check if the user has moderator role for slash commands.
+    Uses the same logic as has_bot_full_access() for consistency.
+
+    Returns:
+        bool: True if the user has moderator privileges, False otherwise
+    """
+    # Reuse the same logic as has_bot_full_access
+    return has_bot_full_access()

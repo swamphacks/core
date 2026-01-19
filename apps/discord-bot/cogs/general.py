@@ -6,7 +6,7 @@ import logging
 from typing import Literal, Optional
 from utils.checks import is_mod_slash
 import re
-from typing import Literal, Union
+from typing import Literal
 from utils.checks import has_bot_full_access
 from utils.mentor_functions import set_all_mentors_available
 from utils.role_assignment import (get_attendees_for_event, format_assignment_summary, assign_roles_to_attendees)
