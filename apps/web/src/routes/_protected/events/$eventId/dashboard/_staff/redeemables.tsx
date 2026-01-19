@@ -7,6 +7,10 @@ export const Route = createFileRoute(
   component: RouteComponent,
 });
 
+// TODO: Implement redeemables dashboard page
+
 function RouteComponent() {
+  // TODO: Create Redeemable Card Component (with edit and delete functionality)
+  // TODO: Create manager for loading redeemables
   return <PageUnderConstruction />;
 }
