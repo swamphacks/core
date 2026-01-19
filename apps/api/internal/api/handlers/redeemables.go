@@ -30,6 +30,18 @@ func NewRedeemablesHandler(
 	}
 }
 
+// GetRedeemables
+//
+//	@Summary      Get all redeemables for an event
+//	@Description   Retrieve a list of all redeemable items associated with a specific event ID.
+//	@Tags         Redeemables
+//	@Accept       json
+//	@Produce      json
+//	@Param        eventId path      string  true  "Event ID (UUID)"
+//	@Success      200     {array}   sqlc.Redeemable
+//	@Failure      400     {object}  response.ErrorResponse "Missing or invalid Event ID"
+//	@Failure      500     {object}  response.ErrorResponse "Internal Server Error"
+//	@Router       /events/{eventId}/redeemables [get]
 func (h *RedeemablesHandler) GetRedeemables(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -56,6 +68,19 @@ type CreateRedeemableRequest struct {
 	MaxUserAmount int    `json:"max_user_amount"`
 }
 
+// CreateRedeemable
+//
+//	@Summary      Create a new redeemable
+//	@Description   Create a new redeemable item for a specific event.
+//	@Tags         Redeemables
+//	@Accept       json
+//	@Produce      json
+//	@Param        eventId path      string                   true  "Event ID (UUID)"
+//	@Param        request body      CreateRedeemableRequest  true  "Redeemable creation data"
+//	@Success      201     {object}  sqlc.Redeemable
+//	@Failure      400     {object}  response.ErrorResponse "Invalid request body or ID"
+//	@Failure      500     {object}  response.ErrorResponse "Internal Server Error"
+//	@Router       /events/{eventId}/redeemables [post]
 func (h *RedeemablesHandler) CreateRedeemable(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
 	if eventIdStr == "" {
@@ -91,6 +116,19 @@ type UpdateRedeemableRequest struct {
 	MaxUserAmount *int    `json:"max_user_amount,omitempty"`
 }
 
+// UpdateRedeemable
+//
+//	@Summary      Update an existing redeemable
+//	@Description   Update specific fields (name, stock, max per user) of a redeemable.
+//	@Tags         Redeemables
+//	@Accept       json
+//	@Produce      json
+//	@Param        redeemableId path      string                   true  "Redeemable ID (UUID)"
+//	@Param        request      body      UpdateRedeemableRequest  true  "Redeemable update data (partial fields allowed)"
+//	@Success      201          {object}  sqlc.Redeemable
+//	@Failure      400          {object}  response.ErrorResponse "Invalid ID or request body"
+//	@Failure      500          {object}  response.ErrorResponse "Internal Server Error"
+//	@Router       /redeemables/{redeemableId} [patch]
 func (h *RedeemablesHandler) UpdateRedeemable(w http.ResponseWriter, r *http.Request) {
 	redeemableIdStr := chi.URLParam(r, "redeemableId")
 	if redeemableIdStr == "" {
@@ -119,9 +157,18 @@ func (h *RedeemablesHandler) UpdateRedeemable(w http.ResponseWriter, r *http.Req
 
 	res.Send(w, http.StatusCreated, redeemable)
 	return
-	// decode request body
 }
 
+// DeleteRedeemable
+//
+//	@Summary      Delete a redeemable
+//	@Description   Permanently delete a redeemable item by ID.
+//	@Tags         Redeemables
+//	@Param        redeemableId path  string  true  "Redeemable ID (UUID)"
+//	@Success      204          "No Content"
+//	@Failure      400          {object}  response.ErrorResponse "Invalid Redeemable ID"
+//	@Failure      500          {object}  response.ErrorResponse "Internal Server Error"
+//	@Router       /redeemables/{redeemableId} [delete]
 func (h *RedeemablesHandler) DeleteRedeemable(w http.ResponseWriter, r *http.Request) {
 	redeemableIdStr := chi.URLParam(r, "redeemableId")
 	if redeemableIdStr == "" {
@@ -141,6 +188,17 @@ func (h *RedeemablesHandler) DeleteRedeemable(w http.ResponseWriter, r *http.Req
 	res.Send(w, http.StatusNoContent, nil)
 }
 
+// RedeemRedeemable
+//
+//	@Summary      Redeem an item for a user
+//	@Description   Create a redemption record linking a specific user to a redeemable item.
+//	@Tags         Redeemables
+//	@Param        redeemableId path  string  true  "Redeemable ID (UUID)"
+//	@Param        userId       path  string  true  "User ID (UUID)"
+//	@Success      204          "No Content"
+//	@Failure      400          {object}  response.ErrorResponse "Invalid IDs"
+//	@Failure      500          {object}  response.ErrorResponse "Internal Server Error"
+//	@Router       /redeemables/{redeemableId}/users/{userId} [post]
 func (h *RedeemablesHandler) RedeemRedeemable(w http.ResponseWriter, r *http.Request) {
 	// user id, redeemable id
 	userIdStr := chi.URLParam(r, "userId")
@@ -171,6 +229,7 @@ func (h *RedeemablesHandler) RedeemRedeemable(w http.ResponseWriter, r *http.Req
 	res.Send(w, http.StatusNoContent, nil)
 }
 
+// UNUSED FOR NOW
 func (h *RedeemablesHandler) UpdateRedemption(w http.ResponseWriter, r *http.Request) {
 	// user id, redeemable id
 	userIdStr := chi.URLParam(r, "userId")

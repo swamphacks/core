@@ -21,7 +21,7 @@ func NewRedeemablesRepository(db *db.DB) *RedeemablesRepository {
 func (r *RedeemablesRepository) GetRedeemablesByEventID(ctx context.Context, eventID uuid.UUID) (*[]sqlc.GetRedeemablesByEventIDRow, error) {
 	redeemables, err := r.db.Query.GetRedeemablesByEventID(ctx, eventID)
 	if err != nil {
-		return nil, err // TODO: more robust error handling
+		return nil, err
 	}
 	return &redeemables, nil
 }
@@ -35,10 +35,9 @@ func (r *RedeemablesRepository) CreateRedeemable(ctx context.Context, eventID uu
 	}
 	redeemable, err := r.db.Query.CreateRedeemable(ctx, params)
 	if err != nil {
-		return nil, err // TODO: more robust error handling
+		return nil, err
 	}
 	return &redeemable, nil
-	// TODO: make sure this is used properly
 }
 func (r *RedeemablesRepository) DeleteRedeemable(ctx context.Context, redeemableID uuid.UUID) error {
 	err := r.db.Query.DeleteRedeemable(ctx, redeemableID)
@@ -69,7 +68,6 @@ func (r *RedeemablesRepository) UpdateRedeemable(ctx context.Context, redeemable
 		return nil, err
 	}
 	return &redeemable, nil
-	// TODO: make sure the this is used properly
 }
 
 func (r *RedeemablesRepository) RedeemRedeemable(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID) (*sqlc.UserRedemption, error) {
@@ -82,7 +80,6 @@ func (r *RedeemablesRepository) RedeemRedeemable(ctx context.Context, redeemable
 		return nil, err
 	}
 	return &redemption, nil
-	// TODO: make sure this is used properly
 }
 
 func (r *RedeemablesRepository) UpdateRedemption(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID) error {
