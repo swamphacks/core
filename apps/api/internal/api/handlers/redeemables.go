@@ -87,7 +87,7 @@ func (h *RedeemablesHandler) CreateRedeemable(w http.ResponseWriter, r *http.Req
 
 type UpdateRedeemableRequest struct {
 	Name          *string `json:"name,omitempty"`
-	Amount        *int    `json:"amount,omitempty"`
+	Amount        *int    `json:"total_stock,omitempty"`
 	MaxUserAmount *int    `json:"max_user_amount,omitempty"`
 }
 

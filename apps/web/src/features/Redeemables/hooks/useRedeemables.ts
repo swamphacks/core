@@ -80,3 +80,18 @@ export function useRedeemRedeemable(eventId: string, redeemableId: string) {
     },
   });
 }
+
+export function useUpdateRedeemable(eventId: string, redeemableId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: Partial<Redeemable>) => {
+      await api.patch(`events/${eventId}/redeemables/${redeemableId}`, {
+        json: data,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["redeemables", eventId] });
+    },
+  });
+}

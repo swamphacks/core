@@ -65,8 +65,8 @@ function RouteComponent() {
               maxUserAmount={redeemable.max_user_amount}
               totalRedeemed={
                 typeof redeemable.total_redeemed === "string"
-                  ? parseInt(redeemable.total_redeemed, 10) || 0
-                  : Number(redeemable.total_redeemed) || 0
+                  ? parseInt(redeemable.total_redeemed) || 0
+                  : redeemable.total_redeemed
               }
               eventId={eventId}
             />
