@@ -54,7 +54,7 @@ export function RedeemableCard({
           <div className="flex justify-end mt-4">
             <DialogTrigger>
               <Button className="px-4 py-2 bg-violet-600 text-white rounded hover:bg-violet-700 transition-colors font-medium cursor-pointer">
-                Redeem
+                Start Redeeming
               </Button>
               <RedeemableDetailsModal
                 id={id}

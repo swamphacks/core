@@ -243,7 +243,10 @@ export function RedeemableDetailsModal({
           </div>
 
           <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <Text className="text-sm text-text-secondary">
+                Tap RFID on Scanner to Redeem
+              </Text>
               <div className="flex items-center justify-between">
                 <Text className="text-sm text-text-secondary">ID: {id}</Text>
 
