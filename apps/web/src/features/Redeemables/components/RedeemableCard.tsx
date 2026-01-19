@@ -28,16 +28,21 @@ export function RedeemableCard({
       <div className="p-6 w-full">
         <div className="flex justify-between items-start mb-4">
           <h3 className="text-xl font-semibold text-text-main">{name}</h3>
-          <div className="text-sm text-text-secondary">
-            {remaining} / {totalStock} remaining
+          <div className="text-right">
+            <div className="text-sm text-text-secondary">
+              {remaining} / {totalStock} remaining
+            </div>
+            <div className="text-sm text-text-secondary">
+              {maxUserAmount} max per user
+            </div>
           </div>
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
+          {/* <div className="flex items-center justify-between text-sm">
             <span className="text-text-secondary">Max per user:</span>
             <span className="text-text-main font-medium">{maxUserAmount}</span>
-          </div>
+          </div> */}
 
           <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
             <div

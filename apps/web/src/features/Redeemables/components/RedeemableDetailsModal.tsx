@@ -1,5 +1,10 @@
 import { Modal } from "@/components/ui/Modal";
-import { OverlayTriggerStateContext, Button } from "react-aria-components";
+import {
+  OverlayTriggerStateContext,
+  DialogTrigger,
+} from "react-aria-components";
+import { Button } from "@/components/ui/Button";
+import TablerTrash from "~icons/tabler/trash";
 import { useContext, useRef, useEffect, useState } from "react";
 import { Text } from "react-aria-components";
 import {
@@ -7,6 +12,7 @@ import {
   getUserByRFID,
   useUpdateRedeemable,
 } from "../hooks/useRedeemables";
+import { DeleteRedeemableModal } from "./DeleteRedeemableModal";
 import { Scanner, type IDetectedBarcode } from "@yudiel/react-qr-scanner";
 import { showToast } from "@/lib/toast/toast";
 import TablerRefresh from "~icons/tabler/refresh";
@@ -242,6 +248,7 @@ export function RedeemableDetailsModal({
                 <Text className="text-sm text-text-secondary">
                   Redeemable ID: {id}
                 </Text>
+
                 <Button
                   onPress={handleRefresh}
                   className="flex items-center gap-2 px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
@@ -305,13 +312,19 @@ export function RedeemableDetailsModal({
       )}
       {mode === "edit" && (
         <div className="flex flex-col gap-6">
-          <div className="flex justify-start">
+          <div className="flex justify-between">
             <button
               onClick={() => setMode("details")}
               className="text-purple-600 underline decoration-purple-600/30 underline-offset-4 transition-colors hover:text-purple-800"
             >
               Back to Details
             </button>
+            <DialogTrigger>
+              <Button variant="danger" className="aspect-square p-2">
+                <TablerTrash className="h-4 w-4" />
+              </Button>
+              <DeleteRedeemableModal eventId={eventId} redeemableId={id} />
+            </DialogTrigger>
           </div>
 
           <div className="space-y-5">
