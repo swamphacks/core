@@ -245,16 +245,14 @@ export function RedeemableDetailsModal({
           <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <Text className="text-sm text-text-secondary">
-                  Redeemable ID: {id}
-                </Text>
+                <Text className="text-sm text-text-secondary">ID: {id}</Text>
 
                 <Button
                   onPress={handleRefresh}
                   className="flex items-center gap-2 px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
                 >
                   <TablerRefresh className="w-4 h-4" />
-                  Refresh
+                  Refresh Scanner
                 </Button>
               </div>
 
