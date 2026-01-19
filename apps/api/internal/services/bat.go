@@ -50,12 +50,14 @@ type BatService struct {
 	emailService *EmailService
 	txm          *db.TransactionManager
 	taskQueue    *asynq.Client
+	scheduler    *asynq.Scheduler
 	logger       zerolog.Logger
 }
 
-func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, logger zerolog.Logger) *BatService {
+func NewBatService(appRepo *repository.ApplicationRepository, eventRepo *repository.EventRepository, userRepo *repository.UserRepository, batRunsRepo *repository.BatRunsRepository, emailService *EmailService, txm *db.TransactionManager, taskQueue *asynq.Client, scheduler *asynq.Scheduler, logger zerolog.Logger) *BatService {
 	return &BatService{
 		taskQueue:    taskQueue,
+		scheduler:    scheduler,
 		appRepo:      appRepo,
 		eventRepo:    eventRepo,
 		userRepo:     userRepo,
@@ -393,4 +395,43 @@ func (s *BatService) CheckInAttendee(ctx context.Context, eventId, userId uuid.U
 		Rfid:         RFID,
 		RfidDoUpdate: RFID != nil,
 	})
+}
+
+func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, eventId uuid.UUID) error {
+
+	cfg := config.Load()
+	task, err := tasks.NewTaskScheduleTransitionWaitlist(tasks.ScheduleTransitionWaitlistPayload{
+		EventID: eventId,
+		Period:  cfg.AcceptFromWaitlistPeriod,
+	})
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to create ScheduleTransitionWaitlist task")
+		return err
+	}
+
+	_, err = s.taskQueue.Enqueue(task, asynq.Queue("bat"))
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to queue ScheduleTransitionWaitlist task")
+		return err
+	}
+	s.logger.Info().Msg("Queued TransitionWaitlist task")
+
+	return nil
+}
+
+func (s *BatService) QueueShutdownWaitlistScheduler() error {
+	task, err := tasks.NewTaskShutdownScheduler()
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to create ShutdownWaitlistScheduler task")
+		return err
+	}
+
+	_, err = s.taskQueue.Enqueue(task, asynq.Queue("bat"))
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to queue ShutdownWaitlistScheduler task")
+		return err
+	}
+	s.logger.Info().Msg("Queued ShutdownWaitlistScheduler task")
+
+	return nil
 }

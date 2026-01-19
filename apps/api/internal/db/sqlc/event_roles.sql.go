@@ -29,6 +29,19 @@ func (q *Queries) AssignRole(ctx context.Context, arg AssignRoleParams) error {
 	return err
 }
 
+const getAttendeeCountByEventId = `-- name: GetAttendeeCountByEventId :one
+SELECT COUNT(*) FROM event_roles AS er
+WHERE er.event_id = $1::uuid
+  AND er.role = 'attendee'
+`
+
+func (q *Queries) GetAttendeeCountByEventId(ctx context.Context, eventID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, getAttendeeCountByEventId, eventID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getEventStaff = `-- name: GetEventStaff :many
 SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.role AS event_role
 FROM auth.users u

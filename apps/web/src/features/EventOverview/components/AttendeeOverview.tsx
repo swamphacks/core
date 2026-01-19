@@ -1,13 +1,16 @@
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { EventAttendanceWithdrawalModal } from "@/features/Event/components/EventAttendanceWithdrawalModal";
 import { generateIdentifyIntent } from "@/lib/qr-intents/generate";
-import { Heading } from "react-aria-components";
+import { DialogTrigger, Heading } from "react-aria-components";
 import QRCode from "react-qr-code";
 
 interface Props {
   userId: string;
+  eventId: string;
 }
 
-export default function AttendeeOverview({ userId }: Props) {
+export default function AttendeeOverview({ userId, eventId }: Props) {
   const identificationIntentString = generateIdentifyIntent(userId);
 
   // Used to get the right colors for QR Code
@@ -29,6 +32,16 @@ export default function AttendeeOverview({ userId }: Props) {
           value={identificationIntentString}
         />
       </Card>
+
+      <div>
+        <p className="my-5">Can't make it to the event?</p>
+        <DialogTrigger>
+          <Button variant="danger">{"Withdraw Attendance"}</Button>
+          <EventAttendanceWithdrawalModal
+            eventId={eventId}
+          ></EventAttendanceWithdrawalModal>
+        </DialogTrigger>
+      </div>
     </main>
   );
 }

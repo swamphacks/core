@@ -34,3 +34,8 @@ SET
   checked_in_at = CASE WHEN @checked_in_at_do_update::boolean THEN @checked_in_at ELSE checked_in_at END
 WHERE user_id = @user_id
   AND event_id = @event_id;
+
+-- name: GetAttendeeCountByEventId :one
+SELECT COUNT(*) FROM event_roles AS er
+WHERE er.event_id = @event_id::uuid
+  AND er.role = 'attendee';

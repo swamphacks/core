@@ -122,9 +122,6 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
-		r.Post("/{eventId}/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
-		r.Post("/{eventId}/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)
-
 		// Superuser-only
 		r.With(mw.Auth.RequireAuth, ensureSuperuser).Post("/", api.Handlers.Event.CreateEvent)
 
@@ -148,6 +145,12 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventStaff).Get("/users/{userId}", api.Handlers.Event.GetUserForEvent)
 
 			// Admin-only
+			r.With(ensureEventAdmin).Post("/queue-confirmation-email", api.Handlers.Email.QueueConfirmationEmail)
+			r.With(ensureEventAdmin).Post("/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
+			r.With(ensureEventAdmin).Patch("/transition-waitlisted-applications", api.Handlers.Application.TransitionWaitlistedApplications)
+			r.With(ensureEventAdmin).Post("/begin-waitlist-transition", api.Handlers.Bat.QueueScheduleWaitlistTransitionTask)
+			r.With(ensureEventAdmin).Post("/shutdown-waitlist-scheduler", api.Handlers.Bat.QueueShutdownWaitlistSchedulerTask)
+			r.With(ensureEventAdmin).Post("/reviews/bat-runs/{runId}/release", api.Handlers.Admission.ReleaseDecisions)
 			r.With(ensureEventAdmin).Patch("/", api.Handlers.Event.UpdateEventById)
 			r.With(ensureEventAdmin).Post("/banner", api.Handlers.Event.UploadEventBanner)
 			r.With(ensureEventAdmin).Delete("/banner", api.Handlers.Event.DeleteBanner)
@@ -193,6 +196,9 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 				//Accept acceptance
 				r.Patch("/accept-acceptance", api.Handlers.Application.AcceptApplicationAcceptance)
+
+				//Withdraw attendance
+				r.Patch("/withdraw-attendance", api.Handlers.Application.WithdrawAttendance)
 
 				//Waitlist application
 				r.Patch("/join-waitlist", api.Handlers.Application.JoinWaitlist)

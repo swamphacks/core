@@ -46,7 +46,6 @@ func main() {
 
 	mux := asynq.NewServeMux()
 
-	mux.HandleFunc(tasks.TypeSendConfirmationEmail, emailWorker.HandleSendConfirmationEmailTask)
 	mux.HandleFunc(tasks.TypeSendHtmlEmail, emailWorker.HandleSendHtmlEmailTask)
 
 	wd, err := os.Getwd()

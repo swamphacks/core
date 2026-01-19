@@ -1,0 +1,30 @@
+name: Deploy Asynqmon to Development
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    name: Deploy to Development Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH proxy commmand
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.API_HOST}}
+          username: root
+          password: ${{ secrets.API_PASSWORD}}
+          script: |
+            cd /root/core/infra
+            git fetch
+            git checkout dev
+            git reset --hard origin/dev
+            git pull
+
+            docker compose -f docker-compose.api.yml pull asynqmon-dev
+            docker compose -f docker-compose.api.yml up -d --no-deps --force-recreate asynqmon-dev
