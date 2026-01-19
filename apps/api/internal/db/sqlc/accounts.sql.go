@@ -155,6 +155,19 @@ func (q *Queries) GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAcco
 	return items, nil
 }
 
+const getUserIDByDiscordAccountID = `-- name: GetUserIDByDiscordAccountID :one
+SELECT user_id
+FROM auth.accounts
+WHERE provider_id = 'discord' AND account_id = $1
+`
+
+func (q *Queries) GetUserIDByDiscordAccountID(ctx context.Context, accountID string) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getUserIDByDiscordAccountID, accountID)
+	var user_id uuid.UUID
+	err := row.Scan(&user_id)
+	return user_id, err
+}
+
 const updateTokens = `-- name: UpdateTokens :exec
 UPDATE auth.accounts
 SET access_token = $3,
