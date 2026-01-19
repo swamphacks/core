@@ -69,8 +69,8 @@ func (s *RedeemablesService) RedeemRedeemable(ctx context.Context, redeemableID 
 	return nil
 }
 
-func (s *RedeemablesService) UpdateRedemption(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID) error {
-	err := s.redeemablesRepo.UpdateRedemption(ctx, redeemableID, userID)
+func (s *RedeemablesService) UpdateRedemption(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID, amount int) error {
+	err := s.redeemablesRepo.UpdateRedemption(ctx, redeemableID, userID, amount)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to update redemption")
 		return err

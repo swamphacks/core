@@ -229,7 +229,10 @@ func (h *RedeemablesHandler) RedeemRedeemable(w http.ResponseWriter, r *http.Req
 	res.Send(w, http.StatusNoContent, nil)
 }
 
-// UNUSED FOR NOW
+type UpdateRedemptionRequest struct {
+	amount int `json:"new_amount,omitempty"`
+}
+
 func (h *RedeemablesHandler) UpdateRedemption(w http.ResponseWriter, r *http.Request) {
 	// user id, redeemable id
 	userIdStr := chi.URLParam(r, "userId")
@@ -252,7 +255,15 @@ func (h *RedeemablesHandler) UpdateRedemption(w http.ResponseWriter, r *http.Req
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_redeemable_id", "The redeemable ID is not a valid UUID"))
 		return
 	}
-	err = h.redeemablesService.UpdateRedemption(r.Context(), redeemableId, userId)
+	var req UpdateRedemptionRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request_body", "The request body is invalid: "+err.Error()))
+		return
+	}
+
+	err = h.redeemablesService.UpdateRedemption(r.Context(), redeemableId, userId, req.amount)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_server_error", "internal service error, failed to update redemption"))
 		return

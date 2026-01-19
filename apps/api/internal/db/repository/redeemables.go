@@ -82,10 +82,11 @@ func (r *RedeemablesRepository) RedeemRedeemable(ctx context.Context, redeemable
 	return &redemption, nil
 }
 
-func (r *RedeemablesRepository) UpdateRedemption(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID) error {
+func (r *RedeemablesRepository) UpdateRedemption(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID, amount int) error {
 	err := r.db.Query.UpdateRedemption(ctx, sqlc.UpdateRedemptionParams{
 		RedeemableID: redeemableID,
 		UserID:       userID,
+		Amount:       int32(amount),
 	})
 	if err != nil {
 		return err
