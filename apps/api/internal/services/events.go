@@ -211,6 +211,27 @@ func (s *EventService) UpdateEventRole(ctx context.Context, userId uuid.UUID, ev
 	return s.eventRepo.UpdateRole(ctx, userId, eventId, role)
 }
 
+// If you need to set any of these fields to nil, then you need to find a different function.
+// If you pass in nil, it will mark that field as do not update.
+func (s *EventService) UpdateEventRoleByIds(ctx context.Context, userId, eventId uuid.UUID, role *sqlc.EventRoleType, checkedInAt *time.Time, RFID *string) error {
+	if role == nil && checkedInAt == nil && RFID == nil {
+		return errors.New("no fields provided to update")
+	}
+
+	return s.eventRepo.UpdateEventRoleByIds(ctx, sqlc.UpdateEventRoleByIdsParams{
+		EventID:      eventId,
+		UserID:       userId,
+		Role:         *role,
+		RoleDoUpdate: role != nil,
+
+		CheckedInAt:         checkedInAt,
+		CheckedInAtDoUpdate: checkedInAt != nil,
+
+		Rfid:         RFID,
+		RfidDoUpdate: RFID != nil,
+	})
+}
+
 func (s *EventService) IsApplicationsOpen(ctx context.Context, eventId uuid.UUID) (bool, error) {
 	event, err := s.GetEventByID(ctx, eventId)
 	if err != nil {
@@ -339,4 +360,52 @@ func (s *EventService) GetEventOverview(ctx context.Context, eventId uuid.UUID) 
 		ApplicationStatusStatistics: statusStats,
 		SubmissionTimesStatistics:   submissionTimesStats,
 	}, nil
+}
+
+type UserInfoForEvent struct {
+	UserID       uuid.UUID          `json:"user_id"`
+	Name         string             `json:"name"`
+	Email        *string            `json:"email"`
+	PlatformRole sqlc.AuthUserRole  `json:"platform_role"`
+	EventRole    sqlc.EventRoleType `json:"event_role"`
+	Image        *string            `json:"image"`
+	CheckedInAt  *time.Time         `json:"checked_in_at"`
+}
+
+func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId uuid.UUID) (*UserInfoForEvent, error) {
+	g, ctx := errgroup.WithContext(ctx)
+
+	var user *sqlc.AuthUser
+	var role *sqlc.EventRole
+
+	g.Go(func() error {
+		var err error
+		user, err = s.userRepo.GetByID(ctx, userId)
+		return err
+	})
+
+	//TODO: This may not run very nicely if the user doesn't have an associated event_role
+	// Oh well... for now!
+	g.Go(func() error {
+		var err error
+		role, err = s.eventRepo.GetEventRoleByIds(ctx, userId, eventId)
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
+		s.logger.Err(err).Msg("Something went wrong while getting event overview stats")
+		return nil, err
+	}
+
+	result := &UserInfoForEvent{
+		UserID:       user.ID,
+		Name:         user.Name,
+		Email:        user.Email,
+		PlatformRole: user.Role,
+		EventRole:    role.Role,
+		Image:        user.Image,
+		CheckedInAt:  role.CheckedInAt,
+	}
+
+	return result, nil
 }

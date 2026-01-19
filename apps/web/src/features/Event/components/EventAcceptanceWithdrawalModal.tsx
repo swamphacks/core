@@ -7,11 +7,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { eventsQueryKey } from "../hooks/useEventsWithUserInfo";
 import { myApplicationBaseKey } from "@/features/Application/hooks/useMyApplication";
 
-interface EventWithdrawalModalProps {
+interface EventAcceptanceWithdrawalModalProps {
   eventId: string;
 }
 
-function EventWithdrawalModal({ eventId }: EventWithdrawalModalProps) {
+function EventAcceptanceWithdrawalModal({
+  eventId,
+}: EventAcceptanceWithdrawalModalProps) {
   const queryClient = useQueryClient();
 
   const { data: userData } = auth.useUser();
@@ -38,7 +40,7 @@ function EventWithdrawalModal({ eventId }: EventWithdrawalModalProps) {
         queryKey: [...myApplicationBaseKey, eventId],
       });
     } catch (error) {
-      console.error("Failed to join waitlist", error);
+      console.error("Failed to withdraw application", error);
       showToast({
         title: "Failed to Withdraw",
         message: "Failed to Withdraw Acceptance. Please try again.",
@@ -59,9 +61,9 @@ function EventWithdrawalModal({ eventId }: EventWithdrawalModalProps) {
         <p className="mt-1 text-sm text-gray-500">
           Are you sure? This action cannot be undone.
         </p>
-        <p className="mt-1 text-sm text-gray-500">
+        {/* <p className="mt-1 text-sm text-gray-500">
           You can still join the waitlist after withdrawing.
-        </p>
+        </p> */}
       </div>
       <div className="mt-3 flex justify-center gap-3">
         <Button
@@ -75,4 +77,4 @@ function EventWithdrawalModal({ eventId }: EventWithdrawalModalProps) {
   );
 }
 
-export { EventWithdrawalModal };
+export { EventAcceptanceWithdrawalModal as EventAcceptanceWithdrawalModal };

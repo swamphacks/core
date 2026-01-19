@@ -99,6 +99,17 @@ func (q *Queries) GetEventRoleByDiscordIDAndEventId(ctx context.Context, arg Get
 	var i GetEventRoleByDiscordIDAndEventIdRow
 	err := row.Scan(&i.EventID, &i.Role)
 	return i, err
+const getAttendeeCountByEventId = `-- name: GetAttendeeCountByEventId :one
+SELECT COUNT(*) FROM event_roles AS er
+WHERE er.event_id = $1::uuid
+  AND er.role = 'attendee'
+`
+
+func (q *Queries) GetAttendeeCountByEventId(ctx context.Context, eventID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, getAttendeeCountByEventId, eventID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const getEventStaff = `-- name: GetEventStaff :many
@@ -225,6 +236,41 @@ type RemoveRoleParams struct {
 
 func (q *Queries) RemoveRole(ctx context.Context, arg RemoveRoleParams) error {
 	_, err := q.db.Exec(ctx, removeRole, arg.EventID, arg.UserID)
+	return err
+}
+
+const updateEventRoleByIds = `-- name: UpdateEventRoleByIds :exec
+UPDATE event_roles
+SET
+  role = CASE WHEN $1::boolean THEN $2 ELSE role END,
+  rfid = CASE WHEN $3::boolean THEN $4 ELSE rfid END,
+  checked_in_at = CASE WHEN $5::boolean THEN $6 ELSE checked_in_at END
+WHERE user_id = $7
+  AND event_id = $8
+`
+
+type UpdateEventRoleByIdsParams struct {
+	RoleDoUpdate        bool          `json:"role_do_update"`
+	Role                EventRoleType `json:"role"`
+	RfidDoUpdate        bool          `json:"rfid_do_update"`
+	Rfid                *string       `json:"rfid"`
+	CheckedInAtDoUpdate bool          `json:"checked_in_at_do_update"`
+	CheckedInAt         *time.Time    `json:"checked_in_at"`
+	UserID              uuid.UUID     `json:"user_id"`
+	EventID             uuid.UUID     `json:"event_id"`
+}
+
+func (q *Queries) UpdateEventRoleByIds(ctx context.Context, arg UpdateEventRoleByIdsParams) error {
+	_, err := q.db.Exec(ctx, updateEventRoleByIds,
+		arg.RoleDoUpdate,
+		arg.Role,
+		arg.RfidDoUpdate,
+		arg.Rfid,
+		arg.CheckedInAtDoUpdate,
+		arg.CheckedInAt,
+		arg.UserID,
+		arg.EventID,
+	)
 	return err
 }
 
