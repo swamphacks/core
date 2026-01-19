@@ -5,7 +5,7 @@ import {
 } from "react-aria-components";
 import { Button } from "@/components/ui/Button";
 import TablerTrash from "~icons/tabler/trash";
-import { useContext, useRef, useEffect, useState } from "react";
+import { useContext, useRef, useEffect, useState, useCallback } from "react";
 import { Text } from "react-aria-components";
 import {
   useRedeemRedeemable,
@@ -46,6 +46,7 @@ export function RedeemableDetailsModal({
   const [rfidInput, setRfidInput] = useState("");
   const [mode, setMode] = useState<ModalMode>("details");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isScanning, setIsScanning] = useState<boolean>(false);
   const { mutateAsync: redeemRedeemable, isPending } = useRedeemRedeemable(
     eventId,
     id,
@@ -111,29 +112,42 @@ export function RedeemableDetailsModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rfidInput]);
 
-  const onScan = async (scannedData: IDetectedBarcode[]) => {
-    const res = parseQrIntent(scannedData[0].rawValue);
-    if (res.ok && res.value.intent === Intent.IDENT) {
-      try {
-        await redeemRedeemable(res.value.user_id);
+  const onScan = useCallback(
+    async (scannedData: IDetectedBarcode[]) => {
+      const res = parseQrIntent(scannedData[0].rawValue);
 
-        showToast({
-          title: "Success",
-          message: "Redeemable redeemed successfully!",
-          type: "success",
-        });
-      } catch (error) {
-        showToast({
-          title: "Error",
-          message:
-            "Failed to redeem with QR. User not found or already redeemed.",
-          type: "error",
-        });
-        console.log("Redeem error:", error);
+      if (res.ok && res.value.intent === Intent.IDENT) {
+        setIsScanning(true);
+
+        try {
+          await redeemRedeemable(res.value.user_id);
+
+          showToast({
+            title: "Success",
+            message: "Redeemable redeemed successfully!",
+            type: "success",
+          });
+
+          // 4. Unlock after your desired delay
+          setTimeout(() => {
+            setIsScanning(false);
+          }, 5000);
+        } catch (error) {
+          showToast({
+            title: "Error",
+            message:
+              "Failed to redeem with QR. User not found or already redeemed.",
+            type: "error",
+          });
+          console.log("QR Scan error:", error);
+          setTimeout(() => {
+            setIsScanning(false);
+          }, 2000);
+        }
       }
-    }
-  };
-
+    },
+    [redeemRedeemable],
+  );
   const handleRedeem = async () => {
     if (rfidInput.length !== 10) {
       showToast({
@@ -301,6 +315,7 @@ export function RedeemableDetailsModal({
                 sound={false}
                 formats={["qr_code"]}
                 onScan={onScan}
+                paused={isScanning}
                 scanDelay={500}
                 onError={(err) => console.log(err)}
               />

@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
 type RedeemablesHandler struct {
@@ -43,16 +42,14 @@ func NewRedeemablesHandler(
 //	@Failure      500     {object}  response.ErrorResponse "Internal Server Error"
 //	@Router       /events/{eventId}/redeemables [get]
 func (h *RedeemablesHandler) GetRedeemables(w http.ResponseWriter, r *http.Request) {
-	eventIdStr := chi.URLParam(r, "eventId")
-	if eventIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
-		return
-	}
-	eventId, err := uuid.Parse(eventIdStr)
+	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		res.SendError(w, http.StatusBadRequest,
+			res.NewError("invalid_request", "Invalid or missing event_id."),
+		)
 		return
 	}
+
 	redeemables, err := h.redeemablesService.GetRedeemablesByEventID(r.Context(), eventId)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_server_error", "internal service error, failed to get redeemables by ID"))
@@ -82,14 +79,11 @@ type CreateRedeemableRequest struct {
 //	@Failure      500     {object}  response.ErrorResponse "Internal Server Error"
 //	@Router       /events/{eventId}/redeemables [post]
 func (h *RedeemablesHandler) CreateRedeemable(w http.ResponseWriter, r *http.Request) {
-	eventIdStr := chi.URLParam(r, "eventId")
-	if eventIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
-		return
-	}
-	eventId, err := uuid.Parse(eventIdStr)
+	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not a valid UUID"))
+		res.SendError(w, http.StatusBadRequest,
+			res.NewError("invalid_request", "Invalid or missing event_id."),
+		)
 		return
 	}
 
@@ -98,6 +92,11 @@ func (h *RedeemablesHandler) CreateRedeemable(w http.ResponseWriter, r *http.Req
 	decoder.DisallowUnknownFields() // Prevents requests with extraneous fields
 	if err := decoder.Decode(&req); err != nil {
 		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request_body", "The request body is invalid: "+err.Error()))
+		return
+	}
+
+	if req.Name == "" || req.Amount <= 0 {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_params", "name and amount are required"))
 		return
 	}
 
@@ -125,19 +124,16 @@ type UpdateRedeemableRequest struct {
 //	@Produce      json
 //	@Param        redeemableId path      string                   true  "Redeemable ID (UUID)"
 //	@Param        request      body      UpdateRedeemableRequest  true  "Redeemable update data (partial fields allowed)"
-//	@Success      201          {object}  sqlc.Redeemable
+//	@Success      200          {object}  sqlc.Redeemable
 //	@Failure      400          {object}  response.ErrorResponse "Invalid ID or request body"
 //	@Failure      500          {object}  response.ErrorResponse "Internal Server Error"
 //	@Router       /redeemables/{redeemableId} [patch]
 func (h *RedeemablesHandler) UpdateRedeemable(w http.ResponseWriter, r *http.Request) {
-	redeemableIdStr := chi.URLParam(r, "redeemableId")
-	if redeemableIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_redeemable_id", "The redeemable ID is missing from the URL!"))
-		return
-	}
-	redeemableId, err := uuid.Parse(redeemableIdStr)
+	redeemableId, err := web.PathParamToUUID(r, "redeemableId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_redeemable_id", "The redeemable ID is not a valid UUID"))
+		res.SendError(w, http.StatusBadRequest,
+			res.NewError("invalid_request", "Invalid or missing redeemable_id."),
+		)
 		return
 	}
 
@@ -170,16 +166,14 @@ func (h *RedeemablesHandler) UpdateRedeemable(w http.ResponseWriter, r *http.Req
 //	@Failure      500          {object}  response.ErrorResponse "Internal Server Error"
 //	@Router       /redeemables/{redeemableId} [delete]
 func (h *RedeemablesHandler) DeleteRedeemable(w http.ResponseWriter, r *http.Request) {
-	redeemableIdStr := chi.URLParam(r, "redeemableId")
-	if redeemableIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_redeemable_id", "The redeemable ID is missing from the URL!"))
-		return
-	}
-	redeemableId, err := uuid.Parse(redeemableIdStr)
+	redeemableId, err := web.PathParamToUUID(r, "redeemableId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_redeemable_id", "The redeemable ID is not a valid UUID"))
+		res.SendError(w, http.StatusBadRequest,
+			res.NewError("invalid_request", "Invalid or missing redeemable_id."),
+		)
 		return
 	}
+
 	err = h.redeemablesService.DeleteRedeemable(r.Context(), redeemableId)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_server_error", "internal service error, failed to delete redeemable"))
@@ -201,26 +195,22 @@ func (h *RedeemablesHandler) DeleteRedeemable(w http.ResponseWriter, r *http.Req
 //	@Router       /redeemables/{redeemableId}/users/{userId} [post]
 func (h *RedeemablesHandler) RedeemRedeemable(w http.ResponseWriter, r *http.Request) {
 	// user id, redeemable id
-	userIdStr := chi.URLParam(r, "userId")
-	if userIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
-		return
-	}
-	userId, err := uuid.Parse(userIdStr)
+	userId, err := web.PathParamToUUID(r, "userId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID"))
+		res.SendError(w, http.StatusBadRequest,
+			res.NewError("invalid_request", "Invalid or missing user_id."),
+		)
 		return
 	}
-	redeemableIdStr := chi.URLParam(r, "redeemableId")
-	if redeemableIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_redeemable_id", "The redeemable ID is missing from the URL!"))
-		return
-	}
-	redeemableId, err := uuid.Parse(redeemableIdStr)
+
+	redeemableId, err := web.PathParamToUUID(r, "redeemableId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_redeemable_id", "The redeemable ID is not a valid UUID"))
+		res.SendError(w, http.StatusBadRequest,
+			res.NewError("invalid_request", "Invalid or missing redeemable_id."),
+		)
 		return
 	}
+
 	err = h.redeemablesService.RedeemRedeemable(r.Context(), redeemableId, userId)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_server_error", "internal service error, failed to redeem redeemable"))
@@ -235,24 +225,19 @@ type UpdateRedemptionRequest struct {
 
 func (h *RedeemablesHandler) UpdateRedemption(w http.ResponseWriter, r *http.Request) {
 	// user id, redeemable id
-	userIdStr := chi.URLParam(r, "userId")
-	if userIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
-		return
-	}
-	userId, err := uuid.Parse(userIdStr)
+	userId, err := web.PathParamToUUID(r, "userId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_user_id", "The user ID is not a valid UUID"))
+		res.SendError(w, http.StatusBadRequest,
+			res.NewError("invalid_request", "Invalid or missing user_id."),
+		)
 		return
 	}
-	redeemableIdStr := chi.URLParam(r, "redeemableId")
-	if redeemableIdStr == "" {
-		res.SendError(w, http.StatusBadRequest, res.NewError("missing_redeemable_id", "The redeemable ID is missing from the URL!"))
-		return
-	}
-	redeemableId, err := uuid.Parse(redeemableIdStr)
+
+	redeemableId, err := web.PathParamToUUID(r, "redeemableId")
 	if err != nil {
-		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_redeemable_id", "The redeemable ID is not a valid UUID"))
+		res.SendError(w, http.StatusBadRequest,
+			res.NewError("invalid_request", "Invalid or missing redeemable_id."),
+		)
 		return
 	}
 	var req UpdateRedemptionRequest
