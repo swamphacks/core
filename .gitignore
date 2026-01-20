@@ -40,3 +40,4 @@ venv
 **/.pnpm-store/
 
 .env.dev.discord
+uv.lock
