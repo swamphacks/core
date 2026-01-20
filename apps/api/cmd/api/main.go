@@ -94,13 +94,23 @@ func main() {
 	teamService := services.NewTeamService(teamRepo, teamMemberRepo, teamJoinRequestRepo, eventRepo, txm, logger)
 	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, taskQueueClient, nil, logger)
 	redeemablesService := services.NewRedeemablesService(redeemablesRepo, logger)
-
-	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, batService, redeemablesService, cfg, logger)
 	discordService := services.NewDiscordService(eventRepo, logger)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, batService, discordService, cfg, logger)
+	apiHandlers := handlers.NewHandlers(
+		authService,
+		userService,
+		eventInterestService,
+		eventService,
+		emailService,
+		applicationService,
+		teamService,
+		batService,
+		redeemablesService,
+		discordService,
+		cfg,
+		logger,
+	)
 
 	api := api.NewAPI(&logger, apiHandlers, mw)
 
