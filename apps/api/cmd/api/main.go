@@ -82,6 +82,7 @@ func main() {
 	teamMemberRepo := repository.NewTeamMemberRespository(database)
 	teamJoinRequestRepo := repository.NewTeamJoinRequestRepository(database)
 	batRunsRepo := repository.NewBatRunsRepository(database)
+	redeemablesRepo := repository.NewRedeemablesRepository(database)
 
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
@@ -92,6 +93,10 @@ func main() {
 	applicationService := services.NewApplicationService(applicationRepo, userRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, nil, logger)
 	teamService := services.NewTeamService(teamRepo, teamMemberRepo, teamJoinRequestRepo, eventRepo, txm, logger)
 	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, taskQueueClient, nil, logger)
+	redeemablesService := services.NewRedeemablesService(redeemablesRepo, logger)
+
+	// Injections into handlers
+	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, batService, redeemablesService, cfg, logger)
 	discordService := services.NewDiscordService(eventRepo, logger)
 
 	// Injections into handlers
