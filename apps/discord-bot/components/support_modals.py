@@ -37,7 +37,7 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         
         This method:
         1. Validates the existence of required channels and roles
-        2. Creates a private thread in the support channel for the user and moderators to discuss the issue
+        2. Creates a private thread in the support channel for the user and mentors to discuss the issue
         3. Sends an embed with the support request details to both the thread and reports channel
         4. Notifies staff members and provides them with a button to join the thread
         
@@ -48,24 +48,33 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
             The method will send error messages if required channels or roles are not found.
             Staff members are notified with a soft ping (hidden mention) in the reports channel.
         """
+        from utils.roles_config import RoleNames, get_role_id
+        
         global last_pinged_mentor_index
         reports_channel = discord.utils.get(interaction.guild.channels, name="reports")
         support_channel = discord.utils.get(interaction.guild.channels, name="support")
         thread_author = interaction.user
-        mod_role = discord.utils.get(interaction.guild.roles, name="Moderator")
+        mod_role_name = RoleNames.MODERATOR
+        mod_role_id = get_role_id(mod_role_name)
+        
+        if mod_role_id:
+            mod_role = interaction.guild.get_role(int(mod_role_id))
+        else:
+            mod_role = discord.utils.get(interaction.guild.roles, name=mod_role_name)
+        
         if not mod_role:
-            await interaction.response.send_message("Error: Could not find the moderator role. Please contact an administrator.", ephemeral=True)
+            await interaction.response.send_message(f"Error: Could not find the **{mod_role_name}** role. Please create it before using this command.", ephemeral=True)
             return
         
-        # check if the channels and roles exist
+        # check if the channels exist
         if not reports_channel:
             await interaction.response.send_message(
-                "Error: Could not find the reports channel. Please contact an administrator.",
+                "Error: Could not find the **reports** channel. Please create it before using this command.",
                 ephemeral=True
             )
             return
         if not support_channel:
-            await interaction.response.send_message("Error: Could not find the support channel. Please contact an administrator.", ephemeral=True)
+            await interaction.response.send_message("Error: Could not find the **support** channel. Please create it before using this command.", ephemeral=True)
             return
         
         # truncate description in case it's too long
@@ -74,22 +83,20 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         if len(description) > 200:
             shortened_description = description[:200] + "..."
             
-        # get available mentors
-        available_mentors = get_available_mentors(mod_role)
-        if not available_mentors:
-            await interaction.response.send_message(
-                "Error: No available mentors at this time. Please try again later.",
-                ephemeral=True
-            )
-            return
+        # get available mentors from all acceptable roles
+        available_mentors = get_available_mentors(interaction.guild)
         
-        # implement round-robin pinging of mentors
-        if last_pinged_mentor_index >= len(available_mentors):
-            last_pinged_mentor_index = 0
-        selected_mentor = available_mentors[last_pinged_mentor_index]
-        last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
-        action_text = f"{selected_mentor.mention} Please join the thread to assist the user."
-        print("last_pinged_mentor_index:", last_pinged_mentor_index)
+        # Handle mentor selection - allow requests even if no mentors are available
+        if available_mentors:
+            # implement round-robin pinging of mentors
+            if last_pinged_mentor_index >= len(available_mentors):
+                last_pinged_mentor_index = 0
+            selected_mentor = available_mentors[last_pinged_mentor_index]
+            last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
+            action_text = f"{selected_mentor.mention} Please join the thread to assist the user."
+        else:
+            # No mentors available, but still allow the request
+            action_text = "No available mentors at this time. A mentor will assist when available."
         
         # create the thread with the next available name and add the initialuser to the thread
         thread_name = get_next_thread_name(support_channel)
@@ -112,6 +119,7 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
             description=f"Description: {description}\n\n✅ Thank you for your request, we will be with you shortly!",
             color=discord.Color.green(),
         )
+        await thread.send(content=f"{thread_author.mention}")
         await thread.send(embed=thread_embed)
         
         # create embed for reports channel
@@ -140,8 +148,8 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
     Support modal for creating a support vc and embeds.
     
     This modal provides a form interface for users to submit support requests.
-    It creates a private vc in the Support-VCs category and notifies staff members
-    through the reports channel.
+        It creates a private vc in the --- SwampHacks XI (Support-VCs) --- category and notifies staff members
+        through the reports channel.
     """
     def __init__(self) -> None:
         """
@@ -163,7 +171,7 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         
         This method:
         1. Validates the existence of required channels and roles
-        2. Creates a private voice channel in the Support-VCs category for the user and moderators to discuss the issue
+        2. Creates a private voice channel in the --- SwampHacks XI (Support-VCs) --- category for the user and mentors to discuss the issue
         3. Sends an embed with the support request details to both the voice channel and reports channel
         4. Notifies staff members and provides them with a button to join the voice channel
         
@@ -174,24 +182,33 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             The method will send error messages if required channels or roles are not found.
             Staff members are notified with a soft ping (hidden mention) in the reports channel.
         """
+        from utils.roles_config import RoleNames, get_role_id
+        
         global last_pinged_mentor_index
         reports_channel = discord.utils.get(interaction.guild.channels, name="reports")
-        mod_role = discord.utils.get(interaction.guild.roles, name="Moderator")
-        category = discord.utils.get(interaction.guild.categories, name="Support-VCs")
+        mod_role_name = RoleNames.MODERATOR
+        mod_role_id = get_role_id(mod_role_name)
+        
+        if mod_role_id:
+            mod_role = interaction.guild.get_role(int(mod_role_id))
+        else:
+            mod_role = discord.utils.get(interaction.guild.roles, name=mod_role_name)
+        
+        category = discord.utils.get(interaction.guild.categories, name="--- SwampHacks XI (Support-VCs) ---")
         vc_author = interaction.user
         
         if not mod_role:
-            await interaction.response.send_message("Error: Could not find the moderator role. Please contact an administrator.", ephemeral=True)
+            await interaction.response.send_message(f"Error: Could not find the **{mod_role_name}** role. Please create it before using this command.", ephemeral=True)
             return
 
         if not reports_channel:
             await interaction.response.send_message(
-                "Error: Could not find the reports channel. Please contact an administrator.",
+                "Error: Could not find the **reports** channel. Please create it before using this command.",
                 ephemeral=True
             )
             return
         if category is None:
-            await interaction.response.send_message("Category 'Support-VCs' not found.", ephemeral=True)
+            await interaction.response.send_message("Category **--- SwampHacks XI (Support-VCs) ---** not found.", ephemeral=True)
             return
         
          # truncate description in case it's too long
@@ -240,20 +257,19 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             ephemeral=True
         )
 
-        # # get available mentors
-        available_mentors = get_available_mentors(mod_role)
-        if not available_mentors:
-            await interaction.response.send_message(
-                "Error: No available mentors at this time. Please try again later.",
-                ephemeral=True
-            )
-            return
-        if last_pinged_mentor_index >= len(available_mentors):
-            last_pinged_mentor_index = 0
-        selected_mentor = available_mentors[last_pinged_mentor_index]
-        last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
-        action_text = f"{selected_mentor.mention} Please join the vc to assist the user."
-        print("last_pinged_mentor_index:", last_pinged_mentor_index)
+        # get available mentors from all acceptable roles
+        available_mentors = get_available_mentors(interaction.guild)
+        
+        # Handle mentor selection - allow requests even if no mentors are available
+        if available_mentors:
+            if last_pinged_mentor_index >= len(available_mentors):
+                last_pinged_mentor_index = 0
+            selected_mentor = available_mentors[last_pinged_mentor_index]
+            last_pinged_mentor_index = (last_pinged_mentor_index + 1) % len(available_mentors)
+            action_text = f"{selected_mentor.mention} Please join the vc to assist the user."
+        else:
+            # No mentors available, but still allow the request
+            action_text = "No available mentors at this time. A mentor will assist when available."
         
         # create embed for reports channel
         reports_embed = discord.Embed(
