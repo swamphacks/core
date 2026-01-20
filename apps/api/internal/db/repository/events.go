@@ -180,3 +180,28 @@ func (r *EventRepository) GetApplicationStatuses(ctx context.Context, eventId uu
 func (r *EventRepository) GetSubmissionTimes(ctx context.Context, eventId uuid.UUID) ([]sqlc.GetSubmissionTimesRow, error) {
 	return r.db.Query.GetSubmissionTimes(ctx, eventId)
 }
+
+func (r *EventRepository) GetEventAttendeesWithDiscord(ctx context.Context, eventId uuid.UUID) (*[]sqlc.GetEventAttendeesWithDiscordRow, error) {
+	attendees, err := r.db.Query.GetEventAttendeesWithDiscord(ctx, eventId)
+	if err != nil {
+		return nil, err
+	}
+	return &attendees, nil
+}
+
+func (r *EventRepository) GetEventRoleByDiscordIDAndEventId(ctx context.Context, discordID string, eventID uuid.UUID) (*sqlc.GetEventRoleByDiscordIDAndEventIdRow, error) {
+	params := sqlc.GetEventRoleByDiscordIDAndEventIdParams{
+		AccountID: discordID,
+		EventID:   eventID,
+	}
+
+	eventRole, err := r.db.Query.GetEventRoleByDiscordIDAndEventId(ctx, params)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrEventRoleNotFound
+		}
+		return nil, err
+	}
+
+	return &eventRole, nil
+}

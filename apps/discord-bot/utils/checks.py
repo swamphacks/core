@@ -1,38 +1,49 @@
 import os
-from discord import app_commands, Interaction
+from discord import app_commands, Interaction, Permissions
 import json
 from typing import Callable, Coroutine, Any
+from utils.roles_config import get_acceptable_roles
 
-def load_config():
-    config_path = os.path.join(os.path.dirname(__file__), "..", "config.json")
-    try:
-        with open(config_path) as f:
-            return json.load(f)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Config file not found at {config_path}")
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON in config file: {e}")
+def has_bot_full_access() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
+    """
+    Check if the user has one of the acceptable roles or is an administrator for slash commands.
 
-config = load_config()
+    Returns:
+        bool: True if the user has one of the acceptable roles or is an administrator, False otherwise
+    """
+    async def predicate(interaction: Interaction):
+        # Get acceptable roles from config
+        acceptable_roles = get_acceptable_roles()
+        
+        # Ensure interaction is in a channel and a user exists
+        if not interaction.guild or not interaction.user:
+            return False
+        
+        member = interaction.guild.get_member(interaction.user.id)
+        if not member:
+            return False
+        
+        # get all the permissions for the member
+        perms: Permissions = member.guild_permissions
+        
+        # check if user has moderator privileges
+        # for now it just checks if they are an admin but adjust this later
+        if any(role.name in acceptable_roles for role in member.roles):
+            # print(f"User {member.name} has moderator privileges.")
+            return True
+        else:
+            # print(f"User {member.name} does not have moderator privileges.")
+            return False
+       
+    return app_commands.check(predicate)
 
 def is_mod_slash() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
     """
-    Check if the user has the moderator role for slash commands. The role is set in the config.json file.
+    Check if the user has moderator role for slash commands.
+    Uses the same logic as has_bot_full_access() for consistency.
 
     Returns:
-        bool: True if the user has the moderator role, False otherwise
+        bool: True if the user has moderator privileges, False otherwise
     """
-    async def predicate(interaction: Interaction):
-        try:
-            mod_role_id = int(config["roles"]["moderator"])
-        except KeyError:
-            raise ValueError("Moderator role ID not found in config")
-        except ValueError:
-            raise ValueError("Invalid moderator role ID in config")
-
-        role_ids = [role.id for role in interaction.user.roles]
-
-        has_permission = mod_role_id in role_ids
-        return has_permission
-
-    return app_commands.check(predicate)
+    # Reuse the same logic as has_bot_full_access
+    return has_bot_full_access()

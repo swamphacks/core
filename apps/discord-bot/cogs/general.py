@@ -1,10 +1,18 @@
 from discord.ext import commands
 from discord import app_commands
 import discord
-from typing import Literal
+import aiohttp
+import logging
+from typing import Literal, Optional
 from utils.checks import is_mod_slash
+import re
+from typing import Literal
+from utils.checks import has_bot_full_access
 from utils.mentor_functions import set_all_mentors_available
-
+from utils.role_assignment import (get_attendees_for_event, format_assignment_summary, assign_roles_to_attendees)
+import os
+from utils.get_next_support_vc_name import get_next_support_vc_name
+from chatbot.llm import llm_response
 
 class General(commands.Cog):
     """A cog containing general utility commands for the server
@@ -22,7 +30,7 @@ class General(commands.Cog):
         """
         self.bot: commands.Bot = bot
     
-    def get_role(self, guild: discord.Guild, role_name: str) -> discord.Role:
+    def get_role(self, guild: discord.Guild, role_name: str) -> Optional[discord.Role]:
         """Helper to get a role by name from a guild."""
         return discord.utils.get(guild.roles, name=role_name)
     
@@ -39,7 +47,7 @@ class General(commands.Cog):
     @app_commands.describe(
         amount="The amount of messages to delete"
     )
-    @is_mod_slash()
+    @has_bot_full_access()
     async def delete(
         self,
         interaction: discord.Interaction,
@@ -59,7 +67,7 @@ class General(commands.Cog):
         )
     
     @app_commands.command(name="delete_all_threads", description="Delete all threads in a specified channel")
-    @is_mod_slash()
+    @has_bot_full_access()
     async def delete_all_threads(self, interaction: discord.Interaction, channel: discord.TextChannel, delete_archived: bool = False) -> None:
         """Delete all threads in a specified channel
         
@@ -88,7 +96,7 @@ class General(commands.Cog):
         )
         
     @app_commands.command(name="delete_all_vcs", description="Delete all voice channels in a specified category")
-    @is_mod_slash()
+    @has_bot_full_access()
     async def delete_all_vcs(self, interaction: discord.Interaction, category: discord.CategoryChannel) -> None:
         """Delete all voice channels in a specified category
         
@@ -114,7 +122,7 @@ class General(commands.Cog):
         action="Whether to assign or remove the role",
         role="The role to assign or remove"
     )
-    @is_mod_slash()
+    @has_bot_full_access()
     async def manage_role(
         self,
         interaction: discord.Interaction,
@@ -154,14 +162,13 @@ class General(commands.Cog):
                     f"Assigned **{role.name}** to {member.mention}.",
                     ephemeral=True
                 )
-                # Send a followup message that will be deleted after 5 seconds
                 await interaction.followup.send(
                     f"{interaction.user.mention} assigned **{role.name}** role to {member.mention}.",
                     delete_after=5
                 )
             except discord.Forbidden:
                 await interaction.response.send_message(
-                    "I don't have permission to assign roles!",
+                    "I don't have permission to assign roles! Please adjust my permissions.",
                     ephemeral=True
                 )
         elif action == "remove":
@@ -178,14 +185,13 @@ class General(commands.Cog):
                     f"Removed **{role.name}** from {member.mention}.",
                     ephemeral=True
                 )
-                # Send a followup message that will be deleted after 5 seconds
                 await interaction.followup.send(
                     f"{interaction.user.mention} removed **{role.name}** role from {member.mention}.",
                     delete_after=5
                 )
             except discord.Forbidden:
                 await interaction.response.send_message(
-                    "I don't have permission to remove roles!",
+                    "I don't have permission to assign roles! Please adjust my permissions.",
                     ephemeral=True
                 )
         else:
@@ -194,23 +200,62 @@ class General(commands.Cog):
                 "Invalid action. Please use 'assign' or 'remove'.",
                 ephemeral=True
             )
-    
-    @is_mod_slash()
+
+    @has_bot_full_access()
     @app_commands.command(name="set_available_mentors", description="Set available mentors in the server")
     async def set_all_mentors_available(self, interaction: discord.Interaction) -> None:
-        """Command should be executed intially to set all mentors to available"""
-        mod_role = self.get_role(interaction.guild, "Moderator")
-        if not mod_role:
-            await interaction.response.send_message("Error: Could not find the Moderator role.", ephemeral=True)
+        """
+        Set all users in the server with acceptable mentor roles to "Available Mentor"
+        
+        Args:
+            interaction: The interaction that triggered this command
+        """
+        from utils.roles_config import get_acceptable_mentor_roles, RoleNames, get_role_id
+        
+        await interaction.response.defer(ephemeral=True)
+        
+        acceptable_mentor_roles = get_acceptable_mentor_roles()
+        available_role_name = RoleNames.AVAILABLE_MENTOR
+        available_role_id = get_role_id(available_role_name)
+        
+        if available_role_id:
+            available_role = interaction.guild.get_role(int(available_role_id))
+        else:
+            available_role = discord.utils.get(interaction.guild.roles, name=available_role_name)
+        
+        if not available_role:
+            await interaction.followup.send(f"Error: Could not find the **{available_role_name}** role. Please create it before using this command.", ephemeral=True)
             return
-        await set_all_mentors_available(mod_role)
-        await interaction.response.send_message("All mentors are now available.", ephemeral=True)
+        
+        total_updated = 0
+        roles_found = []
+        
+        for role_name in acceptable_mentor_roles:
+            role_id = get_role_id(role_name)
+            if role_id:
+                role = interaction.guild.get_role(int(role_id))
+            else:
+                role = self.get_role(interaction.guild, role_name)
+            
+            if role:
+                roles_found.append(role_name)
+                for member in role.members:
+                    if available_role_name not in [r.name for r in member.roles]:
+                        await member.add_roles(available_role)
+                        total_updated += 1
+        
+        if not roles_found:
+            await interaction.followup.send(f"Error: Could not find any of the acceptable mentor roles ({', '.join(acceptable_mentor_roles)}). Please create them before using this command.", ephemeral=True)
+            return
+        
+        await interaction.followup.send(f"Successfully set {total_updated} members from roles {', '.join(roles_found)} to available.", ephemeral=True)
         
         
     @app_commands.command(name="add_to_thread", description="Add a user to the support thread")
     @app_commands.describe(user="The user to add to the thread")
     async def add_to_thread(self, interaction: discord.Interaction, user: discord.Member) -> None:
-        """Add a user to the support thread
+        """
+        Add a specified user to a support thread
         
         Args:
             interaction: The interaction that triggered this command
@@ -225,7 +270,8 @@ class General(commands.Cog):
             return
         # next ensure the thread is in the support channel specifically (check if the thread's parent exists as well)
         if not interaction.channel.parent or interaction.channel.parent.name != "support":
-            await interaction.response.send_message("This command can only be used in the support channel thread.", ephemeral=True)
+            if not interaction.channel.category or interaction.channel.category.name != "--- SwampHacks XI (Support-VCs) ---":
+                await interaction.response.send_message('This command can only be used in the "--- SwampHacks XI (Support-VCs) ---" category.', ephemeral=True)
             return
         
         # check if user is already in the thread
@@ -243,12 +289,74 @@ class General(commands.Cog):
             await interaction.response.send_message("I don't have permission to add users to this thread.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+            
+    @app_commands.command(name="create_vc", description="Creates a voice channel for support")
+    @has_bot_full_access()
+    async def create_vc(self, interaction: discord.Interaction) -> None:
+        """
+        Create a voice channel for support, requires a --- SwampHacks XI (Support-VCs) --- category and a Mentor role
+
+        Args:
+            interaction: The interaction that triggered this command
+        """
+        mentor_role = discord.utils.get(interaction.guild.roles, name="Mentor")
+        category = discord.utils.get(interaction.guild.categories, name="--- SwampHacks XI (Support-VCs) ---")
+        vc_author = interaction.user
+        if not mentor_role:
+            await interaction.response.send_message(
+                "Error: Could not find the **Mentor** role. Please create it before using this command.",
+                ephemeral=True
+            )
+            return
+        if not category:
+            await interaction.response.send_message(
+                "Error: Could not find the --- SwampHacks XI (Support-VCs) --- category. Please create it before using this command.",
+                ephemeral=True
+            )
+            return
         
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False, connect=False),
+            mentor_role: discord.PermissionOverwrite(view_channel=True, connect=True),
+            vc_author: discord.PermissionOverwrite(view_channel=True, connect=True),
+        }
+        vc_name = get_next_support_vc_name(category)
+        # Create the voice channel and get the channel object
+        voice_channel = await interaction.guild.create_voice_channel(
+            name=vc_name,
+            category=category,
+            user_limit=4,
+            reason="Support VC created for mentor and inquirer",
+            overwrites=overwrites
+        )
+        
+        text_channel_embed = discord.Embed(
+            title=f"Voice channel created: {vc_name}",
+            description=f"Here is the voice channel you requested.",
+            color=discord.Color.green(),
+        )
+        
+        # Try to send a message in the voice channel's chat (if available)
+        text_channel = interaction.guild.get_channel(voice_channel.id)
+        if text_channel:
+            await text_channel.send(content=f"{vc_author.mention}")
+            await text_channel.send(embed=text_channel_embed)
+        else:
+            print("Voice channel does not have an associated text channel.")
+            return
+
+        # ping the user who created the thread
+        await interaction.response.send_message(
+            f"Voice channel created: {voice_channel.mention}",
+            ephemeral=True
+        )
+
     @app_commands.command(name="grant_vc_access", description="Grant a user access to a voice channel")
     @app_commands.describe(user="Grant a user access to a voice channel")
-    @is_mod_slash()
+    @has_bot_full_access()
     async def grant_vc_access(self, interaction: discord.Interaction, user: discord.Member) -> None:
-        """Grant a user access to a voice channel
+        """
+        Grant a user access to a voice channel, can only be used in a voice channel under the Support-VCs category
         
         Args:
             interaction: The interaction that triggered this command
@@ -280,7 +388,229 @@ class General(commands.Cog):
             await interaction.response.send_message("I don't have permission to grant access to this voice channel.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+            
+    @app_commands.command(name="ask", description="Ask LLM a question")
+    @app_commands.describe(prompt="Your question for LLM")
+    async def ask(self, interaction: discord.Interaction, prompt: str):
+        """Ask LLM a question and get a response."""
+        await interaction.response.defer(thinking=True)
+        answer = llm_response(prompt)
+        await interaction.followup.send(answer, ephemeral=True)
+    
+    @app_commands.command(name="create_announcement", description="Create an announcement message that the bot will send")
+    @app_commands.describe(
+        message="The announcement message to send (supports Discord markdown formatting). Use @username or @rolename to mention users/roles.",
+        attachment="Optional image or file attachment to include with the announcement"
+    )
+    @has_bot_full_access()
+    async def create_announcement(
+        self, 
+        interaction: discord.Interaction, 
+        message: str,
+        attachment: discord.Attachment = None
+    ) -> None:
+        """Create an announcement message that the bot will send in the current channel
         
+        Args:
+            interaction: The interaction that triggered this command
+            message: The announcement message to send (supports Discord markdown formatting)
+            attachment: Optional image or file attachment to include with the announcement
+        """
+        await interaction.response.defer(ephemeral=True)
+        
+        file = None
+        if attachment:
+            file = await attachment.to_file()
+        
+        processed_message = message.encode().decode('unicode_escape')
+        
+        if interaction.guild:
+            mention_pattern = r'@(\w+)'
+            
+            def replace_mention(match):
+                name = match.group(1).lower()
+                member = discord.utils.find(lambda m: m.name.lower() == name, interaction.guild.members)
+                if member:
+                    return member.mention
+                member = discord.utils.find(lambda m: m.display_name.lower() == name, interaction.guild.members)
+                if member:
+                    return member.mention
+                role = discord.utils.find(lambda r: r.name.lower() == name, interaction.guild.roles)
+                if role:
+                    return role.mention
+                return match.group(0)
+            
+            processed_message = re.sub(mention_pattern, replace_mention, processed_message)
+        
+        allowed_mentions = discord.AllowedMentions(everyone=True, users=True, roles=True)
+        
+        if file:
+            await interaction.channel.send(processed_message, file=file, allowed_mentions=allowed_mentions)
+        else:
+            await interaction.channel.send(processed_message, allowed_mentions=allowed_mentions)
+        
+        await interaction.delete_original_response()
+        
+    
+    @app_commands.command(
+        name="assign_hacker_roles",
+        description="Assign hacker role to all attendees from API using webhook"
+    )
+    @app_commands.describe(
+        event_id="UUID of event",
+        role="Discord role to assign to attendees"
+    )
+    @is_mod_slash()
+    async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, role: discord.Role) -> None:
+        """Assign role to all attendees from API using webhook
+        
+        Args:
+            interaction: The interaction that triggered this command
+            event_id: UUID of event
+            role: Discord role to assign to attendees
+        """
+        
+        await interaction.response.defer(ephemeral=True)
+        
+        try:
+            guild_id = interaction.guild.id if interaction.guild else None
+            if not guild_id:
+                await interaction.followup.send("Error: Could not determine guild.", ephemeral=True)
+                return
+            
+            api_url = os.getenv("API_URL", "http://localhost:8080")
+            session_cookie = os.getenv("SESSION_COOKIE")
+            if not session_cookie:
+                await interaction.followup.send("Error: SESSION_COOKIE is not set.", ephemeral=True)
+                return
+            
+            webhook_url = os.getenv("WEBHOOK_URL")
+            if not webhook_url:
+                await interaction.followup.send("Error: WEBHOOK_URL is not set.", ephemeral=True)
+                return
+            
+            attendees = await get_attendees_for_event(api_url, session_cookie, event_id)
+            if not attendees:
+                await interaction.followup.send("Error: No attendees found for event.", ephemeral=True)
+                return
+            
+            newly_assigned, already_had, failed, errors = await assign_roles_to_attendees(webhook_url, attendees, role.name, str(guild_id))
+            summary = format_assignment_summary(len(attendees), newly_assigned, already_had, failed, errors)
+            await interaction.followup.send(summary, ephemeral=True)
+            
+        except Exception as e:
+            await interaction.followup.send(f"An error occurred: {str(e)}", ephemeral=True)
+            
+    @app_commands.command(name="remove_role_from_all", description="Remove a specific role from all members in the server")
+    @app_commands.describe(role="The role to remove from all members")
+    @is_mod_slash()
+    async def remove_role_from_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
+        """Remove a specific role from all members in the server
+        """
+        await interaction.response.defer(ephemeral=True)
+        try:
+            guild = interaction.guild
+            if not guild:
+                await interaction.followup.send("Error: Could not determine guild.", ephemeral=True)
+                return
+            
+            await interaction.followup.send(
+                f"Fetching all members and removing **{role.name}** role... This may take a moment.",
+                ephemeral=True
+            )
+            
+            members_with_role = [member for member in guild.members if role in member.roles]
+            
+            if not members_with_role:
+                await interaction.followup.send(
+                    f"No members found with the **{role.name}** role.",
+                    ephemeral=True
+                )
+                return
+            
+            removed = 0
+            failed = 0
+            errors = []
+            
+            for member in members_with_role:
+                try:
+                    await member.remove_roles(role, reason=f'Role removal via command by {interaction.user}')
+                    removed += 1
+                except discord.Forbidden:
+                    failed += 1
+                    errors.append(f"Permission denied for {member.mention}")
+                except discord.HTTPException as e:
+                    failed += 1
+                    errors.append(f"Error removing role from {member.mention}: {str(e)}")
+                except Exception as e:
+                    failed += 1
+                    errors.append(f"Unexpected error for {member.mention}: {str(e)}")
+            
+            message = f"**Role Removal Complete**\n\n"
+            message += f"**Summary:**\n"
+            message += f"- Total members with **{role.name}** role: {len(members_with_role)}\n"
+            message += f"- Roles removed successfully: {removed}\n"
+            message += f"- Failed removals: {failed}\n"
+            
+            if errors:
+                message += f"\n**Errors ({len(errors)}):**\n"
+                for error in errors[:10]:
+                    message += f"- {error}\n"
+                if len(errors) > 10:
+                    message += f"- ... and {len(errors) - 10} more errors\n"
+            
+            await interaction.followup.send(message, ephemeral=True)
+        except Exception as e:
+            await interaction.followup.send(
+                f"An error occurred: {str(e)}",
+                ephemeral=True
+            )
+    
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member) -> None:
+        """Automatically assign roles wheen a member joins the server"""
+        
+        logger = logging.getLogger(__name__)
+        guild_id = member.guild.id
+        if not guild_id:
+            return
+        
+        api_url = os.getenv("API_URL", "http://localhost:8080")
+        session_cookie =  os.getenv("SESSION_COOKIE")
+        event_id = os.getenv("EVENT_ID")
+        
+        if not session_cookie:
+            logger.error("SESSION_COOKIE is not set")
+            return
+        
+        if not event_id:
+            logger.error("EVENT_ID is not set")
+            return
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                headers = {"Cookie": f"sh_session_id={session_cookie}"}
+                async with session.get(
+                    f"{api_url}/events/{event_id}/discord/{member.id}",
+                    headers=headers
+                ) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        event_role = data.get("role")
+                        discord_role_name = "Hacker"
+                        if event_role == "attendee":
+                            role = discord.utils.get(member.guild.roles, name=discord_role_name)
+                            if role:
+                                await member.add_roles(role, reason="Auto assigned: User has attendee role")
+                                logger.info(f"Auto assigned {discord_role_name} role to {member.name} ({member.id})")
+                    elif response.status == 404:
+                        pass
+                    else:
+                        logger.error(f"Unexpected response status {response.status} when checking role for {member.name} ({member.id})")
+                        
+
+        except Exception as e:
+            logger.error(f"Error assigning roles: {str(e)}")
 async def setup(bot: commands.Bot) -> None:
     """Add the General cog to the bot
     

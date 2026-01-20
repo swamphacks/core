@@ -72,7 +72,7 @@ export type ModalProps = {
   isDismissible?: boolean;
   isOpen?: boolean;
   onOpenChange?: (isOpen: boolean) => void;
-  dialogAriaLabel?: string
+  dialogAriaLabel?: string;
 } & VariantProps<typeof modal>;
 
 export function Modal({
@@ -128,7 +128,10 @@ export function Modal({
         {title && (
           <Heading className=" text-text-primary text-lg">{title}</Heading>
         )}
-        <Dialog aria-label={dialogAriaLabel} className="outline-none relative flex flex-col h-full">
+        <Dialog
+          aria-label={dialogAriaLabel}
+          className="outline-none relative flex flex-col h-full"
+        >
           {children}
         </Dialog>
       </RAC_Modal>
