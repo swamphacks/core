@@ -91,9 +91,9 @@ type QueueConfirmationEmailFields struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		QueueConfirmationEmailFields	true	"Email data"
-//	@Success		201		{object}	string					"OK: Email request queued"
-//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request. The email request is potentially invalid."
-//	@Failure		500		{object}	response.ErrorResponse	"Server Error: The server went kaput while queueing email sending"
+//	@Success		201		{object}	string							"OK: Email request queued"
+//	@Failure		400		{object}	response.ErrorResponse			"Bad request/Malformed request. The email request is potentially invalid."
+//	@Failure		500		{object}	response.ErrorResponse			"Server Error: The server went kaput while queueing email sending"
 //	@Router			/email/queue [post]
 func (h *EmailHandler) QueueConfirmationEmail(w http.ResponseWriter, r *http.Request) {
 	var req QueueConfirmationEmailFields
@@ -131,9 +131,9 @@ type QueueWelcomeEmailFields struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		QueueConfirmationEmailFields	true	"Email data"
-//	@Success		201		{object}	string					"OK: Email request queued"
-//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request. The email request is potentially invalid."
-//	@Failure		500		{object}	response.ErrorResponse	"Server Error: The server went kaput while queueing email sending"
+//	@Success		201		{object}	string							"OK: Email request queued"
+//	@Failure		400		{object}	response.ErrorResponse			"Bad request/Malformed request. The email request is potentially invalid."
+//	@Failure		500		{object}	response.ErrorResponse			"Server Error: The server went kaput while queueing email sending"
 func (h *EmailHandler) QueueWelcomeEmail(w http.ResponseWriter, r *http.Request) {
 	var req QueueWelcomeEmailFields
 	decoder := json.NewDecoder(r.Body)

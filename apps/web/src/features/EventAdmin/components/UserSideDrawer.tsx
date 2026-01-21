@@ -1,8 +1,8 @@
 import { Modal } from "@/components/ui/Modal";
-import type { StaffUser } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
+import type { EventUser } from "@/features/PlatformAdmin/EventManager/hooks/useEventUsers";
 
 interface UserSideDrawerProps {
-  user: StaffUser;
+  user: EventUser;
   event_id: string;
 }
 function UserSideDrawer({ user, event_id }: UserSideDrawerProps) {

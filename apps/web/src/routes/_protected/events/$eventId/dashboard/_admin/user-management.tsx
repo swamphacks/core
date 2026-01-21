@@ -17,7 +17,7 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const eventId = Route.useParams().eventId;
-  const { data, isLoading, isError } = useEventUsers(eventId);
+  const { data, isLoading, isError, error } = useEventUsers(eventId);
 
   if (isLoading) {
     return (
@@ -32,7 +32,7 @@ function RouteComponent() {
     );
   }
 
-  if (isError) {
+  if (isError || error) {
     <div className="flex flex-col gap-6">
       <Heading className="text-2xl lg:text-3xl font-semibold">
         User Management

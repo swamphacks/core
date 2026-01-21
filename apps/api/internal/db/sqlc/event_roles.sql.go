@@ -197,7 +197,7 @@ func (q *Queries) GetEventStaff(ctx context.Context, eventID uuid.UUID) ([]GetEv
 }
 
 const getEventUsers = `-- name: GetEventUsers :many
-SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.role AS event_role
+SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.checked_in_at, er.role AS event_role
 FROM auth.users u
 JOIN event_roles er ON u.id = er.user_id
 WHERE er.event_id = $1
@@ -215,6 +215,7 @@ type GetEventUsersRow struct {
 	Role           AuthUserRole  `json:"role"`
 	PreferredEmail *string       `json:"preferred_email"`
 	EmailConsent   bool          `json:"email_consent"`
+	CheckedInAt    *time.Time    `json:"checked_in_at"`
 	EventRole      EventRoleType `json:"event_role"`
 }
 
@@ -239,6 +240,7 @@ func (q *Queries) GetEventUsers(ctx context.Context, eventID uuid.UUID) ([]GetEv
 			&i.Role,
 			&i.PreferredEmail,
 			&i.EmailConsent,
+			&i.CheckedInAt,
 			&i.EventRole,
 		); err != nil {
 			return nil, err

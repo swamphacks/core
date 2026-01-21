@@ -459,7 +459,7 @@ func (h *EventHandler) GetEventStaffUsers(w http.ResponseWriter, r *http.Request
 //	@Accept			json
 //	@Produce		json
 //	@Param			eventId	path		string					true	"Event ID"	Format(uuid)
-//	@Success		200		{array}		sqlc.GetEventStaffRow	"OK - Return users"
+//	@Success		200		{array}		sqlc.GetEventUsersRow	"OK - Return users"
 //	@Failure		500		{object}	response.ErrorResponse	"Server Error: Something went terribly wrong on our end."
 //	@Router			/events/{eventId}/users [get]
 func (h *EventHandler) GetEventUsers(w http.ResponseWriter, r *http.Request) {
@@ -833,9 +833,9 @@ func (h *EventHandler) GetUserForEvent(w http.ResponseWriter, r *http.Request) {
 //	@Description	Looks up a user's ID by their RFID code for a specific event. Returns the user ID which can be used for other operations.
 //	@Tags			Event
 //	@Produce		json
-//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
-//	@Param			rfid	path		string	true	"RFID code (10 digits)"
-//	@Success		200		{object}	map[string]string	"OK - Returns user ID"
+//	@Param			eventId	path		string					true	"Event ID"	Format(uuid)
+//	@Param			rfid	path		string					true	"RFID code (10 digits)"
+//	@Success		200		{object}	map[string]string		"OK - Returns user ID"
 //	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
 //	@Failure		404		{object}	response.ErrorResponse	"User not found with the provided RFID"
 //	@Failure		500		{object}	response.ErrorResponse	"Server Error: error getting user by RFID"

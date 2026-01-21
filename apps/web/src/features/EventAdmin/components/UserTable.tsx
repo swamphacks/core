@@ -5,12 +5,12 @@ import { useMemo } from "react";
 import { DialogTrigger, TooltipTrigger, Tooltip } from "react-aria-components";
 
 import RoleBadge from "./RoleBadge";
-import type { EventUser } from "@/features/PlatformAdmin/EventManager/hooks/useEventUsers";
 import { UserSideDrawer } from "./UserSideDrawer";
 import { Route as EventUsersRoute } from "@/routes/_protected/events/$eventId/dashboard/_admin/user-management";
 
 import { Table } from "@/components/ui/Table";
 import { useUrlTableState } from "../hooks/useUrlTableState";
+import type { EventUser } from "@/features/PlatformAdmin/EventManager/hooks/useEventUsers";
 
 // Warning: When using the url table state saving (useUrlTableState hook), random query parameters may be interpreted as table filters if column name is identical.
 

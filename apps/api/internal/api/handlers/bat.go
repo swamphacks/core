@@ -32,7 +32,7 @@ func NewBatHandler(BatService *services.BatService, logger zerolog.Logger) *BatH
 //	@Tags			Bat
 //	@Accept			json
 //	@Produce		json
-//	@Success		200 {array} sqlc.GetRunsByEventIdRow	"OK: BatRuns returned"
+//	@Success		200	{array}	sqlc.GetRunsByEventIdRow	"OK: BatRuns returned"
 //	@Router			/events/{eventId}/bat-runs [get]
 func (h *BatHandler) GetRunsByEventId(w http.ResponseWriter, r *http.Request) {
 	eventIdStr := chi.URLParam(r, "eventId")
@@ -156,15 +156,15 @@ func (h *BatHandler) DeleteRunById(w http.ResponseWriter, r *http.Request) {
 
 //	 Queue transition waitlist task
 //
-//		@Summary		Queues a waitlist transition task
-//		@Description	Queues an asynq task that transitions waitlisted applications, running every 3 days.
-//		@Tags
+//	@Summary		Queues a waitlist transition task
+//	@Description	Queues an asynq task that transitions waitlisted applications, running every 3 days.
+//	@Tags
 //
-//		@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
-//		@Success		200		"Transitioned application statuses successfully"
-//		@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
-//		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to transition application statuses"
-//		@Router			/events/{eventId}/queue-transition-waitlist-task [post]
+//	@Param		eventId	path	string	true	"ID of the event to join the waitlist for"
+//	@Success	200		"Transitioned application statuses successfully"
+//	@Failure	400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//	@Failure	500		{object}	res.ErrorResponse	"Server error: failed to transition application statuses"
+//	@Router		/events/{eventId}/queue-transition-waitlist-task [post]
 func (h *BatHandler) QueueScheduleWaitlistTransitionTask(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {
@@ -182,13 +182,13 @@ func (h *BatHandler) QueueScheduleWaitlistTransitionTask(w http.ResponseWriter, 
 
 //	 Queue Shutdown scheduler task
 //
-//		@Summary		Shutsdown an asynq scheduler
-//		@Description	Shutsdown the scheduler used for the waitlist transition task. Error returned through logs if a scheduler is not active.
-//		@Tags
+//	@Summary		Shutsdown an asynq scheduler
+//	@Description	Shutsdown the scheduler used for the waitlist transition task. Error returned through logs if a scheduler is not active.
+//	@Tags
 //
-//		@Success		200		"Scheduler shutdown successfully"
-//		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to shutdown scheduler"
-//		@Router			/events/{eventId}/queue-transition-waitlist-task [post]
+//	@Success	200	"Scheduler shutdown successfully"
+//	@Failure	500	{object}	res.ErrorResponse	"Server error: failed to shutdown scheduler"
+//	@Router		/events/{eventId}/queue-transition-waitlist-task [post]
 func (h *BatHandler) QueueShutdownWaitlistSchedulerTask(w http.ResponseWriter, r *http.Request) {
 	err := h.BatService.QueueShutdownWaitlistScheduler()
 	if err != nil {
@@ -200,15 +200,15 @@ func (h *BatHandler) QueueShutdownWaitlistSchedulerTask(w http.ResponseWriter, r
 
 //	 Send welcome emails
 //
-//		@Summary		Sends welcome emails to attendees
-//		@Description
-//		@Tags
+//	@Summary	Sends welcome emails to attendees
+//	@Description
+//	@Tags
 //
-//		@Param			eventId	path	string	true	"ID of the event"
-//		@Success		200		"Welcome emails began to queue successfully"
-//		@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
-//		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to begin queuing welcome emails"
-//		@Router			/events/{eventId}/send-welcome-emails [post]
+//	@Param		eventId	path	string	true	"ID of the event"
+//	@Success	200		"Welcome emails began to queue successfully"
+//	@Failure	400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//	@Failure	500		{object}	res.ErrorResponse	"Server error: failed to begin queuing welcome emails"
+//	@Router		/events/{eventId}/send-welcome-emails [post]
 func (h *BatHandler) SendWelcomeEmails(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {

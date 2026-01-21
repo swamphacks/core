@@ -162,6 +162,66 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/discord/event/{event_id}/attendees": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get event attendees with Discord IDs
+     * @description Get all attendees for an event who have Discord accounts linked
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID (UUID) */
+          event_id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of attendees with Discord IDs */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.GetEventAttendeesWithDiscordRow"][];
+          };
+        };
+        /** @description Invalid event ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/email/queue": {
     parameters: {
       query?: never;
@@ -172,8 +232,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Queue an Email Request
-     * @description Push an email request to the task queue
+     * Queue a Confirmation Email Request
+     * @description Push a Confirmation Email request to the task queue
      */
     post: {
       parameters: {
@@ -187,7 +247,7 @@ export interface paths {
         content: {
           "application/json":
             | Record<string, never>
-            | components["schemas"]["handlers.QueueTextEmailRequest"];
+            | components["schemas"]["handlers.QueueConfirmationEmailFields"];
         };
       };
       responses: {
@@ -656,6 +716,126 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events/{eventId}/application/{applicationId}/review": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit application review
+     * @description Handles ratings submissions from staff during the application review process.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description An object containing the passion and experience ratings */
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["handlers.ReviewRatings"];
+        };
+      };
+      responses: {
+        /** @description Created */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": Record<string, never>;
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error submitting application review */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/application/accept-acceptance": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Accept an acceptance after being accepted to an event.
+     * @description Sets event role to attendee, from applicant
+     */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID of the event to join the waitlist for */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Acceptance successful */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request: invalid event ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server error: failed to accept */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
   "/events/{eventId}/application/assign-reviewers": {
     parameters: {
       query?: never;
@@ -842,6 +1022,64 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/application/join-waitlist": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Join event waitlist after rejected application status.
+     * @description Adds a waitlist join time to application. Sets status to waitlisted
+     */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID of the event to join the waitlist for */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Event Waitlist joined successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request: invalid event ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server error: failed to join waitlist */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
     trace?: never;
   };
   "/events/{eventId}/application/reset-reviews": {
@@ -1093,7 +1331,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/events/{eventId}/application/submit-review": {
+  "/events/{eventId}/application/transition-waitlisted-applications": {
     parameters: {
       query?: never;
       header?: never;
@@ -1102,34 +1340,34 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
     /**
-     * Submit application review
-     * @description Handles ratings submissions from staff during the application review process.
+     * Sets application status from accepted to rejected
+     * @description Transitions all accepted users to waitlist, and accepts 50 from the waitlist.
      */
-    post: {
+    patch: {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          /** @description ID of the event to join the waitlist for */
+          eventId: string;
+        };
         cookie?: never;
       };
-      /** @description An object containing the passion and experience ratings */
-      requestBody: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
+      requestBody?: never;
       responses: {
-        /** @description OK */
+        /** @description Transitioned application statuses successfully */
         200: {
           headers: {
             [name: string]: unknown;
           };
-          content: {
-            "application/json": Record<string, never>;
-          };
+          content?: never;
         };
-        /** @description Bad request/Malformed request. */
+        /** @description Bad request: invalid event ID */
         400: {
           headers: {
             [name: string]: unknown;
@@ -1138,7 +1376,7 @@ export interface paths {
             "application/json": components["schemas"]["response.ErrorResponse"];
           };
         };
-        /** @description Server Error: error submitting application review */
+        /** @description Server error: failed to transition application statuses */
         500: {
           headers: {
             [name: string]: unknown;
@@ -1149,6 +1387,346 @@ export interface paths {
         };
       };
     };
+    trace?: never;
+  };
+  "/events/{eventId}/application/withdraw-acceptance": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Withdraw an acceptance after being accepted to an event.
+     * @description Sets application status from accepted to rejected
+     */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID of the event to withdraw acceptance from */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Acceptance withdrawn successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request: invalid event ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server error: failed to withdraw acceptance */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
+  "/events/{eventId}/application/withdraw-attendance": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Withdraw attendance after accepting to go to an event.
+     * @description Sets application status from accepted to withdrawn. Sets event role from attendee, back to applicant.
+     */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID of the event to withdraw attendance from */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Attendance withdrawn successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request: invalid event ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server error: failed to withdraw attendance */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
+  "/events/{eventId}/bat-runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get BatRuns
+     * @description Gets BatRuns.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK: BatRuns returned */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.GetRunsByEventIdRow"][];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    /**
+     * Delete a run
+     * @description Delete an existing BAT run
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Run ID */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK - Run deleted */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Server Error: Something went terribly wrong on our end. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/checkin": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Check a user into an event
+     * @description Staff route for checking a user to an event. The user to check in must be an attendee and have never been checked in yet.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description The ID of the event */
+          event_id: number;
+        };
+        cookie: {
+          /** @description The authenticated session token/id */
+          sh_session_id: string;
+        };
+      };
+      /** @description Event check in data */
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["handlers.EventCheckInRequest"];
+        };
+      };
+      responses: {
+        /** @description No Content */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Malformed request body. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Unauthenticated: Requester is not currently authenticated. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Something went seriously wrong. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/discord/{discordId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user event role by Discord ID and Event ID
+     * @description Get the event role for a user based on their Discord account ID and a specific event ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID (UUID) */
+          eventId: string;
+          /** @description Discord account ID */
+          discordId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description role */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              [key: string]: unknown;
+            };
+          };
+        };
+        /** @description Invalid event ID or discord ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description User or role not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -1270,6 +1848,222 @@ export interface paths {
           };
         };
         /** @description Server Error: error getting statistics */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/queue-transition-waitlist-task": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Shutsdown an asynq scheduler
+     * @description Shutsdown the scheduler used for the waitlist transition task. Error returned through logs if a scheduler is not active.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Scheduler shutdown successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Server error: failed to shutdown scheduler */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/redeemables": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get all redeemables for an event
+     * @description Retrieve a list of all redeemable items associated with a specific event ID.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID (UUID) */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.Redeemable"][];
+          };
+        };
+        /** @description Missing or invalid Event ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create a new redeemable
+     * @description Create a new redeemable item for a specific event.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID (UUID) */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      /** @description Redeemable creation data */
+      requestBody: {
+        content: {
+          "application/json":
+            | Record<string, never>
+            | components["schemas"]["handlers.CreateRedeemableRequest"];
+        };
+      };
+      responses: {
+        /** @description Created */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.Redeemable"];
+          };
+        };
+        /** @description Invalid request body or ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/review-status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Check if application reviews complete
+     * @description Check if application reviews complete
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": Record<string, never>;
+          };
+        };
+        /** @description Server Error: Something went terribly wrong on our end. */
         500: {
           headers: {
             [name: string]: unknown;
@@ -1541,6 +2335,61 @@ export interface paths {
           };
         };
         /** @description Server Error: Something went terribly wrong on our end. */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/send-welcome-emails": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Sends welcome emails to attendees */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID of the event */
+          eventId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Welcome emails began to queue successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad request: invalid event ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server error: failed to begin queuing welcome emails */
         500: {
           headers: {
             [name: string]: unknown;
@@ -2019,7 +2868,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            "application/json": components["schemas"]["sqlc.GetEventStaffRow"][];
+            "application/json": components["schemas"]["sqlc.GetEventUsersRow"][];
           };
         };
         /** @description Server Error: Something went terribly wrong on our end. */
@@ -2035,6 +2884,305 @@ export interface paths {
     };
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/users/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieves a user's information along with their event information
+     * @description A user's information along with their event details such as check in state, role, and more. Must be validated on the frontend.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["services.UserInfoForEvent"];
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error getting user info for event */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{eventId}/users/by-rfid/{rfid}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieves a user's ID by their RFID
+     * @description Looks up a user's ID by their RFID code for a specific event. Returns the user ID which can be used for other operations.
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Event ID */
+          eventId: string;
+          /** @description RFID code (10 digits) */
+          rfid: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK - Returns user ID */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request/Malformed request. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description User not found with the provided RFID */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Server Error: error getting user by RFID */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/redeemables/{redeemableId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete a redeemable
+     * @description Permanently delete a redeemable item by ID.
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Redeemable ID (UUID) */
+          redeemableId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description No Content */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Invalid Redeemable ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    /**
+     * Update an existing redeemable
+     * @description Update specific fields (name, stock, max per user) of a redeemable.
+     */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Redeemable ID (UUID) */
+          redeemableId: string;
+        };
+        cookie?: never;
+      };
+      /** @description Redeemable update data (partial fields allowed) */
+      requestBody: {
+        content: {
+          "application/json":
+            | Record<string, never>
+            | components["schemas"]["handlers.UpdateRedeemableRequest"];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["sqlc.Redeemable"];
+          };
+        };
+        /** @description Invalid ID or request body */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
+  "/redeemables/{redeemableId}/users/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Redeem an item for a user
+     * @description Create a redemption record linking a specific user to a redeemable item.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Redeemable ID (UUID) */
+          redeemableId: string;
+          /** @description User ID (UUID) */
+          userId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description No Content */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Invalid IDs */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["response.ErrorResponse"];
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -2953,8 +4101,17 @@ export interface components {
     "handlers.CreateJoinRequest": {
       message: string;
     };
+    "handlers.CreateRedeemableRequest": {
+      amount: number;
+      max_user_amount: number;
+      name: string;
+    };
     "handlers.CreateTeamRequest": {
       name: string;
+    };
+    "handlers.EventCheckInRequest": {
+      rfid: string;
+      user_id: string;
     };
     "handlers.NullableEventRole": {
       assigned_at: string;
@@ -2962,10 +4119,18 @@ export interface components {
       role: components["schemas"]["sqlc.EventRoleType"];
       user_id: string;
     };
+    "handlers.QueueConfirmationEmailFields": {
+      email: string;
+      firstName: string;
+    };
     "handlers.QueueTextEmailRequest": {
       body: string;
       subject: string;
       to: string[];
+    };
+    "handlers.ReviewRatings": {
+      experience_rating: number;
+      passion_rating: number;
     };
     "handlers.UpdateEmailConsentRequest": {
       email_consent: boolean;
@@ -2973,6 +4138,11 @@ export interface components {
     "handlers.UpdateProfileRequest": {
       name: string;
       preferred_email: string;
+    };
+    "handlers.UpdateRedeemableRequest": {
+      max_user_amount: number;
+      name: string;
+      total_stock: number;
     };
     /** @description Information about the current user session. */
     "middleware.UserContext": {
@@ -3013,6 +4183,13 @@ export interface components {
        * @example 550e8400-e29b-41d4-a716-446655440000
        */
       userId: string;
+    };
+    /** @enum {integer} */
+    "pgtype.InfinityModifier": 1 | 0 | -1;
+    "pgtype.Timestamptz": {
+      infinityModifier?: components["schemas"]["pgtype.InfinityModifier"];
+      time?: string;
+      valid?: boolean;
     };
     "response.ErrorResponse": {
       error: string;
@@ -3062,6 +4239,15 @@ export interface components {
       name: string;
       owner_id: string;
     };
+    "services.UserInfoForEvent": {
+      checked_in_at: string;
+      email: string;
+      event_role: components["schemas"]["sqlc.EventRoleType"];
+      image: string;
+      name: string;
+      platform_role: components["schemas"]["sqlc.AuthUserRole"];
+      user_id: string;
+    };
     "sqlc.Application": {
       application: number[];
       assigned_reviewer_id: string;
@@ -3074,6 +4260,7 @@ export interface components {
       submitted_at: string;
       updated_at: string;
       user_id: string;
+      waitlist_join_time: string;
     };
     /** @enum {string} */
     "sqlc.ApplicationStatus":
@@ -3102,6 +4289,8 @@ export interface components {
      * @enum {string}
      */
     "sqlc.AuthUserRole": "user" | "superuser";
+    /** @enum {string} */
+    "sqlc.BatRunStatus": "running" | "completed" | "failed";
     "sqlc.Event": {
       application_close: string;
       application_open: string;
@@ -3160,7 +4349,28 @@ export interface components {
       waitlisted: number;
       withdrawn: number;
     };
+    "sqlc.GetEventAttendeesWithDiscordRow": {
+      discord_id: string;
+      email: string;
+      name: string;
+      user_id: string;
+    };
     "sqlc.GetEventStaffRow": {
+      created_at: string;
+      email: string;
+      email_consent: boolean;
+      email_verified: boolean;
+      event_role: components["schemas"]["sqlc.EventRoleType"];
+      id: string;
+      image: string;
+      name: string;
+      onboarded: boolean;
+      preferred_email: string;
+      role: components["schemas"]["sqlc.AuthUserRole"];
+      updated_at: string;
+    };
+    "sqlc.GetEventUsersRow": {
+      checked_in_at: string;
       created_at: string;
       email: string;
       email_consent: boolean;
@@ -3196,6 +4406,14 @@ export interface components {
       updated_at: string;
       website_url: string;
     };
+    "sqlc.GetRunsByEventIdRow": {
+      accepted_applicants: string[];
+      completed_at: string;
+      created_at: string;
+      id: string;
+      rejected_applicants: string[];
+      status: components["schemas"]["sqlc.NullBatRunStatus"];
+    };
     /** @enum {string} */
     "sqlc.JoinRequestStatus": "PENDING" | "APPROVED" | "REJECTED";
     "sqlc.ListJoinRequestsByTeamAndStatusWithUserRow": {
@@ -3217,10 +4435,24 @@ export interface components {
       /** @description Valid is true if ApplicationStatus is not NULL */
       valid: boolean;
     };
+    "sqlc.NullBatRunStatus": {
+      bat_run_status: components["schemas"]["sqlc.BatRunStatus"];
+      /** @description Valid is true if BatRunStatus is not NULL */
+      valid: boolean;
+    };
     "sqlc.NullEventRoleType": {
       event_role_type: components["schemas"]["sqlc.EventRoleType"];
       /** @description Valid is true if EventRoleType is not NULL */
       valid: boolean;
+    };
+    "sqlc.Redeemable": {
+      amount: number;
+      created_at: components["schemas"]["pgtype.Timestamptz"];
+      event_id: string;
+      id: string;
+      max_user_amount: number;
+      name: string;
+      updated_at: components["schemas"]["pgtype.Timestamptz"];
     };
     "sqlc.Team": {
       created_at: string;

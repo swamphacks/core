@@ -703,15 +703,15 @@ func (h *ApplicationHandler) AcceptApplicationAcceptance(w http.ResponseWriter, 
 
 //	 Transition waitlisted applications
 //
-//		@Summary		Sets application status from accepted to rejected
-//		@Description	Transitions all accepted users to waitlist, and accepts 50 from the waitlist.
-//		@Tags			Application Event
+//	@Summary		Sets application status from accepted to rejected
+//	@Description	Transitions all accepted users to waitlist, and accepts 50 from the waitlist.
+//	@Tags			Application Event
 //
-//		@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
-//		@Success		200		"Transitioned application statuses successfully"
-//		@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
-//		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to transition application statuses"
-//		@Router			/events/{eventId}/application/transition-waitlisted-applications [patch]
+//	@Param			eventId	path	string	true	"ID of the event to join the waitlist for"
+//	@Success		200		"Transitioned application statuses successfully"
+//	@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//	@Failure		500		{object}	res.ErrorResponse	"Server error: failed to transition application statuses"
+//	@Router			/events/{eventId}/application/transition-waitlisted-applications [patch]
 func (h *ApplicationHandler) TransitionWaitlistedApplications(w http.ResponseWriter, r *http.Request) {
 	eventId, err := web.PathParamToUUID(r, "eventId")
 	if err != nil {

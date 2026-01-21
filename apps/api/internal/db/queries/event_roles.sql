@@ -16,7 +16,7 @@ WHERE event_id = $1
   AND user_id = $2;
 
 -- name: GetEventUsers :many
-SELECT u.*, er.role AS event_role
+SELECT u.*, er.checked_in_at, er.role AS event_role
 FROM auth.users u
 JOIN event_roles er ON u.id = er.user_id
 WHERE er.event_id = $1;

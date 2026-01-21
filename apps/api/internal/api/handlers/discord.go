@@ -27,10 +27,10 @@ func NewDiscordHandler(discordService *services.DiscordService, logger zerolog.L
 //	@Summary		Get event attendees with Discord IDs
 //	@Description	Get all attendees for an event who have Discord accounts linked
 //	@Tags			Discord
-//	@Param			event_id	path		string	true	"Event ID (UUID)"
+//	@Param			event_id	path		string									true	"Event ID (UUID)"
 //	@Success		200			{array}		sqlc.GetEventAttendeesWithDiscordRow	"List of attendees with Discord IDs"
-//	@Failure		400			{object}	response.ErrorResponse	"Invalid event ID"
-//	@Failure		500			{object}	response.ErrorResponse	"Internal server error"
+//	@Failure		400			{object}	response.ErrorResponse					"Invalid event ID"
+//	@Failure		500			{object}	response.ErrorResponse					"Internal server error"
 //	@Router			/discord/event/{event_id}/attendees [get]
 func (h *DiscordHandler) GetEventAttendeesWithDiscord(w http.ResponseWriter, r *http.Request) {
 	eventIDStr := chi.URLParam(r, "event_id")
@@ -65,8 +65,8 @@ func (h *DiscordHandler) GetEventAttendeesWithDiscord(w http.ResponseWriter, r *
 //	@Summary		Get user event role by Discord ID and Event ID
 //	@Description	Get the event role for a user based on their Discord account ID and a specific event ID
 //	@Tags			Discord
-//	@Param			eventId		path		string	true	"Event ID (UUID)"
-//	@Param			discordId	path		string	true	"Discord account ID"
+//	@Param			eventId		path		string					true	"Event ID (UUID)"
+//	@Param			discordId	path		string					true	"Discord account ID"
 //	@Success		200			{object}	map[string]interface{}	"role"
 //	@Failure		400			{object}	response.ErrorResponse	"Invalid event ID or discord ID"
 //	@Failure		404			{object}	response.ErrorResponse	"User or role not found"

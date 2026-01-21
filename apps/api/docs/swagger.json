@@ -137,6 +137,25 @@
                 ],
                 "type": "object"
             },
+            "handlers.CreateRedeemableRequest": {
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "max_user_amount": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "max_user_amount",
+                    "name"
+                ],
+                "type": "object"
+            },
             "handlers.CreateTeamRequest": {
                 "properties": {
                     "name": {
@@ -183,6 +202,21 @@
                     "event_id",
                     "role",
                     "user_id"
+                ],
+                "type": "object"
+            },
+            "handlers.QueueConfirmationEmailFields": {
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email",
+                    "firstName"
                 ],
                 "type": "object"
             },
@@ -254,6 +288,25 @@
                 ],
                 "type": "object"
             },
+            "handlers.UpdateRedeemableRequest": {
+                "properties": {
+                    "max_user_amount": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "total_stock": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "max_user_amount",
+                    "name",
+                    "total_stock"
+                ],
+                "type": "object"
+            },
             "middleware.UserContext": {
                 "description": "Information about the current user session.",
                 "properties": {
@@ -308,6 +361,33 @@
                     "role",
                     "userId"
                 ],
+                "type": "object"
+            },
+            "pgtype.InfinityModifier": {
+                "enum": [
+                    1,
+                    0,
+                    -1
+                ],
+                "type": "integer",
+                "x-enum-varnames": [
+                    "Infinity",
+                    "Finite",
+                    "NegativeInfinity"
+                ]
+            },
+            "pgtype.Timestamptz": {
+                "properties": {
+                    "infinityModifier": {
+                        "$ref": "#/components/schemas/pgtype.InfinityModifier"
+                    },
+                    "time": {
+                        "type": "string"
+                    },
+                    "valid": {
+                        "type": "boolean"
+                    }
+                },
                 "type": "object"
             },
             "response.ErrorResponse": {
@@ -931,6 +1011,29 @@
                 ],
                 "type": "object"
             },
+            "sqlc.GetEventAttendeesWithDiscordRow": {
+                "properties": {
+                    "discord_id": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "discord_id",
+                    "email",
+                    "name",
+                    "user_id"
+                ],
+                "type": "object"
+            },
             "sqlc.GetEventStaffRow": {
                 "properties": {
                     "created_at": {
@@ -971,6 +1074,65 @@
                     }
                 },
                 "required": [
+                    "created_at",
+                    "email",
+                    "email_consent",
+                    "email_verified",
+                    "event_role",
+                    "id",
+                    "image",
+                    "name",
+                    "onboarded",
+                    "preferred_email",
+                    "role",
+                    "updated_at"
+                ],
+                "type": "object"
+            },
+            "sqlc.GetEventUsersRow": {
+                "properties": {
+                    "checked_in_at": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "email_consent": {
+                        "type": "boolean"
+                    },
+                    "email_verified": {
+                        "type": "boolean"
+                    },
+                    "event_role": {
+                        "$ref": "#/components/schemas/sqlc.EventRoleType"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "image": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "onboarded": {
+                        "type": "boolean"
+                    },
+                    "preferred_email": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/sqlc.AuthUserRole"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "checked_in_at",
                     "created_at",
                     "email",
                     "email_consent",
@@ -1225,6 +1387,41 @@
                 "required": [
                     "event_role_type",
                     "valid"
+                ],
+                "type": "object"
+            },
+            "sqlc.Redeemable": {
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "$ref": "#/components/schemas/pgtype.Timestamptz"
+                    },
+                    "event_id": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "max_user_amount": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "$ref": "#/components/schemas/pgtype.Timestamptz"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "created_at",
+                    "event_id",
+                    "id",
+                    "max_user_amount",
+                    "name",
+                    "updated_at"
                 ],
                 "type": "object"
             },
@@ -1494,9 +1691,64 @@
                 ]
             }
         },
+        "/discord/event/{event_id}/attendees": {
+            "get": {
+                "description": "Get all attendees for an event who have Discord accounts linked",
+                "parameters": [
+                    {
+                        "description": "Event ID (UUID)",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/sqlc.GetEventAttendeesWithDiscordRow"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "List of attendees with Discord IDs"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal server error"
+                    }
+                },
+                "summary": "Get event attendees with Discord IDs",
+                "tags": [
+                    "Discord"
+                ]
+            }
+        },
         "/email/queue": {
             "post": {
-                "description": "Push an email request to the task queue",
+                "description": "Push a Confirmation Email request to the task queue",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1506,7 +1758,7 @@
                                         "type": "object"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/handlers.QueueTextEmailRequest",
+                                        "$ref": "#/components/schemas/handlers.QueueConfirmationEmailFields",
                                         "summary": "request",
                                         "description": "Email data"
                                     }
@@ -1549,7 +1801,7 @@
                         "description": "Server Error: The server went kaput while queueing email sending"
                     }
                 },
-                "summary": "Queue an Email Request",
+                "summary": "Queue a Confirmation Email Request",
                 "tags": [
                     "Email"
                 ]
@@ -1886,7 +2138,7 @@
         },
         "/events/{eventId}/application/accept-acceptance": {
             "patch": {
-                "description": "Sets application status from accepted to rejected",
+                "description": "Sets event role to attendee, from applicant",
                 "parameters": [
                     {
                         "description": "ID of the event to join the waitlist for",
@@ -1900,7 +2152,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Acceptance withdrawn joined successfully"
+                        "description": "Acceptance successful"
                     },
                     "400": {
                         "content": {
@@ -2399,9 +2651,9 @@
                 ]
             }
         },
-        "/events/{eventId}/application/withdraw-acceptance": {
+        "/events/{eventId}/application/transition-waitlisted-applications": {
             "patch": {
-                "description": "Sets application status from accepted to rejected",
+                "description": "Transitions all accepted users to waitlist, and accepts 50 from the waitlist.",
                 "parameters": [
                     {
                         "description": "ID of the event to join the waitlist for",
@@ -2415,7 +2667,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Acceptance withdrawn joined successfully"
+                        "description": "Transitioned application statuses successfully"
                     },
                     "400": {
                         "content": {
@@ -2435,10 +2687,100 @@
                                 }
                             }
                         },
-                        "description": "Server error: failed to withdraw"
+                        "description": "Server error: failed to transition application statuses"
+                    }
+                },
+                "summary": "Sets application status from accepted to rejected",
+                "tags": [
+                    "Application Event"
+                ]
+            }
+        },
+        "/events/{eventId}/application/withdraw-acceptance": {
+            "patch": {
+                "description": "Sets application status from accepted to rejected",
+                "parameters": [
+                    {
+                        "description": "ID of the event to withdraw acceptance from",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Acceptance withdrawn successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to withdraw acceptance"
                     }
                 },
                 "summary": "Withdraw an acceptance after being accepted to an event.",
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/events/{eventId}/application/withdraw-attendance": {
+            "patch": {
+                "description": "Sets application status from accepted to withdrawn. Sets event role from attendee, back to applicant.",
+                "parameters": [
+                    {
+                        "description": "ID of the event to withdraw attendance from",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Attendance withdrawn successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to withdraw attendance"
+                    }
+                },
+                "summary": "Withdraw attendance after accepting to go to an event.",
                 "tags": [
                     "Application"
                 ]
@@ -2633,7 +2975,7 @@
         },
         "/events/{eventId}/bat-runs": {
             "delete": {
-                "description": "Delete an existing event",
+                "description": "Delete an existing BAT run",
                 "parameters": [
                     {
                         "description": "Run ID",
@@ -2670,7 +3012,7 @@
                         "description": "Server Error: Something went terribly wrong on our end."
                     }
                 },
-                "summary": "Delete an event",
+                "summary": "Delete a run",
                 "tags": [
                     "Bat"
                 ]
@@ -2781,6 +3123,78 @@
                 "summary": "Check a user into an event",
                 "tags": [
                     "Admissions"
+                ]
+            }
+        },
+        "/events/{eventId}/discord/{discordId}": {
+            "get": {
+                "description": "Get the event role for a user based on their Discord account ID and a specific event ID",
+                "parameters": [
+                    {
+                        "description": "Event ID (UUID)",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Discord account ID",
+                        "in": "path",
+                        "name": "discordId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": {},
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "role"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid event ID or discord ID"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "User or role not found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal server error"
+                    }
+                },
+                "summary": "Get user event role by Discord ID and Event ID",
+                "tags": [
+                    "Discord"
                 ]
             }
         },
@@ -2904,6 +3318,164 @@
                 "summary": "Retrieves general information about the event",
                 "tags": [
                     "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/queue-transition-waitlist-task": {
+            "post": {
+                "description": "Shutsdown the scheduler used for the waitlist transition task. Error returned through logs if a scheduler is not active.",
+                "responses": {
+                    "200": {
+                        "description": "Scheduler shutdown successfully"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to shutdown scheduler"
+                    }
+                },
+                "summary": "Shutsdown an asynq scheduler",
+                "tags": [
+                    ""
+                ]
+            }
+        },
+        "/events/{eventId}/redeemables": {
+            "get": {
+                "description": "Retrieve a list of all redeemable items associated with a specific event ID.",
+                "parameters": [
+                    {
+                        "description": "Event ID (UUID)",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/sqlc.Redeemable"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Missing or invalid Event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal Server Error"
+                    }
+                },
+                "summary": "Get all redeemables for an event",
+                "tags": [
+                    "Redeemables"
+                ]
+            },
+            "post": {
+                "description": "Create a new redeemable item for a specific event.",
+                "parameters": [
+                    {
+                        "description": "Event ID (UUID)",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/handlers.CreateRedeemableRequest",
+                                        "summary": "request",
+                                        "description": "Redeemable creation data"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Redeemable creation data",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/sqlc.Redeemable"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid request body or ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal Server Error"
+                    }
+                },
+                "summary": "Create a new redeemable",
+                "tags": [
+                    "Redeemables"
                 ]
             }
         },
@@ -3237,6 +3809,50 @@
                 "summary": "Revoke event role of a user",
                 "tags": [
                     "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/send-welcome-emails": {
+            "post": {
+                "parameters": [
+                    {
+                        "description": "ID of the event",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Welcome emails began to queue successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request: invalid event ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server error: failed to begin queuing welcome emails"
+                    }
+                },
+                "summary": "Sends welcome emails to attendees",
+                "tags": [
+                    ""
                 ]
             }
         },
@@ -3739,7 +4355,7 @@
                             "application/json": {
                                 "schema": {
                                     "items": {
-                                        "$ref": "#/components/schemas/sqlc.GetEventStaffRow"
+                                        "$ref": "#/components/schemas/sqlc.GetEventUsersRow"
                                     },
                                     "type": "array"
                                 }
@@ -3759,6 +4375,81 @@
                     }
                 },
                 "summary": "Get all users for an event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{eventId}/users/by-rfid/{rfid}": {
+            "get": {
+                "description": "Looks up a user's ID by their RFID code for a specific event. Returns the user ID which can be used for other operations.",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "format": "uuid",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "RFID code (10 digits)",
+                        "in": "path",
+                        "name": "rfid",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "OK - Returns user ID"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Bad request/Malformed request."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "User not found with the provided RFID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Server Error: error getting user by RFID"
+                    }
+                },
+                "summary": "Retrieves a user's ID by their RFID",
                 "tags": [
                     "Event"
                 ]
@@ -3802,6 +4493,175 @@
                 "summary": "Retrieves a user's information along with their event information",
                 "tags": [
                     "Event"
+                ]
+            }
+        },
+        "/redeemables/{redeemableId}": {
+            "delete": {
+                "description": "Permanently delete a redeemable item by ID.",
+                "parameters": [
+                    {
+                        "description": "Redeemable ID (UUID)",
+                        "in": "path",
+                        "name": "redeemableId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid Redeemable ID"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal Server Error"
+                    }
+                },
+                "summary": "Delete a redeemable",
+                "tags": [
+                    "Redeemables"
+                ]
+            },
+            "patch": {
+                "description": "Update specific fields (name, stock, max per user) of a redeemable.",
+                "parameters": [
+                    {
+                        "description": "Redeemable ID (UUID)",
+                        "in": "path",
+                        "name": "redeemableId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/handlers.UpdateRedeemableRequest",
+                                        "summary": "request",
+                                        "description": "Redeemable update data (partial fields allowed)"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Redeemable update data (partial fields allowed)",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/sqlc.Redeemable"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid ID or request body"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal Server Error"
+                    }
+                },
+                "summary": "Update an existing redeemable",
+                "tags": [
+                    "Redeemables"
+                ]
+            }
+        },
+        "/redeemables/{redeemableId}/users/{userId}": {
+            "post": {
+                "description": "Create a redemption record linking a specific user to a redeemable item.",
+                "parameters": [
+                    {
+                        "description": "Redeemable ID (UUID)",
+                        "in": "path",
+                        "name": "redeemableId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "User ID (UUID)",
+                        "in": "path",
+                        "name": "userId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid IDs"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/response.ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal Server Error"
+                    }
+                },
+                "summary": "Redeem an item for a user",
+                "tags": [
+                    "Redeemables"
                 ]
             }
         },
