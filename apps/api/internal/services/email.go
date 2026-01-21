@@ -2,27 +2,33 @@ package services
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"html/template"
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
+	"github.com/skip2/go-qrcode"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/email"
+	"github.com/swamphacks/core/apps/api/internal/storage"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 )
 
 type EmailService struct {
 	logger    zerolog.Logger
-	SESClient *email.SESClient
 	taskQueue *asynq.Client
+	SESClient *email.SESClient
+	storage   storage.Storage
 }
 
-func NewEmailService(taskQueue *asynq.Client, SESClient *email.SESClient, logger zerolog.Logger) *EmailService {
+func NewEmailService(taskQueue *asynq.Client, SESClient *email.SESClient, storage storage.Storage, logger zerolog.Logger) *EmailService {
 	return &EmailService{
 		logger:    logger.With().Str("service", "EmailService").Str("component", "email").Logger(),
 		taskQueue: taskQueue,
 		SESClient: SESClient,
+		storage:   storage,
 	}
 }
 
@@ -45,20 +51,32 @@ func (s *EmailService) QueueConfirmationEmail(recipient string, name string) err
 	return nil
 }
 
-func (s *EmailService) QueueWelcomeEmail(recipient string, name string, userId uuid.UUID) error {
-	// TODO
+func (s *EmailService) QueueWelcomeEmail(ctx context.Context, recipient string, name string, userId uuid.UUID) error {
 	cfg := config.Load()
+
+	qrString := fmt.Sprintf("IDENT::%s", userId)
+	qrPng, err := qrcode.Encode(qrString, qrcode.Medium, 256)
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to generate QR code png")
+		return err
+	}
+
+	contentType := "image/png"
+	err = s.storage.Store(ctx, cfg.CoreBuckets.QRCodes, userId.String(), qrPng, &contentType)
+
+	qrPngLink := fmt.Sprintf("%s/%s", cfg.QRCodesEndpoint, userId.String())
 
 	subject := "SwampHacks XI – A welcome from our Organizers!"
 	templateEmailFilepath := cfg.EmailTemplateDirectory + "WelcomeEmail.html"
 
 	type emailTemplateData struct {
-		Name string
+		Name      string
+		QRPngLink string
 	}
-	_, err := s.QueueSendHtmlEmailTask(recipient, subject, emailTemplateData{Name: name}, templateEmailFilepath)
+	_, err = s.QueueSendHtmlEmailTask(recipient, subject, emailTemplateData{Name: name, QRPngLink: qrPngLink}, templateEmailFilepath)
 
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
+		s.logger.Err(err).Msgf("Failed to send welcome email to recipient with userId %s", userId.String())
 		return err
 	}
 
@@ -84,7 +102,13 @@ func (s *EmailService) QueueWaitlistAcceptanceEmail(recipient string, name strin
 	return nil
 }
 
-// TODO: refactor name string to data struct of any type. template.Execute using this struct
+// SendHtmlEmail
+//
+//	  templateData: a struct holding the data which should replace {{}} tags inside of an html template.
+//		 For example, if an email template uses the tag {{ .Name }}, then the templateData struct would look like
+//	     type templateData struct {
+//	         Name string
+//	     }
 func (s *EmailService) SendHtmlEmail(recipient string, subject string, templateData interface{}, templateFilePath string) error {
 	var body bytes.Buffer
 
