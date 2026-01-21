@@ -83,12 +83,18 @@ type QueueConfirmationEmailFields struct {
 	FirstName string `json:"firstName" validate:"required"`
 }
 
-type QueueWelcomeEmailFields struct {
-	Email     string `json:"email" validate:"required"`
-	FirstName string `json:"firstName" validate:"required"`
-	UserId    string `json:userId validate:"required"`
-}
-
+// Queue a Confirmation Email
+//
+//	@Summary		Queue a Confirmation Email Request
+//	@Description	Push a Confirmation Email request to the task queue
+//	@Tags			Email
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		QueueConfirmationEmailFields	true	"Email data"
+//	@Success		201		{object}	string					"OK: Email request queued"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request. The email request is potentially invalid."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: The server went kaput while queueing email sending"
+//	@Router			/email/queue [post]
 func (h *EmailHandler) QueueConfirmationEmail(w http.ResponseWriter, r *http.Request) {
 	var req QueueConfirmationEmailFields
 	decoder := json.NewDecoder(r.Body)
@@ -111,6 +117,23 @@ func (h *EmailHandler) QueueConfirmationEmail(w http.ResponseWriter, r *http.Req
 	res.Send(w, http.StatusOK, nil)
 }
 
+type QueueWelcomeEmailFields struct {
+	Email     string `json:"email" validate:"required"`
+	FirstName string `json:"firstName" validate:"required"`
+	UserId    string `json:userId validate:"required"`
+}
+
+// Queue a Welcome Email
+//
+//	@Summary		Queue a Welcome Email
+//	@Description	Push an Welcome Email request to the task queue
+//	@Tags			Email
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		QueueConfirmationEmailFields	true	"Email data"
+//	@Success		201		{object}	string					"OK: Email request queued"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request. The email request is potentially invalid."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: The server went kaput while queueing email sending"
 func (h *EmailHandler) QueueWelcomeEmail(w http.ResponseWriter, r *http.Request) {
 	var req QueueWelcomeEmailFields
 	decoder := json.NewDecoder(r.Body)

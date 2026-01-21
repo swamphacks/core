@@ -19,8 +19,8 @@ type SendTextEmailPayload struct {
 
 type SendHtmlEmailPayload struct {
 	To               string
-	Data             interface{}
 	Subject          string
+	TemplateData     interface{}
 	TemplateFilePath string
 }
 
