@@ -19,7 +19,7 @@ type SendTextEmailPayload struct {
 
 type SendHtmlEmailPayload struct {
 	To               string
-	Name             string
+	Data             interface{}
 	Subject          string
 	TemplateFilePath string
 }

@@ -149,7 +149,10 @@ func (s *BatService) SendDecisionEmails(ctx context.Context, batRun sqlc.BatRun)
 		if !ok {
 			return ErrFailedToGetContactEmail
 		}
-		taskInfo, err := s.emailService.QueueSendHtmlEmailTask(contactEmail, acceptedEmailSubject, emailInfo.Name, accepetedEmailTemplatePath)
+		type emailTemplateData struct {
+			Name string
+		}
+		taskInfo, err := s.emailService.QueueSendHtmlEmailTask(contactEmail, acceptedEmailSubject, emailTemplateData{Name: emailInfo.Name}, accepetedEmailTemplatePath)
 		s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued acceptance email")
 	}
 
@@ -163,7 +166,10 @@ func (s *BatService) SendDecisionEmails(ctx context.Context, batRun sqlc.BatRun)
 		if !ok {
 			return ErrFailedToGetContactEmail
 		}
-		taskInfo, err := s.emailService.QueueSendHtmlEmailTask(contactEmail, rejectedEmailSubject, emailInfo.Name, rejectedEmailTemplatePath)
+		type emailTemplateData struct {
+			Name string
+		}
+		taskInfo, err := s.emailService.QueueSendHtmlEmailTask(contactEmail, rejectedEmailSubject, emailTemplateData{emailInfo.Name}, rejectedEmailTemplatePath)
 		s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued rejection email")
 	}
 

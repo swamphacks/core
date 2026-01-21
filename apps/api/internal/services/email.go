@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 
+	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/config"
@@ -31,7 +32,30 @@ func (s *EmailService) QueueConfirmationEmail(recipient string, name string) err
 	subject := "SwampHacks XI: we received your application!"
 	templateEmailFilepath := cfg.EmailTemplateDirectory + "ConfirmationEmail.html"
 
-	_, err := s.QueueSendHtmlEmailTask(recipient, subject, name, templateEmailFilepath)
+	type emailTemplateData struct {
+		Name string
+	}
+	_, err := s.QueueSendHtmlEmailTask(recipient, subject, emailTemplateData{Name: name}, templateEmailFilepath)
+
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
+		return err
+	}
+
+	return nil
+}
+
+func (s *EmailService) QueueWelcomeEmail(recipient string, name string, userId uuid.UUID) error {
+	// TODO
+	cfg := config.Load()
+
+	subject := "SwampHacks XI – A welcome from our Organizers!"
+	templateEmailFilepath := cfg.EmailTemplateDirectory + "WelcomeEmail.html"
+
+	type emailTemplateData struct {
+		Name string
+	}
+	_, err := s.QueueSendHtmlEmailTask(recipient, subject, emailTemplateData{Name: name}, templateEmailFilepath)
 
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to send confirmation email to recipient")
@@ -47,7 +71,10 @@ func (s *EmailService) QueueWaitlistAcceptanceEmail(recipient string, name strin
 	subject := "Congratulations! You're in – confirm in 72 hours to keep your spot in SwampHacks XI"
 	templateEmailFilepath := cfg.EmailTemplateDirectory + "WaitlistAcceptanceEmail.html"
 
-	_, err := s.QueueSendHtmlEmailTask(recipient, subject, name, templateEmailFilepath)
+	type emailTemplateData struct {
+		Name string
+	}
+	_, err := s.QueueSendHtmlEmailTask(recipient, subject, emailTemplateData{Name: name}, templateEmailFilepath)
 
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to send waitlist acceptance email to recipient")
@@ -57,7 +84,8 @@ func (s *EmailService) QueueWaitlistAcceptanceEmail(recipient string, name strin
 	return nil
 }
 
-func (s *EmailService) SendHtmlEmail(recipient string, subject string, name string, templateFilePath string) error {
+// TODO: refactor name string to data struct of any type. template.Execute using this struct
+func (s *EmailService) SendHtmlEmail(recipient string, subject string, templateData interface{}, templateFilePath string) error {
 	var body bytes.Buffer
 
 	template, err := template.ParseFiles(templateFilePath)
@@ -65,7 +93,7 @@ func (s *EmailService) SendHtmlEmail(recipient string, subject string, name stri
 		s.logger.Err(err).Msg("Failed to parse email template for recipient")
 	}
 
-	err = template.Execute(&body, struct{ Name string }{Name: name})
+	err = template.Execute(&body, templateData)
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to inject template variables for recipient '%s'.")
 	}
@@ -80,19 +108,15 @@ func (s *EmailService) SendHtmlEmail(recipient string, subject string, name stri
 	return nil
 }
 
-// TODO: refactor other queue functions to use a similar naming scheme
-func (s *EmailService) QueueSendHtmlEmailTask(to string, subject string, name string, templateFilePath string) (*asynq.TaskInfo, error) {
+func (s *EmailService) QueueSendHtmlEmailTask(to string, subject string, templateData interface{}, templateFilePath string) (*asynq.TaskInfo, error) {
 	if len(to) == 0 {
 		s.logger.Warn().Msgf("No recipient email found for email being sent from template '%s'", templateFilePath)
-	}
-	if len(name) == 0 {
-		s.logger.Warn().Msgf("No recipient name found for email being sent from template '%s'", templateFilePath)
 	}
 
 	task, err := tasks.NewTaskSendHtmlEmail(tasks.SendHtmlEmailPayload{
 		To:               to,
 		Subject:          subject,
-		Name:             name,
+		TemplateData:     templateData,
 		TemplateFilePath: templateFilePath,
 	})
 
