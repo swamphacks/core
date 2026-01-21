@@ -28,20 +28,44 @@ class SupportThreadButtons(View):
 
 class CloseThreadButton(Button):
     """Button to close a support thread, archive it, and lock it."""
-    def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput, threadID=None):
+    def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput, thread_author=None, threadID=None):
         """
         Initializes the CloseThreadButton with the given thread and description input.
 
         Args:
             thread (discord.Thread): The support thread to be closed.
             description_input (discord.ui.TextInput): The text input containing the description of the issue.
+            thread_author (discord.Member, optional): The user who created the thread. If provided, only creator and mentors can close.
+            threadID: Optional thread ID parameter.
         """
         super().__init__(label="Close Thread", style=ButtonStyle.primary, custom_id="close_thread", emoji="❌")
         self.thread = thread
         self.threadID = threadID
         self.description_input = description_input
+        self.thread_author = thread_author
 
     async def callback(self, interaction: Interaction):
+        # Check if user is authorized to close (creator or mentor)
+        if self.thread_author:
+            from utils.roles_config import get_acceptable_roles
+            
+            is_creator = interaction.user.id == self.thread_author.id
+            is_mentor = False
+            
+            # Check if user has mentor/acceptable role
+            if interaction.guild and interaction.user:
+                member = interaction.guild.get_member(interaction.user.id)
+                if member:
+                    acceptable_roles = get_acceptable_roles()
+                    is_mentor = any(role.name in acceptable_roles for role in member.roles)
+            
+            if not is_creator and not is_mentor:
+                await interaction.response.send_message(
+                    "❌ Only the thread creator or mentors can close this thread.",
+                    ephemeral=True
+                )
+                return
+        
         claimed_tickets.pop(self.thread.id, None)
         # print(claimed_tickets)
         
@@ -54,16 +78,32 @@ class CloseThreadButton(Button):
         if not archived_threads_channel:
             await interaction.response.send_message("❌ Archived threads channel not found.", ephemeral=True)
             return
-        bot_avatar_url = interaction.client.user.avatar.url if interaction.client.user.avatar.url else None
+        bot_avatar_url = interaction.client.user.avatar.url if interaction.client.user.avatar else None
+        
+        # Send response first to avoid timeout
+        await interaction.response.defer(ephemeral=True)
         
         try:
             # rename the thread to get new title
             prefix = "archived-"
             title = ""
             if interaction.message.embeds:
-                title = interaction.message.embeds[0].title
-                trimmed_title = title[22:100 - len(prefix)]
-                title = trimmed_title
+                embed_title = interaction.message.embeds[0].title
+                # Handle different embed title formats
+                if embed_title.startswith("💬 New Thread Request: "):
+                    # Reports channel embed format
+                    title = embed_title[22:]  # Remove "💬 New Thread Request: "
+                elif embed_title.startswith("Request: "):
+                    # Thread embed format
+                    title = embed_title[9:]  # Remove "Request: "
+                else:
+                    # Fallback: use the full title
+                    title = embed_title
+                
+                # Trim to fit Discord's thread name limit (100 chars) minus prefix
+                max_length = 100 - len(prefix)
+                if len(title) > max_length:
+                    title = title[:max_length]
             else:
                 title = self.thread.name
             new_name = f"archived-{title}"
@@ -90,9 +130,26 @@ class CloseThreadButton(Button):
             # send the summary to the archived threads channel
             await archived_threads_channel.send(embed=embed)
 
+            # Delete associated VC if it exists
+            from components.ticket_state import thread_vc_mapping
+            try:
+                if self.thread.id in thread_vc_mapping:
+                    vc_id = thread_vc_mapping[self.thread.id]
+                    vc = interaction.guild.get_channel(vc_id)
+                    if vc and isinstance(vc, discord.VoiceChannel):
+                        try:
+                            await vc.delete(reason=f"Thread {self.thread.id} was closed")
+                        except Exception as e:
+                            print(f"Failed to delete VC {vc_id} associated with thread {self.thread.id}: {e}")
+                    # Remove from mapping even if VC doesn't exist anymore
+                    del thread_vc_mapping[self.thread.id]
+            except Exception as e:
+                # If VC deletion fails, log but continue with thread closure
+                print(f"Error handling VC deletion for thread {self.thread.id}: {e}")
+            
             # archive and lock the thread
-            await interaction.response.send_message(f"Thread: {self.thread.mention} has been archived and locked.", ephemeral=True)
             await self.thread.edit(name=new_name,archived=True, locked=True)
+            await interaction.followup.send(f"Thread: {self.thread.mention} has been archived and locked.", ephemeral=True)
 
             
             # Set mentor status - only mark as available if they have no more tickets
@@ -101,21 +158,6 @@ class CloseThreadButton(Button):
                 await set_available_mentor(interaction.user, True)
                 await set_busy_mentor(interaction.user, False)
             
-            # edit original message to disable claim button
-            message = interaction.message
-            if not message:
-                await interaction.response.send_message(
-                    "Message not found.",
-                    ephemeral=True
-                )
-                return
-            new_view = SupportThreadButtons(self.thread, self.description_input)
-            # disable all buttons in the view
-            for item in new_view.children:
-                item.disabled = True
-            # copy the original embed and update its title and description
-            embed = message.embeds[0] if message.embeds else None
-            
             # trim description
             description = self.description_input.value
             shortened_description = ""
@@ -123,20 +165,62 @@ class CloseThreadButton(Button):
                 shortened_description = description[:200] + "..."
             else:
                 shortened_description = description
-            if embed:
-                new_embed = embed.copy()
-                new_embed.description = f"Issue: {shortened_description}\n\nActions: {interaction.user.mention} closed {self.thread.name}."
-                new_embed.color = discord.Color.red()
-                await message.edit(embed=new_embed, view=new_view)
-            else:
-                await message.edit(view=new_view)
+            
+            # Create disabled view for updating messages
+            new_view = SupportThreadButtons(self.thread, self.description_input)
+            # disable all buttons in the view
+            for item in new_view.children:
+                item.disabled = True
+            
+            # Update the thread message (if button was clicked from thread)
+            message = interaction.message
+            if message:
+                embed = message.embeds[0] if message.embeds else None
+                if embed:
+                    new_embed = embed.copy()
+                    new_embed.description = f"Issue: {shortened_description}\n\nActions: {interaction.user.mention} closed {self.thread.name}."
+                    new_embed.color = discord.Color.red()
+                    try:
+                        await message.edit(embed=new_embed, view=new_view)
+                    except Exception as e:
+                        print(f"Failed to update thread message: {e}")
+                else:
+                    try:
+                        await message.edit(view=new_view)
+                    except Exception as e:
+                        print(f"Failed to update thread message view: {e}")
+            
+            # Also update the reports channel message
+            # Find the reports channel message by searching for messages with the thread mention or matching title
+            try:
+                reports_channel = discord.utils.get(interaction.guild.channels, name="reports")
+                if reports_channel:
+                    # Search for the message in reports channel
+                    # Look for messages that mention this thread or have matching embed title
+                    async for reports_message in reports_channel.history(limit=100):
+                        if reports_message.embeds:
+                            embed_title = reports_message.embeds[0].title
+                            # Check if this is the reports channel message for this thread
+                            if (embed_title.startswith("💬 New Thread Request: ") and 
+                                title in embed_title):
+                                # Found the reports channel message
+                                reports_embed = reports_message.embeds[0].copy()
+                                reports_embed.description = f"Issue: {shortened_description}\n\nActions: {interaction.user.mention} closed {self.thread.name}."
+                                reports_embed.color = discord.Color.red()
+                                try:
+                                    await reports_message.edit(embed=reports_embed, view=new_view)
+                                except Exception as e:
+                                    print(f"Failed to update reports channel message: {e}")
+                                break
+            except Exception as e:
+                print(f"Failed to find/update reports channel message: {e}")
         except NotFound:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "This support thread no longer exists.",
                 ephemeral=True
             )
         except Exception as e:
-            await interaction.response.send_message(f"Failed to archive the support thread. Error: {e}", ephemeral=True)
+            await interaction.followup.send(f"Failed to archive the support thread. Error: {e}", ephemeral=True)
 
 class JoinThreadButton(Button):
     """Button to join a claimed support thread for additional mentor assistance."""
