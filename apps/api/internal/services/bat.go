@@ -441,3 +441,32 @@ func (s *BatService) QueueShutdownWaitlistScheduler() error {
 
 	return nil
 }
+
+func (s *BatService) SendWelcomeEmailToAttendees(ctx context.Context, eventId uuid.UUID) error {
+	attendees, err := s.eventRepo.GetAttendeeUserIdsByEventId(ctx, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg("Could not get attendee user ids")
+		return err
+	}
+
+	s.logger.Info().Msgf("Sending welcome emails to %v attendees", len(attendees))
+
+	for _, userId := range attendees {
+		contactInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userId)
+		if err != nil {
+			s.logger.Err(err).Msgf("Could not get contact info for user with id %s", userId)
+			return err
+		}
+		contactEmail, ok := contactInfo.ContactEmail.(string)
+		if !ok {
+			return ErrFailedToGetContactEmail
+		}
+
+		err = s.emailService.QueueWelcomeEmail(ctx, contactEmail, contactInfo.Name, userId)
+		if err != nil {
+			s.logger.Err(err).Msgf("Could not queue welcome email for user with id %s", userId)
+			return err
+		}
+	}
+	return nil
+}

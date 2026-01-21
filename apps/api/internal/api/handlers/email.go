@@ -155,7 +155,7 @@ func (h *EmailHandler) QueueWelcomeEmail(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.emailService.QueueWelcomeEmail(req.Email, req.FirstName, parsedUserId)
+	err = h.emailService.QueueWelcomeEmail(r.Context(), req.Email, req.FirstName, parsedUserId)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Hacker email could not be queued."))
 	}

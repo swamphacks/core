@@ -62,9 +62,17 @@ func (s *EmailService) QueueWelcomeEmail(ctx context.Context, recipient string, 
 	}
 
 	contentType := "image/png"
+	if s.storage == nil {
+		s.logger.Err(err).Msg("A R2 client must be connected for this function to run")
+		return err
+	}
 	err = s.storage.Store(ctx, cfg.CoreBuckets.QRCodes, userId.String(), qrPng, &contentType)
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to upload QR code to R2")
+		return err
+	}
 
-	qrPngLink := fmt.Sprintf("%s/%s", cfg.QRCodesEndpoint, userId.String())
+	qrPngLink := fmt.Sprintf("%s/%s", cfg.CoreBuckets.QRCodesBaseUrl, userId.String())
 
 	subject := "SwampHacks XI – A welcome from our Organizers!"
 	templateEmailFilepath := cfg.EmailTemplateDirectory + "WelcomeEmail.html"

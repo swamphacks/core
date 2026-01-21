@@ -66,7 +66,6 @@ type Config struct {
 	MaxAcceptedApplications  uint32   `env:"MAX_ACCEPTED_APPLICATIONS"`
 	AcceptFromWaitlistCount  uint32   `env:"ACCEPT_FROM_WAITLIST_COUNT"`
 	AcceptFromWaitlistPeriod string   `env:"ACCEPT_FROM_WAITLIST_PERIOD"`
-	QRCodesEndpoint          string   `env:"QRCODES_ENDPOINT"`
 
 	Auth      AuthConfig   `envPrefix:"AUTH_"`
 	Cookie    CookieConfig `envPrefix:"COOKIE_"`

@@ -155,7 +155,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 			// Admin-only
 			r.With(ensureEventAdmin).Post("/queue-confirmation-email", api.Handlers.Email.QueueConfirmationEmail)
-			r.With(ensureEventAdmin).Post("/queue-hacker-emails", api.Handlers.Email.QueueWelcomeEmail)
+			r.With(ensureEventAdmin).Post("/queue-welcome-email", api.Handlers.Email.QueueWelcomeEmail)
+			r.With(ensureEventAdmin).Post("/send-welcome-emails", api.Handlers.Bat.SendWelcomeEmails)
 			r.With(ensureEventAdmin).Post("/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
 			r.With(ensureEventAdmin).Patch("/transition-waitlisted-applications", api.Handlers.Application.TransitionWaitlistedApplications)
 			r.With(ensureEventAdmin).Post("/begin-waitlist-transition", api.Handlers.Bat.QueueScheduleWaitlistTransitionTask)
