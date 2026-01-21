@@ -39,9 +39,7 @@ venv
 
 **/.pnpm-store/
 
-<<<<<<< HEAD
-.env.dev.discord
-=======
 .env.dev.discord
 uv.lock
->>>>>>> 42db4cf14af6e128b28c65765c9025fbb908bc8d
+
+uv.lock
