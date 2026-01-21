@@ -59,3 +59,10 @@ WHERE user_id = @user_id
 SELECT COUNT(*) FROM event_roles AS er
 WHERE er.event_id = @event_id::uuid
   AND er.role = 'attendee';
+
+-- name: GetUserByRFID :one
+SELECT u.*
+FROM auth.users u
+JOIN event_roles er ON u.id = er.user_id
+WHERE er.event_id = $1
+  AND er.rfid = $2;

@@ -237,6 +237,21 @@ class JoinThreadButton(Button):
         except Exception as e:
             await interaction.response.send_message(f"❌ Error joining thread: {str(e)}", ephemeral=True)
 
+class JoinThreadButton(Button):
+    """Button to join a claimed support thread for additional mentor assistance."""
+    def __init__(self, thread: discord.Thread):
+        super().__init__(label="Join Thread", style=ButtonStyle.primary, custom_id="join_thread", emoji="➡️")
+        self.thread = thread
+
+    async def callback(self, interaction: Interaction):
+        try:
+            await self.thread.add_user(interaction.user)
+            await interaction.response.send_message(f"You've joined the thread {self.thread.mention}", ephemeral=True)
+        except NotFound:
+            await interaction.response.send_message("❌ This thread no longer exists.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Error joining thread: {str(e)}", ephemeral=True)
+
 class ClaimThreadButton(Button):
     """Button to claim a support thread and add the mentor to it."""
     def __init__(self, thread: discord.Thread, description_input: discord.ui.TextInput):
