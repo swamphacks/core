@@ -147,9 +147,51 @@ class CloseThreadButton(Button):
                 # If VC deletion fails, log but continue with thread closure
                 print(f"Error handling VC deletion for thread {self.thread.id}: {e}")
             
-            # archive and lock the thread
-            await self.thread.edit(name=new_name,archived=True, locked=True)
-            await interaction.followup.send(f"Thread: {self.thread.mention} has been archived and locked.", ephemeral=True)
+            try:
+                # Fetch members explicitly and collect all member IDs
+                members_to_remove = set()
+                
+                # Add all members from thread.members
+                for thread_member in self.thread.members:
+                    members_to_remove.add(thread_member.id)
+                
+                # Also explicitly include the interaction user and thread author
+                if interaction.user:
+                    members_to_remove.add(interaction.user.id)
+                if self.thread_author:
+                    members_to_remove.add(self.thread_author.id)
+                
+                # Try to fetch members if the list seems incomplete
+                if len(members_to_remove) == 0:
+                    try:
+                        async for member in self.thread.fetch_members():
+                            members_to_remove.add(member.id)
+                    except Exception as fetch_error:
+                        print(f"Failed to fetch members: {fetch_error}")
+                
+                for member_id in members_to_remove:
+                    try:
+                        member = interaction.guild.get_member(member_id)
+                        if member:
+                            await self.thread.remove_user(member)
+                    except Exception as remove_error:
+                        print(f"Failed to remove member {member_id} from thread {self.thread.id}: {remove_error}")
+            except Exception as e:
+                print(f"Error removing members from thread {self.thread.id}: {e}")
+            
+            try:
+                await self.thread.edit(name=new_name)
+                await self.thread.edit(archived=True, locked=True)
+            except Exception as e:
+                print(f"Failed to archive thread {self.thread.id}: {e}")
+                try:
+                    await self.thread.edit(archived=True, locked=True)
+                except Exception as e2:
+                    print(f"Failed to archive thread {self.thread.id} (fallback attempt): {e2}")
+                    await interaction.followup.send(f"⚠️ Thread archiving encountered an error, but the thread should be closed.", ephemeral=True)
+                    return
+            
+            await interaction.followup.send(f"Thread has been archived and locked.", ephemeral=True)
 
             
             # Set mentor status - only mark as available if they have no more tickets
@@ -178,15 +220,15 @@ class CloseThreadButton(Button):
                 embed = message.embeds[0] if message.embeds else None
                 if embed:
                     new_embed = embed.copy()
-                    new_embed.description = f"Issue: {shortened_description}\n\nActions: {interaction.user.mention} closed {self.thread.name}."
+                    new_embed.description = f"Issue: {shortened_description}\n\nActions: Thread closed by {interaction.user.display_name}."
                     new_embed.color = discord.Color.red()
                     try:
-                        await message.edit(embed=new_embed, view=new_view)
+                        await message.edit(embed=new_embed, view=new_view, allowed_mentions=discord.AllowedMentions.none())
                     except Exception as e:
                         print(f"Failed to update thread message: {e}")
                 else:
                     try:
-                        await message.edit(view=new_view)
+                        await message.edit(view=new_view, allowed_mentions=discord.AllowedMentions.none())
                     except Exception as e:
                         print(f"Failed to update thread message view: {e}")
             
