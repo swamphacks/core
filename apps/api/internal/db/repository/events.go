@@ -205,3 +205,7 @@ func (r *EventRepository) GetEventRoleByDiscordIDAndEventId(ctx context.Context,
 
 	return &eventRole, nil
 }
+
+func (r *EventRepository) GetAttendeeUserIdsByEventId(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	return r.db.Query.GetAttendeeUserIdsByEventId(ctx, eventID)
+}

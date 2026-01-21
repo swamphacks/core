@@ -60,6 +60,11 @@ SELECT COUNT(*) FROM event_roles AS er
 WHERE er.event_id = @event_id::uuid
   AND er.role = 'attendee';
 
+-- name: GetAttendeeUserIdsByEventId :many
+SELECT er.user_id FROM event_roles AS er
+WHERE er.event_id = @event_id::uuid
+  AND er.role = 'attendee';
+
 -- name: GetUserByRFID :one
 SELECT u.*
 FROM auth.users u

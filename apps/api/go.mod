@@ -63,6 +63,7 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/redis/go-redis/v9 v9.7.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e // indirect
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/sv-tools/openapi v0.4.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
