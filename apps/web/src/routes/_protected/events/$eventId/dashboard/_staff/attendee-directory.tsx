@@ -1,5 +1,8 @@
-import { PageUnderConstruction } from "@/components/PageUnderConstruction";
+import { PageLoading } from "@/components/PageLoading";
+import AttendeeTable from "@/features/CheckIn/components/ManualCheckInTable";
+import { useEventUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventUsers";
 import { createFileRoute } from "@tanstack/react-router";
+import { Heading } from "react-aria-components";
 
 export const Route = createFileRoute(
   "/_protected/events/$eventId/dashboard/_staff/attendee-directory",
@@ -8,5 +11,39 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  return <PageUnderConstruction />;
+  const eventId = Route.useParams().eventId;
+  const { data, isLoading, isError, error } = useEventUsers(eventId);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-6 h-full">
+        <Heading className="text-2xl lg:text-3xl font-semibold">
+          Attendee Management
+        </Heading>
+        <div className="flex flex-1 justify-center items-center">
+          <PageLoading />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || error) {
+    <div className="flex flex-col gap-6">
+      <Heading className="text-2xl lg:text-3xl font-semibold">
+        Attendee Management
+      </Heading>
+
+      <div>Error loading event users.</div>
+    </div>;
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Heading className="text-2xl lg:text-3xl font-semibold">
+        User Management
+      </Heading>
+
+      <AttendeeTable eventId={eventId} data={data} />
+    </div>
+  );
 }
