@@ -461,6 +461,10 @@ func (s *BatService) SendWelcomeEmailToAttendees(ctx context.Context, eventId uu
 		if !ok {
 			return ErrFailedToGetContactEmail
 		}
+		if contactEmail == "" {
+			s.logger.Err(err).Msgf("empty contact email found for user with id %s", userId)
+			continue
+		}
 
 		err = s.emailService.QueueWelcomeEmail(ctx, contactEmail, contactInfo.Name, userId)
 		if err != nil {
