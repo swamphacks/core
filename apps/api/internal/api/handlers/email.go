@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/email"
@@ -82,6 +83,12 @@ type QueueConfirmationEmailFields struct {
 	FirstName string `json:"firstName" validate:"required"`
 }
 
+type QueueWelcomeEmailFields struct {
+	Email     string `json:"email" validate:"required"`
+	FirstName string `json:"firstName" validate:"required"`
+	UserId    string `json:userId validate:"required"`
+}
+
 func (h *EmailHandler) QueueConfirmationEmail(w http.ResponseWriter, r *http.Request) {
 	var req QueueConfirmationEmailFields
 	decoder := json.NewDecoder(r.Body)
@@ -99,6 +106,35 @@ func (h *EmailHandler) QueueConfirmationEmail(w http.ResponseWriter, r *http.Req
 	err = h.emailService.QueueConfirmationEmail(req.Email, req.FirstName)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Confirmation email could not be queued."))
+	}
+
+	res.Send(w, http.StatusOK, nil)
+}
+
+func (h *EmailHandler) QueueWelcomeEmail(w http.ResponseWriter, r *http.Request) {
+	var req QueueWelcomeEmailFields
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&req)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Could not parse request body"))
+		return
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", err.Error()))
+	}
+
+	parsedUserId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "userId must be of type uuid"))
+		return
+	}
+
+	err = h.emailService.QueueWelcomeEmail(req.Email, req.FirstName, parsedUserId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Hacker email could not be queued."))
 	}
 
 	res.Send(w, http.StatusOK, nil)
