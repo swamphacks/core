@@ -2,8 +2,7 @@ from discord.ext import commands
 from discord import app_commands, Interaction, Embed, Colour
 from typing import Literal
 from components.ticket_view import TicketView
-from utils.checks import is_mod_slash
-import discord
+from utils.checks import has_bot_full_access
 
 class Support(commands.Cog):
     """
@@ -29,7 +28,7 @@ class Support(commands.Cog):
         description="The description of the support panel",
         color="Choose the panel's color"
     )
-    @is_mod_slash()
+    @has_bot_full_access()
     async def supportpanel(
         self,
         interaction: Interaction,
@@ -54,15 +53,6 @@ class Support(commands.Cog):
             "orange": Colour.orange()
         }
         
-        mod_role = discord.utils.get(interaction.guild.roles, name="Moderator")
-        if not mod_role:
-            await interaction.response.send_message(
-                "The 'Moderator' role does not exist. Please create it before using this command.",
-                ephemeral=True
-            )
-            return
-        
-        mentors = mod_role.members
         
         embed = Embed(
             title=title,
@@ -72,7 +62,7 @@ class Support(commands.Cog):
         embed.set_footer(text="Powered by SwampHacksXI")
         await interaction.response.defer(ephemeral=True)
         await interaction.delete_original_response()
-        await interaction.channel.send(embed=embed, view=TicketView(mentors))
+        await interaction.channel.send(embed=embed, view=TicketView())
 
         
 

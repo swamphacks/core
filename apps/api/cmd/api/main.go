@@ -82,19 +82,35 @@ func main() {
 	teamMemberRepo := repository.NewTeamMemberRespository(database)
 	teamJoinRequestRepo := repository.NewTeamJoinRequestRepository(database)
 	batRunsRepo := repository.NewBatRunsRepository(database)
+	redeemablesRepo := repository.NewRedeemablesRepository(database)
 
 	// Injections into services
 	authService := services.NewAuthService(userRepo, accountRepo, sessionRepo, txm, client, logger, &cfg.Auth)
 	userService := services.NewUserService(userRepo, logger)
 	eventInterestService := services.NewEventInterestService(eventInterestRepo, logger)
 	eventService := services.NewEventService(eventRepo, userRepo, r2Client, &cfg.CoreBuckets, logger)
-	emailService := services.NewEmailService(taskQueueClient, sesClient, logger)
+	emailService := services.NewEmailService(taskQueueClient, sesClient, r2Client, logger)
 	applicationService := services.NewApplicationService(applicationRepo, userRepo, eventService, emailService, txm, r2Client, &cfg.CoreBuckets, nil, logger)
 	teamService := services.NewTeamService(teamRepo, teamMemberRepo, teamJoinRequestRepo, eventRepo, txm, logger)
 	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, taskQueueClient, nil, logger)
+	redeemablesService := services.NewRedeemablesService(redeemablesRepo, logger)
+	discordService := services.NewDiscordService(eventRepo, logger)
 
 	// Injections into handlers
-	apiHandlers := handlers.NewHandlers(authService, userService, eventInterestService, eventService, emailService, applicationService, teamService, batService, cfg, logger)
+	apiHandlers := handlers.NewHandlers(
+		authService,
+		userService,
+		eventInterestService,
+		eventService,
+		emailService,
+		applicationService,
+		teamService,
+		batService,
+		redeemablesService,
+		discordService,
+		cfg,
+		logger,
+	)
 
 	api := api.NewAPI(&logger, apiHandlers, mw)
 

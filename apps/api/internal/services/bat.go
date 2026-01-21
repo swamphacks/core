@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
@@ -37,6 +38,8 @@ var (
 	ErrFailedToSendDecisionEmails      = errors.New("Failed to send decision emails")
 	ErrTestErr                         = errors.New("Err while testing")
 	ErrFailedToGetContactEmail         = errors.New("Failed to get contact email")
+	ErrUserNotAttendee                 = errors.New("user is not an attendee")
+	ErrUserCheckedIn                   = errors.New("user already checked in")
 )
 
 type BatService struct {
@@ -146,7 +149,10 @@ func (s *BatService) SendDecisionEmails(ctx context.Context, batRun sqlc.BatRun)
 		if !ok {
 			return ErrFailedToGetContactEmail
 		}
-		taskInfo, err := s.emailService.QueueSendHtmlEmailTask(contactEmail, acceptedEmailSubject, emailInfo.Name, accepetedEmailTemplatePath)
+		type emailTemplateData struct {
+			Name string
+		}
+		taskInfo, err := s.emailService.QueueSendHtmlEmailTask(contactEmail, acceptedEmailSubject, emailTemplateData{Name: emailInfo.Name}, accepetedEmailTemplatePath)
 		s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued acceptance email")
 	}
 
@@ -160,7 +166,10 @@ func (s *BatService) SendDecisionEmails(ctx context.Context, batRun sqlc.BatRun)
 		if !ok {
 			return ErrFailedToGetContactEmail
 		}
-		taskInfo, err := s.emailService.QueueSendHtmlEmailTask(contactEmail, rejectedEmailSubject, emailInfo.Name, rejectedEmailTemplatePath)
+		type emailTemplateData struct {
+			Name string
+		}
+		taskInfo, err := s.emailService.QueueSendHtmlEmailTask(contactEmail, rejectedEmailSubject, emailTemplateData{emailInfo.Name}, rejectedEmailTemplatePath)
 		s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued rejection email")
 	}
 
@@ -362,6 +371,38 @@ func (s *BatService) mapToCandidates(engine *bat.BatEngine, applications []sqlc.
 	return appAdmissionsData, nil
 }
 
+func (s *BatService) CheckInAttendee(ctx context.Context, eventId, userId uuid.UUID, RFID *string) error {
+	// Retrieve user with their current event role
+	role, err := s.eventRepo.GetEventRoleByIds(ctx, userId, eventId)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	if role.Role != sqlc.EventRoleTypeAttendee {
+		return ErrUserNotAttendee
+	}
+
+	if role.CheckedInAt != nil {
+		return ErrUserCheckedIn
+	}
+
+	now := time.Now()
+	// Update user role checked in AND rfid
+	return s.eventRepo.UpdateEventRoleByIds(ctx, sqlc.UpdateEventRoleByIdsParams{
+		EventID: eventId,
+		UserID:  userId,
+
+		Role:         sqlc.EventRoleTypeAttendee,
+		RoleDoUpdate: false,
+
+		CheckedInAt:         &now,
+		CheckedInAtDoUpdate: true,
+
+		Rfid:         RFID,
+		RfidDoUpdate: RFID != nil,
+	})
+}
+
 func (s *BatService) QueueScheduleWaitlistTransitionTask(ctx context.Context, eventId uuid.UUID) error {
 
 	cfg := config.Load()
@@ -398,5 +439,39 @@ func (s *BatService) QueueShutdownWaitlistScheduler() error {
 	}
 	s.logger.Info().Msg("Queued ShutdownWaitlistScheduler task")
 
+	return nil
+}
+
+func (s *BatService) SendWelcomeEmailToAttendees(ctx context.Context, eventId uuid.UUID) error {
+	attendees, err := s.eventRepo.GetAttendeeUserIdsByEventId(ctx, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg("Could not get attendee user ids")
+		return err
+	}
+
+	s.logger.Info().Msgf("Sending welcome emails to %v attendees", len(attendees))
+
+	for _, userId := range attendees {
+		contactInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userId)
+		if err != nil {
+			s.logger.Err(err).Msgf("Could not get contact info for user with id %s", userId)
+			return err
+		}
+		contactEmail, ok := contactInfo.ContactEmail.(string)
+		if !ok {
+			s.logger.Err(err).Msgf("could got convert id %s", userId)
+			continue
+		}
+		if contactEmail == "" {
+			s.logger.Err(err).Msgf("empty contact email found for user with id %s", userId)
+			continue
+		}
+
+		err = s.emailService.QueueWelcomeEmail(ctx, contactEmail, contactInfo.Name, userId)
+		if err != nil {
+			s.logger.Err(err).Msgf("Could not queue welcome email for user with id %s", userId)
+			return err
+		}
+	}
 	return nil
 }

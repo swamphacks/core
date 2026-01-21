@@ -71,6 +71,8 @@ export type ModalProps = {
   minimumSheetHeight?: string;
   isDismissible?: boolean;
   isOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
+  dialogAriaLabel?: string;
 } & VariantProps<typeof modal>;
 
 export function Modal({
@@ -78,6 +80,8 @@ export function Modal({
   children,
   isDismissible = true,
   isOpen,
+  onOpenChange,
+  dialogAriaLabel,
   minimumSheetHeight = "65vh",
   size,
   padding,
@@ -92,6 +96,7 @@ export function Modal({
   return (
     <ModalOverlay
       isOpen={isOpen}
+      onOpenChange={onOpenChange}
       isDismissable={isDismissible}
       className={({ isEntering, isExiting }) => `
         ${overlay({ responsive })}
@@ -123,7 +128,10 @@ export function Modal({
         {title && (
           <Heading className=" text-text-primary text-lg">{title}</Heading>
         )}
-        <Dialog className="outline-none relative flex flex-col h-full">
+        <Dialog
+          aria-label={dialogAriaLabel}
+          className="outline-none relative flex flex-col h-full"
+        >
           {children}
         </Dialog>
       </RAC_Modal>

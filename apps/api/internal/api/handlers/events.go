@@ -22,6 +22,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/parse"
 	. "github.com/swamphacks/core/apps/api/internal/parse"
 	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/web"
 )
 
 type EventHandler struct {
@@ -792,4 +793,76 @@ func (h *EventHandler) GetEventOverview(w http.ResponseWriter, r *http.Request) 
 	}
 
 	res.Send(w, http.StatusOK, eventStats)
+}
+
+// Get User for Event
+//
+//	@Summary		Retrieves a user's information along with their event information
+//	@Description	A user's information along with their event details such as check in state, role, and more. Must be validated on the frontend.
+//	@Tags			Event
+//	@Produce		json
+//	@Success		200	{object}	services.UserInfoForEvent
+//	@Failure		400	{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		500	{object}	response.ErrorResponse	"Server Error: error getting user info for event"
+//	@Router			/events/{eventId}/users/{userId} [get]
+func (h *EventHandler) GetUserForEvent(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+
+	userId, err := web.PathParamToUUID(r, "userId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
+		return
+	}
+
+	info, err := h.eventService.GetUserInfoForEvent(r.Context(), userId, eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("user_info_err", "Something went wrong while querying user info for event"))
+		return
+	}
+
+	res.Send(w, http.StatusOK, info)
+}
+
+// Get User by RFID
+//
+//	@Summary		Retrieves a user's ID by their RFID
+//	@Description	Looks up a user's ID by their RFID code for a specific event. Returns the user ID which can be used for other operations.
+//	@Tags			Event
+//	@Produce		json
+//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
+//	@Param			rfid	path		string	true	"RFID code (10 digits)"
+//	@Success		200		{object}	map[string]string	"OK - Returns user ID"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		404		{object}	response.ErrorResponse	"User not found with the provided RFID"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error getting user by RFID"
+//	@Router			/events/{eventId}/users/by-rfid/{rfid} [get]
+func (h *EventHandler) GetUserByRFID(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+
+	rfid := chi.URLParam(r, "rfid")
+	if rfid == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_rfid", "The RFID is missing from the URL!"))
+		return
+	}
+
+	user, err := h.eventService.GetUserByRFID(r.Context(), eventId, rfid)
+	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) || errors.Is(err, repository.ErrEventRoleNotFound) {
+			res.SendError(w, http.StatusNotFound, res.NewError("user_not_found", "No user found with the provided RFID"))
+		} else {
+			res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went wrong while querying user by RFID"))
+		}
+		return
+	}
+
+	// Return just the user ID as a simple JSON object
+	res.Send(w, http.StatusOK, map[string]string{"user_id": user.ID.String()})
 }

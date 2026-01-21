@@ -120,6 +120,12 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		r.Post("/join/{requestId}/reject", api.Handlers.Teams.RejectTeamJoinRequest)
 	})
 
+	// --- Discord routes (for Discord bot) ---
+	api.Router.Route("/discord", func(r chi.Router) {
+		r.Use(mw.Auth.RequireAuth)
+		r.Get("/event/{event_id}/attendees", api.Handlers.Discord.GetEventAttendeesWithDiscord)
+	})
+
 	// --- Event routes ---
 	api.Router.Route("/events", func(r chi.Router) {
 		// Superuser-only
@@ -136,11 +142,21 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 			r.Get("/", api.Handlers.Event.GetEventByID)
 			r.Get("/role", api.Handlers.Event.GetEventRole)
+			r.Get("/discord/{discordId}", api.Handlers.Discord.GetUserEventRoleByDiscordIDAndEventId)
 
 			r.With(ensureEventStaff).Get("/overview", api.Handlers.Event.GetEventOverview)
 
+			// Check in and event day of routes (STAFF+)
+			r.With(ensureEventStaff).Post("/checkin", api.Handlers.Admission.HandleEventCheckIn)
+			// Used to fetch user info for checking in
+			r.With(ensureEventStaff).Get("/users/{userId}", api.Handlers.Event.GetUserForEvent)
+			// Get user ID by RFID
+			r.With(ensureEventStaff).Get("/users/by-rfid/{rfid}", api.Handlers.Event.GetUserByRFID)
+
 			// Admin-only
 			r.With(ensureEventAdmin).Post("/queue-confirmation-email", api.Handlers.Email.QueueConfirmationEmail)
+			r.With(ensureEventAdmin).Post("/queue-welcome-email", api.Handlers.Email.QueueWelcomeEmail)
+			r.With(ensureEventAdmin).Post("/send-welcome-emails", api.Handlers.Bat.SendWelcomeEmails)
 			r.With(ensureEventAdmin).Post("/calc-admissions", api.Handlers.Admission.HandleCalculateAdmissionsRequest)
 			r.With(ensureEventAdmin).Patch("/transition-waitlisted-applications", api.Handlers.Application.TransitionWaitlistedApplications)
 			r.With(ensureEventAdmin).Post("/begin-waitlist-transition", api.Handlers.Bat.QueueScheduleWaitlistTransitionTask)
@@ -197,6 +213,25 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 				//Waitlist application
 				r.Patch("/join-waitlist", api.Handlers.Application.JoinWaitlist)
+			})
+
+			r.Route("/redeemables", func(r chi.Router) {
+				r.Use(ensureEventStaff)
+				// Get all redeemables and create new redeemable
+				// eventId is available from parent route context
+				r.Get("/", api.Handlers.Redeemables.GetRedeemables)
+				r.Post("/", api.Handlers.Redeemables.CreateRedeemable)
+
+				// Update and delete specific redeemable
+				r.Route("/{redeemableId}", func(r chi.Router) {
+					r.Patch("/", api.Handlers.Redeemables.UpdateRedeemable)
+					r.Delete("/", api.Handlers.Redeemables.DeleteRedeemable)
+
+					r.Route("/users/{userId}", func(r chi.Router) {
+						r.Post("/", api.Handlers.Redeemables.RedeemRedeemable)
+						r.Patch("/", api.Handlers.Redeemables.UpdateRedemption)
+					})
+				})
 			})
 
 			// Team routes

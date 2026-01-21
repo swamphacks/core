@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	res "github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/email"
@@ -82,6 +83,18 @@ type QueueConfirmationEmailFields struct {
 	FirstName string `json:"firstName" validate:"required"`
 }
 
+// Queue a Confirmation Email
+//
+//	@Summary		Queue a Confirmation Email Request
+//	@Description	Push a Confirmation Email request to the task queue
+//	@Tags			Email
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		QueueConfirmationEmailFields	true	"Email data"
+//	@Success		201		{object}	string					"OK: Email request queued"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request. The email request is potentially invalid."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: The server went kaput while queueing email sending"
+//	@Router			/email/queue [post]
 func (h *EmailHandler) QueueConfirmationEmail(w http.ResponseWriter, r *http.Request) {
 	var req QueueConfirmationEmailFields
 	decoder := json.NewDecoder(r.Body)
@@ -99,6 +112,52 @@ func (h *EmailHandler) QueueConfirmationEmail(w http.ResponseWriter, r *http.Req
 	err = h.emailService.QueueConfirmationEmail(req.Email, req.FirstName)
 	if err != nil {
 		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Confirmation email could not be queued."))
+	}
+
+	res.Send(w, http.StatusOK, nil)
+}
+
+type QueueWelcomeEmailFields struct {
+	Email     string `json:"email" validate:"required"`
+	FirstName string `json:"firstName" validate:"required"`
+	UserId    string `json:userId validate:"required"`
+}
+
+// Queue a Welcome Email
+//
+//	@Summary		Queue a Welcome Email
+//	@Description	Push an Welcome Email request to the task queue
+//	@Tags			Email
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		QueueConfirmationEmailFields	true	"Email data"
+//	@Success		201		{object}	string					"OK: Email request queued"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request. The email request is potentially invalid."
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: The server went kaput while queueing email sending"
+func (h *EmailHandler) QueueWelcomeEmail(w http.ResponseWriter, r *http.Request) {
+	var req QueueWelcomeEmailFields
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&req)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "Could not parse request body"))
+		return
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(req); err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", err.Error()))
+	}
+
+	parsedUserId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_request", "userId must be of type uuid"))
+		return
+	}
+
+	err = h.emailService.QueueWelcomeEmail(r.Context(), req.Email, req.FirstName, parsedUserId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Hacker email could not be queued."))
 	}
 
 	res.Send(w, http.StatusOK, nil)
