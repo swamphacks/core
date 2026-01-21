@@ -459,7 +459,8 @@ func (s *BatService) SendWelcomeEmailToAttendees(ctx context.Context, eventId uu
 		}
 		contactEmail, ok := contactInfo.ContactEmail.(string)
 		if !ok {
-			return ErrFailedToGetContactEmail
+			s.logger.Err(err).Msgf("could got convert id %s", userId)
+			continue
 		}
 		if contactEmail == "" {
 			s.logger.Err(err).Msgf("empty contact email found for user with id %s", userId)
