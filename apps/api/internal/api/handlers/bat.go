@@ -218,7 +218,7 @@ func (h *BatHandler) SendWelcomeEmails(w http.ResponseWriter, r *http.Request) {
 
 	err = h.BatService.SendWelcomeEmailToAttendees(r.Context(), eventId)
 	if err != nil {
-		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Failed to create ScheduleWaitlistTransition task."))
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Failed to send welcome emails."))
 	}
 
 	res.Send(w, http.StatusCreated, nil)
