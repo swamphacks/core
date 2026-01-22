@@ -28,22 +28,27 @@ function RouteComponent() {
   }
 
   if (isError || error) {
-    <div className="flex flex-col gap-6">
-      <Heading className="text-2xl lg:text-3xl font-semibold">
-        Attendee Management
-      </Heading>
+    return (
+      <div className="flex flex-col gap-6">
+        <Heading className="text-2xl lg:text-3xl font-semibold">
+          Attendee Management
+        </Heading>
 
-      <div>Error loading event users.</div>
-    </div>;
+        <div>Error loading event users.</div>
+      </div>
+    );
   }
 
+  // Filter to show only users with "attendee" status
+  // const attendeeData = data?.filter((user) => user.event_role === "attendee") ?? [];
+  const attendeeData = data;
   return (
     <div className="flex flex-col gap-6">
       <Heading className="text-2xl lg:text-3xl font-semibold">
         User Management
       </Heading>
 
-      <AttendeeTable eventId={eventId} data={data} />
+      <AttendeeTable eventId={eventId} data={attendeeData} />
     </div>
   );
 }

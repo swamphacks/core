@@ -20,6 +20,21 @@ const fuzzyTextFilterFn: FilterFn<EventUser> = (row, columnId, value) => {
   return rowValue.toLowerCase().includes((value as string).toLowerCase());
 };
 
+// Filter function for checked-in status (yes/no)
+const checkedInFilterFn: FilterFn<EventUser> = (row, _columnId, value) => {
+  const checkedInAt = row.original.checked_in_at;
+  const isCheckedIn = checkedInAt !== null && checkedInAt !== undefined;
+  const filterValues = value as string[];
+
+  if (!filterValues || filterValues.length === 0) return true;
+
+  return filterValues.some((val) => {
+    if (val === "yes") return isCheckedIn;
+    if (val === "no") return !isCheckedIn;
+    return false;
+  });
+};
+
 const fallbackData: EventUser[] = [];
 
 interface Props {
@@ -109,6 +124,40 @@ const AttendeeTable = ({ data, eventId }: Props) => {
             { value: "staff", label: "Staff" },
             { value: "attendee", label: "Attendee" },
             { value: "applicant", label: "Applicant" },
+          ],
+        },
+      },
+      {
+        id: "checked_in",
+        header: "Checked In",
+        accessorFn: (row) => {
+          return row.checked_in_at !== null && row.checked_in_at !== undefined
+            ? "Yes"
+            : "No";
+        },
+        cell: ({ row }) => {
+          const checkedInAt = row.original.checked_in_at;
+          const isCheckedIn = checkedInAt !== null && checkedInAt !== undefined;
+          return (
+            <span
+              className={
+                isCheckedIn
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-gray-500"
+              }
+            >
+              {isCheckedIn ? "Yes" : "No"}
+            </span>
+          );
+        },
+        filterFn: checkedInFilterFn,
+        enableSorting: true,
+        sortingFn: "alphanumeric",
+        meta: {
+          filterType: "select",
+          filterOptions: [
+            { value: "yes", label: "Yes" },
+            { value: "no", label: "No" },
           ],
         },
       },

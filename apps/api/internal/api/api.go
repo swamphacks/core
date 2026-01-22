@@ -166,7 +166,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventAdmin).Post("/banner", api.Handlers.Event.UploadEventBanner)
 			r.With(ensureEventAdmin).Delete("/banner", api.Handlers.Event.DeleteBanner)
 			r.With(ensureEventAdmin).Get("/staff", api.Handlers.Event.GetEventStaffUsers)
-			r.With(ensureEventAdmin).Get("/users", api.Handlers.Event.GetEventUsers)
+			r.With(ensureEventStaff).Get("/users", api.Handlers.Event.GetEventUsers)
 			r.With(ensureEventAdmin).Post("/roles", api.Handlers.Event.AssignEventRole)
 			r.With(ensureEventAdmin).Delete("/roles/{userId}", api.Handlers.Event.RevokeEventRole)
 			r.With(ensureEventAdmin).Post("/roles/batch", api.Handlers.Event.BatchAssignEventRoles)
