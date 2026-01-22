@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/Button";
 import TablerFolder from "~icons/tabler/folder-open";
+import TablerScan from "~icons/tabler/scan";
 import { type ColumnDef, type FilterFn } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { DialogTrigger, TooltipTrigger, Tooltip } from "react-aria-components";
 
 import { Route as EventUsersRoute } from "@/routes/_protected/events/$eventId/dashboard/_staff/attendee-directory";
@@ -11,6 +12,7 @@ import type { EventUser } from "@/features/PlatformAdmin/EventManager/hooks/useE
 import { useUrlTableState } from "@/features/EventAdmin/hooks/useUrlTableState";
 import RoleBadge from "@/features/EventAdmin/components/RoleBadge";
 import { UserSideDrawer } from "@/features/EventAdmin/components/UserSideDrawer";
+import CheckInRFIDModal from "@/features/CheckIn/components/CheckInRFIDModal";
 
 // Warning: When using the url table state saving (useUrlTableState hook), random query parameters may be interpreted as table filters if column name is identical.
 
@@ -47,6 +49,9 @@ const AttendeeTable = ({ data, eventId }: Props) => {
   const search = EventUsersRoute.useSearch();
   const navigate = EventUsersRoute.useNavigate();
 
+  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<EventUser | null>(null);
+
   const {
     columnFilters,
     setColumnFilters,
@@ -58,6 +63,16 @@ const AttendeeTable = ({ data, eventId }: Props) => {
     search,
     navigate,
   });
+
+  const handleOpenCheckIn = (user: EventUser) => {
+    setSelectedUser(user);
+    setCheckInModalOpen(true);
+  };
+
+  const handleCloseCheckIn = () => {
+    setCheckInModalOpen(false);
+    setSelectedUser(null);
+  };
 
   const columns: ColumnDef<EventUser>[] = useMemo(
     () => [
@@ -162,25 +177,45 @@ const AttendeeTable = ({ data, eventId }: Props) => {
         },
       },
       {
-        id: "open-details",
+        id: "actions",
         header: "",
-        size: 20,
+        size: 50,
         cell: ({ row }) => {
           return (
-            <DialogTrigger>
+            <div className="flex items-center gap-1.5 justify-end pr-2">
+              <DialogTrigger>
+                <TooltipTrigger delay={250} closeDelay={250}>
+                  <Button
+                    variant="primary"
+                    className="aspect-square p-2 shrink-0"
+                  >
+                    <TablerFolder className="h-4 w-4" />
+                  </Button>
+                  <Tooltip
+                    offset={5}
+                    className="bg-surface border-input-border border-2 flex justify-center items-center py-1 px-2 rounded-md"
+                  >
+                    Open User Details
+                  </Tooltip>
+                </TooltipTrigger>
+                <UserSideDrawer user={row.original} event_id={eventId} />
+              </DialogTrigger>
               <TooltipTrigger delay={250} closeDelay={250}>
-                <Button variant="primary" className="aspect-square p-2">
-                  <TablerFolder className="h-4 w-4" />
+                <Button
+                  variant="secondary"
+                  className="aspect-square p-2 shrink-0"
+                  onPress={() => handleOpenCheckIn(row.original)}
+                >
+                  <TablerScan className="h-4 w-4" />
                 </Button>
                 <Tooltip
                   offset={5}
                   className="bg-surface border-input-border border-2 flex justify-center items-center py-1 px-2 rounded-md"
                 >
-                  Open User Details
+                  Check In with RFID
                 </Tooltip>
               </TooltipTrigger>
-              <UserSideDrawer user={row.original} event_id={eventId} />
-            </DialogTrigger>
+            </div>
           );
         },
       },
@@ -205,6 +240,15 @@ const AttendeeTable = ({ data, eventId }: Props) => {
         pagination={pagination}
         onPaginationChange={setPagination}
       />
+
+      {selectedUser && (
+        <CheckInRFIDModal
+          isOpen={checkInModalOpen}
+          onClose={handleCloseCheckIn}
+          user={selectedUser}
+          eventId={eventId}
+        />
+      )}
     </div>
   );
 };

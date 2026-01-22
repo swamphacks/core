@@ -131,12 +131,29 @@ func (h *AdmissionHandler) HandleEventCheckIn(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if *req.RFID == "" {
+	if req.RFID != nil && *req.RFID == "" {
 		req.RFID = nil
 	}
 
 	err = h.batService.CheckInAttendee(r.Context(), eventId, req.UserID, req.RFID)
 	if err != nil {
+		// Check for specific errors and return appropriate status codes
+		if errors.Is(err, services.ErrRFIDAlreadyUsed) {
+			res.SendError(w, http.StatusConflict, res.NewError("rfid_already_used", "RFID has already been scanned"))
+			return
+		}
+		if errors.Is(err, services.ErrUserCheckedIn) {
+			res.SendError(w, http.StatusBadRequest, res.NewError("user_already_checked_in", "User has already been checked in"))
+			return
+		}
+		if errors.Is(err, services.ErrUserNotAttendee) {
+			res.SendError(w, http.StatusBadRequest, res.NewError("user_not_attendee", "User is not an attendee"))
+			return
+		}
+		if errors.Is(err, services.ErrUserNotFound) {
+			res.SendError(w, http.StatusNotFound, res.NewError("user_not_found", "User not found"))
+			return
+		}
 		res.Send(w, http.StatusInternalServerError, res.NewError("internal_err", "Something went terribly wrong."))
 		return
 	}

@@ -14,6 +14,7 @@ var (
 	ErrEventNotFound         = errors.New("event not found")
 	ErrEventRoleNotFound     = errors.New("event role not found")
 	ErrDuplicateEvent        = errors.New("event already exists in database")
+	ErrDuplicateRFID         = errors.New("RFID has already been scanned")
 	ErrNoEventsDeleted       = errors.New("no events deleted")
 	ErrMultipleEventsDeleted = errors.New("multiple events affected by delete query while only expecting one to delete one")
 	ErrUnknown               = errors.New("an unkown error was caught")
@@ -170,7 +171,14 @@ func (r *EventRepository) UpdateRole(ctx context.Context, userId uuid.UUID, even
 }
 
 func (r *EventRepository) UpdateEventRoleByIds(ctx context.Context, params sqlc.UpdateEventRoleByIdsParams) error {
-	return r.db.Query.UpdateEventRoleByIds(ctx, params)
+	err := r.db.Query.UpdateEventRoleByIds(ctx, params)
+	if err != nil {
+		// Check if the error is a unique constraint violation on RFID
+		if db.IsUniqueViolation(err) {
+			return ErrDuplicateRFID
+		}
+	}
+	return err
 }
 
 func (r *EventRepository) GetApplicationStatuses(ctx context.Context, eventId uuid.UUID) (sqlc.GetApplicationStatusSplitRow, error) {
