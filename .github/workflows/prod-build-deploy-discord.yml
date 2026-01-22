@@ -1,0 +1,81 @@
+name: Deploy Discord Bot to Production
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/discord-bot/**'
+      - 'infra/docker-compose.web.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image to GHCR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            -t ghcr.io/${{ github.repository_owner }}/core-web:latest \
+            --file ./apps/web/Dockerfile \
+            --target prod \
+            ./apps/discord-bot
+
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/core-web:latest
+
+  deploy:
+    name: Deploy to Production server
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+
+    steps:
+      - name: SSH proxy commmand
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.WEB_HOST }}
+          username: root
+          password: ${{ secrets.WEB_PASSWORD }}
+          script: |
+            cd /root/core/infra
+            git fetch
+            git checkout main
+            git reset --hard origin/main
+            git pull
+
+            export INFISICAL_TOKEN=$(infisical login \
+              --method=universal-auth \
+              --client-id='${{ secrets.INFISICAL_CLIENT_ID }}' \
+              --client-secret='${{ secrets.INFISICAL_CLIENT_SECRET }}' \
+              --silent \
+              --plain)
+
+            infisical export \
+              --token=$INFISICAL_TOKEN \
+              --env=prod \
+              --format=dotenv \
+              --path="/web" \
+              --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
+              > ./secrets/.env.web
+            
+            docker compose -f docker-compose.web.yml pull discord
+            docker compose -f docker-compose.web.yml up -d --no-deps --force-recreate discord
+
