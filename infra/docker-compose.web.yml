@@ -16,6 +16,12 @@ services:
     expose:
       - "80"  # accessible to Caddy via Docker network
 
+  discord:
+    image: ghcr.io/swamphacks/core-discord:latest
+    restart: always
+    env_file:
+      - ./secrets/.env.discord
+
   caddy:
     image: ghcr.io/caddybuilds/caddy-cloudflare:latest
     container_name: caddy

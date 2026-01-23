@@ -33,14 +33,13 @@ jobs:
         run: |
           docker build \
             --platform linux/amd64 \
-            -t ghcr.io/${{ github.repository_owner }}/core-web:latest \
-            --file ./apps/web/Dockerfile \
-            --target prod \
+            -t ghcr.io/${{ github.repository_owner }}/core-discord:latest \
+            --file ./apps/discord-bot/Dockerfile \
             ./apps/discord-bot
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/core-web:latest
+          docker push ghcr.io/${{ github.repository_owner }}/core-discord:latest
 
   deploy:
     name: Deploy to Production server
@@ -72,9 +71,9 @@ jobs:
               --token=$INFISICAL_TOKEN \
               --env=prod \
               --format=dotenv \
-              --path="/web" \
+              --path="/discord" \
               --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
-              > ./secrets/.env.web
+              > ./secrets/.env.discord
             
             docker compose -f docker-compose.web.yml pull discord
             docker compose -f docker-compose.web.yml up -d --no-deps --force-recreate discord

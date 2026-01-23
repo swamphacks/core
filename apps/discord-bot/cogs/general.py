@@ -458,10 +458,11 @@ class General(commands.Cog):
     )
     @app_commands.describe(
         event_id="UUID of event",
-        role="Discord role to assign to attendees"
+        role="Discord role to assign to attendees",
+        test_mode="Test mode: only process first 5 users and stop on first error (default: False)"
     )
     @is_mod_slash()
-    async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, role: discord.Role) -> None:
+    async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, role: discord.Role, test_mode: bool = False) -> None:
         """Assign role to all attendees from API using webhook
         
         Args:
@@ -478,7 +479,8 @@ class General(commands.Cog):
                 await interaction.followup.send("Error: Could not determine guild.", ephemeral=True)
                 return
             
-            api_url = os.getenv("API_URL", "http://localhost:8080")
+            api_url = os.getenv("API_URL", "https://api.swamphacks.com")
+            
             session_cookie = os.getenv("SESSION_COOKIE")
             if not session_cookie:
                 await interaction.followup.send("Error: SESSION_COOKIE is not set.", ephemeral=True)
@@ -494,8 +496,35 @@ class General(commands.Cog):
                 await interaction.followup.send("Error: No attendees found for event.", ephemeral=True)
                 return
             
-            newly_assigned, already_had, failed, errors = await assign_roles_to_attendees(webhook_url, attendees, role.name, str(guild_id))
-            summary = format_assignment_summary(len(attendees), newly_assigned, already_had, failed, errors)
+            # Limit to 5 users in test mode
+            if test_mode:
+                attendees = attendees[:5]
+                await interaction.followup.send(f"🧪 **TEST MODE**: Processing first 5 attendees only. Will stop on first error.", ephemeral=True)
+            
+            total_attendees = len(attendees)
+            
+            # Send initial progress message
+            mode_text = "🧪 TEST MODE: " if test_mode else ""
+            await interaction.followup.send(f"{mode_text}🔄 Processing {total_attendees} attendees in chunks of 20...", ephemeral=True)
+            
+            # Progress callback to send updates
+            async def progress_update(current: int, total: int):
+                if current % 20 == 0 or current == total:  # Update every 20 or at the end
+                    await interaction.followup.send(f"⏳ Progress: {current}/{total} processed...", ephemeral=True)
+            
+            newly_assigned, already_had, failed, errors = await assign_roles_to_attendees(
+                webhook_url, 
+                attendees, 
+                role.name, 
+                str(guild_id),
+                chunk_size=20,
+                progress_callback=progress_update,
+                test_mode=test_mode
+            )
+            
+            summary = format_assignment_summary(total_attendees, newly_assigned, already_had, failed, errors)
+            if test_mode and errors:
+                summary += f"\n\n⚠️ **Test stopped early due to error.** Fix the issue before running full assignment."
             await interaction.followup.send(summary, ephemeral=True)
             
         except Exception as e:
@@ -575,7 +604,7 @@ class General(commands.Cog):
         if not guild_id:
             return
         
-        api_url = os.getenv("API_URL", "http://localhost:8080")
+        api_url = os.getenv("API_URL", "https://api.swamphacks.com")
         session_cookie =  os.getenv("SESSION_COOKIE")
         event_id = os.getenv("EVENT_ID")
         

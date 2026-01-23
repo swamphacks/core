@@ -28,7 +28,9 @@ logging.basicConfig(
 )
 
 # Load environment variables
-load_dotenv()
+# Explicitly load from discord-bot directory
+env_path = pathlib.Path(__file__).parent / '.env'
+load_dotenv(env_path)
 token: Optional[str] = os.getenv('DISCORD_TOKEN')
 
 # Configure bot intents
