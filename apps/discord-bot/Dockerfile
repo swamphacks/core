@@ -1,19 +1,19 @@
-FROM python:3.12-slim
+# FROM python:3.12-slim
 
-RUN pip install uv
+# RUN pip install uv
 
-WORKDIR /app
+# WORKDIR /app
 
-COPY pyproject.toml .
-COPY uv.lock .
+# COPY pyproject.toml .
+# COPY uv.lock .
 
-# ENV PATH="/root/.local/bin:$PATH"
+# # ENV PATH="/root/.local/bin:$PATH"
 
-RUN uv sync --frozen --no-cache --all-extras
+# RUN uv sync --frozen --no-cache --all-extras
 
-COPY . .
+# COPY . .
 
-EXPOSE 3000
+# EXPOSE 3000
 
-CMD ["uv", "run", "main.py"]
-# CMD ["uv", "run", "api_server.py"]
+# CMD ["uv", "run", "main.py"]
+# # CMD ["uv", "run", "api_server.py"]
