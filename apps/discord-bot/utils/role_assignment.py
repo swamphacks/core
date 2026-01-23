@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import aiohttp
 from typing import List, Tuple, Optional
 
@@ -106,45 +107,73 @@ async def assign_role_via_webhook(
         return ("failed", str(e))
 
 
-async def assign_roles_to_attendees(webhook_url: str, attendees: List[Tuple[str, str, str, Optional[str]]], role_name: str, guild_id: str) -> Tuple[int, int, int, List[str]]:
-    """Assign roles to attendees via webhook
+async def assign_roles_to_attendees(webhook_url: str, attendees: List[Tuple[str, str, str, Optional[str]]], role_name: str, guild_id: str, chunk_size: int = 20, progress_callback=None, test_mode: bool = False) -> Tuple[int, int, int, List[str]]:
+    """Assign roles to attendees via webhook in chunks
     
     Args:
         webhook_url: URL of webhook to send requests to
         attendees: List of attendees to assign roles to
         role_name: Name of role to assign
         guild_id: Discord guild ID
+        chunk_size: Number of users to process at a time (default: 20)
+        progress_callback: Optional async function to call with progress updates (current, total)
+        test_mode: If True, stop on first error (default: False)
         
     Returns:
         Tuple of (newly_assigned: int, already_had: int, failed: int, errors: List[str])
     """
-    
     newly_assigned = 0
     already_had = 0
     failed = 0
     errors = []
     
+    total_attendees = len(attendees)
+    
     # Create a single session to reuse for all requests (better performance)
     async with aiohttp.ClientSession() as session:
-        for discord_id, user_id, name, email in attendees:
-            status, error_msg = await assign_role_via_webhook(webhook_url, discord_id, role_name, guild_id, session)  # Pass session
+        # Process attendees in chunks
+        for chunk_start in range(0, total_attendees, chunk_size):
+            chunk_end = min(chunk_start + chunk_size, total_attendees)
+            chunk = attendees[chunk_start:chunk_end]
             
-            if status == "newly_assigned":
-                newly_assigned += 1
-            elif status == "already_had":
-                already_had += 1
-            elif status == "failed":
-                failed += 1
-                error_detail = f"User {name} (Discord ID: {discord_id}, User ID: {user_id})"
-                if error_msg:
-                    error_detail += f": {error_msg}"
-                errors.append(error_detail.strip())
-            else:  # Handle "unknown" status
-                failed += 1
-                error_detail = f"User {name} (Discord ID: {discord_id}, User ID: {user_id}): Unknown status from webhook"
-                if error_msg:
-                    error_detail += f" - {error_msg}"
-                errors.append(error_detail.strip())
+            # Process this chunk
+            for discord_id, user_id, name, email in chunk:
+                status, error_msg = await assign_role_via_webhook(webhook_url, discord_id, role_name, guild_id, session)
+                
+                if status == "newly_assigned":
+                    newly_assigned += 1
+                elif status == "already_had":
+                    already_had += 1
+                elif status == "failed":
+                    failed += 1
+                    error_detail = f"User {name} (Discord ID: {discord_id}, User ID: {user_id})"
+                    if error_msg:
+                        error_detail += f": {error_msg}"
+                    errors.append(error_detail.strip())
+                    
+                    # In test mode, stop on first error
+                    if test_mode:
+                        logger.warning(f"Test mode: Stopping on first error - {error_detail}")
+                        return (newly_assigned, already_had, failed, errors)
+                else:  # Handle "unknown" status
+                    failed += 1
+                    error_detail = f"User {name} (Discord ID: {discord_id}, User ID: {user_id}): Unknown status from webhook"
+                    if error_msg:
+                        error_detail += f" - {error_msg}"
+                    errors.append(error_detail.strip())
+                    
+                    # In test mode, stop on first error
+                    if test_mode:
+                        logger.warning(f"Test mode: Stopping on first error - {error_detail}")
+                        return (newly_assigned, already_had, failed, errors)
+            
+            # Call progress callback if provided
+            if progress_callback:
+                await progress_callback(chunk_end, total_attendees)
+            
+            # Small delay between chunks to avoid rate limits (except after last chunk)
+            if chunk_end < total_attendees:
+                await asyncio.sleep(0.5)  # 500ms delay between chunks
     
     return (newly_assigned, already_had, failed, errors)
 
@@ -166,6 +195,8 @@ def format_assignment_summary(
         errors: List of error messages
         max_errors_displayed: Maximum number of errors to show
     """
+    DISCORD_MAX_LENGTH = 2000
+    
     message = f"**Role Assignment Complete**\n\n"
     message += f"**Summary:**\n"
     message += f"- Total attendees: {total_attendees}\n"
@@ -180,9 +211,33 @@ def format_assignment_summary(
     
     if errors:
         message += f"\n**Errors ({len(errors)}):**\n"
-        for error in errors[:max_errors_displayed]:
+        
+        # Calculate how many errors we can fit
+        base_length = len(message)
+        remaining_chars = DISCORD_MAX_LENGTH - base_length - 50  # Reserve 50 chars for "... and X more"
+        
+        errors_to_show = []
+        current_length = 0
+        
+        for i, error in enumerate(errors[:max_errors_displayed]):
+            error_line = f"- {error}\n"
+            if current_length + len(error_line) > remaining_chars:
+                break
+            errors_to_show.append(error)
+            current_length += len(error_line)
+        
+        for error in errors_to_show:
+            # Truncate individual error messages if they're too long
+            if len(error) > 150:
+                error = error[:147] + "..."
             message += f"- {error}\n"
-        if len(errors) > max_errors_displayed:
-            message += f"- ... and {len(errors) - max_errors_displayed} more errors\n"
+        
+        if len(errors) > len(errors_to_show):
+            remaining = len(errors) - len(errors_to_show)
+            message += f"- ... and {remaining} more errors\n"
+    
+    # Final safety check - truncate if still too long
+    if len(message) > DISCORD_MAX_LENGTH:
+        message = message[:DISCORD_MAX_LENGTH - 3] + "..."
     
     return message

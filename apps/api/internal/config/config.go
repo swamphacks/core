@@ -75,6 +75,8 @@ type Config struct {
 	CoreBuckets CoreBuckets      `envPrefix:"CORE_BUCKETS_"`
 	Smtp        SmtpConfig       `envPrefix:"SMTP_"`
 	AWS         AWSConfig        `envPrefix:"AWS_"`
+
+	MobileAuthKey string `env:"MOBILE_AUTH_KEY"`
 }
 
 func Load() *Config {

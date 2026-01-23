@@ -4,10 +4,9 @@ import discord
 import aiohttp
 import logging
 from typing import Literal, Optional
-from utils.checks import is_mod_slash
+from utils.checks import is_mod_slash, has_bot_full_access, requires_admin, has_bot_full_access_or_hacker, requires_admin_or_moderator
 import re
 from typing import Literal
-from utils.checks import has_bot_full_access
 from utils.mentor_functions import set_all_mentors_available
 from utils.role_assignment import (get_attendees_for_event, format_assignment_summary, assign_roles_to_attendees)
 import os
@@ -47,7 +46,7 @@ class General(commands.Cog):
     @app_commands.describe(
         amount="The amount of messages to delete"
     )
-    @has_bot_full_access()
+    @requires_admin_or_moderator()
     async def delete(
         self,
         interaction: discord.Interaction,
@@ -67,7 +66,7 @@ class General(commands.Cog):
         )
     
     @app_commands.command(name="delete_all_threads", description="Delete all threads in a specified channel")
-    @has_bot_full_access()
+    @requires_admin_or_moderator()
     async def delete_all_threads(self, interaction: discord.Interaction, channel: discord.TextChannel, delete_archived: bool = False) -> None:
         """Delete all threads in a specified channel
         
@@ -96,7 +95,7 @@ class General(commands.Cog):
         )
         
     @app_commands.command(name="delete_all_vcs", description="Delete all voice channels in a specified category")
-    @has_bot_full_access()
+    @requires_admin_or_moderator()
     async def delete_all_vcs(self, interaction: discord.Interaction, category: discord.CategoryChannel) -> None:
         """Delete all voice channels in a specified category
         
@@ -201,8 +200,8 @@ class General(commands.Cog):
                 ephemeral=True
             )
 
-    @has_bot_full_access()
     @app_commands.command(name="set_available_mentors", description="Set available mentors in the server")
+    @requires_admin_or_moderator()
     async def set_all_mentors_available(self, interaction: discord.Interaction) -> None:
         """
         Set all users in the server with acceptable mentor roles to "Available Mentor"
@@ -253,6 +252,7 @@ class General(commands.Cog):
         
     @app_commands.command(name="add_to_thread", description="Add a user to the support thread")
     @app_commands.describe(user="The user to add to the thread")
+    @has_bot_full_access()
     async def add_to_thread(self, interaction: discord.Interaction, user: discord.Member) -> None:
         """
         Add a specified user to a support thread
@@ -291,20 +291,69 @@ class General(commands.Cog):
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
             
     @app_commands.command(name="create_vc", description="Creates a voice channel for support")
-    @has_bot_full_access()
+    @has_bot_full_access_or_hacker()
     async def create_vc(self, interaction: discord.Interaction) -> None:
         """
         Create a voice channel for support, requires a --- SwampHacks XI (Support-VCs) --- category and a Mentor role
+        Can only be used in a thread, and only one VC per thread is allowed.
 
         Args:
             interaction: The interaction that triggered this command
         """
-        mentor_role = discord.utils.get(interaction.guild.roles, name="Mentor")
+        from utils.roles_config import RoleNames, get_role_id
+        from components.ticket_state import thread_vc_mapping
+        
+        # Check if command is being used in a thread
+        if not isinstance(interaction.channel, discord.Thread):
+            await interaction.response.send_message(
+                "❌ This command can only be used inside a support thread.",
+                ephemeral=True
+            )
+            return
+        
+        thread = interaction.channel
+        
+        # Check if thread already has a VC associated
+        if thread.id in thread_vc_mapping:
+            existing_vc_id = thread_vc_mapping[thread.id]
+            existing_vc = interaction.guild.get_channel(existing_vc_id)
+            if existing_vc:
+                await interaction.response.send_message(
+                    f"❌ This thread already has an associated voice channel: {existing_vc.mention}",
+                    ephemeral=True
+                )
+                return
+            else:
+                # VC was deleted, remove from mapping
+                del thread_vc_mapping[thread.id]
+        
+        # Extract thread number from thread name (e.g., "support-5" -> "5")
+        thread_number = None
+        try:
+            if "-" in thread.name:
+                thread_number = thread.name.split("-")[-1]
+                # Verify it's a number
+                int(thread_number)
+        except (ValueError, IndexError):
+            await interaction.response.send_message(
+                "❌ Could not determine thread number from thread name. Thread name should be in format 'support-<number>'.",
+                ephemeral=True
+            )
+            return
+        
+        mentor_role_name = RoleNames.MENTOR_XI
+        mentor_role_id = get_role_id(mentor_role_name)
+        
+        if mentor_role_id:
+            mentor_role = interaction.guild.get_role(int(mentor_role_id))
+        else:
+            mentor_role = discord.utils.get(interaction.guild.roles, name=mentor_role_name)
+        
         category = discord.utils.get(interaction.guild.categories, name="--- SwampHacks XI (Support-VCs) ---")
         vc_author = interaction.user
         if not mentor_role:
             await interaction.response.send_message(
-                "Error: Could not find the **Mentor** role. Please create it before using this command.",
+                f"Error: Could not find the **{mentor_role_name}** role. Please create it before using this command.",
                 ephemeral=True
             )
             return
@@ -315,12 +364,22 @@ class General(commands.Cog):
             )
             return
         
+        # Check if VC with this number already exists
+        # Use "thread-VC-{number}" format to avoid conflicts with directly created VCs
+        vc_name = f"thread-VC-{thread_number}"
+        existing_vc = discord.utils.get(category.voice_channels, name=vc_name)
+        if existing_vc:
+            await interaction.response.send_message(
+                f"❌ A voice channel with name {vc_name} already exists. Please delete it first or use a different thread.",
+                ephemeral=True
+            )
+            return
+        
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False, connect=False),
             mentor_role: discord.PermissionOverwrite(view_channel=True, connect=True),
             vc_author: discord.PermissionOverwrite(view_channel=True, connect=True),
         }
-        vc_name = get_next_support_vc_name(category)
         # Create the voice channel and get the channel object
         voice_channel = await interaction.guild.create_voice_channel(
             name=vc_name,
@@ -345,6 +404,9 @@ class General(commands.Cog):
             print("Voice channel does not have an associated text channel.")
             return
 
+        # Store the association between thread and VC
+        thread_vc_mapping[thread.id] = voice_channel.id
+        
         # ping the user who created the thread
         await interaction.response.send_message(
             f"Voice channel created: {voice_channel.mention}",
@@ -353,10 +415,10 @@ class General(commands.Cog):
 
     @app_commands.command(name="grant_vc_access", description="Grant a user access to a voice channel")
     @app_commands.describe(user="Grant a user access to a voice channel")
-    @has_bot_full_access()
+    @has_bot_full_access_or_hacker()
     async def grant_vc_access(self, interaction: discord.Interaction, user: discord.Member) -> None:
         """
-        Grant a user access to a voice channel, can only be used in a voice channel under the Support-VCs category
+        Grant a user access to a voice channel, can only be used in a voice channel under the --- SwampHacks XI (Support-VCs) --- category
         
         Args:
             interaction: The interaction that triggered this command
@@ -370,8 +432,8 @@ class General(commands.Cog):
             )
             return
         # next ensure the channel is in the support category specifically
-        if not interaction.channel.category or interaction.channel.category.name != "Support-VCs":
-            await interaction.response.send_message('This command can only be used in the "Support-VCs" category.', ephemeral=True)
+        if not interaction.channel.category or interaction.channel.category.name != "--- SwampHacks XI (Support-VCs) ---":
+            await interaction.response.send_message('This command can only be used in the "--- SwampHacks XI (Support-VCs) ---" category.', ephemeral=True)
             return
         
         # check if user already has access to the voice channel
@@ -458,10 +520,11 @@ class General(commands.Cog):
     )
     @app_commands.describe(
         event_id="UUID of event",
-        role="Discord role to assign to attendees"
+        role="Discord role to assign to attendees",
+        test_mode="Test mode: only process first 5 users and stop on first error (default: False)"
     )
-    @is_mod_slash()
-    async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, role: discord.Role) -> None:
+    @requires_admin_or_moderator()
+    async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, role: discord.Role, test_mode: bool = False) -> None:
         """Assign role to all attendees from API using webhook
         
         Args:
@@ -478,7 +541,8 @@ class General(commands.Cog):
                 await interaction.followup.send("Error: Could not determine guild.", ephemeral=True)
                 return
             
-            api_url = os.getenv("API_URL", "http://localhost:8080")
+            api_url = os.getenv("API_URL", "https://api.swamphacks.com")
+            
             session_cookie = os.getenv("SESSION_COOKIE")
             if not session_cookie:
                 await interaction.followup.send("Error: SESSION_COOKIE is not set.", ephemeral=True)
@@ -494,8 +558,35 @@ class General(commands.Cog):
                 await interaction.followup.send("Error: No attendees found for event.", ephemeral=True)
                 return
             
-            newly_assigned, already_had, failed, errors = await assign_roles_to_attendees(webhook_url, attendees, role.name, str(guild_id))
-            summary = format_assignment_summary(len(attendees), newly_assigned, already_had, failed, errors)
+            # Limit to 5 users in test mode
+            if test_mode:
+                attendees = attendees[:5]
+                await interaction.followup.send(f"🧪 **TEST MODE**: Processing first 5 attendees only. Will stop on first error.", ephemeral=True)
+            
+            total_attendees = len(attendees)
+            
+            # Send initial progress message
+            mode_text = "🧪 TEST MODE: " if test_mode else ""
+            await interaction.followup.send(f"{mode_text}🔄 Processing {total_attendees} attendees in chunks of 20...", ephemeral=True)
+            
+            # Progress callback to send updates
+            async def progress_update(current: int, total: int):
+                if current % 20 == 0 or current == total:  # Update every 20 or at the end
+                    await interaction.followup.send(f"⏳ Progress: {current}/{total} processed...", ephemeral=True)
+            
+            newly_assigned, already_had, failed, errors = await assign_roles_to_attendees(
+                webhook_url, 
+                attendees, 
+                role.name, 
+                str(guild_id),
+                chunk_size=20,
+                progress_callback=progress_update,
+                test_mode=test_mode
+            )
+            
+            summary = format_assignment_summary(total_attendees, newly_assigned, already_had, failed, errors)
+            if test_mode and errors:
+                summary += f"\n\n⚠️ **Test stopped early due to error.** Fix the issue before running full assignment."
             await interaction.followup.send(summary, ephemeral=True)
             
         except Exception as e:
@@ -503,7 +594,7 @@ class General(commands.Cog):
             
     @app_commands.command(name="remove_role_from_all", description="Remove a specific role from all members in the server")
     @app_commands.describe(role="The role to remove from all members")
-    @is_mod_slash()
+    @requires_admin_or_moderator()
     async def remove_role_from_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
         """Remove a specific role from all members in the server
         """
@@ -575,7 +666,7 @@ class General(commands.Cog):
         if not guild_id:
             return
         
-        api_url = os.getenv("API_URL", "http://localhost:8080")
+        api_url = os.getenv("API_URL", "https://api.swamphacks.com")
         session_cookie =  os.getenv("SESSION_COOKIE")
         event_id = os.getenv("EVENT_ID")
         

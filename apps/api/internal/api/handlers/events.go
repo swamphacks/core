@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -865,4 +866,96 @@ func (h *EventHandler) GetUserByRFID(w http.ResponseWriter, r *http.Request) {
 
 	// Return just the user ID as a simple JSON object
 	res.Send(w, http.StatusOK, map[string]string{"user_id": user.ID.String()})
+}
+
+// Get User by RFID
+//
+//	@Summary		Retrieves a user's ID by their RFID
+//	@Description	Looks up a user's ID by their RFID code for a specific event. Returns the user ID which can be used for other operations.
+//	@Tags			Event
+//	@Produce		json
+//	@Param			eventId	path		string	true	"Event ID"	Format(uuid)
+//	@Param			rfid	path		string	true	"RFID code (10 digits)"
+//	@Success		200		{object}	map[string]string	"OK - Returns user ID"
+//	@Failure		400		{object}	response.ErrorResponse	"Bad request/Malformed request."
+//	@Failure		404		{object}	response.ErrorResponse	"User not found with the provided RFID"
+//	@Failure		500		{object}	response.ErrorResponse	"Server Error: error getting user by RFID"
+//	@Router			/events/{eventId}/users/by-rfid/{rfid} [get]
+func (h *EventHandler) GetCheckedInStatusByIds(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+
+	userId, err := web.PathParamToUUID(r, "userId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
+		return
+	}
+	result, err := h.eventService.GetCheckedInStatusByIds(r.Context(), userId, eventId)
+	if err != nil {
+		res.SendError(w, http.StatusNotFound, res.NewError("error", "Something went wrong internally."))
+		return
+	}
+	// Return just the checked in status as a simple JSON object
+	res.Send(w, http.StatusOK, map[string]string{
+		"checked_in_status": strconv.FormatBool(result),
+	})
+}
+
+type UpdateRFID struct {
+	RFID string `json:"rfid"`
+}
+
+// UpdateUserRFID
+//
+//	@Summary		Updates a user's RFID tag
+//	@Description	Associates a new RFID string with a specific user for the given event. This overwrites any existing RFID association.
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			eventId	path		string			true	"Event ID"	Format(uuid)
+//	@Param			userId	path		string			true	"User ID"	Format(uuid)
+//	@Param			body	body		UpdateRFID		true	"New RFID data"
+//	@Success		204		"No Content - RFID updated successfully"
+//	@Failure		400		{object}	response.ErrorResponse	"Invalid request body or UUID format"
+//	@Failure		404		{object}	response.ErrorResponse	"User or Event not found"
+//	@Failure		500		{object}	response.ErrorResponse	"Internal server error"
+//	@Router			/events/{eventId}/users/{userId}/update-rfid [post]
+func (h *EventHandler) UpdateUserRFID(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_event_id", "The event ID is missing from the URL!"))
+		return
+	}
+
+	userId, err := web.PathParamToUUID(r, "userId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("missing_user_id", "The user ID is missing from the URL!"))
+		return
+	}
+
+	var payload UpdateRFID
+	err = json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("body_malformed", "Invalid body"))
+		return
+	}
+	defer r.Body.Close()
+
+	if payload.RFID == "" {
+		res.SendError(w, http.StatusBadRequest, res.NewError("body_malformed", "Invalid body"))
+		return
+	}
+
+	tempRole := sqlc.EventRoleTypeAttendee
+
+	err = h.eventService.UpdateEventRoleByIds(r.Context(), userId, eventId, &tempRole, nil, &payload.RFID)
+	if err != nil {
+		res.SendError(w, http.StatusNotFound, res.NewError("error", "Something went wrong internally."))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
