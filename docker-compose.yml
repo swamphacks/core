@@ -55,11 +55,8 @@ services:
     build:
       context: ./apps/discord-bot
       dockerfile: Dockerfile
-      target: dev
-    # ports:
-      # - "5173:5173"
-    environment:
-      - NODE_ENV=development
+    ports:
+      - "3000:3000"
 
   asynqmon:
     image: hibiken/asynqmon:latest
