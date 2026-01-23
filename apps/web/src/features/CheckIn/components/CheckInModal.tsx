@@ -2,13 +2,14 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Modal } from "@/components/ui/Modal";
 import { CheckInBadge } from "./CheckInBadge";
 import { Button } from "@/components/ui/Button";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useUserEventInfo } from "../hooks/useUserEventInfo";
 import RoleBadge from "@/features/EventAdmin/components/RoleBadge";
 import TablerCheck from "~icons/tabler/check";
 import TablerX from "~icons/tabler/x";
 import { toast } from "react-toastify";
 import { api } from "@/lib/ky";
+import TablerRefresh from "~icons/tabler/refresh";
 
 interface Props {
   isOpen: boolean;
@@ -32,9 +33,12 @@ export default function CheckInModal({
   eventId,
 }: Props) {
   const userInfo = useUserEventInfo(eventId, userId);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [rfid, setRfid] = useState<string | null>(null);
 
   const isLoading = !userInfo;
+
+  const isRfidFocused = inputRef.current === document.activeElement;
 
   const isValidForCheckIn =
     userInfo.data &&
@@ -42,6 +46,13 @@ export default function CheckInModal({
     !userInfo.data.checked_in_at &&
     rfid &&
     rfid.trim() !== "";
+
+  const handleRefresh = () => {
+    setRfid("");
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   const onCheckIn = async () => {
     // validate all conditions are met
@@ -174,13 +185,26 @@ export default function CheckInModal({
               </p>
             )}
           </div>
+
           <input
+            ref={inputRef}
             type="text"
             autoFocus
             onChange={(e) => setRfid(e.target.value)}
             inputMode="none"
-            className="opacity-0 absolute h-0 w-0 overflow-hidden"
+            className="sr-only"
           />
+
+          {/* Show reset if rfid is not null/empty OR if the input is not focused */}
+          {(!isRfidFocused || rfid || rfid?.trim() === "") && (
+            <Button
+              onPress={handleRefresh}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
+            >
+              <TablerRefresh className="w-4 h-4" />
+              Refresh Scanner
+            </Button>
+          )}
         </div>
       )}
     </Modal>
