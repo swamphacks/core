@@ -949,7 +949,9 @@ func (h *EventHandler) UpdateUserRFID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.eventService.UpdateEventRoleByIds(r.Context(), userId, eventId, nil, nil, &payload.RFID)
+	tempRole := sqlc.EventRoleTypeAttendee
+
+	err = h.eventService.UpdateEventRoleByIds(r.Context(), userId, eventId, &tempRole, nil, &payload.RFID)
 	if err != nil {
 		res.SendError(w, http.StatusNotFound, res.NewError("error", "Something went wrong internally."))
 		return
