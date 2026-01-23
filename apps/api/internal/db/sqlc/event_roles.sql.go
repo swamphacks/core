@@ -42,6 +42,19 @@ func (q *Queries) GetAttendeeCountByEventId(ctx context.Context, eventID uuid.UU
 	return count, err
 }
 
+const getCheckedInStatusByUserId = `-- name: GetCheckedInStatusByUserId :one
+SELECT (er.checked_in_at IS NOT NULL) AS is_checked_in
+FROM event_roles AS er
+WHERE er.user_id = $1
+`
+
+func (q *Queries) GetCheckedInStatusByUserId(ctx context.Context, userID uuid.UUID) (interface{}, error) {
+	row := q.db.QueryRow(ctx, getCheckedInStatusByUserId, userID)
+	var is_checked_in interface{}
+	err := row.Scan(&is_checked_in)
+	return is_checked_in, err
+}
+
 const getEventAttendeesWithDiscord = `-- name: GetEventAttendeesWithDiscord :many
 SELECT 
     a.account_id as discord_id,

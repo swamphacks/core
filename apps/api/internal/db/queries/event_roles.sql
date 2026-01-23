@@ -66,3 +66,8 @@ FROM auth.users u
 JOIN event_roles er ON u.id = er.user_id
 WHERE er.event_id = $1
   AND er.rfid = $2;
+
+-- name: GetCheckedInStatusByUserId :one
+SELECT (er.checked_in_at IS NOT NULL) AS is_checked_in
+FROM event_roles AS er
+WHERE er.user_id = $1;

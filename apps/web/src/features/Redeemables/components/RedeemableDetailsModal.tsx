@@ -26,6 +26,7 @@ export interface RedeemableDetailsModalProps {
   maxUserAmount: number;
   totalRedeemed: number;
   eventId: string;
+  eventRole: string | undefined;
 }
 
 type ModalMode = "details" | "qr" | "edit";
@@ -37,6 +38,7 @@ export function RedeemableDetailsModal({
   maxUserAmount,
   totalRedeemed,
   eventId,
+  eventRole,
 }: RedeemableDetailsModalProps) {
   const state = useContext(OverlayTriggerStateContext)!;
   const remaining = totalStock - totalRedeemed;
@@ -335,12 +337,14 @@ export function RedeemableDetailsModal({
             >
               Back to Details
             </button>
-            <DialogTrigger>
-              <Button variant="danger" className="aspect-square p-2">
-                <TablerTrash className="h-4 w-4" />
-              </Button>
-              <DeleteRedeemableModal eventId={eventId} redeemableId={id} />
-            </DialogTrigger>
+            {eventRole === "admin" && (
+              <DialogTrigger>
+                <Button variant="danger" className="aspect-square p-2">
+                  <TablerTrash className="h-4 w-4" />
+                </Button>
+                <DeleteRedeemableModal eventId={eventId} redeemableId={id} />
+              </DialogTrigger>
+            )}
           </div>
 
           <div className="space-y-5">

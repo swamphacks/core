@@ -18,12 +18,14 @@ export default function AttendeeOverview({ userId, eventId }: Props) {
   const bg = styles.getPropertyValue("--surface").trim();
   const fg = styles.getPropertyValue("--text-main").trim();
 
+  // Should be a feature flag
+  const allowWithdrawal = false;
+
   return (
     <main>
       <Heading className="text-2xl lg:text-3xl font-semibold mb-6">
         Overview
       </Heading>
-
       <Card className="p-5 w-full md:w-64">
         <QRCode
           bgColor={bg}
@@ -32,16 +34,17 @@ export default function AttendeeOverview({ userId, eventId }: Props) {
           value={identificationIntentString}
         />
       </Card>
-
-      <div>
-        <p className="my-5">Can't make it to the event?</p>
-        <DialogTrigger>
-          <Button variant="danger">{"Withdraw Attendance"}</Button>
-          <EventAttendanceWithdrawalModal
-            eventId={eventId}
-          ></EventAttendanceWithdrawalModal>
-        </DialogTrigger>
-      </div>
+      {allowWithdrawal && (
+        <div>
+          <p className="my-5">Can't make it to the event?</p>
+          <DialogTrigger>
+            <Button variant="danger">{"Withdraw Attendance"}</Button>
+            <EventAttendanceWithdrawalModal
+              eventId={eventId}
+            ></EventAttendanceWithdrawalModal>
+          </DialogTrigger>
+        </div>
+      )}
     </main>
   );
 }

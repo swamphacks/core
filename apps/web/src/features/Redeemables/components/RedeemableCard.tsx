@@ -9,6 +9,7 @@ export interface RedeemableCardProps {
   maxUserAmount: number;
   totalRedeemed: number;
   eventId: string;
+  eventRole: string | undefined;
 }
 
 export function RedeemableCard({
@@ -18,6 +19,7 @@ export function RedeemableCard({
   maxUserAmount,
   totalRedeemed,
   eventId,
+  eventRole,
 }: RedeemableCardProps) {
   const remaining = totalStock - (totalRedeemed as number);
   const percentageRemaining =
@@ -63,6 +65,7 @@ export function RedeemableCard({
                 maxUserAmount={maxUserAmount}
                 totalRedeemed={totalRedeemed as number}
                 eventId={eventId}
+                eventRole={eventRole}
               />
             </DialogTrigger>
           </div>
