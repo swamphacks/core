@@ -87,6 +87,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 
 		r.Get("/events/{eventId}/redeemables", api.Handlers.Redeemables.GetRedeemables)
 		r.Post("/redeemables/{redeemableId}/users/{userId}", api.Handlers.Redeemables.RedeemRedeemable)
+		r.Post("/events/{eventId}/users/{userId}/update-rfid", api.Handlers.Event.UpdateUserRFID)
 	})
 
 	// Health check
