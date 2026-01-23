@@ -1,19 +1,19 @@
 FROM python:3.12-slim
 
-# Install prerequisites for uv
-RUN apt-get update && apt-get install -y curl git
+RUN pip install uv
 
-# Install uv by Astral
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Set working directory
 WORKDIR /app
 
-# Copy bot files
+COPY pyproject.toml .
+COPY uv.lock .
+
+# ENV PATH="/root/.local/bin:$PATH"
+
+RUN uv sync --frozen --no-cache --all-extras
+
 COPY . .
 
-# Environment variables are handled by docker-compose
-ENV PATH="/root/.local/bin:$PATH"
+EXPOSE 3000
 
-# Default command to run bot
 CMD ["uv", "run", "main.py"]
+# CMD ["uv", "run", "api_server.py"]

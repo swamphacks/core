@@ -164,6 +164,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventStaff).Get("/users/{userId}", api.Handlers.Event.GetUserForEvent)
 			// Get user ID by RFID
 			r.With(ensureEventStaff).Get("/users/by-rfid/{rfid}", api.Handlers.Event.GetUserByRFID)
+			// Is the user checked in
+			r.With(ensureEventStaff).Get("/users/{userId}/checked-in-status", api.Handlers.Event.GetCheckedInStatusByIds)
 
 			// Admin-only
 			r.With(ensureEventAdmin).Post("/queue-confirmation-email", api.Handlers.Email.QueueConfirmationEmail)
@@ -237,7 +239,7 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 				// Update and delete specific redeemable
 				r.Route("/{redeemableId}", func(r chi.Router) {
 					r.Patch("/", api.Handlers.Redeemables.UpdateRedeemable)
-					r.Delete("/", api.Handlers.Redeemables.DeleteRedeemable)
+					r.With(ensureEventAdmin).Delete("/", api.Handlers.Redeemables.DeleteRedeemable)
 
 					r.Route("/users/{userId}", func(r chi.Router) {
 						r.Post("/", api.Handlers.Redeemables.RedeemRedeemable)

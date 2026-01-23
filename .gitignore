@@ -41,3 +41,5 @@ venv
 
 .env.dev.discord
 uv.lock
+
+uv.lock

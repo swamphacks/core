@@ -95,3 +95,18 @@ export function useUpdateRedeemable(eventId: string, redeemableId: string) {
     },
   });
 }
+
+interface CheckInStatusResponse {
+  checked_in_status: string;
+}
+
+export function useGetCheckedInStatus(eventId: string) {
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await api
+        .get(`events/${eventId}/users/${userId}/checked-in-status`)
+        .json<CheckInStatusResponse>();
+      return response;
+    },
+  });
+}
