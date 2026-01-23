@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -67,6 +68,34 @@ func NewAuthMiddleware(db *db.DB, logger zerolog.Logger, cfg *config.Config) *Au
 		logger: logger.With().Str("middleware", "AuthMiddleware").Str("component", "api").Logger(),
 		cfg:    cfg,
 	}
+}
+
+func (m *AuthMiddleware) RequireMobileAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		m.logger.Trace().Msg("Incoming mobile request")
+
+		auth := r.Header.Get("Authorization")
+		if auth == "" {
+			m.logger.Warn().Msg("Authorization header is empty.")
+			response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized"))
+			return
+		}
+
+		parts := strings.SplitN(auth, " ", 2)
+		if len(parts) != 2 {
+			m.logger.Warn().Msg("Authorization header is malformed > 2 parts")
+			response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized"))
+			return
+		}
+
+		if parts[0] != "Key" || parts[1] != m.cfg.MobileAuthKey {
+			m.logger.Warn().Msg("Authorization header is not a valid value")
+			response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized"))
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
