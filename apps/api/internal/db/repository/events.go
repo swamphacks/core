@@ -220,6 +220,7 @@ func (r *EventRepository) GetCheckedInStatusByUserIdAndEventId(ctx context.Conte
 	}
 
 	return result, nil
+}
 
 func (r *EventRepository) GetAttendeeUserIdsByEventId(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
 	return r.db.Query.GetAttendeeUserIdsByEventId(ctx, eventID)

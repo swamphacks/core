@@ -51,13 +51,6 @@ services:
     depends_on:
       - api
 
-  discord:
-    build:
-      context: ./apps/discord-bot
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-
   asynqmon:
     image: hibiken/asynqmon:latest
     platform: linux/amd64
