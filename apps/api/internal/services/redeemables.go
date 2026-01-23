@@ -60,6 +60,10 @@ func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID 
 }
 
 func (s *RedeemablesService) RedeemRedeemable(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID) error {
+	// Need to do a check to see if the user is checked in
+	// Probably need event service
+
+	// CREATE NEW SQL function for getting checked in status
 	_, err := s.redeemablesRepo.RedeemRedeemable(ctx, redeemableID, userID)
 
 	if err != nil {

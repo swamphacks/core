@@ -13,6 +13,7 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { eventId } = Route.useParams();
+  const { eventRole } = Route.useRouteContext();
   const { data: redeemables, isLoading, isError } = useRedeemables(eventId);
 
   if (isLoading) {
@@ -69,6 +70,7 @@ function RouteComponent() {
                   : redeemable.total_redeemed
               }
               eventId={eventId}
+              eventRole={eventRole}
             />
           ))}
         </div>

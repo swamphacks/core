@@ -71,3 +71,12 @@ FROM auth.users u
 JOIN event_roles er ON u.id = er.user_id
 WHERE er.event_id = $1
   AND er.rfid = $2;
+
+-- name: GetCheckedInStatusByIds :one
+SELECT EXISTS (
+    SELECT 1 
+    FROM event_roles 
+    WHERE user_id = $1 
+      AND event_id = $2 
+      AND checked_in_at IS NOT NULL
+)::bool;
