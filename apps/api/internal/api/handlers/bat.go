@@ -197,3 +197,29 @@ func (h *BatHandler) QueueShutdownWaitlistSchedulerTask(w http.ResponseWriter, r
 
 	res.Send(w, http.StatusOK, nil)
 }
+
+//	 Send welcome emails
+//
+//		@Summary		Sends welcome emails to attendees
+//		@Description
+//		@Tags
+//
+//		@Param			eventId	path	string	true	"ID of the event"
+//		@Success		200		"Welcome emails began to queue successfully"
+//		@Failure		400		{object}	res.ErrorResponse	"Bad request: invalid event ID"
+//		@Failure		500		{object}	res.ErrorResponse	"Server error: failed to begin queuing welcome emails"
+//		@Router			/events/{eventId}/send-welcome-emails [post]
+func (h *BatHandler) SendWelcomeEmails(w http.ResponseWriter, r *http.Request) {
+	eventId, err := web.PathParamToUUID(r, "eventId")
+	if err != nil {
+		res.SendError(w, http.StatusBadRequest, res.NewError("invalid_event_id", "The event ID is not valid."))
+		return
+	}
+
+	err = h.BatService.SendWelcomeEmailToAttendees(r.Context(), eventId)
+	if err != nil {
+		res.SendError(w, http.StatusInternalServerError, res.NewError("internal_err", "Failed to send welcome emails."))
+	}
+
+	res.Send(w, http.StatusCreated, nil)
+}

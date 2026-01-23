@@ -62,6 +62,30 @@ func (q *Queries) GetCheckedInStatusByIds(ctx context.Context, arg GetCheckedInS
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err
+const getAttendeeUserIdsByEventId = `-- name: GetAttendeeUserIdsByEventId :many
+SELECT er.user_id FROM event_roles AS er
+WHERE er.event_id = $1::uuid
+  AND er.role = 'attendee'
+`
+
+func (q *Queries) GetAttendeeUserIdsByEventId(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, getAttendeeUserIdsByEventId, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getEventAttendeesWithDiscord = `-- name: GetEventAttendeesWithDiscord :many

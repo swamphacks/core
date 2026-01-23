@@ -48,9 +48,11 @@ type AWSConfig struct {
 
 type CoreBuckets struct {
 	Avatars            string `env:"USER_AVATARS" envDefault:"core-user-avatars-dev"`
+	QRCodes            string `env:"USER_QRCODES" envDefault:"core-user-qrcodes-dev"`
 	ApplicationResumes string `env:"APPLICATION_RESUMES" envDefault:"core-application-resumes-dev"`
 	EventAssets        string `env:"EVENT_ASSETS" envDefault:"core-event-assets-dev"`
 	AvatarsBaseUrl     string `env:"USER_AVATARS_BASE_URL"`
+	QRCodesBaseUrl     string `env:"USER_QRCODES_BASE_URL"`
 	EventAssetsBaseUrl string `env:"EVENT_ASSETS_BASE_URL"`
 }
 
