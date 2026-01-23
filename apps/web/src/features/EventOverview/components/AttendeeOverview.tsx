@@ -53,7 +53,7 @@ export default function AttendeeOverview({ userId, eventId }: Props) {
                     Personal QR Code
                   </p>
                   <p className="font-mono text-[10px] text-slate-500 dark:text-slate-400 mt-1 uppercase">
-                    ID: {userId.slice(0, 12)}
+                    ID: {userId}
                   </p>
                 </div>
               </div>
