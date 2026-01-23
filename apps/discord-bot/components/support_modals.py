@@ -54,16 +54,16 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         reports_channel = discord.utils.get(interaction.guild.channels, name="reports")
         support_channel = discord.utils.get(interaction.guild.channels, name="support")
         thread_author = interaction.user
-        mod_role_name = RoleNames.MODERATOR
-        mod_role_id = get_role_id(mod_role_name)
+        mentor_role_name = RoleNames.MENTOR_XI
+        mentor_role_id = get_role_id(mentor_role_name)
         
-        if mod_role_id:
-            mod_role = interaction.guild.get_role(int(mod_role_id))
+        if mentor_role_id:
+            mentor_role = interaction.guild.get_role(int(mentor_role_id))
         else:
-            mod_role = discord.utils.get(interaction.guild.roles, name=mod_role_name)
+            mentor_role = discord.utils.get(interaction.guild.roles, name=mentor_role_name)
         
-        if not mod_role:
-            await interaction.response.send_message(f"Error: Could not find the **{mod_role_name}** role. Please create it before using this command.", ephemeral=True)
+        if not mentor_role:
+            await interaction.response.send_message(f"Error: Could not find the **{mentor_role_name}** role. Please create it before using this command.", ephemeral=True)
             return
         
         # check if the channels exist
@@ -109,8 +109,8 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         await thread.add_user(thread_author)
         
         
-        close_button = CloseThreadButton(thread, self.description_input)
-        close_button_view = View()
+        close_button = CloseThreadButton(thread, self.description_input, thread_author=thread_author)
+        close_button_view = View(timeout=None)
         close_button_view.add_item(close_button)
         
         # send initial message as embed in thread with inquiry details
@@ -120,7 +120,7 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
             color=discord.Color.green(),
         )
         await thread.send(content=f"{thread_author.mention}")
-        await thread.send(embed=thread_embed)
+        await thread.send(embed=thread_embed, view=close_button_view)
         
         # create embed for reports channel
         reports_embed = discord.Embed(
@@ -130,9 +130,9 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         )
         reports_embed.add_field(name="Opened by", value=f"{thread_author.mention}\n", inline=True)
                 
-        # soft ping staff and send the embed to the reports channel
+        # soft ping mentor role and send the embed to the reports channel
         await reports_channel.send(
-            content=f"||{mod_role.mention}||",
+            content=f"||{mentor_role.mention}||",
             embed=reports_embed,
             view=SupportThreadButtons(thread, self.description_input),
             allowed_mentions=discord.AllowedMentions(roles=True)
@@ -186,19 +186,19 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         
         global last_pinged_mentor_index
         reports_channel = discord.utils.get(interaction.guild.channels, name="reports")
-        mod_role_name = RoleNames.MODERATOR
-        mod_role_id = get_role_id(mod_role_name)
+        mentor_role_name = RoleNames.MENTOR_XI
+        mentor_role_id = get_role_id(mentor_role_name)
         
-        if mod_role_id:
-            mod_role = interaction.guild.get_role(int(mod_role_id))
+        if mentor_role_id:
+            mentor_role = interaction.guild.get_role(int(mentor_role_id))
         else:
-            mod_role = discord.utils.get(interaction.guild.roles, name=mod_role_name)
+            mentor_role = discord.utils.get(interaction.guild.roles, name=mentor_role_name)
         
         category = discord.utils.get(interaction.guild.categories, name="--- SwampHacks XI (Support-VCs) ---")
         vc_author = interaction.user
         
-        if not mod_role:
-            await interaction.response.send_message(f"Error: Could not find the **{mod_role_name}** role. Please create it before using this command.", ephemeral=True)
+        if not mentor_role:
+            await interaction.response.send_message(f"Error: Could not find the **{mentor_role_name}** role. Please create it before using this command.", ephemeral=True)
             return
 
         if not reports_channel:
@@ -218,10 +218,10 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
             shortened_description = description[:200] + "..."
         
         
-        # give permissions to the moderator role and the user who clicked the button
+        # give permissions to the mentor role and the user who clicked the button
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False, connect=False),
-            mod_role: discord.PermissionOverwrite(view_channel=True, connect=True),
+            mentor_role: discord.PermissionOverwrite(view_channel=True, connect=True),
             vc_author: discord.PermissionOverwrite(view_channel=True, connect=True),
         }
         
@@ -281,7 +281,7 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         reports_embed.add_field(name="Opened by", value=f"{vc_author.mention}\n", inline=True)
 
         await reports_channel.send(
-            content=f"||{mod_role.mention}||",
+            content=f"||{mentor_role.mention}||",
             embed=reports_embed,
             view=SupportVCButtons(voice_channel, self.description_input),
             allowed_mentions=discord.AllowedMentions(roles=True)

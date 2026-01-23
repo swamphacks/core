@@ -18,10 +18,10 @@ To add/remove acceptable roles:
 from typing import Optional
 
 # Roles that are allowed to use all bot commands
-ACCEPTABLE_ROLES: list[str] = ["Moderator", "Mentor", "Bot", "Staff (XI), Admin,"]
+ACCEPTABLE_ROLES: list[str] = ["Moderator", "Mentor (XI)", "Bot", "Staff (XI), Admin,"]
 
 # Roles that can be set as available mentors (can be different from ACCEPTABLE_ROLES)
-ACCEPTABLE_MENTOR_ROLES: list[str] = ["Mentor"]
+ACCEPTABLE_MENTOR_ROLES: list[str] = ["Mentor (XI)"]
 
 # Optional: Map role names to role IDs for faster lookups
 # If a role ID is None fallback to search by name
@@ -29,6 +29,7 @@ ACCEPTABLE_MENTOR_ROLES: list[str] = ["Mentor"]
 ROLE_IDS: dict[str, Optional[str]] = {
     "Moderator": None,
     "Mentor": None,
+    "Mentor (XI)": None,
     "Available Mentor": None,
     "Busy Mentor": None,
 }
@@ -38,6 +39,8 @@ class RoleNames:
     """Centralized role name constants."""
     MODERATOR = "Moderator"
     MENTOR = "Mentor"
+    MENTOR_XI = "Mentor (XI)"
+    ADMIN = "Admin"
     AVAILABLE_MENTOR = "Available Mentor"
     BUSY_MENTOR = "Busy Mentor"
 

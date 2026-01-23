@@ -4,10 +4,9 @@ import discord
 import aiohttp
 import logging
 from typing import Literal, Optional
-from utils.checks import is_mod_slash
+from utils.checks import is_mod_slash, has_bot_full_access, requires_admin
 import re
 from typing import Literal
-from utils.checks import has_bot_full_access
 from utils.mentor_functions import set_all_mentors_available
 from utils.role_assignment import (get_attendees_for_event, format_assignment_summary, assign_roles_to_attendees)
 import os
@@ -68,6 +67,7 @@ class General(commands.Cog):
     
     @app_commands.command(name="delete_all_threads", description="Delete all threads in a specified channel")
     @has_bot_full_access()
+    @requires_admin()
     async def delete_all_threads(self, interaction: discord.Interaction, channel: discord.TextChannel, delete_archived: bool = False) -> None:
         """Delete all threads in a specified channel
         
@@ -97,6 +97,7 @@ class General(commands.Cog):
         
     @app_commands.command(name="delete_all_vcs", description="Delete all voice channels in a specified category")
     @has_bot_full_access()
+    @requires_admin()
     async def delete_all_vcs(self, interaction: discord.Interaction, category: discord.CategoryChannel) -> None:
         """Delete all voice channels in a specified category
         
@@ -295,16 +296,65 @@ class General(commands.Cog):
     async def create_vc(self, interaction: discord.Interaction) -> None:
         """
         Create a voice channel for support, requires a --- SwampHacks XI (Support-VCs) --- category and a Mentor role
+        Can only be used in a thread, and only one VC per thread is allowed.
 
         Args:
             interaction: The interaction that triggered this command
         """
-        mentor_role = discord.utils.get(interaction.guild.roles, name="Mentor")
+        from utils.roles_config import RoleNames, get_role_id
+        from components.ticket_state import thread_vc_mapping
+        
+        # Check if command is being used in a thread
+        if not isinstance(interaction.channel, discord.Thread):
+            await interaction.response.send_message(
+                "❌ This command can only be used inside a support thread.",
+                ephemeral=True
+            )
+            return
+        
+        thread = interaction.channel
+        
+        # Check if thread already has a VC associated
+        if thread.id in thread_vc_mapping:
+            existing_vc_id = thread_vc_mapping[thread.id]
+            existing_vc = interaction.guild.get_channel(existing_vc_id)
+            if existing_vc:
+                await interaction.response.send_message(
+                    f"❌ This thread already has an associated voice channel: {existing_vc.mention}",
+                    ephemeral=True
+                )
+                return
+            else:
+                # VC was deleted, remove from mapping
+                del thread_vc_mapping[thread.id]
+        
+        # Extract thread number from thread name (e.g., "support-5" -> "5")
+        thread_number = None
+        try:
+            if "-" in thread.name:
+                thread_number = thread.name.split("-")[-1]
+                # Verify it's a number
+                int(thread_number)
+        except (ValueError, IndexError):
+            await interaction.response.send_message(
+                "❌ Could not determine thread number from thread name. Thread name should be in format 'support-<number>'.",
+                ephemeral=True
+            )
+            return
+        
+        mentor_role_name = RoleNames.MENTOR_XI
+        mentor_role_id = get_role_id(mentor_role_name)
+        
+        if mentor_role_id:
+            mentor_role = interaction.guild.get_role(int(mentor_role_id))
+        else:
+            mentor_role = discord.utils.get(interaction.guild.roles, name=mentor_role_name)
+        
         category = discord.utils.get(interaction.guild.categories, name="--- SwampHacks XI (Support-VCs) ---")
         vc_author = interaction.user
         if not mentor_role:
             await interaction.response.send_message(
-                "Error: Could not find the **Mentor** role. Please create it before using this command.",
+                f"Error: Could not find the **{mentor_role_name}** role. Please create it before using this command.",
                 ephemeral=True
             )
             return
@@ -315,12 +365,21 @@ class General(commands.Cog):
             )
             return
         
+        # Check if VC with this number already exists
+        vc_name = f"VC-{thread_number}"
+        existing_vc = discord.utils.get(category.voice_channels, name=vc_name)
+        if existing_vc:
+            await interaction.response.send_message(
+                f"❌ A voice channel with name {vc_name} already exists. Please delete it first or use a different thread.",
+                ephemeral=True
+            )
+            return
+        
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False, connect=False),
             mentor_role: discord.PermissionOverwrite(view_channel=True, connect=True),
             vc_author: discord.PermissionOverwrite(view_channel=True, connect=True),
         }
-        vc_name = get_next_support_vc_name(category)
         # Create the voice channel and get the channel object
         voice_channel = await interaction.guild.create_voice_channel(
             name=vc_name,
@@ -345,6 +404,9 @@ class General(commands.Cog):
             print("Voice channel does not have an associated text channel.")
             return
 
+        # Store the association between thread and VC
+        thread_vc_mapping[thread.id] = voice_channel.id
+        
         # ping the user who created the thread
         await interaction.response.send_message(
             f"Voice channel created: {voice_channel.mention}",
