@@ -32,6 +32,7 @@ ROLE_IDS: dict[str, Optional[str]] = {
     "Mentor (XI)": None,
     "Available Mentor": None,
     "Busy Mentor": None,
+    "Hacker (XI)": None,
 }
 
 # Role names used throughout the bot
@@ -43,6 +44,7 @@ class RoleNames:
     ADMIN = "Admin"
     AVAILABLE_MENTOR = "Available Mentor"
     BUSY_MENTOR = "Busy Mentor"
+    HACKER_XI = "Hacker (XI)"
 
 
 def get_role_id(role_name: str) -> Optional[str]:

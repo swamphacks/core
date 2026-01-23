@@ -4,7 +4,7 @@ import discord
 import aiohttp
 import logging
 from typing import Literal, Optional
-from utils.checks import is_mod_slash, has_bot_full_access, requires_admin
+from utils.checks import is_mod_slash, has_bot_full_access, requires_admin, has_bot_full_access_or_hacker, requires_admin_or_moderator
 import re
 from typing import Literal
 from utils.mentor_functions import set_all_mentors_available
@@ -46,7 +46,7 @@ class General(commands.Cog):
     @app_commands.describe(
         amount="The amount of messages to delete"
     )
-    @has_bot_full_access()
+    @requires_admin_or_moderator()
     async def delete(
         self,
         interaction: discord.Interaction,
@@ -66,8 +66,7 @@ class General(commands.Cog):
         )
     
     @app_commands.command(name="delete_all_threads", description="Delete all threads in a specified channel")
-    @has_bot_full_access()
-    @requires_admin()
+    @requires_admin_or_moderator()
     async def delete_all_threads(self, interaction: discord.Interaction, channel: discord.TextChannel, delete_archived: bool = False) -> None:
         """Delete all threads in a specified channel
         
@@ -96,8 +95,7 @@ class General(commands.Cog):
         )
         
     @app_commands.command(name="delete_all_vcs", description="Delete all voice channels in a specified category")
-    @has_bot_full_access()
-    @requires_admin()
+    @requires_admin_or_moderator()
     async def delete_all_vcs(self, interaction: discord.Interaction, category: discord.CategoryChannel) -> None:
         """Delete all voice channels in a specified category
         
@@ -202,8 +200,8 @@ class General(commands.Cog):
                 ephemeral=True
             )
 
-    @has_bot_full_access()
     @app_commands.command(name="set_available_mentors", description="Set available mentors in the server")
+    @requires_admin_or_moderator()
     async def set_all_mentors_available(self, interaction: discord.Interaction) -> None:
         """
         Set all users in the server with acceptable mentor roles to "Available Mentor"
@@ -254,6 +252,7 @@ class General(commands.Cog):
         
     @app_commands.command(name="add_to_thread", description="Add a user to the support thread")
     @app_commands.describe(user="The user to add to the thread")
+    @has_bot_full_access()
     async def add_to_thread(self, interaction: discord.Interaction, user: discord.Member) -> None:
         """
         Add a specified user to a support thread
@@ -292,7 +291,7 @@ class General(commands.Cog):
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
             
     @app_commands.command(name="create_vc", description="Creates a voice channel for support")
-    @has_bot_full_access()
+    @has_bot_full_access_or_hacker()
     async def create_vc(self, interaction: discord.Interaction) -> None:
         """
         Create a voice channel for support, requires a --- SwampHacks XI (Support-VCs) --- category and a Mentor role
@@ -366,7 +365,8 @@ class General(commands.Cog):
             return
         
         # Check if VC with this number already exists
-        vc_name = f"VC-{thread_number}"
+        # Use "thread-VC-{number}" format to avoid conflicts with directly created VCs
+        vc_name = f"thread-VC-{thread_number}"
         existing_vc = discord.utils.get(category.voice_channels, name=vc_name)
         if existing_vc:
             await interaction.response.send_message(
@@ -415,10 +415,10 @@ class General(commands.Cog):
 
     @app_commands.command(name="grant_vc_access", description="Grant a user access to a voice channel")
     @app_commands.describe(user="Grant a user access to a voice channel")
-    @has_bot_full_access()
+    @has_bot_full_access_or_hacker()
     async def grant_vc_access(self, interaction: discord.Interaction, user: discord.Member) -> None:
         """
-        Grant a user access to a voice channel, can only be used in a voice channel under the Support-VCs category
+        Grant a user access to a voice channel, can only be used in a voice channel under the --- SwampHacks XI (Support-VCs) --- category
         
         Args:
             interaction: The interaction that triggered this command
@@ -432,8 +432,8 @@ class General(commands.Cog):
             )
             return
         # next ensure the channel is in the support category specifically
-        if not interaction.channel.category or interaction.channel.category.name != "Support-VCs":
-            await interaction.response.send_message('This command can only be used in the "Support-VCs" category.', ephemeral=True)
+        if not interaction.channel.category or interaction.channel.category.name != "--- SwampHacks XI (Support-VCs) ---":
+            await interaction.response.send_message('This command can only be used in the "--- SwampHacks XI (Support-VCs) ---" category.', ephemeral=True)
             return
         
         # check if user already has access to the voice channel
@@ -523,7 +523,7 @@ class General(commands.Cog):
         role="Discord role to assign to attendees",
         test_mode="Test mode: only process first 5 users and stop on first error (default: False)"
     )
-    @is_mod_slash()
+    @requires_admin_or_moderator()
     async def assign_hacker_roles(self, interaction: discord.Interaction, event_id: str, role: discord.Role, test_mode: bool = False) -> None:
         """Assign role to all attendees from API using webhook
         
@@ -594,7 +594,7 @@ class General(commands.Cog):
             
     @app_commands.command(name="remove_role_from_all", description="Remove a specific role from all members in the server")
     @app_commands.describe(role="The role to remove from all members")
-    @is_mod_slash()
+    @requires_admin_or_moderator()
     async def remove_role_from_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
         """Remove a specific role from all members in the server
         """

@@ -116,7 +116,7 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         # send initial message as embed in thread with inquiry details
         thread_embed = discord.Embed(
             title=f"Request: {self.title_input.value}",
-            description=f"Description: {description}\n\n✅ Thank you for your request, we will be with you shortly!",
+            description=f"Description: {description}\n\n✅ Thank you for your request, we will be with you shortly!\n\n💡 **Note:** Mentors and hackers may use the `/create_vc` command to create a private voice chat. Only mentors have access to `/add_to_thread`, allowing them to add anyone to a thread.",
             color=discord.Color.green(),
         )
         await thread.send(content=f"{thread_author.mention}")
@@ -131,11 +131,12 @@ class ThreadSupportModal(Modal, title="Support Inquiry"):
         reports_embed.add_field(name="Opened by", value=f"{thread_author.mention}\n", inline=True)
                 
         # soft ping mentor role and send the embed to the reports channel
+        # TEMPORARILY DISABLED: Mentor ping removed
         await reports_channel.send(
-            content=f"||{mentor_role.mention}||",
+            # content=f"||{mentor_role.mention}||",  # Temporarily disabled
             embed=reports_embed,
             view=SupportThreadButtons(thread, self.description_input),
-            allowed_mentions=discord.AllowedMentions(roles=True)
+            # allowed_mentions=discord.AllowedMentions(roles=True)  # Temporarily disabled
         )
 
         await interaction.response.send_message(
@@ -280,9 +281,10 @@ class VCSupportModal(Modal, title="VC Support Inquiry"):
         )
         reports_embed.add_field(name="Opened by", value=f"{vc_author.mention}\n", inline=True)
 
+        # TEMPORARILY DISABLED: Mentor ping removed
         await reports_channel.send(
-            content=f"||{mentor_role.mention}||",
+            # content=f"||{mentor_role.mention}||",  # Temporarily disabled
             embed=reports_embed,
             view=SupportVCButtons(voice_channel, self.description_input),
-            allowed_mentions=discord.AllowedMentions(roles=True)
+            # allowed_mentions=discord.AllowedMentions(roles=True)  # Temporarily disabled
         )
