@@ -16,6 +16,7 @@ var (
 	ErrDuplicateEvent        = errors.New("event already exists in database")
 	ErrNoEventsDeleted       = errors.New("no events deleted")
 	ErrMultipleEventsDeleted = errors.New("multiple events affected by delete query while only expecting one to delete one")
+	ErrUserEventNotFound     = errors.New("the user and event id combination was not found")
 	ErrUnknown               = errors.New("an unkown error was caught")
 )
 
@@ -204,4 +205,20 @@ func (r *EventRepository) GetEventRoleByDiscordIDAndEventId(ctx context.Context,
 	}
 
 	return &eventRole, nil
+}
+
+func (r *EventRepository) GetCheckedInStatusByUserIdAndEventId(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (bool, error) {
+	params := sqlc.GetCheckedInStatusByIdsParams{
+		UserID:  userId,
+		EventID: eventId,
+	}
+
+	result, err := r.db.Query.GetCheckedInStatusByIds(ctx, params)
+
+	if err != nil {
+		return false, err
+	}
+
+	return result, nil
+
 }

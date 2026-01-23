@@ -42,17 +42,26 @@ func (q *Queries) GetAttendeeCountByEventId(ctx context.Context, eventID uuid.UU
 	return count, err
 }
 
-const getCheckedInStatusByUserId = `-- name: GetCheckedInStatusByUserId :one
-SELECT (er.checked_in_at IS NOT NULL) AS is_checked_in
-FROM event_roles AS er
-WHERE er.user_id = $1
+const getCheckedInStatusByIds = `-- name: GetCheckedInStatusByIds :one
+SELECT EXISTS (
+    SELECT 1 
+    FROM event_roles 
+    WHERE user_id = $1 
+      AND event_id = $2 
+      AND checked_in_at IS NOT NULL
+)::bool
 `
 
-func (q *Queries) GetCheckedInStatusByUserId(ctx context.Context, userID uuid.UUID) (interface{}, error) {
-	row := q.db.QueryRow(ctx, getCheckedInStatusByUserId, userID)
-	var is_checked_in interface{}
-	err := row.Scan(&is_checked_in)
-	return is_checked_in, err
+type GetCheckedInStatusByIdsParams struct {
+	UserID  uuid.UUID `json:"user_id"`
+	EventID uuid.UUID `json:"event_id"`
+}
+
+func (q *Queries) GetCheckedInStatusByIds(ctx context.Context, arg GetCheckedInStatusByIdsParams) (bool, error) {
+	row := q.db.QueryRow(ctx, getCheckedInStatusByIds, arg.UserID, arg.EventID)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const getEventAttendeesWithDiscord = `-- name: GetEventAttendeesWithDiscord :many

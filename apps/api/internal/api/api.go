@@ -152,6 +152,8 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 			r.With(ensureEventStaff).Get("/users/{userId}", api.Handlers.Event.GetUserForEvent)
 			// Get user ID by RFID
 			r.With(ensureEventStaff).Get("/users/by-rfid/{rfid}", api.Handlers.Event.GetUserByRFID)
+			// Is the user checked in
+			r.With(ensureEventStaff).Get("/users/{userId}/checked-in-status", api.Handlers.Event.GetCheckedInStatusByIds)
 
 			// Admin-only
 			r.With(ensureEventAdmin).Post("/queue-confirmation-email", api.Handlers.Email.QueueConfirmationEmail)

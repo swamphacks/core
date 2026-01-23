@@ -422,3 +422,13 @@ func (s *EventService) GetUserInfoForEvent(ctx context.Context, userId, eventId 
 
 	return result, nil
 }
+
+func (s *EventService) GetCheckedInStatusByIds(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (bool, error) {
+	result, err := s.eventRepo.GetCheckedInStatusByUserIdAndEventId(ctx, userId, eventId)
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to get user by ids")
+		return false, err
+	}
+	return result, nil
+
+}

@@ -11,6 +11,7 @@ import {
   useRedeemRedeemable,
   getUserByRFID,
   useUpdateRedeemable,
+  useGetCheckedInStatus,
 } from "../hooks/useRedeemables";
 import { DeleteRedeemableModal } from "./DeleteRedeemableModal";
 import { Scanner, type IDetectedBarcode } from "@yudiel/react-qr-scanner";
@@ -53,6 +54,8 @@ export function RedeemableDetailsModal({
     eventId,
     id,
   );
+  const { mutateAsync: getCheckedInStatus } = useGetCheckedInStatus(eventId);
+
   const [formData, setFormData] = useState({
     name: name,
     totalStock: totalStock,
@@ -122,6 +125,16 @@ export function RedeemableDetailsModal({
         setIsScanning(true);
 
         try {
+          // check if they are checked in
+          const checkedInStatus = await getCheckedInStatus(res.value.user_id);
+          if (checkedInStatus.checked_in_status != "true") {
+            showToast({
+              title: "Error",
+              message: "Failed to Redeem with QR. User is not checked in",
+              type: "error",
+            });
+            return;
+          }
           await redeemRedeemable(res.value.user_id);
 
           showToast({
@@ -130,7 +143,6 @@ export function RedeemableDetailsModal({
             type: "success",
           });
 
-          // 4. Unlock after your desired delay
           setTimeout(() => {
             setIsScanning(false);
           }, 5000);
