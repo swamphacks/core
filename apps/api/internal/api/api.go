@@ -77,6 +77,18 @@ func (api *API) setupRoutes(mw *mw.Middleware) {
 		fmt.Fprintln(w, htmlContent)
 	})
 
+	api.Router.Route("/mobile", func(r chi.Router) {
+		// This means you have to set a Authorization header with "Key xxx".
+		r.Use(mw.Auth.RequireMobileAuth)
+
+		r.Get("/events/{eventId}/users/{userId}", api.Handlers.Event.GetUserForEvent)
+		r.Get("/events/{eventId}/users/by-rfid/{rfid}", api.Handlers.Event.GetUserByRFID)
+		r.Post("/events/{eventId}/checkin", api.Handlers.Admission.HandleEventCheckIn)
+
+		r.Get("/events/{eventId}/redeemables", api.Handlers.Redeemables.GetRedeemables)
+		r.Post("/redeemables/{redeemableId}/users/{userId}", api.Handlers.Redeemables.RedeemRedeemable)
+	})
+
 	// Health check
 	api.Router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		api.Logger.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("Received ping.")
