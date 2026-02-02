@@ -32,7 +32,7 @@ def main():
         )
         print("R2 client initialized successfully.")
 
-        os.makedirs(os.path.dirname(DOWNLOAD_PATH), exist_ok=True)
+        os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
         with open(CSV_PATH, mode='r', newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
