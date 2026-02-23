@@ -2,6 +2,7 @@ site_name: SwampHacks Documentation
 repo_url: https://github.com/swamphacks/core
 repo_name: SwampHacks Core
 docs_dir: src
+
 theme:
   name: material
   icon:
@@ -15,10 +16,12 @@ theme:
     - navigation.instant.progress
     - content.code.copy
     - content.action.edit
+
 plugins:
   - search
+
 copyright: >
-  Copyright &copy; 2025 SwampHacks
+  Copyright &copy; 2026 SwampHacks
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -30,33 +33,55 @@ markdown_extensions:
   - pymdownx.superfences
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
   - attr_list
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-nav:
-  - Home:
-      - Introduction: index.md
-      - Getting Started: getting-started.md
-  - Web:
-      - Overview: web/index.md
-      - Installation: web/installation.md
-      - Features: web/features.md
-  - API:
-      - Overview: api/index.md
-      - Installation: api/installation.md
-      - OpenAPI: 'https://core.apidocumentation.com/guide/swamphacks-core-api'
-      - Database testing: 'api/db_testing.md'
-  - Discord Bot:
-      - Overview: discord-bot/index.md
-      - Installation: discord-bot/installation.md
-      - Commands: discord-bot/commands.md
-  - Docs:
-      - Overview: docs/index.md
-      - Installation: docs/installation.md
 
 extra:
   generator: false
+
+nav:
+  - Home:
+      - Introduction: index.md
+      - System Architecture: architecture.md
+      - Repository Structure: repo-structure.md
+      - Getting Started: getting-started.md
+      - Development Workflow: workflow.md
+  - Web:
+      - Overview: web/index.md
+      - Installation & Setup: web/installation.md
+      - Architecture & State: web/architecture.md
+      - Routing & Auth: web/routing-auth.md
+      - API Integration: web/api-integration.md
+      - Styling & UI: web/styling.md
+  - API:
+      - Overview: api/index.md
+      - Installation & Setup: api/installation.md
+      - Project Structure: api/structure.md
+      - Authentication & Roles: api/auth.md
+      - Database Schema (Neon): api/database.md
+      - Migrations: api/migrations.md
+      - Database Testing: api/db_testing.md
+      - OpenAPI: 'https://core.apidocumentation.com/guide/swamphacks-core-api'
+  - Discord Bot:
+      - Overview: discord-bot/index.md
+      - Installation: discord-bot/installation.md
+      - Architecture: discord-bot/architecture.md
+      - Commands & Events: discord-bot/commands.md
+  - Infrastructure:
+      - Overview: infrastructure/index.md
+      - Docker Containers: infrastructure/docker.md
+      - Secrets Management (Infisical): infrastructure/secrets.md
+      - Deployment (DigitalOcean): infrastructure/digitalocean.md
+      - CI/CD Pipeline: infrastructure/cicd.md
+  - Operations:
+      - Third-Party Services: operations/services.md
+      - Troubleshooting: operations/troubleshooting.md
+      - Maintenance & Handoff: operations/handoff.md
+  - Docs:
+      - Overview: docs/index.md
+      - Installation: docs/installation.md
+      - Writing Guide: docs/writing-guide.md
