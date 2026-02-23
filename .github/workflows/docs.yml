@@ -1,10 +1,10 @@
-name: docs
+name: ci 
 on:
   push:
     branches:
-      - master 
+      - master
     paths:
-      - 'apps/docs/**'     # Only trigger if docs files changed
+      - 'apps/docs/**'
 
 permissions:
   contents: write
@@ -12,6 +12,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -29,10 +30,12 @@ jobs:
       - uses: actions/cache@v4
         with:
           key: mkdocs-material-${{ env.cache_id }}
-          path: .cache 
+          path: ~/.cache 
           restore-keys: |
             mkdocs-material-
 
-      - run: pip install mkdocs-material 
-      
-      - run: mkdocs gh-deploy --force --config-file ./apps/docs/mkdocs.yml
+      - run: pip install mkdocs-material
+
+      - name: Deploy docs
+        working-directory: ./apps/docs
+        run: mkdocs gh-deploy --force
