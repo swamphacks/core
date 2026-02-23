@@ -5,6 +5,7 @@ on:
       - master
     paths:
       - 'apps/docs/**'
+  workflow_dispatch:
 
 permissions:
   contents: write
