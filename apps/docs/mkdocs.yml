@@ -65,7 +65,7 @@ nav:
       - Database Schema (Neon): api/database.md
       - Migrations: api/migrations.md
       - Database Testing: api/db_testing.md
-      - OpenAPI: 'https://core.apidocumentation.com/guide/swamphacks-core-api'
+      - OpenAPI: api/openapi.md
   - Discord Bot:
       - Overview: discord-bot/index.md
       - Installation: discord-bot/installation.md
