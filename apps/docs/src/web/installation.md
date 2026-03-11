@@ -1,43 +1,54 @@
-# Getting Started
+# Installation & Setup
 
-### Setup with Docker Compose (main setup)
-1. Navigate to `core/apps/web`
+The web app is a React + Vite SPA. It can run via Docker (part of the full stack) or directly on the host with Node.js.
 
-2. **Set up environment variables**:
-``` bash
-cp .env.example .env
-```
+## Prerequisites
 
-Fill in the required keys and tokens in your new `.env` file. For `VITE_DISCORD_OAUTH_CLIENT_ID`, retrive the token via the instructions given in [the API installation page](../api/installation.md).
+- Node.js 22.16 via nvm (see [Getting Started](../getting-started.md))
+- pnpm: `npm install -g pnpm`
 
-`VITE_` must be prefixed to all environment variables in order for them to be accessible.
+## Environment
 
-3. Continue with the [main setup instructions](../getting-started.md)
-
-### Setup without Docker Compose
-
-1. Make sure [pnpm](https://pnpm.io/) is installed on your system.
-
-2. Navigate to `core/apps/web`
-
-3. Install dependencies
+Copy the example file:
 
 ```bash
+cp apps/web/.env.example apps/web/.env
+```
+
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_BASE_API_URL` | `https://api.swamphacks.com` | API base URL. Use `http://localhost:8080` for local development |
+| `VITE_DISCORD_OAUTH_CLIENT_ID` | — | Discord OAuth application client ID (must match the API's) |
+| `VITE_ALLOWED_HOSTS` | `[""]` | JSON array of allowed host origins |
+
+For local development, set `VITE_BASE_API_URL=http://localhost:8080`.
+
+## Running locally
+
+```bash
+cd apps/web
+nvm use          # picks up .nvmrc (Node 22.16)
 pnpm install
+pnpm dev
 ```
 
-4. Configure environment variables:
+The app is available at **http://localhost:5173**.
+
+## Running via Docker
 
 ```bash
-cp .env.example .env
+make local       # full stack including web
+# or
+docker compose up web
 ```
 
-Fill in the required keys and tokens in your new `.env` file.
+## Generating API types
 
-`VITE_` must be prefixed to all environment variables in order for them to be accessible.
-
-5. Finally, launch the app
+The web app uses auto-generated TypeScript types from the API's OpenAPI spec:
 
 ```bash
-pnpm run dev
+cd apps/web
+pnpm generate:openapi
 ```
+
+Run this whenever the API schema changes. The output is written to `src/lib/openapi/schema.d.ts`.

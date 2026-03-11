@@ -1,30 +1,85 @@
-# Database testing
+# Database Testing
 
-## Manual
+The API does not currently have automated unit or integration tests. This page covers how to work with the database during local development — inspecting data, running ad-hoc queries, and verifying migrations.
 
-1. Make sure the docker instance is currently running (i.e. you ran `$ docker compose up`)
-!!! note
+## Connecting to the local database
 
-    You may have to run docker with sudo depending on your system configuration.
+When the stack is running via Docker, PostgreSQL is exposed on `localhost:5432`.
 
-1. In a seperate terminal (I suggest you try using tmux) list the current docker processes
-``` bash
-docker ps
+**Connection string:**
+```
+postgres://postgres:postgres@localhost:5432/coredb
 ```
 
-1. Copy the process id for the docker container running postgres, and paste into the following command in order to spawn a shell with access to the container.
-``` bash
-sudo docker exec -it ef7XXXXXX07e sh
+Connect with `psql`:
+
+```bash
+psql postgres://postgres:postgres@localhost:5432/coredb
 ```
 
-1. Connect to the postgres database using a database url. The url can be found inside `core/apps/api/.env.example`. 
-``` bash
-psql postgres://postgres:postgres@postgres:5432/coredb
+Or use a GUI client (TablePlus, DBeaver, DataGrip) with the same credentials.
+
+## Useful queries
+
+**Check applied migrations:**
+```sql
+SELECT version_id, is_applied, tstamp
+FROM goose_db_version
+ORDER BY id DESC;
 ```
 
-1. Check to see if database tables currently exist. You can by listing the currently created tables.
-``` bash
-\dt
+**Inspect user sessions:**
+```sql
+SELECT id, user_id, expires_at, updated_at AS last_used_at
+FROM auth.sessions
+ORDER BY updated_at DESC
+LIMIT 20;
 ```
-If there is nothing here, then go into `/core/apps/api` and run `make migrate`, which runs sql commands added to [migrations](https://en.wikipedia.org/wiki/Schema_migration) in `core/apps/api/internal/db/migrations`.
-1. You can now test to see if rows, columns and tables are updated appropriately with psql commands. Use a [reference to psql](https://www.postgresql.org/docs/17/app-psql.html) if you need help finding commands.
+
+**View applications by status:**
+```sql
+SELECT status, COUNT(*)
+FROM applications
+GROUP BY status
+ORDER BY count DESC;
+```
+
+**Check BAT run results:**
+```sql
+SELECT id, status, array_length(accepted_applicants, 1) AS accepted,
+       array_length(rejected_applicants, 1) AS rejected, created_at
+FROM bat_runs
+ORDER BY created_at DESC;
+```
+
+## Resetting the database
+
+To wipe and recreate the local database (useful after a bad migration or schema experiment):
+
+```bash
+# Stop and remove the postgres container + its volume
+docker compose down -v
+
+# Restart — migrations run automatically on startup
+make local
+```
+
+!!! warning
+    `docker compose down -v` deletes all persisted data including the `postgres_data` volume. Only do this locally.
+
+
+
+## Inspecting the task queue
+
+[Asynqmon](http://localhost:6767) provides a web UI for inspecting queued, active, and failed tasks when running `make local` or `make backend`. Use it to verify that email and BAT tasks are being enqueued and processed correctly.
+
+## Working with sqlc
+
+All SQL queries are in `internal/db/queries/`. After modifying a query or migration, regenerate the Go bindings:
+
+```bash
+cd apps/api
+make generate
+```
+
+The generated code in `internal/db/sqlc/` reflects the current schema and query set. If `make generate` fails, the SQL query is invalid against the current schema — fix the query or migration before proceeding.
