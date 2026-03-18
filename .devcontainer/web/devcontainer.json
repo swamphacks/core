@@ -4,7 +4,7 @@
 	"name": "web-devcontainer",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	// "image": "mcr.microsoft.com/devcontainers/typescript-node:4-24-trixie",
-	"dockerComposeFile": ["../docker-compose.yml"],
+	"dockerComposeFile": ["../../docker-compose.yml"],
 	"service": "web-devcontainer",
   	"shutdownAction": "none",
 	"workspaceFolder": "/core/apps/web",
