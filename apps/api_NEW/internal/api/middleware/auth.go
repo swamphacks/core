@@ -17,6 +17,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/database"
+	"github.com/swamphacks/core/apps/api/internal/database/repository"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
@@ -25,11 +26,13 @@ type ctxKey string
 // Use this variable to retrieve the user object later from context!
 const UserContextKey ctxKey = "user"
 const SessionContextKey ctxKey = "session"
+const EventRoleContextKey ctxKey = "eventRole"
 
 type AuthMiddleware struct {
-	db     *database.DB
-	logger zerolog.Logger
-	cfg    *config.Config
+	db             *database.DB
+	logger         zerolog.Logger
+	cfg            *config.Config
+	eventRolesRepo *repository.EventRolesRepository
 }
 
 // UserContext represents the authenticated user in API requests.
@@ -54,7 +57,7 @@ type UserContext struct {
 	Image *string `json:"image,omitempty" example:"https://cdn.example.com/avatar.png" extensions:"nullable"`
 
 	// Role assigned to the user
-	Role sqlc.AuthUserRole `json:"role"`
+	Role sqlc.AuthUserRole `json:"role" enum:"user,superuser"`
 
 	// Whether the user agreed to receive emails
 	EmailConsent bool `json:"emailConsent" example:"false"`
@@ -64,11 +67,12 @@ type SessionContext struct {
 	SessionID uuid.UUID
 }
 
-func NewAuthMiddleware(db *database.DB, logger zerolog.Logger, cfg *config.Config) *AuthMiddleware {
+func NewAuthMiddleware(eventRolesRepo *repository.EventRolesRepository, db *database.DB, logger zerolog.Logger, cfg *config.Config) *AuthMiddleware {
 	return &AuthMiddleware{
-		db:     db,
-		logger: logger.With().Str("middleware", "AuthMiddleware").Str("component", "api").Logger(),
-		cfg:    cfg,
+		db:             db,
+		logger:         logger.With().Str("middleware", "AuthMiddleware").Str("component", "api").Logger(),
+		cfg:            cfg,
+		eventRolesRepo: eventRolesRepo,
 	}
 }
 
@@ -82,6 +86,56 @@ func (m *AuthMiddleware) RawHTTPMiddlewareHuma(ctx huma.Context, next func(huma.
 	newCtx = context.WithValue(newCtx, RawRequestKey{}, r)
 
 	next(huma.WithContext(ctx, newCtx))
+}
+
+// TODO: remove this extra layer and use RequireAuth directly
+func (m *AuthMiddleware) RequireAuthHuma(ctx huma.Context, next func(huma.Context)) {
+	r, w := humachi.Unwrap(ctx)
+
+	m.RequireAuth(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		next(huma.WithContext(ctx, r.Context()))
+	})).ServeHTTP(w, r)
+}
+
+// TODO: remove this extra layer and use RequireRole directly
+func (m *AuthMiddleware) RequireRoleHuma(eventRoles []sqlc.EventRoleType) func(ctx huma.Context, next func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		r, w := humachi.Unwrap(ctx)
+
+		m.RequireRole(eventRoles)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+			next(huma.WithContext(ctx, r.Context()))
+		})).ServeHTTP(w, r)
+	}
+}
+
+func (m *AuthMiddleware) RequireSuperuserHuma(ctx huma.Context, next func(huma.Context)) {
+	r, w := humachi.Unwrap(ctx)
+
+	mwHandler := m.RequirePlatformRole([]sqlc.AuthUserRole{sqlc.AuthUserRoleSuperuser})
+
+	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		next(huma.WithContext(ctx, r.Context()))
+	})).ServeHTTP(w, r)
+}
+
+func (m *AuthMiddleware) RequireAdminHuma(ctx huma.Context, next func(huma.Context)) {
+	r, w := humachi.Unwrap(ctx)
+
+	mwHandler := m.RequireRole([]sqlc.EventRoleType{sqlc.EventRoleTypeAdmin})
+
+	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		next(huma.WithContext(ctx, r.Context()))
+	})).ServeHTTP(w, r)
+}
+
+func (m *AuthMiddleware) RequireStaffHuma(ctx huma.Context, next func(huma.Context)) {
+	r, w := humachi.Unwrap(ctx)
+
+	mwHandler := m.RequireRole([]sqlc.EventRoleType{sqlc.EventRoleTypeAdmin, sqlc.EventRoleTypeStaff})
+
+	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		next(huma.WithContext(ctx, r.Context()))
+	})).ServeHTTP(w, r)
 }
 
 func (m *AuthMiddleware) RequireMobileAuth(next http.Handler) http.Handler {
@@ -110,15 +164,6 @@ func (m *AuthMiddleware) RequireMobileAuth(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
-}
-
-// TODO: remove this extra layer and use RequireAuth directly
-func (m *AuthMiddleware) RequireAuthHuma(ctx huma.Context, next func(huma.Context)) {
-	r, w := humachi.Unwrap(ctx)
-
-	m.RequireAuth(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-		next(huma.WithContext(ctx, r.Context()))
-	})).ServeHTTP(w, r)
 }
 
 func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
@@ -197,6 +242,43 @@ func (m *AuthMiddleware) RequirePlatformRole(roles []sqlc.AuthUserRole) func(htt
 			}
 
 			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func (m *AuthMiddleware) RequireRole(eventRoles []sqlc.EventRoleType) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// get user from context
+			userCtx, ok := r.Context().Value(UserContextKey).(*UserContext)
+			if !ok {
+				m.logger.Warn().Msg("No event role context found.")
+				response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized."))
+				return
+			}
+
+			if userCtx.Role == sqlc.AuthUserRoleSuperuser {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			userEventRole, err := m.eventRolesRepo.GetRoleByUserId(r.Context(), userCtx.UserID)
+			if err != nil {
+				// TODO: Will throw if user doesn't have permission, but how should we handle that with other possible errors?
+				m.logger.Warn().Msgf("Error while trying to access %s with insufficient permissions (userId: %s)", r.URL.Path, userCtx.UserID)
+				response.SendError(w, http.StatusForbidden, response.NewError("forbidden", "You are forbidden from this resource."))
+				return
+
+			}
+			if !slices.Contains(eventRoles, userEventRole.Role) {
+				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions (eventRole: %s)", r.URL.Path, string(userEventRole.Role))
+				response.SendError(w, http.StatusForbidden, response.NewError("forbidden", "You are forbidden from this resource."))
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), EventRoleContextKey, userEventRole)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

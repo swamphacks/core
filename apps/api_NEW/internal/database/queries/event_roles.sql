@@ -12,6 +12,10 @@ UPDATE event_roles
 SET role = $2
 WHERE user_id = $1;
 
+-- name: GetRoleByUserId :one
+SELECT * FROM event_roles
+WHERE user_id = @user_id::uuid;
+
 -- name: GetRoleByDiscordID :one
 SELECT er.role
 FROM event_roles er

@@ -43,6 +43,24 @@ func (q *Queries) GetRoleByDiscordID(ctx context.Context, accountID string) (Eve
 	return role, err
 }
 
+const getRoleByUserId = `-- name: GetRoleByUserId :one
+SELECT user_id, role, assigned_at, checked_in_at, rfid FROM event_roles
+WHERE user_id = $1::uuid
+`
+
+func (q *Queries) GetRoleByUserId(ctx context.Context, userID uuid.UUID) (EventRole, error) {
+	row := q.db.QueryRow(ctx, getRoleByUserId, userID)
+	var i EventRole
+	err := row.Scan(
+		&i.UserID,
+		&i.Role,
+		&i.AssignedAt,
+		&i.CheckedInAt,
+		&i.Rfid,
+	)
+	return i, err
+}
+
 const removeRole = `-- name: RemoveRole :exec
 DELETE FROM event_roles
 WHERE user_id = $1

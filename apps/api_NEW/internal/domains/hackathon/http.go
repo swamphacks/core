@@ -37,7 +37,7 @@ func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Mi
 		Description:   "Updates the information of the hackathon",
 		Tags:          []string{"Hackathon"},
 		Path:          "",
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
@@ -50,7 +50,7 @@ func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Mi
 		Description: "Returns the users who are part of the current staff of the hackathon",
 		Tags:        []string{"Hackathon"},
 		Path:        "/staff",
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
 		Errors:      []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
 	}, hackathonHandler.handleGetStaff)
@@ -62,7 +62,7 @@ func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Mi
 		Description: "Returns all users with a discord account that is also attending the hackathon",
 		Tags:        []string{"Hackathon"},
 		Path:        "/attendees/discord",
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
 		Errors:      []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
 	}, hackathonHandler.handleGetAttendeesWithDiscord)
@@ -74,7 +74,7 @@ func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Mi
 		Description: "Returns all users ids of users who are attending the hackathon",
 		Tags:        []string{"Hackathon"},
 		Path:        "/attendees/userids",
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
 		Errors:      []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
 	}, hackathonHandler.handleGetAttendeeUserIds)
@@ -86,7 +86,7 @@ func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Mi
 		Description: "Returns the number of users who is attending the hackathon",
 		Tags:        []string{"Hackathon"},
 		Path:        "/attendees/count",
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
 		Errors:      []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
 	}, hackathonHandler.handleGetAttendeeCount)

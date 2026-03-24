@@ -38,6 +38,10 @@ func (r *EventRolesRepository) RemoveRole(ctx context.Context, userId uuid.UUID)
 	return r.db.Query.RemoveRole(ctx, userId)
 }
 
+func (r *EventRolesRepository) GetRoleByUserId(ctx context.Context, userId uuid.UUID) (sqlc.EventRole, error) {
+	return r.db.Query.GetRoleByUserId(ctx, userId)
+}
+
 // **Deprecated**. Use `UpdateEventRoleByIds` instead.
 // Only kept for backwards compatibility. TODO: Refactor all current implementations to use new function.
 func (r *EventRolesRepository) UpdateRole(ctx context.Context, userId uuid.UUID, role sqlc.EventRoleType) error {
@@ -48,6 +52,6 @@ func (r *EventRolesRepository) UpdateRole(ctx context.Context, userId uuid.UUID,
 	return r.db.Query.UpdateRole(ctx, params)
 }
 
-func (r *EventRolesRepository) UpdateRoleById(ctx context.Context, params sqlc.UpdateRoleByUserIdParams) error {
+func (r *EventRolesRepository) UpdateRoleByUserId(ctx context.Context, params sqlc.UpdateRoleByUserIdParams) error {
 	return r.db.Query.UpdateRoleByUserId(ctx, params)
 }

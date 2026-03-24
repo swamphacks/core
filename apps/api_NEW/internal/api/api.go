@@ -40,8 +40,6 @@ func Run() {
 		},
 	}
 
-	mw := mw.NewMiddleware(db, logger, config)
-
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -86,6 +84,9 @@ func Run() {
 	accountRepo := repository.NewAccountRespository(db)
 	sessionRepo := repository.NewSessionRepository(db)
 	hackathonRepo := repository.NewHackathonRepository(db)
+	eventRolesRepo := repository.NewEventRolesRepository(db)
+
+	mw := mw.NewMiddleware(eventRolesRepo, db, logger, config)
 
 	// Routes registrations
 	authService := auth.NewService(userRepo, accountRepo, sessionRepo, txm, httpClient, logger, &config.Auth)
