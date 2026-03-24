@@ -129,7 +129,7 @@ func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oaut
 			avatar = &custom
 		}
 
-		user, err := txUserRepo.Create(ctx, sqlc.CreateUserParams{
+		user, err := txUserRepo.CreateUser(ctx, sqlc.CreateUserParams{
 			Name:  userInfo.Username,
 			Email: &userInfo.Email,
 			Image: avatar,

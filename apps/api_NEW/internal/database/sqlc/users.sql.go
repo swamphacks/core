@@ -53,7 +53,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const getCheckedInStatusByUserIds = `-- name: GetCheckedInStatusByUserIds :one
+const getCheckedInStatusByUserId = `-- name: GetCheckedInStatusByUserId :one
 SELECT EXISTS (
     SELECT 1 
     FROM event_roles 
@@ -62,8 +62,8 @@ SELECT EXISTS (
 )::bool
 `
 
-func (q *Queries) GetCheckedInStatusByUserIds(ctx context.Context, userID uuid.UUID) (bool, error) {
-	row := q.db.QueryRow(ctx, getCheckedInStatusByUserIds, userID)
+func (q *Queries) GetCheckedInStatusByUserId(ctx context.Context, userID uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, getCheckedInStatusByUserId, userID)
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err

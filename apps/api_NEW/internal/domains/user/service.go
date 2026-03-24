@@ -29,10 +29,10 @@ func NewService(userRepo *repository.UserRepository, logger zerolog.Logger) *Use
 }
 
 func (s *UserService) GetUser(ctx context.Context, userId uuid.UUID) (*sqlc.AuthUser, error) {
-	user, err := s.userRepo.GetByID(ctx, userId)
+	user, err := s.userRepo.GetUserByID(ctx, userId)
+
 	if err != nil {
 		if err == repository.ErrUserNotFound {
-			s.logger.Err(err).Msg(repository.ErrUserNotFound.Error())
 			return nil, ErrUserNotFound
 		} else {
 			s.logger.Err(err).Msg("failed to get user by ID")
@@ -41,6 +41,62 @@ func (s *UserService) GetUser(ctx context.Context, userId uuid.UUID) (*sqlc.Auth
 	}
 
 	return user, nil
+}
+
+func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*sqlc.AuthUser, error) {
+	user, err := s.userRepo.GetUserByEmail(ctx, email)
+
+	if err != nil {
+		if err == repository.ErrUserNotFound {
+			return nil, ErrUserNotFound
+		} else {
+			s.logger.Err(err).Msg("get user by email fail")
+			return nil, ErrFailedToGetUser
+		}
+	}
+
+	return user, nil
+}
+
+func (s *UserService) GetUserEmailInfoById(ctx context.Context, userId uuid.UUID) (*sqlc.GetUserEmailInfoByIdRow, error) {
+	emailInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userId)
+
+	if err != nil {
+		if err == repository.ErrUserNotFound {
+			return nil, ErrUserNotFound
+		} else {
+			s.logger.Err(err).Msg("get user by email fail")
+			return nil, ErrFailedToGetUser
+		}
+	}
+
+	return emailInfo, nil
+}
+
+func (s *UserService) GetUserByRFID(ctx context.Context, rfid string) (*sqlc.AuthUser, error) {
+	user, err := s.userRepo.GetUserByRFID(ctx, rfid)
+
+	if err != nil {
+		if err == repository.ErrUserNotFound {
+			return nil, ErrUserNotFound
+		} else {
+			s.logger.Err(err).Msg("get user by rfid fail")
+			return nil, ErrFailedToGetUser
+		}
+	}
+
+	return user, nil
+}
+
+func (s *UserService) GetCheckedInStatusByUserId(ctx context.Context, userId uuid.UUID) (bool, error) {
+	checkedIn, err := s.userRepo.GetCheckedInStatusByUserId(ctx, userId)
+
+	if err != nil {
+		s.logger.Err(err).Msg("check in status fail")
+		return false, errors.New("Failed to get check in status for user")
+	}
+
+	return checkedIn, nil
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, userId uuid.UUID, params sqlc.UpdateUserParams) error {
@@ -75,5 +131,12 @@ func (s *UserService) CompleteOnboarding(ctx context.Context, userId uuid.UUID, 
 }
 
 func (s *UserService) GetAllUsers(ctx context.Context, search *string, limit, offset int32) ([]sqlc.AuthUser, error) {
-	return s.userRepo.GetAllUsers(ctx, search, limit, offset)
+	users, err := s.userRepo.GetAllUsers(ctx, search, limit, offset)
+
+	if err != nil {
+		s.logger.Err(err).Msg("get all users fail")
+		return []sqlc.AuthUser{}, errors.New("Failed to get users")
+	}
+
+	return users, nil
 }

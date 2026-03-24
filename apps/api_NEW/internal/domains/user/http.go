@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/cookie"
 	"github.com/swamphacks/core/apps/api/internal/api/middleware"
@@ -66,6 +67,42 @@ func RegisterRoutes(userHandler *handler, group huma.API, mw *middleware.Middlew
 		Errors:      []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusBadRequest, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
 	}, userHandler.handleGetUsers)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "get-user-by-email",
+		Method:      http.MethodGet,
+		Summary:     "Get User By Email",
+		Description: "Returns the user associated with the email",
+		Tags:        []string{"User"},
+		Path:        "/email/{email}",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Errors:      []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusBadRequest, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, userHandler.handleGetUserByEmail)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "get-user-by-rfid",
+		Method:      http.MethodGet,
+		Summary:     "Get User By RFID",
+		Description: "Returns the user associated with the RFID",
+		Tags:        []string{"User"},
+		Path:        "/rfid/{rfid}",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Errors:      []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusBadRequest, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, userHandler.handleGetUserByRFID)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "get-check-in-status",
+		Method:      http.MethodGet,
+		Summary:     "Get User Check In Status",
+		Description: "Returns true if the user is checked in, false otherwise",
+		Tags:        []string{"User"},
+		Path:        "/checkin",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Errors:      []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusBadRequest, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, userHandler.handleGetCheckedInStatus)
 }
 
 type handler struct {
@@ -243,4 +280,62 @@ func (h *handler) handleGetUsers(ctx context.Context, input *struct {
 	res := &GetUsersOutput{Body: &users}
 
 	return res, nil
+}
+
+type GetUserByEmailOutput struct {
+	Body *sqlc.AuthUser
+}
+
+func (h *handler) handleGetUserByEmail(ctx context.Context, input *struct {
+	Email string `path:"email"`
+}) (*GetUserByEmailOutput, error) {
+	if !email.IsValidEmail(input.Email) {
+		return nil, huma.Error400BadRequest("Invalid email")
+	}
+
+	user, err := h.userService.GetUserByEmail(ctx, input.Email)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to get user by email")
+	}
+
+	return &GetUserByEmailOutput{Body: user}, nil
+}
+
+type GetUserByRFIDOutput struct {
+	Body *sqlc.AuthUser
+}
+
+func (h *handler) handleGetUserByRFID(ctx context.Context, input *struct {
+	RFID string `path:"rfid"`
+}) (*GetUserByRFIDOutput, error) {
+	user, err := h.userService.GetUserByRFID(ctx, input.RFID)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to get user by rfid")
+	}
+
+	return &GetUserByRFIDOutput{Body: user}, nil
+}
+
+type GetCheckedInStatusOutput struct {
+	Body bool
+}
+
+func (h *handler) handleGetCheckedInStatus(ctx context.Context, input *struct {
+	UserId string `query:"userId" required:"true"`
+}) (*GetCheckedInStatusOutput, error) {
+	userId, err := uuid.Parse(input.UserId)
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid user id")
+	}
+
+	checkedIn, err := h.userService.GetCheckedInStatusByUserId(ctx, userId)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to get check in status by user id")
+	}
+
+	return &GetCheckedInStatusOutput{Body: checkedIn}, nil
 }

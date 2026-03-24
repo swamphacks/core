@@ -65,7 +65,7 @@ SELECT u.*, er.role AS event_role
 FROM auth.users u
 JOIN event_roles er ON u.id = er.user_id;
 
--- name: GetCheckedInStatusByUserIds :one
+-- name: GetCheckedInStatusByUserId :one
 SELECT EXISTS (
     SELECT 1 
     FROM event_roles 
