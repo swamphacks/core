@@ -7,6 +7,7 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -52,6 +53,22 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getCheckedInStatusByUserIds = `-- name: GetCheckedInStatusByUserIds :one
+SELECT EXISTS (
+    SELECT 1 
+    FROM event_roles 
+    WHERE user_id = $1 
+      AND checked_in_at IS NOT NULL
+)::bool
+`
+
+func (q *Queries) GetCheckedInStatusByUserIds(ctx context.Context, userID uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, getCheckedInStatusByUserIds, userID)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent FROM auth.users
 WHERE email = $1
@@ -83,6 +100,32 @@ WHERE id = $1
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
+	var i AuthUser
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.EmailVerified,
+		&i.Onboarded,
+		&i.Image,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Role,
+		&i.PreferredEmail,
+		&i.EmailConsent,
+	)
+	return i, err
+}
+
+const getUserByRFID = `-- name: GetUserByRFID :one
+SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent
+FROM auth.users u
+JOIN event_roles er ON u.id = er.user_id
+WHERE er.rfid = $1
+`
+
+func (q *Queries) GetUserByRFID(ctx context.Context, rfid *string) (AuthUser, error) {
+	row := q.db.QueryRow(ctx, getUserByRFID, rfid)
 	var i AuthUser
 	err := row.Scan(
 		&i.ID,
@@ -168,6 +211,60 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]AuthUser,
 			&i.Role,
 			&i.PreferredEmail,
 			&i.EmailConsent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUsersWithRoles = `-- name: GetUsersWithRoles :many
+SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.role AS event_role
+FROM auth.users u
+JOIN event_roles er ON u.id = er.user_id
+`
+
+type GetUsersWithRolesRow struct {
+	ID             uuid.UUID     `json:"id"`
+	Name           string        `json:"name"`
+	Email          *string       `json:"email"`
+	EmailVerified  bool          `json:"email_verified"`
+	Onboarded      bool          `json:"onboarded"`
+	Image          *string       `json:"image"`
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
+	Role           AuthUserRole  `json:"role"`
+	PreferredEmail *string       `json:"preferred_email"`
+	EmailConsent   bool          `json:"email_consent"`
+	EventRole      EventRoleType `json:"event_role"`
+}
+
+func (q *Queries) GetUsersWithRoles(ctx context.Context) ([]GetUsersWithRolesRow, error) {
+	rows, err := q.db.Query(ctx, getUsersWithRoles)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUsersWithRolesRow{}
+	for rows.Next() {
+		var i GetUsersWithRolesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.EmailVerified,
+			&i.Onboarded,
+			&i.Image,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Role,
+			&i.PreferredEmail,
+			&i.EmailConsent,
+			&i.EventRole,
 		); err != nil {
 			return nil, err
 		}

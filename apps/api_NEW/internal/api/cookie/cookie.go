@@ -4,13 +4,24 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 	"github.com/swamphacks/core/apps/api/internal/config"
 )
 
+var SessionCookieName = "sh_session_id"
+
+var SessionCookieHumaParam *huma.Param = &huma.Param{
+	Name:        SessionCookieName,
+	In:          "cookie",
+	Required:    true,
+	Schema:      &huma.Schema{Type: "string"},
+	Description: "Session cookie used to authenticate the user",
+}
+
 func SetSessionCookie(w http.ResponseWriter, sessionID uuid.UUID, expiresAt time.Time, cfg config.CookieConfig) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     "sh_session_id",
+		Name:     SessionCookieName,
 		Value:    sessionID.String(),
 		Domain:   cfg.Domain,
 		Path:     "/",
@@ -18,31 +29,5 @@ func SetSessionCookie(w http.ResponseWriter, sessionID uuid.UUID, expiresAt time
 		Secure:   cfg.Secure,
 		SameSite: http.SameSiteLaxMode,
 		Expires:  expiresAt,
-	})
-}
-
-func ClearSessionCookie(w http.ResponseWriter, cfg config.CookieConfig) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     "sh_session_id",
-		Value:    "",
-		Domain:   cfg.Domain,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   cfg.Secure,
-		SameSite: http.SameSiteLaxMode,
-		Expires:  time.Unix(0, 0),
-		MaxAge:   -1,
-	})
-}
-
-func ExpireCookie(w http.ResponseWriter, cfg config.CookieConfig, name string) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     name,
-		Value:    "",
-		Domain:   cfg.Domain,
-		Path:     "/",
-		SameSite: http.SameSiteLaxMode,
-		Expires:  time.Unix(0, 0),
-		MaxAge:   -1,
 	})
 }

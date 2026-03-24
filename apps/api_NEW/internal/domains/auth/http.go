@@ -61,16 +61,16 @@ func RegisterRoutes(authHandler *handler, group huma.API, mw *middleware.Middlew
 }
 
 type handler struct {
-	authService AuthService
+	authService *AuthService
 	config      *config.Config
 	logger      zerolog.Logger
 }
 
-func NewHandler(authService AuthService, config *config.Config, logger zerolog.Logger) *handler {
+func NewHandler(authService *AuthService, config *config.Config, logger zerolog.Logger) *handler {
 	return &handler{
 		authService: authService,
 		config:      config,
-		logger:      logger.With().Str("handler", "AuthHandler").Str("component", "auth").Logger(),
+		logger:      logger.With().Str("handler", "AuthHandler").Str("domain", "auth").Logger(),
 	}
 }
 

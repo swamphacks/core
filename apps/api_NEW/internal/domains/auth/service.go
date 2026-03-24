@@ -28,7 +28,7 @@ var (
 	ErrInvalidateSessionFailed   = errors.New("failed to invalidate the session")
 )
 
-type service struct {
+type AuthService struct {
 	userRepo    *repository.UserRepository
 	accountRepo *repository.AccountRepository
 	sessionRepo *repository.SessionRepository
@@ -42,8 +42,8 @@ func NewService(
 	userRepo *repository.UserRepository, accountRepo *repository.AccountRepository, sessionRepo *repository.SessionRepository,
 	txm *database.TransactionManager, httpClient *http.Client,
 	logger zerolog.Logger, authConfig *config.AuthConfig,
-) AuthService {
-	return &service{
+) *AuthService {
+	return &AuthService{
 		userRepo:    userRepo,
 		accountRepo: accountRepo,
 		sessionRepo: sessionRepo,
@@ -54,7 +54,7 @@ func NewService(
 	}
 }
 
-func (s *service) GetMe(ctx context.Context) (*middleware.UserContext, error) {
+func (s *AuthService) GetMe(ctx context.Context) (*middleware.UserContext, error) {
 	userContext, ok := ctx.Value(middleware.UserContextKey).(*middleware.UserContext)
 	if !ok || userContext == nil {
 		return nil, ErrFetchUserFailed
@@ -63,7 +63,7 @@ func (s *service) GetMe(ctx context.Context) (*middleware.UserContext, error) {
 	return userContext, nil
 }
 
-func (s *service) AuthenticateWithOAuth(ctx context.Context, code, provider string, ipAddress, userAgent *string) (*sqlc.AuthSession, error) {
+func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, code, provider string, ipAddress, userAgent *string) (*sqlc.AuthSession, error) {
 	switch provider {
 	case "discord":
 		return s.authenticateWithDiscord(ctx, code, ipAddress, userAgent)
@@ -72,7 +72,7 @@ func (s *service) AuthenticateWithOAuth(ctx context.Context, code, provider stri
 	}
 }
 
-func (s *service) Logout(ctx context.Context) error {
+func (s *AuthService) Logout(ctx context.Context) error {
 	sessionContext, ok := ctx.Value(middleware.SessionContextKey).(*middleware.SessionContext)
 	if !ok || sessionContext == nil {
 		return ErrFetchSessionContextFailed
@@ -86,7 +86,7 @@ func (s *service) Logout(ctx context.Context) error {
 	return nil
 }
 
-func (s *service) authenticateWithDiscord(ctx context.Context, code string, ipAddress, userAgent *string) (*sqlc.AuthSession, error) {
+func (s *AuthService) authenticateWithDiscord(ctx context.Context, code string, ipAddress, userAgent *string) (*sqlc.AuthSession, error) {
 	discordOAuthResp, err := oauth.ExchangeDiscordCode(ctx, s.httpClient, &s.authConfig.Discord, code)
 	if err != nil {
 		// Log it
@@ -114,7 +114,7 @@ func (s *service) authenticateWithDiscord(ctx context.Context, code string, ipAd
 	return s.createSessionForExistingUser(ctx, account.UserID, ipAddress, userAgent)
 }
 
-func (s *service) registerNewDiscordUser(ctx context.Context, userInfo *oauth.DiscordUserWithAvatarURL, oauthResp *oauth.DiscordExchangeResponse, ipAddress, userAgent *string) (*sqlc.AuthSession, error) {
+func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oauth.DiscordUserWithAvatarURL, oauthResp *oauth.DiscordExchangeResponse, ipAddress, userAgent *string) (*sqlc.AuthSession, error) {
 	var session *sqlc.AuthSession
 
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
@@ -171,7 +171,7 @@ func (s *service) registerNewDiscordUser(ctx context.Context, userInfo *oauth.Di
 	return session, nil
 }
 
-func (s *service) createSessionForExistingUser(ctx context.Context, userID uuid.UUID, ipAddress, userAgent *string) (*sqlc.AuthSession, error) {
+func (s *AuthService) createSessionForExistingUser(ctx context.Context, userID uuid.UUID, ipAddress, userAgent *string) (*sqlc.AuthSession, error) {
 	return s.sessionRepo.Create(ctx, sqlc.CreateSessionParams{
 		UserID:    userID,
 		ExpiresAt: time.Now().AddDate(0, 1, 0),

@@ -95,3 +95,14 @@ func (r *UserRepository) GetAllUsers(ctx context.Context, search *string, limit,
 
 	return r.db.Query.GetUsers(ctx, params)
 }
+
+func (r *UserRepository) GetUserByRFID(ctx context.Context, rfid string) (*sqlc.AuthUser, error) {
+	user, err := r.db.Query.GetUserByRFID(ctx, &rfid)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrUserNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

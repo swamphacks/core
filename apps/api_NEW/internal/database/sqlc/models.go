@@ -392,7 +392,7 @@ type EventRole struct {
 	Rfid        *string       `json:"rfid"`
 }
 
-type HackathonConfig struct {
+type Hackathon struct {
 	Name                     string     `json:"name"`
 	Description              *string    `json:"description"`
 	Location                 *string    `json:"location"`

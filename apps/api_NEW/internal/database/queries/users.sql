@@ -53,3 +53,22 @@ WHERE LOWER(name) LIKE LOWER('%' || COALESCE(sqlc.arg('search'), '') || '%')
    OR LOWER(email) LIKE LOWER('%' || COALESCE(sqlc.arg('search'), '') || '%')
 ORDER BY name
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: GetUserByRFID :one
+SELECT u.*
+FROM auth.users u
+JOIN event_roles er ON u.id = er.user_id
+WHERE er.rfid = $1;
+
+-- name: GetUsersWithRoles :many
+SELECT u.*, er.role AS event_role
+FROM auth.users u
+JOIN event_roles er ON u.id = er.user_id;
+
+-- name: GetCheckedInStatusByUserIds :one
+SELECT EXISTS (
+    SELECT 1 
+    FROM event_roles 
+    WHERE user_id = $1 
+      AND checked_in_at IS NOT NULL
+)::bool;
