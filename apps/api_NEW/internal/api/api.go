@@ -19,6 +19,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/domains/auth"
 	"github.com/swamphacks/core/apps/api/internal/domains/email"
 	"github.com/swamphacks/core/apps/api/internal/domains/hackathon"
+	"github.com/swamphacks/core/apps/api/internal/domains/team"
 	"github.com/swamphacks/core/apps/api/internal/domains/user"
 	"github.com/swamphacks/core/apps/api/internal/emailutils"
 	"github.com/swamphacks/core/apps/api/internal/logger"
@@ -106,6 +107,9 @@ func Run() {
 	hackathonRepo := repository.NewHackathonRepository(db)
 	eventRolesRepo := repository.NewEventRolesRepository(db)
 	applicationRepo := repository.NewApplicationRepository(db)
+	teamRepo := repository.NewTeamRespository(db)
+	teamMemberRepo := repository.NewTeamMemberRespository(db)
+	teamJoinRequestRepo := repository.NewTeamJoinRequestRepository(db)
 
 	mw := mw.NewMiddleware(eventRolesRepo, db, logger, config)
 
@@ -126,6 +130,10 @@ func Run() {
 	applicationService := application.NewService(applicationRepo, userRepo, hackathonRepo, eventRolesRepo, txm, r2Client, &config.CoreBuckets, nil, logger, emailService)
 	applicationHandler := application.NewHandler(applicationService, config, logger)
 	application.RegisterRoutes(applicationHandler, huma.NewGroup(api, "/application"), mw)
+
+	teamService := team.NewService(teamRepo, teamMemberRepo, teamJoinRequestRepo, hackathonRepo, eventRolesRepo, txm, logger)
+	teamHandler := team.NewHandler(teamService, logger)
+	team.RegisterRoutes(teamHandler, huma.NewGroup(api, "/team"), mw)
 
 	logger.Info().Msgf("API listening on port %s", config.Port)
 	if err := http.ListenAndServe(":"+config.Port, r); err != nil {

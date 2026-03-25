@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -38,8 +39,18 @@ func (r *EventRolesRepository) RemoveRole(ctx context.Context, userId uuid.UUID)
 	return r.db.Query.RemoveRole(ctx, userId)
 }
 
-func (r *EventRolesRepository) GetRoleByUserId(ctx context.Context, userId uuid.UUID) (sqlc.EventRole, error) {
-	return r.db.Query.GetRoleByUserId(ctx, userId)
+func (r *EventRolesRepository) GetRoleByUserId(ctx context.Context, userId uuid.UUID) (*sqlc.EventRole, error) {
+	role, err := r.db.Query.GetRoleByUserId(ctx, userId)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrEntityNotFound
+		}
+
+		return nil, err
+	}
+
+	return &role, nil
 }
 
 // **Deprecated**. Use `UpdateEventRoleByIds` instead.

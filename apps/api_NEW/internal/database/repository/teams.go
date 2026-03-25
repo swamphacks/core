@@ -35,10 +35,10 @@ func (r *TeamRepository) NewTx(tx pgx.Tx) *TeamRepository {
 	}
 }
 
-func (r *TeamRepository) Create(ctx context.Context, name string, owner_id, event_id uuid.UUID) (*sqlc.Team, error) {
+func (r *TeamRepository) Create(ctx context.Context, name string, owner_id uuid.UUID) (*sqlc.Team, error) {
 	team, err := r.db.Query.CreateTeam(ctx, sqlc.CreateTeamParams{
 		Name:    name,
-		OwnerID: &event_id,
+		OwnerID: &owner_id,
 	})
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (r *TeamRepository) GetTeamByMember(ctx context.Context, userId uuid.UUID) 
 	return &team, err
 }
 
-func (r *TeamRepository) GetTeamsWithMembers(ctx context.Context, eventId uuid.UUID, limit, offset int32) ([]sqlc.ListTeamsWithMembersRow, error) {
+func (r *TeamRepository) GetTeamsWithMembers(ctx context.Context, limit, offset int32) ([]sqlc.ListTeamsWithMembersRow, error) {
 	return r.db.Query.ListTeamsWithMembers(ctx, sqlc.ListTeamsWithMembersParams{
 		Limit:  limit,
 		Offset: offset,

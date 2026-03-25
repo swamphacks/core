@@ -31,14 +31,14 @@ func (r *TeamJoinRequestRepository) NewTx(tx pgx.Tx) *TeamJoinRequestRepository 
 	}
 }
 
-func (r *TeamJoinRequestRepository) Create(ctx context.Context, teamId, userId uuid.UUID, message string) (*sqlc.TeamJoinRequest, error) {
+func (r *TeamJoinRequestRepository) Create(ctx context.Context, teamId, userId uuid.UUID, message *string) (*sqlc.TeamJoinRequest, error) {
 
 	l := logger.New()
 	l.Debug().Msg("Before creating...")
 	request, err := r.db.Query.CreateTeamJoinRequest(ctx, sqlc.CreateTeamJoinRequestParams{
 		TeamID:         teamId,
 		UserID:         userId,
-		RequestMessage: &message,
+		RequestMessage: message,
 	})
 	if err != nil {
 		return nil, err
