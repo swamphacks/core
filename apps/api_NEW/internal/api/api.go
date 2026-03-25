@@ -124,7 +124,7 @@ func Run() {
 	userHandler := user.NewHandler(userService, config, logger)
 	user.RegisterRoutes(userHandler, huma.NewGroup(api, "/user"), mw)
 
-	hackathonService := hackathon.NewService(hackathonRepo, logger)
+	hackathonService := hackathon.NewService(hackathonRepo, eventRolesRepo, logger)
 	hackathonHandler := hackathon.NewHandler(hackathonService, config, logger)
 	hackathon.RegisterRoutes(hackathonHandler, huma.NewGroup(api, "/hackathon"), mw)
 

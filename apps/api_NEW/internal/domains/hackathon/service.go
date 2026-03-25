@@ -3,6 +3,7 @@ package hackathon
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -11,14 +12,16 @@ import (
 )
 
 type HackathonService struct {
-	hackathonRepo *repository.HackathonRepository
-	logger        zerolog.Logger
+	hackathonRepo  *repository.HackathonRepository
+	eventRolesRepo *repository.EventRolesRepository
+	logger         zerolog.Logger
 }
 
-func NewService(hackathonRepo *repository.HackathonRepository, logger zerolog.Logger) *HackathonService {
+func NewService(hackathonRepo *repository.HackathonRepository, eventRolesRepo *repository.EventRolesRepository, logger zerolog.Logger) *HackathonService {
 	return &HackathonService{
-		hackathonRepo: hackathonRepo,
-		logger:        logger.With().Str("service", "HackathonService").Str("domain", "hackathon").Logger(),
+		hackathonRepo:  hackathonRepo,
+		eventRolesRepo: eventRolesRepo,
+		logger:         logger.With().Str("service", "HackathonService").Str("domain", "hackathon").Logger(),
 	}
 }
 
@@ -103,4 +106,41 @@ func (s *HackathonService) GetAttendeeCount(ctx context.Context) (int64, error) 
 	}
 
 	return count, nil
+}
+
+var (
+	ErrRolesNotFound   = errors.New("roles not found")
+	ErrUserNotAttendee = errors.New("user is not an attendee")
+	ErrUserCheckedIn   = errors.New("user already checked in")
+)
+
+func (s *HackathonService) CheckInAttendee(ctx context.Context, userId uuid.UUID, RFID *string) error {
+	// Retrieve user with their current event role
+	role, err := s.eventRolesRepo.GetRoleByUserId(ctx, userId)
+	if err != nil {
+		return ErrRolesNotFound
+	}
+
+	if role.Role != sqlc.EventRoleTypeAttendee {
+		return ErrUserNotAttendee
+	}
+
+	if role.CheckedInAt != nil {
+		return ErrUserCheckedIn
+	}
+
+	now := time.Now()
+	// Update user role checked in AND rfid
+	return s.eventRolesRepo.UpdateRoleByUserId(ctx, sqlc.UpdateRoleByUserIdParams{
+		UserID: userId,
+
+		Role:         sqlc.EventRoleTypeAttendee,
+		RoleDoUpdate: false,
+
+		CheckedInAt:         &now,
+		CheckedInAtDoUpdate: true,
+
+		Rfid:         RFID,
+		RfidDoUpdate: RFID != nil,
+	})
 }

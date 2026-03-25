@@ -90,6 +90,18 @@ func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Mi
 		Errors:      []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
 	}, hackathonHandler.handleGetAttendeeCount)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "check-in",
+		Method:      http.MethodGet,
+		Summary:     "Check In User",
+		Description: "Staff route for checking a user to an event. The user to check in must be an attendee and have never been checked in yet.",
+		Tags:        []string{"Hackathon"},
+		Path:        "/checkin",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Errors:      []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, hackathonHandler.handleCheckIn)
 }
 
 type handler struct {
@@ -259,4 +271,29 @@ func (h *handler) handleGetAttendeeCount(ctx context.Context, input *struct{}) (
 	}
 
 	return &GetAttendeeCountOutput{Body: count}, nil
+}
+
+type CheckInRequest struct {
+	UserID uuid.UUID `json:"user_id"`
+	RFID   *string   `json:"rfid"`
+}
+
+type CheckInOutput struct {
+	Status int
+}
+
+func (h *handler) handleCheckIn(ctx context.Context, input *struct {
+	Body CheckInRequest
+}) (*CheckInOutput, error) {
+	if *input.Body.RFID == "" {
+		input.Body.RFID = nil
+	}
+
+	err := h.hackathonService.CheckInAttendee(ctx, input.Body.UserID, input.Body.RFID)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to check in user")
+	}
+
+	return &CheckInOutput{Status: http.StatusOK}, nil
 }
