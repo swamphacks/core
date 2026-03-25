@@ -37,3 +37,17 @@ func GetUserIdFromCtx(ctx context.Context) *uuid.UUID {
 
 	return &userCtx.UserID
 }
+
+type EventContext struct {
+	EventRole *sqlc.EventRole
+}
+
+// Takes in the request context and returns the eventRole or nil if not retrievable
+func GetEventRoleFromCtx(ctx context.Context) *sqlc.EventRoleType {
+	eventRole, ok := ctx.Value(mw.EventRoleContextKey).(*sqlc.EventRole)
+	if !ok {
+		return nil
+	}
+
+	return &eventRole.Role
+}

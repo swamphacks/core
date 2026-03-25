@@ -9,15 +9,20 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog/log"
 	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
+	"github.com/swamphacks/core/apps/api/internal/domains/application"
 	"github.com/swamphacks/core/apps/api/internal/domains/auth"
+	"github.com/swamphacks/core/apps/api/internal/domains/email"
 	"github.com/swamphacks/core/apps/api/internal/domains/hackathon"
 	"github.com/swamphacks/core/apps/api/internal/domains/user"
+	"github.com/swamphacks/core/apps/api/internal/emailutils"
 	"github.com/swamphacks/core/apps/api/internal/logger"
+	"github.com/swamphacks/core/apps/api/internal/storage"
 )
 
 func Run() {
@@ -38,6 +43,21 @@ func Run() {
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
+	}
+
+	// Create SES Client for email service
+	sesClient := emailutils.NewSESClient(config.AWS.AccessKey, config.AWS.AccessKeySecret, config.AWS.Region, logger)
+
+	// Create asynq client
+	redisOpt, err := asynq.ParseRedisURI(config.RedisURL)
+	if err != nil {
+		logger.Fatal().Msg("Failed to parse REDIS_URL")
+	}
+	taskQueueClient := asynq.NewClient(redisOpt)
+
+	r2Client, err := storage.NewR2Client(config.CF.AccountID, config.CF.AccessKeyId, config.CF.AccessKeySecret, logger)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to create R2 client")
 	}
 
 	r := chi.NewRouter()
@@ -85,6 +105,7 @@ func Run() {
 	sessionRepo := repository.NewSessionRepository(db)
 	hackathonRepo := repository.NewHackathonRepository(db)
 	eventRolesRepo := repository.NewEventRolesRepository(db)
+	applicationRepo := repository.NewApplicationRepository(db)
 
 	mw := mw.NewMiddleware(eventRolesRepo, db, logger, config)
 
@@ -100,6 +121,11 @@ func Run() {
 	hackathonService := hackathon.NewService(hackathonRepo, logger)
 	hackathonHandler := hackathon.NewHandler(hackathonService, config, logger)
 	hackathon.RegisterRoutes(hackathonHandler, huma.NewGroup(api, "/hackathon"), mw)
+
+	emailService := email.NewEmailService(taskQueueClient, sesClient, r2Client, logger, config)
+	applicationService := application.NewService(applicationRepo, userRepo, hackathonRepo, eventRolesRepo, txm, r2Client, &config.CoreBuckets, nil, logger, emailService)
+	applicationHandler := application.NewHandler(applicationService, config, logger)
+	application.RegisterRoutes(applicationHandler, huma.NewGroup(api, "/application"), mw)
 
 	logger.Info().Msgf("API listening on port %s", config.Port)
 	if err := http.ListenAndServe(":"+config.Port, r); err != nil {

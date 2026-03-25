@@ -52,7 +52,7 @@ func (r *ApplicationRepository) CreateApplication(ctx context.Context, userId uu
 	return &application, nil
 }
 
-func (r *ApplicationRepository) GetApplicationByUser(ctx context.Context, userId uuid.UUID) (*sqlc.Application, error) {
+func (r *ApplicationRepository) GetApplicationByUserId(ctx context.Context, userId uuid.UUID) (*sqlc.Application, error) {
 	application, err := r.db.Query.GetApplicationByUserId(ctx, userId)
 
 	if err != nil {

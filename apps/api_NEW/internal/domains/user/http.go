@@ -13,7 +13,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
-	"github.com/swamphacks/core/apps/api/internal/email"
+	"github.com/swamphacks/core/apps/api/internal/emailutils"
 )
 
 func RegisterRoutes(userHandler *handler, group huma.API, mw *middleware.Middleware) {
@@ -141,7 +141,7 @@ func (h *handler) handleUpdateUser(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Name is required")
 	}
 
-	if input.Body.PreferredEmail != "" && !email.IsValidEmail(input.Body.PreferredEmail) {
+	if input.Body.PreferredEmail != "" && !emailutils.IsValidEmail(input.Body.PreferredEmail) {
 		return nil, huma.Error400BadRequest("Invalid email format")
 	}
 
@@ -232,7 +232,7 @@ func (h *handler) handleOnboarding(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Name and preferred email are required")
 	}
 
-	if input.Body.PreferredEmail != "" && !email.IsValidEmail(input.Body.PreferredEmail) {
+	if input.Body.PreferredEmail != "" && !emailutils.IsValidEmail(input.Body.PreferredEmail) {
 		return nil, huma.Error400BadRequest("Invalid email format")
 	}
 
@@ -289,7 +289,7 @@ type GetUserByEmailOutput struct {
 func (h *handler) handleGetUserByEmail(ctx context.Context, input *struct {
 	Email string `path:"email"`
 }) (*GetUserByEmailOutput, error) {
-	if !email.IsValidEmail(input.Email) {
+	if !emailutils.IsValidEmail(input.Email) {
 		return nil, huma.Error400BadRequest("Invalid email")
 	}
 
