@@ -23,7 +23,7 @@ SELECT
 FROM
     team_members tm
 JOIN
-    auth.users u ON tm.user_id = u.id
+    users u ON tm.user_id = u.id
 WHERE
     tm.team_id = $1;
 

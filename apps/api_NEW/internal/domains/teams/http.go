@@ -1,4 +1,4 @@
-package team
+package teams
 
 import (
 	"context"
@@ -163,13 +163,13 @@ type GetMyTeamOutput struct {
 }
 
 func (h *handler) handleGetMyTeam(ctx context.Context, input *struct{}) (*GetMyTeamOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	team, err := h.teamService.GetUserTeamWithMembers(ctx, *userId)
+	team, err := h.teamService.GetUserTeamWithMembers(ctx, userCtx.UserID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Fail to get my team")
 	}
@@ -218,13 +218,13 @@ type CreateTeamOutput struct {
 func (h *handler) handleCreateTeam(ctx context.Context, input *struct {
 	Body CreateTeamRequest
 }) (*CreateTeamOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	team, err := h.teamService.CreateTeam(ctx, input.Body.Name, *userId)
+	team, err := h.teamService.CreateTeam(ctx, input.Body.Name, userCtx.UserID)
 
 	if err != nil {
 		if errors.Is(err, ErrTeamExists) {
@@ -244,10 +244,10 @@ type LeaveTeamOutput struct {
 func (h *handler) handleLeaveTeam(ctx context.Context, input *struct {
 	TeamId string `path:"teamId"`
 }) (*LeaveTeamOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	teamId, err := uuid.Parse(input.TeamId)
@@ -256,7 +256,7 @@ func (h *handler) handleLeaveTeam(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Invalid team id")
 	}
 
-	err = h.teamService.LeaveTeam(ctx, *userId, teamId)
+	err = h.teamService.LeaveTeam(ctx, userCtx.UserID, teamId)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Fail to leave team")
@@ -277,10 +277,10 @@ func (h *handler) handleRequestToJoinTeam(ctx context.Context, input *struct {
 	Body   CreateJoinRequest
 	TeamId string `path:"teamId"`
 }) (*RequestToJoinTeamOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	teamId, err := uuid.Parse(input.TeamId)
@@ -289,7 +289,7 @@ func (h *handler) handleRequestToJoinTeam(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Invalid team id")
 	}
 
-	request, err := h.teamService.RequestToJoinTeam(ctx, teamId, *userId, input.Body.Message)
+	request, err := h.teamService.RequestToJoinTeam(ctx, teamId, userCtx.UserID, input.Body.Message)
 
 	if err != nil {
 		if errors.Is(err, ErrUserOnTeam) {
@@ -309,10 +309,10 @@ type GetPendingRequestsForTeamOutput struct {
 func (h *handler) handleGetPendingRequestsForTeam(ctx context.Context, input *struct {
 	TeamId string `path:"teamId"`
 }) (*GetPendingRequestsForTeamOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	teamId, err := uuid.Parse(input.TeamId)
@@ -321,7 +321,7 @@ func (h *handler) handleGetPendingRequestsForTeam(ctx context.Context, input *st
 		return nil, huma.Error400BadRequest("Invalid team id")
 	}
 
-	requests, err := h.teamService.GetPendingJoinRequestForTeam(ctx, *userId, teamId)
+	requests, err := h.teamService.GetPendingJoinRequestForTeam(ctx, userCtx.UserID, teamId)
 
 	if err != nil {
 		if errors.Is(err, ErrUserNotTeamOwner) {
@@ -339,13 +339,12 @@ type GetMyPendingRequestsOutput struct {
 }
 
 func (h *handler) handleGetMyPendingRequests(ctx context.Context, input *struct{}) (*GetMyPendingRequestsOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
-
-	requests, err := h.teamService.GetUserPendingJoinRequests(ctx, *userId)
+	requests, err := h.teamService.GetUserPendingJoinRequests(ctx, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Fail to get user's pending requests")
@@ -361,10 +360,10 @@ type AcceptTeamJoinRequestOutput struct {
 func (h *handler) handleAcceptTeamJoinRequest(ctx context.Context, input *struct {
 	RequestId string `path:"requestId"`
 }) (*AcceptTeamJoinRequestOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	requestId, err := uuid.Parse(input.RequestId)
@@ -373,7 +372,7 @@ func (h *handler) handleAcceptTeamJoinRequest(ctx context.Context, input *struct
 		return nil, huma.Error400BadRequest("Invalid join request id")
 	}
 
-	err = h.teamService.RespondToJoinRequest(ctx, *userId, requestId, true)
+	err = h.teamService.RespondToJoinRequest(ctx, userCtx.UserID, requestId, true)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Fail to accept team join request")
@@ -389,10 +388,10 @@ type RejectTeamJoinRequestOutput struct {
 func (h *handler) handleRejectTeamJoinRequest(ctx context.Context, input *struct {
 	RequestId string `path:"requestId"`
 }) (*RejectTeamJoinRequestOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	requestId, err := uuid.Parse(input.RequestId)
@@ -401,7 +400,7 @@ func (h *handler) handleRejectTeamJoinRequest(ctx context.Context, input *struct
 		return nil, huma.Error400BadRequest("Invalid join request id")
 	}
 
-	err = h.teamService.RespondToJoinRequest(ctx, *userId, requestId, false)
+	err = h.teamService.RespondToJoinRequest(ctx, userCtx.UserID, requestId, false)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Fail to accept team join request")
@@ -418,10 +417,10 @@ func (h *handler) handleKickMemberFromTeam(ctx context.Context, input *struct {
 	MemberId string `path:"memberId"`
 	TeamId   string `path:"teamId"`
 }) (*KickMemberFromTeamOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	memberId, err := uuid.Parse(input.MemberId)
@@ -436,7 +435,7 @@ func (h *handler) handleKickMemberFromTeam(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Invalid team id")
 	}
 
-	err = h.teamService.KickMemberFromTeam(ctx, memberId, teamId, *userId)
+	err = h.teamService.KickMemberFromTeam(ctx, memberId, teamId, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Fail to kick member from team")

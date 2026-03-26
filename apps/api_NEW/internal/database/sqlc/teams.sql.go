@@ -118,7 +118,7 @@ FROM
 LEFT JOIN
     team_members tm ON t.id = tm.team_id
 LEFT JOIN
-    auth.users u ON tm.user_id = u.id
+    users u ON tm.user_id = u.id
 GROUP BY
     t.id
 ORDER BY

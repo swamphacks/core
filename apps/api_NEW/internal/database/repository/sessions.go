@@ -30,7 +30,7 @@ func (r *SessionRepository) NewTx(tx pgx.Tx) *SessionRepository {
 	}
 }
 
-func (r *SessionRepository) Create(ctx context.Context, params sqlc.CreateSessionParams) (*sqlc.AuthSession, error) {
+func (r *SessionRepository) Create(ctx context.Context, params sqlc.CreateSessionParams) (*sqlc.Session, error) {
 	session, err := r.db.Query.CreateSession(ctx, params)
 	return &session, err
 }

@@ -11,7 +11,6 @@ LEFT JOIN user_redemptions ur ON r.id = ur.redeemable_id
 GROUP BY r.id;
 
 -- name: RedeemRedeemable :one
--- Using user id and redeemable id, attempt to redeem a redeemable
 INSERT INTO user_redemptions (user_id, redeemable_id, amount)
 SELECT $1, $2, 1
 WHERE (
@@ -27,13 +26,11 @@ WHERE user_redemptions.amount < (SELECT max_user_amount FROM redeemables WHERE i
 RETURNING *;
 
 -- name: GetRedemptionInfoByRedeemableID :many
--- Gather all redemption info for a specific reedeemable (who has redeemed already)
 SELECT ur.user_id, ur.redeemable_id, ur.amount, ur.created_at, ur.updated_at
 FROM user_redemptions ur
 WHERE ur.redeemable_id = $1;
 
 -- name: CreateRedeemable :one
--- Create a new redeemable
 INSERT INTO redeemables (name, amount, max_user_amount)
 VALUES ($1, $2, $3)
 RETURNING *;
@@ -49,12 +46,10 @@ WHERE id = $1
 RETURNING *;
 
 -- name: DeleteRedeemable :exec
--- Delete a redeemable by id
 DELETE FROM redeemables
 WHERE id = $1;
 
 -- name: UpdateRedemption :exec
--- Update a redemption record for a user and redeemable (for removing redemption mostly)
 UPDATE user_redemptions
 SET
     amount = $1

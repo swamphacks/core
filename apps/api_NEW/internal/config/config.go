@@ -58,6 +58,7 @@ type CoreBuckets struct {
 }
 
 type Config struct {
+	AppEnv                   string   `env:"APP_ENV"`
 	DatabaseURL              string   `env:"DATABASE_URL"`
 	RedisURL                 string   `env:"REDIS_URL"`
 	Port                     string   `env:"PORT" envDefault:"8080"`

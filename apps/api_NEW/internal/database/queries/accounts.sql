@@ -1,5 +1,5 @@
 -- name: CreateAccount :one
-INSERT INTO auth.accounts (
+INSERT INTO accounts (
     user_id, provider_id, account_id, hashed_password,
     access_token, refresh_token, id_token,
     access_token_expires_at, refresh_token_expires_at, scope
@@ -11,15 +11,15 @@ INSERT INTO auth.accounts (
 RETURNING *;
 
 -- name: GetByProviderAndAccountID :one
-SELECT * FROM auth.accounts
+SELECT * FROM accounts
 WHERE provider_id = $1 AND account_id = $2;
 
 -- name: GetByUserID :many
-SELECT * FROM auth.accounts
+SELECT * FROM accounts
 WHERE user_id = $1;
 
 -- name: UpdateTokens :exec
-UPDATE auth.accounts
+UPDATE accounts
 SET access_token = $3,
     refresh_token = $4,
     id_token = $5,
@@ -29,10 +29,10 @@ SET access_token = $3,
 WHERE provider_id = $1 AND account_id = $2;
 
 -- name: DeleteAccount :exec
-DELETE FROM auth.accounts
+DELETE FROM accounts
 WHERE provider_id = $1 AND account_id = $2;
 
 -- name: GetUserIDByDiscordAccountID :one
 SELECT user_id
-FROM auth.accounts
+FROM accounts
 WHERE provider_id = 'discord' AND account_id = $1;

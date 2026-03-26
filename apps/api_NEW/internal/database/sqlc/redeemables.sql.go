@@ -7,9 +7,9 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createRedeemable = `-- name: CreateRedeemable :one
@@ -24,7 +24,6 @@ type CreateRedeemableParams struct {
 	MaxUserAmount int32  `json:"max_user_amount"`
 }
 
-// Create a new redeemable
 func (q *Queries) CreateRedeemable(ctx context.Context, arg CreateRedeemableParams) (Redeemable, error) {
 	row := q.db.QueryRow(ctx, createRedeemable, arg.Name, arg.Amount, arg.MaxUserAmount)
 	var i Redeemable
@@ -44,7 +43,6 @@ DELETE FROM redeemables
 WHERE id = $1
 `
 
-// Delete a redeemable by id
 func (q *Queries) DeleteRedeemable(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteRedeemable, id)
 	return err
@@ -64,13 +62,13 @@ GROUP BY r.id
 `
 
 type GetRedeemablesRow struct {
-	ID            uuid.UUID          `json:"id"`
-	Name          string             `json:"name"`
-	TotalStock    int32              `json:"total_stock"`
-	MaxUserAmount int32              `json:"max_user_amount"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
-	TotalRedeemed interface{}        `json:"total_redeemed"`
+	ID            uuid.UUID   `json:"id"`
+	Name          string      `json:"name"`
+	TotalStock    int32       `json:"total_stock"`
+	MaxUserAmount int32       `json:"max_user_amount"`
+	CreatedAt     *time.Time  `json:"created_at"`
+	UpdatedAt     *time.Time  `json:"updated_at"`
+	TotalRedeemed interface{} `json:"total_redeemed"`
 }
 
 func (q *Queries) GetRedeemables(ctx context.Context) ([]GetRedeemablesRow, error) {
@@ -107,7 +105,6 @@ FROM user_redemptions ur
 WHERE ur.redeemable_id = $1
 `
 
-// Gather all redemption info for a specific reedeemable (who has redeemed already)
 func (q *Queries) GetRedemptionInfoByRedeemableID(ctx context.Context, redeemableID uuid.UUID) ([]UserRedemption, error) {
 	rows, err := q.db.Query(ctx, getRedemptionInfoByRedeemableID, redeemableID)
 	if err != nil {
@@ -155,7 +152,6 @@ type RedeemRedeemableParams struct {
 	RedeemableID uuid.UUID `json:"redeemable_id"`
 }
 
-// Using user id and redeemable id, attempt to redeem a redeemable
 func (q *Queries) RedeemRedeemable(ctx context.Context, arg RedeemRedeemableParams) (UserRedemption, error) {
 	row := q.db.QueryRow(ctx, redeemRedeemable, arg.UserID, arg.RedeemableID)
 	var i UserRedemption
@@ -219,7 +215,6 @@ type UpdateRedemptionParams struct {
 	RedeemableID uuid.UUID `json:"redeemable_id"`
 }
 
-// Update a redemption record for a user and redeemable (for removing redemption mostly)
 func (q *Queries) UpdateRedemption(ctx context.Context, arg UpdateRedemptionParams) error {
 	_, err := q.db.Exec(ctx, updateRedemption, arg.Amount, arg.UserID, arg.RedeemableID)
 	return err

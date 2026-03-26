@@ -16,7 +16,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
-	"github.com/swamphacks/core/apps/api/internal/database/repository"
+	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/domains/bat"
 )
@@ -268,16 +268,16 @@ type GetApplicationOutput struct {
 }
 
 func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*GetApplicationOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	application, err := h.applicationService.GetApplicationByUserId(ctx, *userId)
+	application, err := h.applicationService.GetApplicationByUserId(ctx, userCtx.UserID)
 	if err != nil {
-		if errors.Is(err, repository.ErrApplicationNotFound) {
-			newApplication, err := h.applicationService.CreateApplication(ctx, *userId)
+		if errors.Is(err, database.ErrApplicationNotFound) {
+			newApplication, err := h.applicationService.CreateApplication(ctx, userCtx.UserID)
 
 			if err != nil || newApplication == nil {
 				return nil, huma.Error500InternalServerError("can't create application")
@@ -302,14 +302,14 @@ type SaveApplicationOutput struct {
 func (h *handler) handleSaveApplication(ctx context.Context, input *struct {
 	Body any
 }) (*SaveApplicationOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	// TODO: validate input.Body, make sure that the data is the application
-	err := h.applicationService.SaveApplication(ctx, input.Body, *userId)
+	err := h.applicationService.SaveApplication(ctx, input.Body, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to save application")
@@ -323,10 +323,10 @@ type SubmitApplicationOutput struct {
 }
 
 func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) (*SubmitApplicationOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	r := ctx.Value(middleware.RawRequestKey{}).(*http.Request)
@@ -408,7 +408,7 @@ func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) 
 		return nil, huma.Error400BadRequest("Unable to parse application submission")
 	}
 
-	err = h.applicationService.SubmitApplication(r.Context(), submission, resumeFileBuffer.Bytes(), *userId)
+	err = h.applicationService.SubmitApplication(r.Context(), submission, resumeFileBuffer.Bytes(), userCtx.UserID)
 
 	if err != nil {
 		if errors.Is(err, ErrApplicationNotOpened) {
@@ -426,13 +426,13 @@ type GetDownloadResumeOutput struct {
 }
 
 func (h *handler) handleGetDownloadResumeURL(ctx context.Context, input *struct{}) (*GetDownloadResumeOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	request, err := h.applicationService.GetDownloadResumeURL(ctx, *userId, 60)
+	request, err := h.applicationService.GetDownloadResumeURL(ctx, userCtx.UserID, 60)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to get url to download resume")
@@ -474,13 +474,13 @@ func (h *handler) handleSubmitApplicationReview(ctx context.Context, input *stru
 		return nil, huma.Error400BadRequest("Invalid applicant id")
 	}
 
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err = h.applicationService.SaveApplicationReview(ctx, *userId, applicantId, input.Body.ExperienceRating, input.Body.PassionRating)
+	err = h.applicationService.SaveApplicationReview(ctx, userCtx.UserID, applicantId, input.Body.ExperienceRating, input.Body.PassionRating)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to save review")
@@ -494,13 +494,13 @@ type GetAssignedApplicationsOutput struct {
 }
 
 func (h *handler) handleGetAssignedApplications(ctx context.Context, input *struct{}) (*GetAssignedApplicationsOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	applications, err := h.applicationService.GetAssignedApplicationsAndProgress(ctx, *userId)
+	applications, err := h.applicationService.GetAssignedApplicationsAndProgress(ctx, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to get assigned applications")
@@ -546,10 +546,10 @@ type GetResumePresignedUrlOutput struct {
 func (h *handler) handleGetResumePresignedUrl(ctx context.Context, input *struct {
 	ApplicantId string `path:"applicantId"`
 }) (*GetResumePresignedUrlOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	applicantId, err := uuid.Parse(input.ApplicantId)
@@ -558,13 +558,7 @@ func (h *handler) handleGetResumePresignedUrl(ctx context.Context, input *struct
 		return nil, huma.Error400BadRequest("Invalid applicant id")
 	}
 
-	eventRole := ctxutils.GetEventRoleFromCtx(ctx)
-
-	if eventRole == nil {
-		return nil, huma.Error400BadRequest("Unable to get user role")
-	}
-
-	if *eventRole != sqlc.EventRoleTypeStaff && *eventRole != sqlc.EventRoleTypeAdmin && *userId != applicantId {
+	if userCtx.Role != sqlc.RoleTypeStaff && userCtx.Role != sqlc.RoleTypeAdmin && userCtx.UserID != applicantId {
 		return nil, huma.Error400BadRequest("You are not allowed to see other ppls resumes :(")
 	}
 
@@ -582,13 +576,13 @@ type JoinWaitlistOutput struct {
 }
 
 func (h *handler) handleJoinWaitlist(ctx context.Context, input *struct{}) (*JoinWaitlistOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err := h.applicationService.JoinWaitlist(ctx, *userId)
+	err := h.applicationService.JoinWaitlist(ctx, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to join waitlist")
@@ -602,13 +596,13 @@ type WithdrawAcceptanceOutput struct {
 }
 
 func (h *handler) handleWithdrawAcceptance(ctx context.Context, input *struct{}) (*WithdrawAcceptanceOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err := h.applicationService.WithdrawAcceptance(ctx, *userId)
+	err := h.applicationService.WithdrawAcceptance(ctx, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to withdraw acceptance")
@@ -622,13 +616,13 @@ type WithdrawAttendanceOutput struct {
 }
 
 func (h *handler) handleWithdrawAttendance(ctx context.Context, input *struct{}) (*WithdrawAttendanceOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err := h.applicationService.WithdrawAttendance(ctx, *userId)
+	err := h.applicationService.WithdrawAttendance(ctx, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to withdraw attendance")
@@ -642,13 +636,13 @@ type AcceptApplicationAcceptanceOutput struct {
 }
 
 func (h *handler) handleAcceptApplicationAcceptance(ctx context.Context, input *struct{}) (*AcceptApplicationAcceptanceOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err := h.applicationService.AcceptApplicationAcceptance(ctx, *userId)
+	err := h.applicationService.AcceptApplicationAcceptance(ctx, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to withdraw attendance")

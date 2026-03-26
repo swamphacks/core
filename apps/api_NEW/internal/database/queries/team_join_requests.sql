@@ -67,7 +67,7 @@ SELECT
     u.name AS user_name,
     u.image AS user_image
 FROM team_join_requests tjr
-JOIN auth.users u ON u.id = tjr.user_id
+JOIN users u ON u.id = tjr.user_id
 WHERE tjr.team_id = @team_id::uuid
     AND tjr.status = @status::join_request_status
 ORDER BY tjr.created_at DESC;

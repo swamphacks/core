@@ -1,4 +1,4 @@
-package team
+package teams
 
 import (
 	"context"
@@ -31,7 +31,7 @@ type TeamService struct {
 	teamMemberRepo      *repository.TeamMemberRepository
 	teamJoinRequestRepo *repository.TeamJoinRequestRepository
 	hackathonRepo       *repository.HackathonRepository
-	eventRolesRepo      *repository.EventRolesRepository
+	userRepo            *repository.UserRepository
 	txm                 *database.TransactionManager
 	logger              zerolog.Logger
 }
@@ -41,7 +41,7 @@ func NewService(
 	teamMemberRepo *repository.TeamMemberRepository,
 	teamJoinRequestRepo *repository.TeamJoinRequestRepository,
 	hackathonRepo *repository.HackathonRepository,
-	eventRolesRepo *repository.EventRolesRepository,
+	userRepo *repository.UserRepository,
 	txm *database.TransactionManager,
 	logger zerolog.Logger) *TeamService {
 	return &TeamService{
@@ -49,7 +49,7 @@ func NewService(
 		teamMemberRepo:      teamMemberRepo,
 		teamJoinRequestRepo: teamJoinRequestRepo,
 		hackathonRepo:       hackathonRepo,
-		eventRolesRepo:      eventRolesRepo,
+		userRepo:            userRepo,
 		txm:                 txm,
 		logger:              logger.With().Str("service", "TeamService").Str("component", "team").Logger(),
 	}
@@ -76,7 +76,7 @@ func (s *TeamService) CreateTeam(ctx context.Context, name string, userId uuid.U
 		txTeamJoinRequestRepo := s.teamJoinRequestRepo.NewTx(tx)
 
 		// Delete any pending join requests by the user for this event
-		if err := txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, userId, sqlc.JoinRequestStatusPENDING); err != nil {
+		if err := txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, userId, sqlc.JoinRequestStatusPending); err != nil {
 			return err
 		}
 
@@ -313,7 +313,7 @@ func (s *TeamService) GetPendingJoinRequestForTeam(ctx context.Context, userId, 
 		return []sqlc.ListJoinRequestsByTeamAndStatusWithUserRow{}, ErrUserNotTeamOwner
 	}
 
-	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByTeamWithUser(ctx, teamId, sqlc.JoinRequestStatusPENDING)
+	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByTeamWithUser(ctx, teamId, sqlc.JoinRequestStatusPending)
 	if err != nil {
 		return []sqlc.ListJoinRequestsByTeamAndStatusWithUserRow{}, err
 	}
@@ -322,7 +322,7 @@ func (s *TeamService) GetPendingJoinRequestForTeam(ctx context.Context, userId, 
 }
 
 func (s *TeamService) GetUserPendingJoinRequests(ctx context.Context, userId uuid.UUID) ([]sqlc.TeamJoinRequest, error) {
-	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByUserAndStatus(ctx, userId, sqlc.JoinRequestStatusPENDING)
+	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByUserAndStatus(ctx, userId, sqlc.JoinRequestStatusPending)
 	if err != nil {
 		return []sqlc.TeamJoinRequest{}, err
 	}
@@ -347,15 +347,18 @@ func (s *TeamService) RespondToJoinRequest(ctx context.Context, ownerId, request
 	}
 
 	// Also ensure user is actually an applicant or attendee
-	role, err := s.eventRolesRepo.GetRoleByUserId(ctx, oldRequest.UserID)
+	user, err := s.userRepo.GetUserByID(ctx, oldRequest.UserID)
 	if err != nil {
-		if errors.Is(err, repository.ErrEntityNotFound) {
+		if errors.Is(err, database.ErrEntityNotFound) {
 			return ErrUserNotApplicantOrAttendee
 		}
 
 		return err
 	}
-	if role.Role != sqlc.EventRoleTypeAttendee && role.Role != sqlc.EventRoleTypeApplicant {
+	if user == nil {
+		return ErrUserNotApplicantOrAttendee
+	}
+	if user.Role != sqlc.RoleTypeAttendee && user.Role != sqlc.RoleTypeApplicant {
 		return ErrUserNotApplicantOrAttendee
 	}
 
@@ -389,16 +392,16 @@ func (s *TeamService) RespondToJoinRequest(ctx context.Context, ownerId, request
 				return err
 			}
 
-			if _, err := txTeamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.JoinRequestStatusAPPROVED); err != nil {
+			if _, err := txTeamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.JoinRequestStatusApproved); err != nil {
 				return err
 			}
 
 			// Delete all other pending requests by the user for this event
-			return txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, oldRequest.UserID, sqlc.JoinRequestStatusPENDING)
+			return txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, oldRequest.UserID, sqlc.JoinRequestStatusPending)
 		})
 	} else {
 		// Rejecting the request: just update request status
-		_, err := s.teamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.JoinRequestStatusREJECTED)
+		_, err := s.teamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.JoinRequestStatusRejected)
 		return err
 	}
 }

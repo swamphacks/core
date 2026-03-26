@@ -7,21 +7,27 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
 type HackathonService struct {
-	hackathonRepo  *repository.HackathonRepository
-	eventRolesRepo *repository.EventRolesRepository
-	logger         zerolog.Logger
+	hackathonRepo      *repository.HackathonRepository
+	userRepo           *repository.UserRepository
+	eventInterestsRepo *repository.EventInterestsRepository
+	logger             zerolog.Logger
 }
 
-func NewService(hackathonRepo *repository.HackathonRepository, eventRolesRepo *repository.EventRolesRepository, logger zerolog.Logger) *HackathonService {
+func NewService(
+	hackathonRepo *repository.HackathonRepository, userRepo *repository.UserRepository,
+	eventInterestsRepo *repository.EventInterestsRepository, logger zerolog.Logger,
+) *HackathonService {
 	return &HackathonService{
-		hackathonRepo:  hackathonRepo,
-		eventRolesRepo: eventRolesRepo,
-		logger:         logger.With().Str("service", "HackathonService").Str("domain", "hackathon").Logger(),
+		hackathonRepo:      hackathonRepo,
+		userRepo:           userRepo,
+		eventInterestsRepo: eventInterestsRepo,
+		logger:             logger.With().Str("service", "HackathonService").Str("domain", "hackathon").Logger(),
 	}
 }
 
@@ -39,8 +45,8 @@ func (s *HackathonService) GetHackathon(ctx context.Context) (*sqlc.Hackathon, e
 	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
 
 	if err != nil {
-		if errors.Is(err, repository.ErrEntityNotFound) {
-			return nil, repository.ErrEntityNotFound
+		if errors.Is(err, database.ErrEntityNotFound) {
+			return nil, database.ErrEntityNotFound
 		}
 		s.logger.Err(err).Msg("")
 		return nil, errors.New("Failed to get hackathon")
@@ -60,7 +66,7 @@ func (s *HackathonService) UpdateHackathon(ctx context.Context, params sqlc.Upda
 	return nil
 }
 
-func (s *HackathonService) GetStaff(ctx context.Context) ([]sqlc.GetStaffRow, error) {
+func (s *HackathonService) GetStaff(ctx context.Context) ([]sqlc.User, error) {
 	staff, err := s.hackathonRepo.GetStaff(ctx)
 
 	if err != nil {
@@ -68,7 +74,7 @@ func (s *HackathonService) GetStaff(ctx context.Context) ([]sqlc.GetStaffRow, er
 	}
 
 	if staff == nil {
-		return []sqlc.GetStaffRow{}, nil
+		return []sqlc.User{}, nil
 	}
 
 	return *staff, nil
@@ -116,26 +122,26 @@ var (
 
 func (s *HackathonService) CheckInAttendee(ctx context.Context, userId uuid.UUID, RFID *string) error {
 	// Retrieve user with their current event role
-	role, err := s.eventRolesRepo.GetRoleByUserId(ctx, userId)
+	user, err := s.userRepo.GetUserByID(ctx, userId)
 	if err != nil {
-		return ErrRolesNotFound
+		return repository.ErrUserNotFound
 	}
 
-	if role.Role != sqlc.EventRoleTypeAttendee {
+	if user.Role != sqlc.RoleTypeAttendee {
 		return ErrUserNotAttendee
 	}
 
-	if role.CheckedInAt != nil {
+	if user.CheckedInAt != nil {
 		return ErrUserCheckedIn
 	}
 
 	now := time.Now()
 	// Update user role checked in AND rfid
-	return s.eventRolesRepo.UpdateRoleByUserId(ctx, sqlc.UpdateRoleByUserIdParams{
-		UserID: userId,
+	return s.userRepo.UpdateUser(ctx, sqlc.UpdateUserParams{
+		ID: userId,
 
-		Role:         sqlc.EventRoleTypeAttendee,
-		RoleDoUpdate: false,
+		Role:         sqlc.RoleTypeAttendee,
+		RoleDoUpdate: true,
 
 		CheckedInAt:         &now,
 		CheckedInAtDoUpdate: true,
@@ -143,4 +149,20 @@ func (s *HackathonService) CheckInAttendee(ctx context.Context, userId uuid.UUID
 		Rfid:         RFID,
 		RfidDoUpdate: RFID != nil,
 	})
+}
+
+func (s *HackathonService) SubmitInterestEmail(ctx context.Context, email string, source *string) (*sqlc.InterestSubmission, error) {
+	params := sqlc.AddEmailParams{
+		Email:  email,
+		Source: source,
+	}
+
+	result, err := s.eventInterestsRepo.AddEmail(ctx, params)
+	if err != nil && errors.Is(err, database.ErrDuplicateEmails) {
+		return nil, errors.New("Duplicate email")
+	} else if err != nil {
+		return nil, errors.New("Failed to submit interest email")
+	}
+
+	return result, nil
 }

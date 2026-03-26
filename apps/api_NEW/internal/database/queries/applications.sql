@@ -89,8 +89,8 @@ SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
     status = 'waitlisted'
 WHERE status = 'accepted'
   AND user_id IN (
-    SELECT user_id from event_roles AS er
-    WHERE er.role = 'applicant'
+    SELECT id from users
+    WHERE role = 'applicant'
 );
 
 -- name: TransitionWaitlistedApplicationsToAccepted :many

@@ -12,8 +12,9 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/api/cookie"
 	"github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/config"
-	"github.com/swamphacks/core/apps/api/internal/database/repository"
+	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/emailutils"
 	. "github.com/swamphacks/core/apps/api/internal/parse"
 )
 
@@ -24,7 +25,7 @@ func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Mi
 		Summary:     "Get Hackathon",
 		Description: "Returns information of the hackathon",
 		Tags:        []string{"Hackathon"},
-		Path:        "/hackathon",
+		Path:        "",
 		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
 		Errors:      []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
@@ -102,6 +103,16 @@ func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Mi
 		Errors:      []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
 	}, hackathonHandler.handleCheckIn)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "submit-interest-email",
+		Method:      http.MethodPost,
+		Summary:     "Submit Interest Email",
+		Description: "Submits an email to interest/mailing list for the hackathon",
+		Tags:        []string{"Hackathon"},
+		Path:        "/interest", // public route
+		Errors:      []int{http.StatusBadRequest, http.StatusInternalServerError},
+	}, hackathonHandler.handleSubmitInterestEmail)
 }
 
 type handler struct {
@@ -127,7 +138,7 @@ func (h *handler) handleGetHackathon(ctx context.Context, input *struct{}) (*Get
 
 	if err != nil {
 		h.logger.Err(err).Msg("")
-		if errors.Is(err, repository.ErrEntityNotFound) {
+		if errors.Is(err, database.ErrEntityNotFound) {
 			return nil, huma.Error404NotFound("Hackathon not found")
 		}
 		return nil, huma.Error500InternalServerError("Failed to get hackathon")
@@ -141,19 +152,19 @@ type UpdateHackathonOutput struct {
 }
 
 type UpdateHackathonRequest struct {
-	Name             OmittableNullable[string]     `json:"name,omitempty"`
-	Description      OmittableNullable[*string]    `json:"description,omitempty"`
-	Location         OmittableNullable[*string]    `json:"location,omitempty"`
-	LocationUrl      OmittableNullable[*string]    `json:"location_url,omitempty"`
-	MaxAttendees     OmittableNullable[*int32]     `json:"max_attendees,omitempty"`
-	ApplicationOpen  OmittableNullable[time.Time]  `json:"application_open,omitempty"`
-	ApplicationClose OmittableNullable[time.Time]  `json:"application_close,omitempty"`
-	RsvpDeadline     OmittableNullable[*time.Time] `json:"rsvp_deadline,omitempty"`
-	DecisionRelease  OmittableNullable[*time.Time] `json:"decision_release,omitempty"`
-	StartTime        OmittableNullable[time.Time]  `json:"start_time,omitempty"`
-	EndTime          OmittableNullable[time.Time]  `json:"end_time,omitempty"`
-	WebsiteUrl       OmittableNullable[*string]    `json:"website_url,omitempty"`
-	IsPublished      OmittableNullable[bool]       `json:"is_published,omitempty"`
+	Name             OmittableNullable[string]     `json:"name"`
+	Description      OmittableNullable[*string]    `json:"description"`
+	Location         OmittableNullable[*string]    `json:"location"`
+	LocationUrl      OmittableNullable[*string]    `json:"location_url"`
+	MaxAttendees     OmittableNullable[*int32]     `json:"max_attendees"`
+	ApplicationOpen  OmittableNullable[time.Time]  `json:"application_open"`
+	ApplicationClose OmittableNullable[time.Time]  `json:"application_close"`
+	RsvpDeadline     OmittableNullable[*time.Time] `json:"rsvp_deadline"`
+	DecisionRelease  OmittableNullable[*time.Time] `json:"decision_release"`
+	StartTime        OmittableNullable[time.Time]  `json:"start_time"`
+	EndTime          OmittableNullable[time.Time]  `json:"end_time"`
+	WebsiteUrl       OmittableNullable[*string]    `json:"website_url"`
+	IsPublished      OmittableNullable[bool]       `json:"is_published"`
 }
 
 func (h *handler) handleUpdateHackathon(ctx context.Context, input *struct {
@@ -214,7 +225,7 @@ func (h *handler) handleUpdateHackathon(ctx context.Context, input *struct {
 }
 
 type GetStaffOutput struct {
-	Body []sqlc.GetStaffRow
+	Body []sqlc.User
 }
 
 func (h *handler) handleGetStaff(ctx context.Context, input *struct{}) (*GetStaffOutput, error) {
@@ -296,4 +307,29 @@ func (h *handler) handleCheckIn(ctx context.Context, input *struct {
 	}
 
 	return &CheckInOutput{Status: http.StatusOK}, nil
+}
+
+type SubmitInterestEmailRequest struct {
+	Email  string  `json:"email"`
+	Source *string `json:"source"`
+}
+
+type SubmitInterestEmailOutput struct {
+	Status int
+}
+
+func (h *handler) handleSubmitInterestEmail(ctx context.Context, input *struct {
+	Body SubmitInterestEmailRequest
+}) (*SubmitInterestEmailOutput, error) {
+	if !emailutils.IsValidEmail(input.Body.Email) {
+		return nil, huma.Error400BadRequest("Invalid email")
+	}
+
+	_, err := h.hackathonService.SubmitInterestEmail(ctx, input.Body.Email, input.Body.Source)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to submit interest email")
+	}
+
+	return &SubmitInterestEmailOutput{Status: http.StatusOK}, nil
 }

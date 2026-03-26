@@ -10,10 +10,6 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
-var (
-	ErrAccountNotFound = errors.New("account not found")
-)
-
 type AccountRepository struct {
 	db *database.DB
 }
@@ -35,23 +31,38 @@ func (r *AccountRepository) NewTx(tx pgx.Tx) *AccountRepository {
 	}
 }
 
-func (r *AccountRepository) Create(ctx context.Context, params sqlc.CreateAccountParams) (*sqlc.AuthAccount, error) {
+func (r *AccountRepository) Create(ctx context.Context, params sqlc.CreateAccountParams) (*sqlc.Account, error) {
 	account, err := r.db.Query.CreateAccount(ctx, params)
-	return &account, err
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &account, nil
 }
 
-func (r *AccountRepository) GetByProviderAndAccountID(ctx context.Context, params sqlc.GetByProviderAndAccountIDParams) (*sqlc.AuthAccount, error) {
+func (r *AccountRepository) GetByProviderAndAccountID(ctx context.Context, params sqlc.GetByProviderAndAccountIDParams) (*sqlc.Account, error) {
 	account, err := r.db.Query.GetByProviderAndAccountID(ctx, params)
-	return &account, err
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, database.ErrAccountNotFound
+		}
+		return nil, err
+	}
+
+	return &account, nil
 }
 
 func (r *AccountRepository) GetUserIDByDiscordAccountID(ctx context.Context, discordAccountID string) (*uuid.UUID, error) {
 	userID, err := r.db.Query.GetUserIDByDiscordAccountID(ctx, discordAccountID)
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrAccountNotFound
+			return nil, database.ErrAccountNotFound
 		}
 		return nil, err
 	}
+
 	return &userID, nil
 }

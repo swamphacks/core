@@ -46,10 +46,8 @@ RETURNING *;
 SELECT * FROM hackathon;
 
 -- name: GetStaff :many
-SELECT u.*, er.role AS event_role
-FROM auth.users u
-JOIN event_roles er ON u.id = er.user_id
-WHERE er.role IN ('admin', 'staff');
+SELECT * FROM users
+WHERE role IN ('admin', 'staff');
 
 -- name: GetAttendeesWithDiscord :many
 SELECT 
@@ -57,16 +55,15 @@ SELECT
     u.id as user_id,
     u.name,
     u.email
-FROM auth.users u
-JOIN event_roles er ON u.id = er.user_id
-JOIN auth.accounts a ON u.id = a.user_id
-WHERE er.role = 'attendee'
+FROM users u
+JOIN accounts a ON u.id = a.user_id
+WHERE u.role = 'attendee'
     AND a.provider_id = 'discord';
 
 -- name: GetAttendeeCount :one
-SELECT COUNT(*) FROM event_roles AS er
-WHERE er.role = 'attendee';
+SELECT COUNT(*) FROM users
+WHERE role = 'attendee';
 
 -- name: GetAttendeeUserIds :many
-SELECT er.user_id FROM event_roles AS er
-WHERE er.role = 'attendee';
+SELECT id FROM users
+WHERE role = 'attendee';

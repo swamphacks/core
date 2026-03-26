@@ -94,8 +94,8 @@ func (q *Queries) CreateHackathon(ctx context.Context, arg CreateHackathonParams
 }
 
 const getAttendeeCount = `-- name: GetAttendeeCount :one
-SELECT COUNT(*) FROM event_roles AS er
-WHERE er.role = 'attendee'
+SELECT COUNT(*) FROM users
+WHERE role = 'attendee'
 `
 
 func (q *Queries) GetAttendeeCount(ctx context.Context) (int64, error) {
@@ -106,8 +106,8 @@ func (q *Queries) GetAttendeeCount(ctx context.Context) (int64, error) {
 }
 
 const getAttendeeUserIds = `-- name: GetAttendeeUserIds :many
-SELECT er.user_id FROM event_roles AS er
-WHERE er.role = 'attendee'
+SELECT id FROM users
+WHERE role = 'attendee'
 `
 
 func (q *Queries) GetAttendeeUserIds(ctx context.Context) ([]uuid.UUID, error) {
@@ -118,11 +118,11 @@ func (q *Queries) GetAttendeeUserIds(ctx context.Context) ([]uuid.UUID, error) {
 	defer rows.Close()
 	items := []uuid.UUID{}
 	for rows.Next() {
-		var user_id uuid.UUID
-		if err := rows.Scan(&user_id); err != nil {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
-		items = append(items, user_id)
+		items = append(items, id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -136,10 +136,9 @@ SELECT
     u.id as user_id,
     u.name,
     u.email
-FROM auth.users u
-JOIN event_roles er ON u.id = er.user_id
-JOIN auth.accounts a ON u.id = a.user_id
-WHERE er.role = 'attendee'
+FROM users u
+JOIN accounts a ON u.id = a.user_id
+WHERE u.role = 'attendee'
     AND a.provider_id = 'discord'
 `
 
@@ -206,36 +205,19 @@ func (q *Queries) GetHackathon(ctx context.Context) (Hackathon, error) {
 }
 
 const getStaff = `-- name: GetStaff :many
-SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.role AS event_role
-FROM auth.users u
-JOIN event_roles er ON u.id = er.user_id
-WHERE er.role IN ('admin', 'staff')
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role FROM users
+WHERE role IN ('admin', 'staff')
 `
 
-type GetStaffRow struct {
-	ID             uuid.UUID     `json:"id"`
-	Name           string        `json:"name"`
-	Email          *string       `json:"email"`
-	EmailVerified  bool          `json:"email_verified"`
-	Onboarded      bool          `json:"onboarded"`
-	Image          *string       `json:"image"`
-	CreatedAt      time.Time     `json:"created_at"`
-	UpdatedAt      time.Time     `json:"updated_at"`
-	Role           AuthUserRole  `json:"role"`
-	PreferredEmail *string       `json:"preferred_email"`
-	EmailConsent   bool          `json:"email_consent"`
-	EventRole      EventRoleType `json:"event_role"`
-}
-
-func (q *Queries) GetStaff(ctx context.Context) ([]GetStaffRow, error) {
+func (q *Queries) GetStaff(ctx context.Context) ([]User, error) {
 	rows, err := q.db.Query(ctx, getStaff)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetStaffRow{}
+	items := []User{}
 	for rows.Next() {
-		var i GetStaffRow
+		var i User
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -245,10 +227,12 @@ func (q *Queries) GetStaff(ctx context.Context) ([]GetStaffRow, error) {
 			&i.Image,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Role,
 			&i.PreferredEmail,
 			&i.EmailConsent,
-			&i.EventRole,
+			&i.CheckedInAt,
+			&i.Rfid,
+			&i.RoleAssignedAt,
+			&i.Role,
 		); err != nil {
 			return nil, err
 		}

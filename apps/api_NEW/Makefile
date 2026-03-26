@@ -17,8 +17,5 @@ migrate-down-devcontainer:
 generate:
 	@sqlc generate
 	
-# openapi-generate:
-# 	swag init --dir cmd/api,internal/api/handlers --parseDependency --requiredByDefault -v3.1
-
-# openapi-format:
-# 	swag f --dir cmd/api,internal/api/handlers
+generate-openapi:
+	chmod +x download-openapi.sh && ./download-openapi.sh

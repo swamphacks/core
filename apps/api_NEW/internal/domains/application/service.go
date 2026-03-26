@@ -27,7 +27,6 @@ type ApplicationService struct {
 	userRepo        *repository.UserRepository
 	applicationRepo *repository.ApplicationRepository
 	hackathonRepo   *repository.HackathonRepository
-	eventRolesRepo  *repository.EventRolesRepository
 	storage         storage.Storage
 	buckets         *config.CoreBuckets
 	txm             *database.TransactionManager
@@ -40,15 +39,13 @@ type ApplicationService struct {
 
 func NewService(
 	applicationRepo *repository.ApplicationRepository, userRepo *repository.UserRepository,
-	hackathonRepo *repository.HackathonRepository, eventRolesRepo *repository.EventRolesRepository,
-	txm *database.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets,
+	hackathonRepo *repository.HackathonRepository, txm *database.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets,
 	scheduler *asynq.Scheduler, emailService *email.EmailService, batService *bat.BatService, config *config.Config, logger zerolog.Logger,
 ) *ApplicationService {
 	return &ApplicationService{
 		applicationRepo: applicationRepo,
 		userRepo:        userRepo,
 		hackathonRepo:   hackathonRepo,
-		eventRolesRepo:  eventRolesRepo,
 		emailService:    emailService, // TODO: is there anyway to structure this? I don't know if it's a good idea to depend on another service
 		batService:      batService,
 		storage:         storage,
@@ -89,8 +86,8 @@ func (s *ApplicationService) GetApplicationByUserId(ctx context.Context, userId 
 	application, err := s.applicationRepo.GetApplicationByUserId(ctx, userId)
 
 	if err != nil {
-		if errors.Is(err, repository.ErrApplicationNotFound) {
-			return nil, repository.ErrApplicationNotFound
+		if errors.Is(err, database.ErrApplicationNotFound) {
+			return nil, database.ErrApplicationNotFound
 		} else {
 			s.logger.Err(err).Msg("")
 			return nil, err
@@ -176,9 +173,9 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 			return err
 		}
 
-		err = s.eventRolesRepo.AssignRole(ctx, sqlc.AssignRoleParams{
+		err = s.userRepo.UpdateRole(ctx, sqlc.UpdateRoleParams{
 			UserID: userId,
-			Role:   sqlc.EventRoleTypeApplicant,
+			Role:   sqlc.RoleTypeApplicant,
 		})
 		if err != nil {
 			s.logger.Err(err).Msg("submit application assign role fail")
@@ -567,7 +564,7 @@ func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userId uuid
 	// Make atomic
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.applicationRepo.NewTx(tx)
-		txEventRolesRepo := s.eventRolesRepo.NewTx(tx)
+		txUserRepo := s.userRepo.NewTx(tx)
 
 		if err := txAppRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
 			UserID:         userId,
@@ -577,9 +574,11 @@ func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userId uuid
 			return err
 		}
 
-		return txEventRolesRepo.UpdateRole(ctx,
-			userId,
-			sqlc.EventRoleTypeApplicant,
+		return txUserRepo.UpdateRole(ctx,
+			sqlc.UpdateRoleParams{
+				UserID: userId,
+				Role:   sqlc.RoleTypeApplicant,
+			},
 		)
 	})
 	if err != nil {
@@ -592,9 +591,11 @@ func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userId uuid
 func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, userId uuid.UUID) error {
 	// is a check for a user being accepted necessary here? or is the frontend enough
 
-	err := s.eventRolesRepo.UpdateRole(ctx,
-		userId,
-		sqlc.EventRoleTypeAttendee,
+	err := s.userRepo.UpdateRole(ctx,
+		sqlc.UpdateRoleParams{
+			UserID: userId,
+			Role:   sqlc.RoleTypeAttendee,
+		},
 	)
 	if err != nil {
 		s.logger.Err(err).Msg("AcceptApplicationAcceptance fail, unable to update role")

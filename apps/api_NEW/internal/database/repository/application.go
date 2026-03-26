@@ -12,15 +12,6 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
-var (
-	ErrCreateApplication      = errors.New("unable to create application")
-	ErrSaveApplication        = errors.New("unable to save application")
-	ErrSubmitApplication      = errors.New("unable to submit application")
-	ErrInvalidApplicationData = errors.New("unable to parse application data")
-	ErrGetApplication         = errors.New("unable to get application for user")
-	ErrApplicationNotFound    = errors.New("can not find application for user")
-)
-
 type ApplicationRepository struct {
 	db *database.DB
 }
@@ -57,7 +48,7 @@ func (r *ApplicationRepository) GetApplicationByUserId(ctx context.Context, user
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrApplicationNotFound
+			return nil, database.ErrApplicationNotFound
 		}
 
 		return nil, err

@@ -13,9 +13,9 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO auth.users (name, email, image)
+INSERT INTO users (name, email, image)
 VALUES ($1, $2, $3)
-RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent
+RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role
 `
 
 type CreateUserParams struct {
@@ -24,9 +24,9 @@ type CreateUserParams struct {
 	Image *string `json:"image"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AuthUser, error) {
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Email, arg.Image)
-	var i AuthUser
+	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -36,15 +36,18 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AuthUse
 		&i.Image,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Role,
 		&i.PreferredEmail,
 		&i.EmailConsent,
+		&i.CheckedInAt,
+		&i.Rfid,
+		&i.RoleAssignedAt,
+		&i.Role,
 	)
 	return i, err
 }
 
 const deleteUser = `-- name: DeleteUser :exec
-DELETE FROM auth.users
+DELETE FROM users
 WHERE id = $1
 `
 
@@ -53,30 +56,14 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const getCheckedInStatusByUserId = `-- name: GetCheckedInStatusByUserId :one
-SELECT EXISTS (
-    SELECT 1 
-    FROM event_roles 
-    WHERE user_id = $1 
-      AND checked_in_at IS NOT NULL
-)::bool
-`
-
-func (q *Queries) GetCheckedInStatusByUserId(ctx context.Context, userID uuid.UUID) (bool, error) {
-	row := q.db.QueryRow(ctx, getCheckedInStatusByUserId, userID)
-	var column_1 bool
-	err := row.Scan(&column_1)
-	return column_1, err
-}
-
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role FROM users
 WHERE email = $1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email *string) (AuthUser, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email *string) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
-	var i AuthUser
+	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -86,21 +73,24 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email *string) (AuthUser, 
 		&i.Image,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Role,
 		&i.PreferredEmail,
 		&i.EmailConsent,
+		&i.CheckedInAt,
+		&i.Rfid,
+		&i.RoleAssignedAt,
+		&i.Role,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role FROM users
 WHERE id = $1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, error) {
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
-	var i AuthUser
+	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -110,23 +100,24 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (AuthUser, erro
 		&i.Image,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Role,
 		&i.PreferredEmail,
 		&i.EmailConsent,
+		&i.CheckedInAt,
+		&i.Rfid,
+		&i.RoleAssignedAt,
+		&i.Role,
 	)
 	return i, err
 }
 
 const getUserByRFID = `-- name: GetUserByRFID :one
-SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent
-FROM auth.users u
-JOIN event_roles er ON u.id = er.user_id
-WHERE er.rfid = $1
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role FROM users
+WHERE rfid = $1
 `
 
-func (q *Queries) GetUserByRFID(ctx context.Context, rfid *string) (AuthUser, error) {
+func (q *Queries) GetUserByRFID(ctx context.Context, rfid *string) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByRFID, rfid)
-	var i AuthUser
+	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -136,9 +127,12 @@ func (q *Queries) GetUserByRFID(ctx context.Context, rfid *string) (AuthUser, er
 		&i.Image,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Role,
 		&i.PreferredEmail,
 		&i.EmailConsent,
+		&i.CheckedInAt,
+		&i.Rfid,
+		&i.RoleAssignedAt,
+		&i.Role,
 	)
 	return i, err
 }
@@ -152,7 +146,7 @@ SELECT
         WHEN preferred_email IS NOT NULL AND preferred_email != '' THEN preferred_email
         ELSE email
     END AS contact_email
-FROM auth.users
+FROM users
 WHERE id = $1
 `
 
@@ -176,8 +170,8 @@ func (q *Queries) GetUserEmailInfoById(ctx context.Context, id uuid.UUID) (GetUs
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, role, preferred_email, email_consent
-FROM auth.users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role
+FROM users
 WHERE LOWER(name) LIKE LOWER('%' || COALESCE($1, '') || '%')
    OR LOWER(email) LIKE LOWER('%' || COALESCE($1, '') || '%')
 ORDER BY name
@@ -190,15 +184,15 @@ type GetUsersParams struct {
 	Limit  int32   `json:"limit"`
 }
 
-func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]AuthUser, error) {
+func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]User, error) {
 	rows, err := q.db.Query(ctx, getUsers, arg.Search, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AuthUser{}
+	items := []User{}
 	for rows.Next() {
-		var i AuthUser
+		var i User
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -208,9 +202,12 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]AuthUser,
 			&i.Image,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Role,
 			&i.PreferredEmail,
 			&i.EmailConsent,
+			&i.CheckedInAt,
+			&i.Rfid,
+			&i.RoleAssignedAt,
+			&i.Role,
 		); err != nil {
 			return nil, err
 		}
@@ -222,62 +219,69 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]AuthUser,
 	return items, nil
 }
 
-const getUsersWithRoles = `-- name: GetUsersWithRoles :many
-SELECT u.id, u.name, u.email, u.email_verified, u.onboarded, u.image, u.created_at, u.updated_at, u.role, u.preferred_email, u.email_consent, er.role AS event_role
-FROM auth.users u
-JOIN event_roles er ON u.id = er.user_id
+const removeRole = `-- name: RemoveRole :exec
+UPDATE users
+SET role = NULL,
+    role_assigned_at = NOW()
+WHERE id = $1::uuid
 `
 
-type GetUsersWithRolesRow struct {
-	ID             uuid.UUID     `json:"id"`
-	Name           string        `json:"name"`
-	Email          *string       `json:"email"`
-	EmailVerified  bool          `json:"email_verified"`
-	Onboarded      bool          `json:"onboarded"`
-	Image          *string       `json:"image"`
-	CreatedAt      time.Time     `json:"created_at"`
-	UpdatedAt      time.Time     `json:"updated_at"`
-	Role           AuthUserRole  `json:"role"`
-	PreferredEmail *string       `json:"preferred_email"`
-	EmailConsent   bool          `json:"email_consent"`
-	EventRole      EventRoleType `json:"event_role"`
+func (q *Queries) RemoveRole(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, removeRole, userID)
+	return err
 }
 
-func (q *Queries) GetUsersWithRoles(ctx context.Context) ([]GetUsersWithRolesRow, error) {
-	rows, err := q.db.Query(ctx, getUsersWithRoles)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetUsersWithRolesRow{}
-	for rows.Next() {
-		var i GetUsersWithRolesRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Email,
-			&i.EmailVerified,
-			&i.Onboarded,
-			&i.Image,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.Role,
-			&i.PreferredEmail,
-			&i.EmailConsent,
-			&i.EventRole,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+const updateCheckInTime = `-- name: UpdateCheckInTime :exec
+UPDATE users
+SET checked_in_at = $1
+WHERE id = $2::uuid
+`
+
+type UpdateCheckInTimeParams struct {
+	CheckedInAt *time.Time `json:"checked_in_at"`
+	UserID      uuid.UUID  `json:"user_id"`
+}
+
+func (q *Queries) UpdateCheckInTime(ctx context.Context, arg UpdateCheckInTimeParams) error {
+	_, err := q.db.Exec(ctx, updateCheckInTime, arg.CheckedInAt, arg.UserID)
+	return err
+}
+
+const updateRFID = `-- name: UpdateRFID :exec
+UPDATE users
+SET rfid = $1
+WHERE id = $2::uuid
+`
+
+type UpdateRFIDParams struct {
+	Rfid   *string   `json:"rfid"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) UpdateRFID(ctx context.Context, arg UpdateRFIDParams) error {
+	_, err := q.db.Exec(ctx, updateRFID, arg.Rfid, arg.UserID)
+	return err
+}
+
+const updateRole = `-- name: UpdateRole :exec
+UPDATE users
+SET role = $1::role_type,
+    role_assigned_at = NOW()
+WHERE id = $2::uuid
+`
+
+type UpdateRoleParams struct {
+	Role   RoleType  `json:"role"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) error {
+	_, err := q.db.Exec(ctx, updateRole, arg.Role, arg.UserID)
+	return err
 }
 
 const updateUser = `-- name: UpdateUser :exec
-UPDATE auth.users
+UPDATE users
 SET
     name = CASE WHEN $1::boolean THEN $2 ELSE name END,
     email = CASE WHEN $3::boolean THEN $4 ELSE email END,
@@ -286,27 +290,37 @@ SET
     onboarded = CASE WHEN $9::boolean THEN $10 ELSE onboarded END,
     image = CASE WHEN $11::boolean THEN $12 ELSE image END,
     email_consent = CASE WHEN $13::boolean THEN $14 ELSE email_consent END,
+    checked_in_at = CASE WHEN $15::boolean THEN $16 ELSE checked_in_at END,
+    rfid = CASE WHEN $17::boolean THEN $18 ELSE rfid END,
+    role = CASE WHEN $19::boolean THEN $20 ELSE role END,
+    role_assigned_at = CASE WHEN $19::boolean THEN NOW() ELSE role_assigned_at END,
     updated_at = NOW()
 WHERE
-    id = $15::uuid
+    id = $21::uuid
 `
 
 type UpdateUserParams struct {
-	NameDoUpdate           bool      `json:"name_do_update"`
-	Name                   string    `json:"name"`
-	EmailDoUpdate          bool      `json:"email_do_update"`
-	Email                  *string   `json:"email"`
-	EmailVerifiedDoUpdate  bool      `json:"email_verified_do_update"`
-	EmailVerified          bool      `json:"email_verified"`
-	PreferredEmailDoUpdate bool      `json:"preferred_email_do_update"`
-	PreferredEmail         *string   `json:"preferred_email"`
-	OnboardedDoUpdate      bool      `json:"onboarded_do_update"`
-	Onboarded              bool      `json:"onboarded"`
-	ImageDoUpdate          bool      `json:"image_do_update"`
-	Image                  *string   `json:"image"`
-	EmailConsentDoUpdate   bool      `json:"email_consent_do_update"`
-	EmailConsent           bool      `json:"email_consent"`
-	ID                     uuid.UUID `json:"id"`
+	NameDoUpdate           bool       `json:"name_do_update"`
+	Name                   string     `json:"name"`
+	EmailDoUpdate          bool       `json:"email_do_update"`
+	Email                  *string    `json:"email"`
+	EmailVerifiedDoUpdate  bool       `json:"email_verified_do_update"`
+	EmailVerified          bool       `json:"email_verified"`
+	PreferredEmailDoUpdate bool       `json:"preferred_email_do_update"`
+	PreferredEmail         *string    `json:"preferred_email"`
+	OnboardedDoUpdate      bool       `json:"onboarded_do_update"`
+	Onboarded              bool       `json:"onboarded"`
+	ImageDoUpdate          bool       `json:"image_do_update"`
+	Image                  *string    `json:"image"`
+	EmailConsentDoUpdate   bool       `json:"email_consent_do_update"`
+	EmailConsent           bool       `json:"email_consent"`
+	CheckedInAtDoUpdate    bool       `json:"checked_in_at_do_update"`
+	CheckedInAt            *time.Time `json:"checked_in_at"`
+	RfidDoUpdate           bool       `json:"rfid_do_update"`
+	Rfid                   *string    `json:"rfid"`
+	RoleDoUpdate           bool       `json:"role_do_update"`
+	Role                   RoleType   `json:"role"`
+	ID                     uuid.UUID  `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
@@ -325,13 +339,19 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.Image,
 		arg.EmailConsentDoUpdate,
 		arg.EmailConsent,
+		arg.CheckedInAtDoUpdate,
+		arg.CheckedInAt,
+		arg.RfidDoUpdate,
+		arg.Rfid,
+		arg.RoleDoUpdate,
+		arg.Role,
 		arg.ID,
 	)
 	return err
 }
 
 const updateUserOnboarded = `-- name: UpdateUserOnboarded :exec
-UPDATE auth.users
+UPDATE users
 SET onboarded = TRUE
 WHERE id = $1
 `

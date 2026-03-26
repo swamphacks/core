@@ -16,26 +16,19 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/config"
 )
 
-func RegisterRoutes(authHandler *handler, group huma.API, mw *middleware.Middleware) {
-	huma.Register(group, huma.Operation{
-		OperationID: "get-me",
-		Method:      http.MethodGet,
-		Summary:     "Get Me",
-		Description: "Returns the authenticated user's profile",
-		Tags:        []string{"Auth"},
-		Path:        "/me",
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Errors:      []int{http.StatusUnauthorized},
-		Parameters: []*huma.Param{
-			{
-				Name:        authHandler.config.Cookie.SessionName,
-				In:          "cookie",
-				Required:    true,
-				Schema:      &huma.Schema{Type: "string"},
-				Description: "Session cookie used to authenticate the user",
-			},
-		},
-	}, authHandler.handleGetMe)
+func RegisterRoutes(authHandler *handler, group huma.API, mw *middleware.Middleware, config *config.Config) {
+	// if config.AppEnv == "dev" {
+	// 	huma.Register(group, huma.Operation{
+	// 		OperationID: "login-with-discord",
+	// 		Method:      http.MethodGet,
+	// 		Summary:     "Login With Discord",
+	// 		Description: "Redirects to discord oauth to login",
+	// 		Tags:        []string{"Auth"},
+	// 		Path:        "/login",
+	// 		Middlewares: huma.Middlewares{mw.Auth.RawHTTPMiddlewareHuma},
+	// 		Errors:      []int{http.StatusInternalServerError, http.StatusNotImplemented, http.StatusBadRequest, http.StatusUnauthorized},
+	// 	}, authHandler.handleLogin)
+	// }
 
 	huma.Register(group, huma.Operation{
 		OperationID: "logout",
@@ -74,17 +67,39 @@ func NewHandler(authService *AuthService, config *config.Config, logger zerolog.
 	}
 }
 
-type GetMeOutput struct {
-	Body *middleware.UserContext
+var stateStore = map[string]bool{}
+
+type LoginOutput struct {
+	Location  string      `header:"Location"`
+	SetCookie http.Cookie `header:"Set-Cookie"`
 }
 
-func (h *handler) handleGetMe(ctx context.Context, input *struct{}) (*GetMeOutput, error) {
-	user, err := h.authService.GetMe(ctx)
-	if err != nil {
-		return nil, huma.Error401Unauthorized("Your profile could not be loaded.")
+func (h *handler) handleLogin(ctx context.Context, input *struct{}) (*LoginOutput, error) {
+	// Generate state
+	state := OAuthState{
+		Nonce:    "none",
+		Provider: "discord",
+		Redirect: "/docs",
 	}
 
-	return &GetMeOutput{Body: user}, nil
+	stateJSON, _ := json.Marshal(state)
+
+	params := url.Values{
+		"client_id":     {h.config.Auth.Discord.ClientID},
+		"redirect_uri":  {h.config.Auth.Discord.RedirectURI},
+		"response_type": {"code"},
+		"scope":         {"identify email"},
+		"state":         {base64.StdEncoding.EncodeToString(stateJSON)},
+	}
+
+	resp := &LoginOutput{Location: "https://discord.com/oauth2/authorize?" + params.Encode()}
+	resp.SetCookie = http.Cookie{
+		Name:     "sh_auth_nonce",
+		Value:    "test",
+		SameSite: http.SameSiteLaxMode,
+		// Path:     "/",
+	}
+	return resp, nil
 }
 
 type LogoutOutput struct {
@@ -159,6 +174,11 @@ func (h *handler) handleOAuthCallback(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("This callback was invalid. Please try again.")
 	}
 
+	// if h.config.AppEnv == "prod" {
+	// 	if input.Nonce != state.Nonce {
+	// 		return nil, huma.Error401Unauthorized("Failed to authenticate. Please try again.")
+	// 	}
+	// }
 	if input.Nonce != state.Nonce {
 		return nil, huma.Error401Unauthorized("Failed to authenticate. Please try again.")
 	}

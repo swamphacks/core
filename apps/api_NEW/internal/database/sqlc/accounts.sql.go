@@ -13,7 +13,7 @@ import (
 )
 
 const createAccount = `-- name: CreateAccount :one
-INSERT INTO auth.accounts (
+INSERT INTO accounts (
     user_id, provider_id, account_id, hashed_password,
     access_token, refresh_token, id_token,
     access_token_expires_at, refresh_token_expires_at, scope
@@ -38,7 +38,7 @@ type CreateAccountParams struct {
 	Scope                 *string    `json:"scope"`
 }
 
-func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (AuthAccount, error) {
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
 	row := q.db.QueryRow(ctx, createAccount,
 		arg.UserID,
 		arg.ProviderID,
@@ -51,7 +51,7 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		arg.RefreshTokenExpiresAt,
 		arg.Scope,
 	)
-	var i AuthAccount
+	var i Account
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -71,7 +71,7 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 }
 
 const deleteAccount = `-- name: DeleteAccount :exec
-DELETE FROM auth.accounts
+DELETE FROM accounts
 WHERE provider_id = $1 AND account_id = $2
 `
 
@@ -86,7 +86,7 @@ func (q *Queries) DeleteAccount(ctx context.Context, arg DeleteAccountParams) er
 }
 
 const getByProviderAndAccountID = `-- name: GetByProviderAndAccountID :one
-SELECT id, user_id, provider_id, account_id, hashed_password, access_token, refresh_token, id_token, access_token_expires_at, refresh_token_expires_at, scope, created_at, updated_at FROM auth.accounts
+SELECT id, user_id, provider_id, account_id, hashed_password, access_token, refresh_token, id_token, access_token_expires_at, refresh_token_expires_at, scope, created_at, updated_at FROM accounts
 WHERE provider_id = $1 AND account_id = $2
 `
 
@@ -95,9 +95,9 @@ type GetByProviderAndAccountIDParams struct {
 	AccountID  string `json:"account_id"`
 }
 
-func (q *Queries) GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (AuthAccount, error) {
+func (q *Queries) GetByProviderAndAccountID(ctx context.Context, arg GetByProviderAndAccountIDParams) (Account, error) {
 	row := q.db.QueryRow(ctx, getByProviderAndAccountID, arg.ProviderID, arg.AccountID)
-	var i AuthAccount
+	var i Account
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -117,19 +117,19 @@ func (q *Queries) GetByProviderAndAccountID(ctx context.Context, arg GetByProvid
 }
 
 const getByUserID = `-- name: GetByUserID :many
-SELECT id, user_id, provider_id, account_id, hashed_password, access_token, refresh_token, id_token, access_token_expires_at, refresh_token_expires_at, scope, created_at, updated_at FROM auth.accounts
+SELECT id, user_id, provider_id, account_id, hashed_password, access_token, refresh_token, id_token, access_token_expires_at, refresh_token_expires_at, scope, created_at, updated_at FROM accounts
 WHERE user_id = $1
 `
 
-func (q *Queries) GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAccount, error) {
+func (q *Queries) GetByUserID(ctx context.Context, userID uuid.UUID) ([]Account, error) {
 	rows, err := q.db.Query(ctx, getByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AuthAccount{}
+	items := []Account{}
 	for rows.Next() {
-		var i AuthAccount
+		var i Account
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
@@ -157,7 +157,7 @@ func (q *Queries) GetByUserID(ctx context.Context, userID uuid.UUID) ([]AuthAcco
 
 const getUserIDByDiscordAccountID = `-- name: GetUserIDByDiscordAccountID :one
 SELECT user_id
-FROM auth.accounts
+FROM accounts
 WHERE provider_id = 'discord' AND account_id = $1
 `
 
@@ -169,7 +169,7 @@ func (q *Queries) GetUserIDByDiscordAccountID(ctx context.Context, accountID str
 }
 
 const updateTokens = `-- name: UpdateTokens :exec
-UPDATE auth.accounts
+UPDATE accounts
 SET access_token = $3,
     refresh_token = $4,
     id_token = $5,

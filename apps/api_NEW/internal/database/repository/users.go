@@ -34,7 +34,7 @@ func (r *UserRepository) NewTx(tx pgx.Tx) *UserRepository {
 	return &UserRepository{db: txDB}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, params sqlc.CreateUserParams) (*sqlc.AuthUser, error) {
+func (r *UserRepository) CreateUser(ctx context.Context, params sqlc.CreateUserParams) (*sqlc.User, error) {
 	user, err := r.db.Query.CreateUser(ctx, params)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, params sqlc.UpdateUserP
 	return err
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*sqlc.AuthUser, error) {
+func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*sqlc.User, error) {
 	user, err := r.db.Query.GetUserByID(ctx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrUserNotFound
@@ -64,7 +64,7 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*sqlc.A
 	return &user, nil
 }
 
-func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*sqlc.AuthUser, error) {
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*sqlc.User, error) {
 	user, err := r.db.Query.GetUserByEmail(ctx, &email)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrUserNotFound
@@ -86,7 +86,7 @@ func (r *UserRepository) GetUserEmailInfoById(ctx context.Context, id uuid.UUID)
 	return &row, nil
 }
 
-func (r *UserRepository) GetUserByRFID(ctx context.Context, rfid string) (*sqlc.AuthUser, error) {
+func (r *UserRepository) GetUserByRFID(ctx context.Context, rfid string) (*sqlc.User, error) {
 	user, err := r.db.Query.GetUserByRFID(ctx, &rfid)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrUserNotFound
@@ -97,7 +97,7 @@ func (r *UserRepository) GetUserByRFID(ctx context.Context, rfid string) (*sqlc.
 	return &user, nil
 }
 
-func (r *UserRepository) GetAllUsers(ctx context.Context, search *string, limit, offset int32) ([]sqlc.AuthUser, error) {
+func (r *UserRepository) GetAllUsers(ctx context.Context, search *string, limit, offset int32) ([]sqlc.User, error) {
 	params := sqlc.GetUsersParams{
 		Search: search,
 		Limit:  limit,
@@ -107,11 +107,18 @@ func (r *UserRepository) GetAllUsers(ctx context.Context, search *string, limit,
 	return r.db.Query.GetUsers(ctx, params)
 }
 
-// TODO: need to add search, limit and offet param to this, similar to GetAllUsers
-func (r *UserRepository) GetAllUsersWithRoles(ctx context.Context) ([]sqlc.GetUsersWithRolesRow, error) {
-	return r.db.Query.GetUsersWithRoles(ctx)
+func (r *UserRepository) UpdateRole(ctx context.Context, updateRoleParams sqlc.UpdateRoleParams) error {
+	return r.db.Query.UpdateRole(ctx, updateRoleParams)
 }
 
-func (r *UserRepository) GetCheckedInStatusByUserId(ctx context.Context, userId uuid.UUID) (bool, error) {
-	return r.GetCheckedInStatusByUserId(ctx, userId)
+func (r *UserRepository) RemoveRole(ctx context.Context, userId uuid.UUID) error {
+	return r.db.Query.RemoveRole(ctx, userId)
+}
+
+func (r *UserRepository) UpdateCheckInTime(ctx context.Context, updateCheckInParams sqlc.UpdateCheckInTimeParams) error {
+	return r.db.Query.UpdateCheckInTime(ctx, updateCheckInParams)
+}
+
+func (r *UserRepository) UpdateRFID(ctx context.Context, updateRFIDParams sqlc.UpdateRFIDParams) error {
+	return r.db.Query.UpdateRFID(ctx, updateRFIDParams)
 }

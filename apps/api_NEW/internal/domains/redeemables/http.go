@@ -202,10 +202,10 @@ type RedeemRedeemableOutput struct {
 func (h *handler) handleRedeemRedeemable(ctx context.Context, input *struct {
 	RedeemableId string `path:"redeemableId"`
 }) (*RedeemRedeemableOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	redeemableId, err := uuid.Parse(input.RedeemableId)
@@ -214,7 +214,7 @@ func (h *handler) handleRedeemRedeemable(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Invalid redeemable id")
 	}
 
-	err = h.redeemablesService.RedeemRedeemable(ctx, redeemableId, *userId)
+	err = h.redeemablesService.RedeemRedeemable(ctx, redeemableId, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to redeem redeemable")
@@ -235,10 +235,10 @@ func (h *handler) handleUpdateRedemption(ctx context.Context, input *struct {
 	RedeemableId string `path:"redeemableId"`
 	Body         UpdateRedemptionRequest
 }) (*UpdateRedeemableOutput, error) {
-	userId := ctxutils.GetUserIdFromCtx(ctx)
+	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if userId == nil {
-		return nil, huma.Error400BadRequest("Invalid user id")
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
 	redeemableId, err := uuid.Parse(input.RedeemableId)
@@ -247,7 +247,7 @@ func (h *handler) handleUpdateRedemption(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Invalid redeemable id")
 	}
 
-	err = h.redeemablesService.UpdateRedemption(ctx, redeemableId, *userId, input.Body.Amount)
+	err = h.redeemablesService.UpdateRedemption(ctx, redeemableId, userCtx.UserID, input.Body.Amount)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to update redemption")

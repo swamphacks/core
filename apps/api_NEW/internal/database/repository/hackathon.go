@@ -41,7 +41,7 @@ func (r *HackathonRepository) GetHackathon(ctx context.Context) (*sqlc.Hackathon
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrEntityNotFound
+			return nil, database.ErrEntityNotFound
 		}
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (r *HackathonRepository) UpdateHackathon(ctx context.Context, params sqlc.U
 	return r.db.Query.UpdateHackathon(ctx, params)
 }
 
-func (r *HackathonRepository) GetStaff(ctx context.Context) (*[]sqlc.GetStaffRow, error) {
+func (r *HackathonRepository) GetStaff(ctx context.Context) (*[]sqlc.User, error) {
 	users, err := r.db.Query.GetStaff(ctx)
 	return &users, err
 }

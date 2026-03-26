@@ -11,8 +11,8 @@ type Middleware struct {
 	Auth *AuthMiddleware
 }
 
-func NewMiddleware(eventRolesRepo *repository.EventRolesRepository, db *database.DB, logger zerolog.Logger, config *config.Config) *Middleware {
+func NewMiddleware(userRepo *repository.UserRepository, db *database.DB, logger zerolog.Logger, config *config.Config) *Middleware {
 	return &Middleware{
-		Auth: NewAuthMiddleware(eventRolesRepo, db, logger, config),
+		Auth: NewAuthMiddleware(userRepo, db, logger, config),
 	}
 }
