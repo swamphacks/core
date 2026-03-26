@@ -18,6 +18,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/domains/bat"
 )
 
 func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.Middleware) {
@@ -215,17 +216,48 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
 	}, applicationHandler.handleTransitionWaitlistedApplications)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "calculate-admissions-request",
+		Method:        http.MethodPost,
+		Summary:       "Submit Admissions Calculation Request",
+		Description:   "Queues an admission calculation task to the BAT worker",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/calculate-admissions",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleCalculateAdmissionsRequest)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "release-decisions",
+		Method:        http.MethodPost,
+		Summary:       "Release Decisions",
+		Description:   "Releases decisions that were calculated by the worker from a specific run id",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/release-decisions/{runId}",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleReleaseDecisions)
 }
 
 type handler struct {
 	applicationService *ApplicationService
+	batService         *bat.BatService
 	config             *config.Config
 	logger             zerolog.Logger
 }
 
-func NewHandler(applicationService *ApplicationService, config *config.Config, logger zerolog.Logger) *handler {
+func NewHandler(
+	applicationService *ApplicationService, batService *bat.BatService,
+	config *config.Config, logger zerolog.Logger,
+) *handler {
 	return &handler{
 		applicationService: applicationService,
+		batService:         batService,
 		config:             config,
 		logger:             logger,
 	}
@@ -640,4 +672,41 @@ func (h *handler) handleTransitionWaitlistedApplications(ctx context.Context, in
 	}
 
 	return &TransitionWaitlistedApplicationsOutput{Status: http.StatusOK}, nil
+}
+
+type CalculateAdmissionsRequestOutput struct {
+	Status int
+}
+
+func (h *handler) handleCalculateAdmissionsRequest(ctx context.Context, input *struct{}) (*CalculateAdmissionsRequestOutput, error) {
+	_, err := h.batService.QueueCalculateAdmissionsTask(ctx)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to handle admissions calculation request")
+	}
+
+	return &CalculateAdmissionsRequestOutput{Status: http.StatusOK}, nil
+}
+
+type ReleaseDecisionsOutput struct {
+	Status int
+}
+
+func (h *handler) handleReleaseDecisions(ctx context.Context, input *struct {
+	RunId string `path:"runId"`
+}) (*ReleaseDecisionsOutput, error) {
+	runId, err := uuid.Parse(input.RunId)
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid Run Id")
+	}
+
+	err = h.applicationService.ReleaseDecisions(ctx, runId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &ReleaseDecisionsOutput{Status: http.StatusOK}, nil
+
 }

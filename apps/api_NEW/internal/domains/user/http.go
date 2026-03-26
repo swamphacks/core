@@ -103,6 +103,42 @@ func RegisterRoutes(userHandler *handler, group huma.API, mw *middleware.Middlew
 		Errors:      []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusBadRequest, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
 	}, userHandler.handleGetCheckedInStatus)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "assign-role",
+		Method:      http.MethodPost,
+		Summary:     "Assign Role",
+		Description: "Assigns/modify a user's role",
+		Tags:        []string{"User"},
+		Path:        "/assign-role",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Errors:      []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, userHandler.handleAssignRole)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "batch-assign-roles",
+		Method:      http.MethodPost,
+		Summary:     "Batch Assign Roles",
+		Description: "Batch assign/modify multiple users' roles",
+		Tags:        []string{"User"},
+		Path:        "/batch-assign-roles",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Errors:      []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, userHandler.handleBatchAssignRoles)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "revoke-role",
+		Method:      http.MethodPost,
+		Summary:     "Revoke Role",
+		Description: "Remove a user's role",
+		Tags:        []string{"User"},
+		Path:        "/revoke-role/{userId}",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Errors:      []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, userHandler.handleRevokeEventRole)
 }
 
 type handler struct {
@@ -338,4 +374,96 @@ func (h *handler) handleGetCheckedInStatus(ctx context.Context, input *struct {
 	}
 
 	return &GetCheckedInStatusOutput{Body: checkedIn}, nil
+}
+
+type AssignRoleRequest struct {
+	Email  *string            `json:"email"`
+	UserID *string            `json:"user_id"`
+	Role   sqlc.EventRoleType `json:"role"`
+}
+
+type AssignRoleOutput struct {
+	Status int
+}
+
+func (h *handler) handleAssignRole(ctx context.Context, input *struct {
+	Body AssignRoleRequest
+}) (*AssignRoleOutput, error) {
+	var userId *uuid.UUID
+
+	if input.Body.UserID == nil {
+		userId = nil
+	} else {
+		userIdTemp, err := uuid.Parse(*input.Body.UserID)
+
+		if err != nil {
+			userId = nil
+		} else {
+			userId = &userIdTemp
+		}
+	}
+
+	err := h.userService.AssignRole(ctx, userId, input.Body.Email, input.Body.Role)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to assign role")
+	}
+
+	return &AssignRoleOutput{Status: http.StatusOK}, nil
+}
+
+type AssignRoleBatchRequest struct {
+	Assignments []AssignRoleRequest `json:"assignments"`
+}
+
+type BatchAssignRolesOutput struct {
+	Status int
+}
+
+func (h *handler) handleBatchAssignRoles(ctx context.Context, input *struct {
+	Body AssignRoleBatchRequest
+}) (*BatchAssignRolesOutput, error) {
+	for _, assignment := range input.Body.Assignments {
+		userId := ParseUUIDOrNil(assignment.UserID)
+
+		err := h.userService.AssignRole(ctx, userId, assignment.Email, assignment.Role)
+		if err != nil {
+			return nil, huma.Error500InternalServerError("Failed to batch assign roles")
+		}
+	}
+
+	return &BatchAssignRolesOutput{Status: http.StatusOK}, nil
+}
+
+type RevokeEventRoleOutput struct {
+	Status int
+}
+
+func (h *handler) handleRevokeEventRole(ctx context.Context, input *struct {
+	UserId string `path:"userId"`
+}) (*RevokeEventRoleOutput, error) {
+	userId, err := uuid.Parse(input.UserId)
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid user id")
+	}
+
+	err = h.userService.RevokeRole(ctx, userId)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to revoke role")
+	}
+
+	return &RevokeEventRoleOutput{Status: http.StatusOK}, nil
+}
+
+func ParseUUIDOrNil(s *string) *uuid.UUID {
+	if s == nil || *s == "" {
+		return nil
+	}
+	id, err := uuid.Parse(*s)
+	if err != nil {
+		return nil
+	}
+	return &id
 }

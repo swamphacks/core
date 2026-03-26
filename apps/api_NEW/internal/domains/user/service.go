@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -17,14 +18,16 @@ var (
 )
 
 type UserService struct {
-	userRepo *repository.UserRepository
-	logger   zerolog.Logger
+	userRepo       *repository.UserRepository
+	eventRolesRepo *repository.EventRolesRepository
+	logger         zerolog.Logger
 }
 
-func NewService(userRepo *repository.UserRepository, logger zerolog.Logger) *UserService {
+func NewService(userRepo *repository.UserRepository, eventRolesRepo *repository.EventRolesRepository, logger zerolog.Logger) *UserService {
 	return &UserService{
-		userRepo: userRepo,
-		logger:   logger.With().Str("service", "UserService").Str("component", "user").Logger(),
+		userRepo:       userRepo,
+		eventRolesRepo: eventRolesRepo,
+		logger:         logger.With().Str("service", "UserService").Str("domain", "user").Logger(),
 	}
 }
 
@@ -139,4 +142,73 @@ func (s *UserService) GetAllUsers(ctx context.Context, search *string, limit, of
 	}
 
 	return users, nil
+}
+
+func (s *UserService) AssignRole(ctx context.Context, userId *uuid.UUID, email *string, role sqlc.EventRoleType) error {
+	if userId == nil && email == nil {
+		return errors.New("must provide either userId or email")
+	}
+
+	var selectedUser *sqlc.AuthUser
+	var err error
+
+	if userId != nil {
+		selectedUser, err = s.userRepo.GetUserByID(ctx, *userId)
+		// Do not return if user not found, the query needs to fallback to other optiosn
+		if err != nil && !errors.Is(err, repository.ErrUserNotFound) {
+			s.logger.Err(err).Msg("Something went wrong getting by id")
+			return err
+		}
+	}
+
+	if selectedUser == nil && email != nil {
+		selectedUser, err = s.userRepo.GetUserByEmail(ctx, *email)
+		if err != nil {
+			s.logger.Err(err).Msg("Something went wrong getting by email")
+			return err
+		}
+	}
+
+	// Just a double safety check (should usually be caught by queries above)
+	if selectedUser == nil {
+		s.logger.Warn().Msg(("User not found from email OR id"))
+		return repository.ErrUserNotFound
+	}
+
+	// Now assign the event role
+	err = s.eventRolesRepo.AssignRole(ctx, sqlc.AssignRoleParams{
+		UserID: selectedUser.ID,
+		Role:   role,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserService) RevokeRole(ctx context.Context, userId uuid.UUID) error {
+	return s.eventRolesRepo.RemoveRole(ctx, userId)
+}
+
+func (s *UserService) UpdateRole(ctx context.Context, userId uuid.UUID, role sqlc.EventRoleType) error {
+	return s.eventRolesRepo.UpdateRole(ctx, userId, role)
+}
+
+func (s *UserService) UpdateRoleById(ctx context.Context, userId uuid.UUID, role *sqlc.EventRoleType, checkedInAt *time.Time, RFID *string) error {
+	if role == nil && checkedInAt == nil && RFID == nil {
+		return errors.New("no fields provided to update")
+	}
+
+	return s.eventRolesRepo.UpdateRoleByUserId(ctx, sqlc.UpdateRoleByUserIdParams{
+		UserID:       userId,
+		Role:         *role,
+		RoleDoUpdate: role != nil,
+
+		CheckedInAt:         checkedInAt,
+		CheckedInAtDoUpdate: checkedInAt != nil,
+
+		Rfid:         RFID,
+		RfidDoUpdate: RFID != nil,
+	})
 }

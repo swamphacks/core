@@ -42,7 +42,7 @@ func (r *BatRunsRepository) GetRunById(ctx context.Context, id uuid.UUID) (sqlc.
 	return r.db.Query.GetBatRunById(ctx, id)
 }
 
-func (r *BatRunsRepository) GetRunsByEventId(ctx context.Context) (*[]sqlc.BatRun, error) {
+func (r *BatRunsRepository) GetRuns(ctx context.Context) (*[]sqlc.BatRun, error) {
 	runs, err := r.db.Query.GetBatRuns(ctx)
 	return &runs, err
 }

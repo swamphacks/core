@@ -13,6 +13,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/domains/bat"
 	"github.com/swamphacks/core/apps/api/internal/domains/email"
 	"github.com/swamphacks/core/apps/api/internal/storage"
 	"golang.org/x/sync/errgroup"
@@ -31,15 +32,17 @@ type ApplicationService struct {
 	buckets         *config.CoreBuckets
 	txm             *database.TransactionManager
 	scheduler       *asynq.Scheduler
-	logger          zerolog.Logger
 	emailService    *email.EmailService
+	batService      *bat.BatService
+	config          *config.Config
+	logger          zerolog.Logger
 }
 
 func NewService(
 	applicationRepo *repository.ApplicationRepository, userRepo *repository.UserRepository,
 	hackathonRepo *repository.HackathonRepository, eventRolesRepo *repository.EventRolesRepository,
 	txm *database.TransactionManager, storage storage.Storage, buckets *config.CoreBuckets,
-	scheduler *asynq.Scheduler, logger zerolog.Logger, emailService *email.EmailService,
+	scheduler *asynq.Scheduler, emailService *email.EmailService, batService *bat.BatService, config *config.Config, logger zerolog.Logger,
 ) *ApplicationService {
 	return &ApplicationService{
 		applicationRepo: applicationRepo,
@@ -47,10 +50,12 @@ func NewService(
 		hackathonRepo:   hackathonRepo,
 		eventRolesRepo:  eventRolesRepo,
 		emailService:    emailService, // TODO: is there anyway to structure this? I don't know if it's a good idea to depend on another service
+		batService:      batService,
 		storage:         storage,
 		buckets:         buckets,
 		txm:             txm,
 		scheduler:       scheduler,
+		config:          config,
 		logger:          logger.With().Str("service", "ApplicationService").Str("domain", "application").Logger(),
 	}
 }
@@ -527,6 +532,15 @@ func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewer
 	return nil
 }
 
+func (s *ApplicationService) CheckApplicationReviewsComplete(ctx context.Context) (bool, error) {
+	nonReviewedApplicantUUIDs, err := s.applicationRepo.GetNonReviewedApplications(ctx)
+	if err != nil {
+		return false, errors.New("Failed to check application reviews status")
+	}
+
+	return len(nonReviewedApplicantUUIDs) == 0, nil
+}
+
 func (s *ApplicationService) JoinWaitlist(ctx context.Context, userId uuid.UUID) error {
 	err := s.applicationRepo.JoinWaitlist(ctx, userId)
 	if err != nil {
@@ -683,6 +697,39 @@ func (s *ApplicationService) isApplicationOpen(ctx context.Context) error {
 
 	if !isApplicationOpen {
 		return ErrApplicationNotOpened
+	}
+
+	return nil
+}
+
+func (s *ApplicationService) ReleaseDecisions(ctx context.Context, batRunId uuid.UUID) error {
+	batRun, err := s.batService.GetRunById(ctx, batRunId)
+
+	if !batRun.Status.Valid || (batRun.Status.Valid == true && batRun.Status.BatRunStatus != sqlc.BatRunStatusCompleted) {
+		return errors.New("This run status is not valid for this action.")
+	}
+
+	if len(batRun.AcceptedApplicants) == 0 {
+		return errors.New("No applicants marked as accepted.")
+	}
+
+	err = s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.applicationRepo.NewTx(tx)
+
+		err := txAppRepo.UpdateApplicationsStatuses(ctx, sqlc.ApplicationStatusAccepted, batRun.AcceptedApplicants)
+		if err != nil {
+			return err
+		}
+
+		return txAppRepo.UpdateApplicationsStatuses(ctx, sqlc.ApplicationStatusRejected, batRun.RejectedApplicants)
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.emailService.SendDecisionEmails(ctx, batRun)
+	if err != nil {
+		return errors.New("Failed to send decision emails")
 	}
 
 	return nil

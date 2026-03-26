@@ -17,6 +17,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
 	"github.com/swamphacks/core/apps/api/internal/domains/application"
 	"github.com/swamphacks/core/apps/api/internal/domains/auth"
+	"github.com/swamphacks/core/apps/api/internal/domains/bat"
 	"github.com/swamphacks/core/apps/api/internal/domains/email"
 	"github.com/swamphacks/core/apps/api/internal/domains/hackathon"
 	"github.com/swamphacks/core/apps/api/internal/domains/redeemables"
@@ -112,6 +113,7 @@ func Run() {
 	teamMemberRepo := repository.NewTeamMemberRespository(db)
 	teamJoinRequestRepo := repository.NewTeamJoinRequestRepository(db)
 	redeemablesRepo := repository.NewRedeemablesRepository(db)
+	batRunsRepo := repository.NewBatRunsRepository(db)
 
 	mw := mw.NewMiddleware(eventRolesRepo, db, logger, config)
 
@@ -120,7 +122,7 @@ func Run() {
 	authHandler := auth.NewHandler(authService, config, logger)
 	auth.RegisterRoutes(authHandler, huma.NewGroup(api, "/auth"), mw)
 
-	userService := user.NewService(userRepo, logger)
+	userService := user.NewService(userRepo, eventRolesRepo, logger)
 	userHandler := user.NewHandler(userService, config, logger)
 	user.RegisterRoutes(userHandler, huma.NewGroup(api, "/user"), mw)
 
@@ -128,9 +130,10 @@ func Run() {
 	hackathonHandler := hackathon.NewHandler(hackathonService, config, logger)
 	hackathon.RegisterRoutes(hackathonHandler, huma.NewGroup(api, "/hackathon"), mw)
 
-	emailService := email.NewEmailService(taskQueueClient, sesClient, r2Client, logger, config)
-	applicationService := application.NewService(applicationRepo, userRepo, hackathonRepo, eventRolesRepo, txm, r2Client, &config.CoreBuckets, nil, logger, emailService)
-	applicationHandler := application.NewHandler(applicationService, config, logger)
+	emailService := email.NewEmailService(hackathonRepo, userRepo, taskQueueClient, sesClient, r2Client, logger, config)
+	batService := bat.NewBatService(applicationRepo, hackathonRepo, userRepo, batRunsRepo, emailService, txm, taskQueueClient, nil, config, logger)
+	applicationService := application.NewService(applicationRepo, userRepo, hackathonRepo, eventRolesRepo, txm, r2Client, &config.CoreBuckets, nil, emailService, batService, config, logger)
+	applicationHandler := application.NewHandler(applicationService, batService, config, logger)
 	application.RegisterRoutes(applicationHandler, huma.NewGroup(api, "/application"), mw)
 
 	teamService := team.NewService(teamRepo, teamMemberRepo, teamJoinRequestRepo, hackathonRepo, eventRolesRepo, txm, logger)

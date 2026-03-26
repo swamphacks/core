@@ -66,7 +66,7 @@ func (r *ApplicationRepository) GetApplicationByUserId(ctx context.Context, user
 	return &application, nil
 }
 
-func (r *ApplicationRepository) UpdateApplicationStatus(ctx context.Context, status sqlc.ApplicationStatus, userIds uuid.UUIDs) error {
+func (r *ApplicationRepository) UpdateApplicationsStatuses(ctx context.Context, status sqlc.ApplicationStatus, userIds uuid.UUIDs) error {
 	return r.db.Query.UpdateApplicationStatus(ctx, sqlc.UpdateApplicationStatusParams{
 		Status:  status,
 		UserIds: userIds,
