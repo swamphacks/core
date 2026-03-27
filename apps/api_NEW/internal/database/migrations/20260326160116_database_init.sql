@@ -92,7 +92,7 @@ create table applications
 	user_id uuid not null primary key
 		references users
 			on delete cascade,
-	status application_status default 'started'::application_status,
+	status application_status default 'started'::application_status not null,
 	application jsonb default '{}'::jsonb not null,
 	created_at timestamptz default now() not null,
 	saved_at timestamptz default now() not null,
@@ -113,7 +113,7 @@ create table bat_runs
 		primary key,
 	accepted_applicants uuid[] default '{}'::uuid[],
 	rejected_applicants uuid[] default '{}'::uuid[],
-	status bat_run_status default 'running'::bat_run_status,
+	status bat_run_status default 'running'::bat_run_status not null,
 	created_at timestamptz default now() not null,
 	completed_at timestamptz
 );
@@ -156,7 +156,6 @@ create table teams
 	created_at timestamptz default now(),
 	updated_at timestamptz default now()
 );
-
 
 create table team_invitations
 (
@@ -317,4 +316,60 @@ create trigger set_updated_at_user_redemptions
 
 -- +goose StatementEnd
 -- +goose Down
-SELECT 'down SQL query';
+drop index if exists idx_unique_pending_request;
+
+drop index if exists idx_applications_status;
+
+drop index if exists idx_accounts_user_id;
+
+drop index if exists idx_accounts_provider_account;
+
+drop index if exists idx_sessions_user_id;
+
+drop index if exists idx_sessions_expires_at;
+
+drop trigger if exists set_updated_at_accounts on accounts;
+
+drop trigger if exists set_updated_at_users on users;
+
+drop trigger if exists set_updated_at_teams on teams;
+
+drop trigger if exists set_updated_at_sessions on sessions;
+
+drop trigger if exists set_updated_at_hackathon on hackathon;
+
+drop trigger if exists set_updated_at_applications on applications;
+
+drop trigger if exists set_updated_at_redeemables on redeemables;
+
+drop trigger if exists set_updated_at_team_invitations on invitations;
+
+drop trigger if exists set_updated_at_team_join_requests on team_join_requests;
+
+drop trigger if exists set_updated_at_user_redemptions on user_redemptions;
+
+drop table user_redemptions;
+drop table team_members;
+drop table team_join_requests;
+drop table team_invitations;
+drop table teams;
+drop table redeemables;
+drop table interest_submissions;
+drop table bat_runs;
+drop table applications;
+drop table hackathon;
+drop table sessions;
+drop table accounts;
+drop table users;
+
+drop type application_status;
+
+drop type invitation_status;
+
+drop type join_request_status;
+
+drop type bat_run_status;
+
+drop type role_type;
+
+drop function update_modified_column;

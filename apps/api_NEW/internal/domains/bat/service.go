@@ -175,11 +175,8 @@ func (s *BatService) CalculateAdmissions(ctx context.Context, batRunId uuid.UUID
 		StatusDoUpdate:             true,
 		AcceptedApplicants:         acceptedIDs,
 		RejectedApplicants:         rejectedIDs,
-		Status: sqlc.NullBatRunStatus{
-			BatRunStatus: sqlc.BatRunStatusCompleted,
-			Valid:        true,
-		},
-		ID: batRunId,
+		Status:                     sqlc.BatRunStatusCompleted,
+		ID:                         batRunId,
 	}
 
 	err = s.batRunsRepo.UpdateRunById(ctx, params)

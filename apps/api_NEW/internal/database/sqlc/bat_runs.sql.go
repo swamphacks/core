@@ -115,15 +115,15 @@ RETURNING id, accepted_applicants, rejected_applicants, status, created_at, comp
 `
 
 type UpdateBatRunByIdParams struct {
-	AcceptedApplicantsDoUpdate bool             `json:"accepted_applicants_do_update"`
-	AcceptedApplicants         []uuid.UUID      `json:"accepted_applicants"`
-	RejectedApplicantsDoUpdate bool             `json:"rejected_applicants_do_update"`
-	RejectedApplicants         []uuid.UUID      `json:"rejected_applicants"`
-	StatusDoUpdate             bool             `json:"status_do_update"`
-	Status                     NullBatRunStatus `json:"status"`
-	CreatedAtDoUpdate          bool             `json:"created_at_do_update"`
-	CreatedAt                  time.Time        `json:"created_at"`
-	ID                         uuid.UUID        `json:"id"`
+	AcceptedApplicantsDoUpdate bool         `json:"accepted_applicants_do_update"`
+	AcceptedApplicants         []uuid.UUID  `json:"accepted_applicants"`
+	RejectedApplicantsDoUpdate bool         `json:"rejected_applicants_do_update"`
+	RejectedApplicants         []uuid.UUID  `json:"rejected_applicants"`
+	StatusDoUpdate             bool         `json:"status_do_update"`
+	Status                     BatRunStatus `json:"status"`
+	CreatedAtDoUpdate          bool         `json:"created_at_do_update"`
+	CreatedAt                  time.Time    `json:"created_at"`
+	ID                         uuid.UUID    `json:"id"`
 }
 
 func (q *Queries) UpdateBatRunById(ctx context.Context, arg UpdateBatRunByIdParams) error {

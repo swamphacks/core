@@ -93,26 +93,52 @@ func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Mi
 	}, hackathonHandler.handleGetAttendeeCount)
 
 	huma.Register(group, huma.Operation{
-		OperationID: "check-in",
-		Method:      http.MethodGet,
-		Summary:     "Check In User",
-		Description: "Staff route for checking a user to an event. The user to check in must be an attendee and have never been checked in yet.",
-		Tags:        []string{"Hackathon"},
-		Path:        "/checkin",
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Errors:      []int{http.StatusUnauthorized, http.StatusInternalServerError},
-		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+		OperationID:   "check-in",
+		Method:        http.MethodPost,
+		Summary:       "Check In User",
+		Description:   "Staff route for checking a user to an event. The user to check in must be an attendee and have never been checked in yet.",
+		Tags:          []string{"Hackathon"},
+		Path:          "/checkin",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
 	}, hackathonHandler.handleCheckIn)
 
 	huma.Register(group, huma.Operation{
-		OperationID: "submit-interest-email",
-		Method:      http.MethodPost,
-		Summary:     "Submit Interest Email",
-		Description: "Submits an email to interest/mailing list for the hackathon",
-		Tags:        []string{"Hackathon"},
-		Path:        "/interest", // public route
-		Errors:      []int{http.StatusBadRequest, http.StatusInternalServerError},
+		OperationID:   "submit-interest-email",
+		Method:        http.MethodPost,
+		Summary:       "Submit Interest Email",
+		Description:   "Submits an email to interest/mailing list for the hackathon",
+		Tags:          []string{"Hackathon"},
+		Path:          "/interest", // public route
+		Errors:        []int{http.StatusBadRequest, http.StatusInternalServerError},
+		DefaultStatus: http.StatusOK,
 	}, hackathonHandler.handleSubmitInterestEmail)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "upload-banner",
+		Method:      http.MethodPost,
+		Summary:     "Upload Banner",
+		Description: "Uploads an image to be used as the banner for the hackathon",
+		Tags:        []string{"Hackathon"},
+		Path:        "/banner",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+		Errors:      []int{http.StatusBadRequest, http.StatusInternalServerError},
+	}, hackathonHandler.handleUploadBanner)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "delete-banner",
+		Method:      http.MethodDelete,
+		Summary:     "Delete Banner",
+		Description: "Deletes the banner",
+		Tags:        []string{"Hackathon"},
+		Path:        "/banner",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+		Errors:      []int{http.StatusBadRequest, http.StatusInternalServerError},
+	}, hackathonHandler.handleDeleteBanner)
 }
 
 type handler struct {
@@ -152,19 +178,19 @@ type UpdateHackathonOutput struct {
 }
 
 type UpdateHackathonRequest struct {
-	Name             OmittableNullable[string]     `json:"name"`
-	Description      OmittableNullable[*string]    `json:"description"`
-	Location         OmittableNullable[*string]    `json:"location"`
-	LocationUrl      OmittableNullable[*string]    `json:"location_url"`
-	MaxAttendees     OmittableNullable[*int32]     `json:"max_attendees"`
-	ApplicationOpen  OmittableNullable[time.Time]  `json:"application_open"`
-	ApplicationClose OmittableNullable[time.Time]  `json:"application_close"`
-	RsvpDeadline     OmittableNullable[*time.Time] `json:"rsvp_deadline"`
-	DecisionRelease  OmittableNullable[*time.Time] `json:"decision_release"`
-	StartTime        OmittableNullable[time.Time]  `json:"start_time"`
-	EndTime          OmittableNullable[time.Time]  `json:"end_time"`
-	WebsiteUrl       OmittableNullable[*string]    `json:"website_url"`
-	IsPublished      OmittableNullable[bool]       `json:"is_published"`
+	Name             OmittableNullable[string]     `json:"name,omitempty"`
+	Description      OmittableNullable[*string]    `json:"description,omitempty"`
+	Location         OmittableNullable[*string]    `json:"location,omitempty"`
+	LocationUrl      OmittableNullable[*string]    `json:"location_url,omitempty"`
+	MaxAttendees     OmittableNullable[*int32]     `json:"max_attendees,omitempty"`
+	ApplicationOpen  OmittableNullable[time.Time]  `json:"application_open,omitempty"`
+	ApplicationClose OmittableNullable[time.Time]  `json:"application_close,omitempty"`
+	RsvpDeadline     OmittableNullable[*time.Time] `json:"rsvp_deadline,omitempty"`
+	DecisionRelease  OmittableNullable[*time.Time] `json:"decision_release,omitempty"`
+	StartTime        OmittableNullable[time.Time]  `json:"start_time,omitempty"`
+	EndTime          OmittableNullable[time.Time]  `json:"end_time,omitempty"`
+	WebsiteUrl       OmittableNullable[*string]    `json:"website_url,omitempty"`
+	IsPublished      OmittableNullable[bool]       `json:"is_published,omitempty"`
 }
 
 func (h *handler) handleUpdateHackathon(ctx context.Context, input *struct {
@@ -296,13 +322,16 @@ type CheckInOutput struct {
 func (h *handler) handleCheckIn(ctx context.Context, input *struct {
 	Body CheckInRequest
 }) (*CheckInOutput, error) {
-	if *input.Body.RFID == "" {
-		input.Body.RFID = nil
+	if input.Body.RFID != nil {
+		if *input.Body.RFID == "" {
+			input.Body.RFID = nil
+		}
 	}
 
 	err := h.hackathonService.CheckInAttendee(ctx, input.Body.UserID, input.Body.RFID)
 
 	if err != nil {
+		h.logger.Err(err).Msg("check in user failed")
 		return nil, huma.Error500InternalServerError("Failed to check in user")
 	}
 
@@ -332,4 +361,48 @@ func (h *handler) handleSubmitInterestEmail(ctx context.Context, input *struct {
 	}
 
 	return &SubmitInterestEmailOutput{Status: http.StatusOK}, nil
+}
+
+type UploadBannerOutput struct {
+	Body *string
+}
+
+func (h *handler) handleUploadBanner(ctx context.Context, input *struct {
+	RawBody huma.MultipartFormFiles[struct {
+		Image huma.FormFile `form:"image" contentType:"image/png, image/jpeg, image/jpg" required:"true"`
+	}]
+}) (*UploadBannerOutput, error) {
+	fileHeader := input.RawBody.Form.File["image"][0]
+
+	if fileHeader.Size > 5*1024*1024 { // 5 MiB
+		return nil, huma.Error400BadRequest("File too large")
+	}
+
+	file, err := fileHeader.Open()
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Failed to parse uploaded banner image")
+	}
+
+	url, err := h.hackathonService.UploadBanner(ctx, file, fileHeader)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to upload banner")
+	}
+
+	return &UploadBannerOutput{Body: url}, nil
+}
+
+type DeleteBannerOutput struct {
+	Status int
+}
+
+func (h *handler) handleDeleteBanner(ctx context.Context, input *struct{}) (*DeleteBannerOutput, error) {
+	err := h.hackathonService.DeleteBanner(ctx)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to delete banner")
+	}
+
+	return &DeleteBannerOutput{Status: http.StatusOK}, nil
 }

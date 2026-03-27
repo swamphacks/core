@@ -96,9 +96,9 @@ func (m *AuthMiddleware) RawHTTPMiddlewareHuma(ctx huma.Context, next func(huma.
 func (m *AuthMiddleware) RequireAuthHuma(ctx huma.Context, next func(huma.Context)) {
 	r, w := humachi.Unwrap(ctx)
 
-	m.RequireAuth(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-		next(huma.WithContext(ctx, r.Context()))
-	})).ServeHTTP(w, r)
+	m.RequireAuth(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
+		next(huma.WithContext(ctx, newR.Context()))
+	})).ServeHTTP(w, r.WithContext(ctx.Context()))
 }
 
 // TODO: remove this extra layer and use RequireRole directly
@@ -106,9 +106,9 @@ func (m *AuthMiddleware) RequireRoleHuma(roles []sqlc.RoleType) func(ctx huma.Co
 	return func(ctx huma.Context, next func(huma.Context)) {
 		r, w := humachi.Unwrap(ctx)
 
-		m.RequireRoles(roles)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-			next(huma.WithContext(ctx, r.Context()))
-		})).ServeHTTP(w, r)
+		m.RequireRoles(roles)(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
+			next(huma.WithContext(ctx, newR.Context()))
+		})).ServeHTTP(w, r.WithContext(ctx.Context()))
 	}
 }
 
@@ -117,9 +117,9 @@ func (m *AuthMiddleware) RequireAdminHuma(ctx huma.Context, next func(huma.Conte
 
 	mwHandler := m.RequireRoles([]sqlc.RoleType{sqlc.RoleTypeAdmin})
 
-	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-		next(huma.WithContext(ctx, r.Context()))
-	})).ServeHTTP(w, r)
+	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
+		next(huma.WithContext(ctx, newR.Context()))
+	})).ServeHTTP(w, r.WithContext(ctx.Context()))
 }
 
 func (m *AuthMiddleware) RequireStaffHuma(ctx huma.Context, next func(huma.Context)) {
@@ -127,9 +127,9 @@ func (m *AuthMiddleware) RequireStaffHuma(ctx huma.Context, next func(huma.Conte
 
 	mwHandler := m.RequireRoles([]sqlc.RoleType{sqlc.RoleTypeAdmin, sqlc.RoleTypeStaff})
 
-	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-		next(huma.WithContext(ctx, r.Context()))
-	})).ServeHTTP(w, r)
+	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
+		next(huma.WithContext(ctx, newR.Context()))
+	})).ServeHTTP(w, r.WithContext(ctx.Context()))
 }
 
 func (m *AuthMiddleware) RequireMobileAuth(next http.Handler) http.Handler {
@@ -211,6 +211,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 
 		ctx := context.WithValue(r.Context(), UserContextKey, &userContext)
 		ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

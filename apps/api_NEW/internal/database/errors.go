@@ -9,7 +9,10 @@ import (
 
 // Errors
 var (
-	ErrEntityNotFound = errors.New("Entity not found")
+	ErrEntityNotFound          = errors.New("Entity not found")
+	ErrUnexpectedFileType      = errors.New("did not expect this file type")
+	ErrFailedToUploadBanner    = errors.New("failed to upload banner")
+	ErrFailedToUpdateHackathon = errors.New("failed to update hackathon")
 
 	// Account
 	ErrAccountNotFound = errors.New("account not found")

@@ -54,7 +54,7 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 		Summary:       "Submit Application",
 		Description:   "Submit the application",
 		Tags:          []string{"Application"},
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares:   huma.Middlewares{mw.Auth.RawHTTPMiddlewareHuma, mw.Auth.RequireAuthHuma},
 		Path:          "/submit",
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},

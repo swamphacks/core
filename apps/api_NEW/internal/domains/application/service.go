@@ -213,7 +213,7 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 		return errors.New("Application not found when saving the application")
 	}
 
-	if application.Status.ApplicationStatus != sqlc.ApplicationStatusStarted {
+	if application.Status != sqlc.ApplicationStatusStarted {
 		return errors.New("application has already been submitted and cannot be modified")
 	}
 
@@ -706,7 +706,7 @@ func (s *ApplicationService) isApplicationOpen(ctx context.Context) error {
 func (s *ApplicationService) ReleaseDecisions(ctx context.Context, batRunId uuid.UUID) error {
 	batRun, err := s.batService.GetRunById(ctx, batRunId)
 
-	if !batRun.Status.Valid || (batRun.Status.Valid == true && batRun.Status.BatRunStatus != sqlc.BatRunStatusCompleted) {
+	if batRun.Status != sqlc.BatRunStatusCompleted {
 		return errors.New("This run status is not valid for this action.")
 	}
 

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -127,7 +128,7 @@ func Run() {
 	userHandler := users.NewHandler(userService, config, logger)
 	users.RegisterRoutes(userHandler, huma.NewGroup(api, "/users"), mw)
 
-	hackathonService := hackathon.NewService(hackathonRepo, userRepo, eventInterestsRepo, logger)
+	hackathonService := hackathon.NewService(hackathonRepo, userRepo, eventInterestsRepo, r2Client, &config.CoreBuckets, logger)
 	hackathonHandler := hackathon.NewHandler(hackathonService, config, logger)
 	hackathon.RegisterRoutes(hackathonHandler, huma.NewGroup(api, "/hackathon"), mw)
 
@@ -144,6 +145,19 @@ func Run() {
 	redeemablesService := redeemables.NewService(redeemablesRepo, logger)
 	redeemablesHandler := redeemables.NewHandler(redeemablesService, config, logger)
 	redeemables.RegisterRoutes(redeemablesHandler, huma.NewGroup(api, "/redeemables"), mw)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "ping",
+		Method:      http.MethodGet,
+		Summary:     "Ping",
+		Description: "Health Check",
+		Tags:        []string{"Misc"},
+		Path:        "/ping",
+	}, func(ctx context.Context, input *struct{}) (*struct{ Body string }, error) {
+		return &struct{ Body string }{
+			Body: "pong",
+		}, nil
+	})
 
 	logger.Info().Msgf("API listening on port %s", config.Port)
 	if err := http.ListenAndServe(":"+config.Port, r); err != nil {

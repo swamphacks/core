@@ -70,10 +70,7 @@ func (w *BATWorker) HandleCalculateAdmissionsTask(ctx context.Context, t *asynq.
 		_, _ = w.batService.UpdateRunById(ctx, sqlc.UpdateBatRunByIdParams{
 			ID:             p.BatRunID,
 			StatusDoUpdate: true,
-			Status: sqlc.NullBatRunStatus{
-				BatRunStatus: sqlc.BatRunStatusFailed,
-				Valid:        true,
-			},
+			Status:         sqlc.BatRunStatusFailed,
 		})
 
 		return err

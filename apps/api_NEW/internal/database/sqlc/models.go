@@ -251,27 +251,27 @@ type Account struct {
 }
 
 type Application struct {
-	UserID             uuid.UUID             `json:"user_id"`
-	Status             NullApplicationStatus `json:"status"`
-	Application        []byte                `json:"application"`
-	CreatedAt          time.Time             `json:"created_at"`
-	SavedAt            time.Time             `json:"saved_at"`
-	UpdatedAt          time.Time             `json:"updated_at"`
-	SubmittedAt        *time.Time            `json:"submitted_at"`
-	ExperienceRating   *int32                `json:"experience_rating"`
-	PassionRating      *int32                `json:"passion_rating"`
-	AssignedReviewerID *uuid.UUID            `json:"assigned_reviewer_id"`
-	WaitlistJoinTime   *time.Time            `json:"waitlist_join_time"`
-	HackathonIteration string                `json:"hackathon_iteration"`
+	UserID             uuid.UUID         `json:"user_id"`
+	Status             ApplicationStatus `json:"status"`
+	Application        []byte            `json:"application"`
+	CreatedAt          time.Time         `json:"created_at"`
+	SavedAt            time.Time         `json:"saved_at"`
+	UpdatedAt          time.Time         `json:"updated_at"`
+	SubmittedAt        *time.Time        `json:"submitted_at"`
+	ExperienceRating   *int32            `json:"experience_rating"`
+	PassionRating      *int32            `json:"passion_rating"`
+	AssignedReviewerID *uuid.UUID        `json:"assigned_reviewer_id"`
+	WaitlistJoinTime   *time.Time        `json:"waitlist_join_time"`
+	HackathonIteration string            `json:"hackathon_iteration"`
 }
 
 type BatRun struct {
-	ID                 uuid.UUID        `json:"id"`
-	AcceptedApplicants []uuid.UUID      `json:"accepted_applicants"`
-	RejectedApplicants []uuid.UUID      `json:"rejected_applicants"`
-	Status             NullBatRunStatus `json:"status"`
-	CreatedAt          time.Time        `json:"created_at"`
-	CompletedAt        *time.Time       `json:"completed_at"`
+	ID                 uuid.UUID    `json:"id"`
+	AcceptedApplicants []uuid.UUID  `json:"accepted_applicants"`
+	RejectedApplicants []uuid.UUID  `json:"rejected_applicants"`
+	Status             BatRunStatus `json:"status"`
+	CreatedAt          time.Time    `json:"created_at"`
+	CompletedAt        *time.Time   `json:"completed_at"`
 }
 
 type Hackathon struct {

@@ -1,15 +1,24 @@
 package hackathon
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"mime"
+	"mime/multipart"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/storage"
 )
 
 type HackathonService struct {
@@ -17,16 +26,21 @@ type HackathonService struct {
 	userRepo           *repository.UserRepository
 	eventInterestsRepo *repository.EventInterestsRepository
 	logger             zerolog.Logger
+	storage            storage.Storage
+	buckets            *config.CoreBuckets
 }
 
 func NewService(
 	hackathonRepo *repository.HackathonRepository, userRepo *repository.UserRepository,
-	eventInterestsRepo *repository.EventInterestsRepository, logger zerolog.Logger,
+	eventInterestsRepo *repository.EventInterestsRepository, storage storage.Storage,
+	buckets *config.CoreBuckets, logger zerolog.Logger,
 ) *HackathonService {
 	return &HackathonService{
 		hackathonRepo:      hackathonRepo,
 		userRepo:           userRepo,
 		eventInterestsRepo: eventInterestsRepo,
+		storage:            storage,
+		buckets:            buckets,
 		logger:             logger.With().Str("service", "HackathonService").Str("domain", "hackathon").Logger(),
 	}
 }
@@ -165,4 +179,58 @@ func (s *HackathonService) SubmitInterestEmail(ctx context.Context, email string
 	}
 
 	return result, nil
+}
+
+func (s *HackathonService) UploadBanner(ctx context.Context, banner multipart.File, header *multipart.FileHeader) (*string, error) {
+	bannerFileBuffer := bytes.NewBuffer(nil)
+
+	fileName := header.Filename
+	fileExt := strings.ToLower(filepath.Ext(fileName))
+
+	s.logger.Info().Str("Filetype", fileExt).Msg("The file type")
+
+	switch fileExt {
+	case ".jpg", ".png", ".jpeg":
+		// Do nothing
+	default:
+		return nil, database.ErrUnexpectedFileType
+	}
+
+	fileType := mime.TypeByExtension(fileExt)
+
+	if fileType == "" {
+		return nil, database.ErrFailedToUploadBanner
+	}
+
+	if _, err := io.Copy(bannerFileBuffer, banner); err != nil {
+		return nil, database.ErrFailedToUploadBanner
+	}
+
+	uploadKey := fmt.Sprintf("/banner%s", fileExt)
+
+	err := s.storage.Store(ctx, s.buckets.EventAssets, uploadKey, bannerFileBuffer.Bytes(), &fileType)
+	if err != nil {
+		return nil, database.ErrFailedToUploadBanner
+	}
+
+	// Reconstrust URL with cache buster
+	url := fmt.Sprintf("%s/%s?t=%d", s.buckets.EventAssetsBaseUrl, uploadKey, time.Now().Unix())
+
+	err = s.hackathonRepo.UpdateHackathon(ctx, sqlc.UpdateHackathonParams{
+		BannerDoUpdate: true,
+		Banner:         &url,
+	})
+	if err != nil {
+		return nil, database.ErrFailedToUpdateHackathon
+	}
+
+	return &url, nil
+}
+
+func (s *HackathonService) DeleteBanner(ctx context.Context) error {
+	// For now its a soft delete, not actually deleting banner is easiest, just set to null
+	return s.hackathonRepo.UpdateHackathon(ctx, sqlc.UpdateHackathonParams{
+		BannerDoUpdate: true,
+		Banner:         nil,
+	})
 }
