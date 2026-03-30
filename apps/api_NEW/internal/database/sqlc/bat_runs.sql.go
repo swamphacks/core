@@ -13,7 +13,7 @@ import (
 )
 
 const addBatRun = `-- name: AddBatRun :one
-INSERT INTO bat_runs DEFAULT VALUES RETURNING id, accepted_applicants, rejected_applicants, status, created_at, completed_at
+INSERT INTO bat_runs DEFAULT VALUES RETURNING id, accepted_applicants, rejected_applicants, status, created_at, completed_at, hackathon_id
 `
 
 func (q *Queries) AddBatRun(ctx context.Context) (BatRun, error) {
@@ -26,6 +26,7 @@ func (q *Queries) AddBatRun(ctx context.Context) (BatRun, error) {
 		&i.Status,
 		&i.CreatedAt,
 		&i.CompletedAt,
+		&i.HackathonID,
 	)
 	return i, err
 }
@@ -44,7 +45,7 @@ func (q *Queries) DeleteBatRunById(ctx context.Context, id uuid.UUID) (int64, er
 }
 
 const getBatRunById = `-- name: GetBatRunById :one
-SELECT id, accepted_applicants, rejected_applicants, status, created_at, completed_at
+SELECT id, accepted_applicants, rejected_applicants, status, created_at, completed_at, hackathon_id
 FROM bat_runs
 WHERE id = $1
 `
@@ -59,18 +60,14 @@ func (q *Queries) GetBatRunById(ctx context.Context, id uuid.UUID) (BatRun, erro
 		&i.Status,
 		&i.CreatedAt,
 		&i.CompletedAt,
+		&i.HackathonID,
 	)
 	return i, err
 }
 
 const getBatRuns = `-- name: GetBatRuns :many
 SELECT
-    id,
-    accepted_applicants,
-    rejected_applicants,
-    status,
-    created_at,
-    completed_at
+    id, accepted_applicants, rejected_applicants, status, created_at, completed_at, hackathon_id
 FROM bat_runs
 ORDER BY created_at DESC
 `
@@ -91,6 +88,7 @@ func (q *Queries) GetBatRuns(ctx context.Context) ([]BatRun, error) {
 			&i.Status,
 			&i.CreatedAt,
 			&i.CompletedAt,
+			&i.HackathonID,
 		); err != nil {
 			return nil, err
 		}
@@ -111,7 +109,7 @@ SET
     created_at = CASE WHEN $7::boolean THEN $8 ELSE created_at END
 WHERE
     id = $9::uuid
-RETURNING id, accepted_applicants, rejected_applicants, status, created_at, completed_at
+RETURNING id, accepted_applicants, rejected_applicants, status, created_at, completed_at, hackathon_id
 `
 
 type UpdateBatRunByIdParams struct {

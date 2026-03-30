@@ -30,7 +30,7 @@ func (q *Queries) AssignApplicationsToReviewer(ctx context.Context, arg AssignAp
 }
 
 const createApplication = `-- name: CreateApplication :one
-INSERT INTO applications (user_id) VALUES ($1) RETURNING user_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time, hackathon_iteration
+INSERT INTO applications (user_id) VALUES ($1) RETURNING user_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time, hackathon_id
 `
 
 func (q *Queries) CreateApplication(ctx context.Context, userID uuid.UUID) (Application, error) {
@@ -48,7 +48,7 @@ func (q *Queries) CreateApplication(ctx context.Context, userID uuid.UUID) (Appl
 		&i.PassionRating,
 		&i.AssignedReviewerID,
 		&i.WaitlistJoinTime,
-		&i.HackathonIteration,
+		&i.HackathonID,
 	)
 	return i, err
 }
@@ -63,7 +63,7 @@ func (q *Queries) DeleteApplication(ctx context.Context, userID uuid.UUID) error
 }
 
 const getApplicationByUserId = `-- name: GetApplicationByUserId :one
-SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time, hackathon_iteration FROM applications WHERE user_id = $1
+SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time, hackathon_id FROM applications WHERE user_id = $1
 `
 
 func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) (Application, error) {
@@ -81,7 +81,7 @@ func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) 
 		&i.PassionRating,
 		&i.AssignedReviewerID,
 		&i.WaitlistJoinTime,
-		&i.HackathonIteration,
+		&i.HackathonID,
 	)
 	return i, err
 }

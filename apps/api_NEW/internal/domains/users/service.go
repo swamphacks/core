@@ -151,7 +151,7 @@ func (s *UserService) GetAllUsers(ctx context.Context, search *string, limit, of
 // 	return role, nil
 // }
 
-func (s *UserService) AssignRole(ctx context.Context, userId *uuid.UUID, email *string, role sqlc.RoleType) error {
+func (s *UserService) AssignRole(ctx context.Context, userId *uuid.UUID, email *string, role sqlc.UserRole) error {
 	if userId == nil && email == nil {
 		return errors.New("must provide either userId or email")
 	}
@@ -198,7 +198,7 @@ func (s *UserService) RevokeRole(ctx context.Context, userId uuid.UUID) error {
 	return s.userRepo.RemoveRole(ctx, userId)
 }
 
-func (s *UserService) UpdateRole(ctx context.Context, userId uuid.UUID, role sqlc.RoleType) error {
+func (s *UserService) UpdateRole(ctx context.Context, userId uuid.UUID, role sqlc.UserRole) error {
 	return s.userRepo.UpdateRole(ctx, sqlc.UpdateRoleParams{
 		UserID: userId,
 		Role:   role,

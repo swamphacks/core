@@ -15,7 +15,7 @@ import (
 const createRedeemable = `-- name: CreateRedeemable :one
 INSERT INTO redeemables (name, amount, max_user_amount)
 VALUES ($1, $2, $3)
-RETURNING id, name, amount, max_user_amount, created_at, updated_at
+RETURNING id, name, amount, max_user_amount, created_at, updated_at, hackathon_id
 `
 
 type CreateRedeemableParams struct {
@@ -34,6 +34,7 @@ func (q *Queries) CreateRedeemable(ctx context.Context, arg CreateRedeemablePara
 		&i.MaxUserAmount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.HackathonID,
 	)
 	return i, err
 }
@@ -66,8 +67,8 @@ type GetRedeemablesRow struct {
 	Name          string      `json:"name"`
 	TotalStock    int32       `json:"total_stock"`
 	MaxUserAmount int32       `json:"max_user_amount"`
-	CreatedAt     *time.Time  `json:"created_at"`
-	UpdatedAt     *time.Time  `json:"updated_at"`
+	CreatedAt     time.Time   `json:"created_at"`
+	UpdatedAt     time.Time   `json:"updated_at"`
 	TotalRedeemed interface{} `json:"total_redeemed"`
 }
 
@@ -105,15 +106,23 @@ FROM user_redemptions ur
 WHERE ur.redeemable_id = $1
 `
 
-func (q *Queries) GetRedemptionInfoByRedeemableID(ctx context.Context, redeemableID uuid.UUID) ([]UserRedemption, error) {
+type GetRedemptionInfoByRedeemableIDRow struct {
+	UserID       uuid.UUID `json:"user_id"`
+	RedeemableID uuid.UUID `json:"redeemable_id"`
+	Amount       int32     `json:"amount"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+func (q *Queries) GetRedemptionInfoByRedeemableID(ctx context.Context, redeemableID uuid.UUID) ([]GetRedemptionInfoByRedeemableIDRow, error) {
 	rows, err := q.db.Query(ctx, getRedemptionInfoByRedeemableID, redeemableID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []UserRedemption{}
+	items := []GetRedemptionInfoByRedeemableIDRow{}
 	for rows.Next() {
-		var i UserRedemption
+		var i GetRedemptionInfoByRedeemableIDRow
 		if err := rows.Scan(
 			&i.UserID,
 			&i.RedeemableID,
@@ -144,7 +153,7 @@ DO UPDATE SET
     amount = user_redemptions.amount + 1,
     updated_at = CURRENT_TIMESTAMP
 WHERE user_redemptions.amount < (SELECT max_user_amount FROM redeemables WHERE id = $2)
-RETURNING user_id, redeemable_id, amount, created_at, updated_at
+RETURNING user_id, redeemable_id, amount, created_at, updated_at, hackathon_id
 `
 
 type RedeemRedeemableParams struct {
@@ -161,6 +170,7 @@ func (q *Queries) RedeemRedeemable(ctx context.Context, arg RedeemRedeemablePara
 		&i.Amount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.HackathonID,
 	)
 	return i, err
 }
@@ -173,7 +183,7 @@ SET
     max_user_amount = COALESCE($4, max_user_amount),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, name, amount, max_user_amount, created_at, updated_at
+RETURNING id, name, amount, max_user_amount, created_at, updated_at, hackathon_id
 `
 
 type UpdateRedeemableParams struct {
@@ -198,6 +208,7 @@ func (q *Queries) UpdateRedeemable(ctx context.Context, arg UpdateRedeemablePara
 		&i.MaxUserAmount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.HackathonID,
 	)
 	return i, err
 }

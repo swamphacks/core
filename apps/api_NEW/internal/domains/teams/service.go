@@ -76,7 +76,7 @@ func (s *TeamService) CreateTeam(ctx context.Context, name string, userId uuid.U
 		txTeamJoinRequestRepo := s.teamJoinRequestRepo.NewTx(tx)
 
 		// Delete any pending join requests by the user for this event
-		if err := txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, userId, sqlc.JoinRequestStatusPending); err != nil {
+		if err := txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, userId, sqlc.TeamJoinRequestStatusPending); err != nil {
 			return err
 		}
 
@@ -99,11 +99,11 @@ func (s *TeamService) CreateTeam(ctx context.Context, name string, userId uuid.U
 }
 
 type MemberWithUserInfo struct {
-	UserID   uuid.UUID  `json:"user_id"`
-	Email    *string    `json:"email"`
-	Image    *string    `json:"image"`
-	Name     string     `json:"name"`
-	JoinedAt *time.Time `json:"joined_at"`
+	UserID   uuid.UUID `json:"user_id"`
+	Email    *string   `json:"email"`
+	Image    *string   `json:"image"`
+	Name     string    `json:"name"`
+	JoinedAt time.Time `json:"joined_at"`
 }
 
 type TeamWithMembers struct {
@@ -313,7 +313,7 @@ func (s *TeamService) GetPendingJoinRequestForTeam(ctx context.Context, userId, 
 		return []sqlc.ListJoinRequestsByTeamAndStatusWithUserRow{}, ErrUserNotTeamOwner
 	}
 
-	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByTeamWithUser(ctx, teamId, sqlc.JoinRequestStatusPending)
+	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByTeamWithUser(ctx, teamId, sqlc.TeamJoinRequestStatusPending)
 	if err != nil {
 		return []sqlc.ListJoinRequestsByTeamAndStatusWithUserRow{}, err
 	}
@@ -322,7 +322,7 @@ func (s *TeamService) GetPendingJoinRequestForTeam(ctx context.Context, userId, 
 }
 
 func (s *TeamService) GetUserPendingJoinRequests(ctx context.Context, userId uuid.UUID) ([]sqlc.TeamJoinRequest, error) {
-	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByUserAndStatus(ctx, userId, sqlc.JoinRequestStatusPending)
+	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByUserAndStatus(ctx, userId, sqlc.TeamJoinRequestStatusPending)
 	if err != nil {
 		return []sqlc.TeamJoinRequest{}, err
 	}
@@ -358,7 +358,7 @@ func (s *TeamService) RespondToJoinRequest(ctx context.Context, ownerId, request
 	if user == nil {
 		return ErrUserNotApplicantOrAttendee
 	}
-	if user.Role != sqlc.RoleTypeAttendee && user.Role != sqlc.RoleTypeApplicant {
+	if user.Role != sqlc.UserRoleAttendee && user.Role != sqlc.UserRoleApplicant {
 		return ErrUserNotApplicantOrAttendee
 	}
 
@@ -392,16 +392,16 @@ func (s *TeamService) RespondToJoinRequest(ctx context.Context, ownerId, request
 				return err
 			}
 
-			if _, err := txTeamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.JoinRequestStatusApproved); err != nil {
+			if _, err := txTeamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.TeamJoinRequestStatusApproved); err != nil {
 				return err
 			}
 
 			// Delete all other pending requests by the user for this event
-			return txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, oldRequest.UserID, sqlc.JoinRequestStatusPending)
+			return txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, oldRequest.UserID, sqlc.TeamJoinRequestStatusPending)
 		})
 	} else {
 		// Rejecting the request: just update request status
-		_, err := s.teamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.JoinRequestStatusRejected)
+		_, err := s.teamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.TeamJoinRequestStatusRejected)
 		return err
 	}
 }

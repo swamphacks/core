@@ -125,8 +125,8 @@ ORDER BY created_at DESC
 `
 
 type ListInvitationsByInvitedUserIDAndStatusParams struct {
-	InvitedUserID *uuid.UUID       `json:"invited_user_id"`
-	Status        InvitationStatus `json:"status"`
+	InvitedUserID *uuid.UUID  `json:"invited_user_id"`
+	Status        interface{} `json:"status"`
 }
 
 func (q *Queries) ListInvitationsByInvitedUserIDAndStatus(ctx context.Context, arg ListInvitationsByInvitedUserIDAndStatusParams) ([]TeamInvitation, error) {
@@ -238,13 +238,13 @@ RETURNING id, team_id, invited_by_user_id, invited_email, invited_user_id, statu
 `
 
 type UpdateInvitationParams struct {
-	InvitedUserIDDoUpdate bool             `json:"invited_user_id_do_update"`
-	InvitedUserID         uuid.UUID        `json:"invited_user_id"`
-	StatusDoUpdate        bool             `json:"status_do_update"`
-	Status                InvitationStatus `json:"status"`
-	ExpiresAtDoUpdate     bool             `json:"expires_at_do_update"`
-	ExpiresAt             time.Time        `json:"expires_at"`
-	ID                    uuid.UUID        `json:"id"`
+	InvitedUserIDDoUpdate bool        `json:"invited_user_id_do_update"`
+	InvitedUserID         uuid.UUID   `json:"invited_user_id"`
+	StatusDoUpdate        bool        `json:"status_do_update"`
+	Status                interface{} `json:"status"`
+	ExpiresAtDoUpdate     bool        `json:"expires_at_do_update"`
+	ExpiresAt             time.Time   `json:"expires_at"`
+	ID                    uuid.UUID   `json:"id"`
 }
 
 func (q *Queries) UpdateInvitation(ctx context.Context, arg UpdateInvitationParams) (TeamInvitation, error) {

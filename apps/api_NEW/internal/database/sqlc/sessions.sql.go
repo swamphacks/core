@@ -72,7 +72,7 @@ type GetActiveSessionUserInfoRow struct {
 	PreferredEmail *string    `json:"preferred_email"`
 	Onboarded      bool       `json:"onboarded"`
 	Image          *string    `json:"image"`
-	Role           RoleType   `json:"role"`
+	Role           UserRole   `json:"role"`
 	EmailConsent   bool       `json:"email_consent"`
 	CheckedInAt    *time.Time `json:"checked_in_at"`
 	Rfid           *string    `json:"rfid"`

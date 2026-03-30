@@ -8,12 +8,7 @@ WHERE id = $1;
 
 -- name: GetBatRuns :many
 SELECT
-    id,
-    accepted_applicants,
-    rejected_applicants,
-    status,
-    created_at,
-    completed_at
+    *
 FROM bat_runs
 ORDER BY created_at DESC;
 

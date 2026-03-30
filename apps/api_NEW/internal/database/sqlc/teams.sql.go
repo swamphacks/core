@@ -19,7 +19,7 @@ INSERT INTO teams (
     $1,
     $2
 )
-RETURNING id, name, owner_id, created_at, updated_at
+RETURNING id, name, owner_id, created_at, updated_at, hackathon_id
 `
 
 type CreateTeamParams struct {
@@ -36,6 +36,7 @@ func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, e
 		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.HackathonID,
 	)
 	return i, err
 }
@@ -51,7 +52,7 @@ func (q *Queries) DeleteTeam(ctx context.Context, id uuid.UUID) error {
 }
 
 const getTeamById = `-- name: GetTeamById :one
-SELECT id, name, owner_id, created_at, updated_at
+SELECT id, name, owner_id, created_at, updated_at, hackathon_id
 FROM teams
 WHERE id = $1
 `
@@ -65,6 +66,7 @@ func (q *Queries) GetTeamById(ctx context.Context, id uuid.UUID) (Team, error) {
 		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.HackathonID,
 	)
 	return i, err
 }
@@ -171,7 +173,7 @@ SET
     name = CASE WHEN $3::boolean THEN $4 ELSE name END
 WHERE
     id = $5::uuid
-RETURNING id, name, owner_id, created_at, updated_at
+RETURNING id, name, owner_id, created_at, updated_at, hackathon_id
 `
 
 type UpdateTeamByIdParams struct {
@@ -197,6 +199,7 @@ func (q *Queries) UpdateTeamById(ctx context.Context, arg UpdateTeamByIdParams) 
 		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.HackathonID,
 	)
 	return i, err
 }

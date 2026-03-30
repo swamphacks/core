@@ -66,8 +66,8 @@ WHERE tjr.user_id = $1
 `
 
 type DeleteJoinRequestsByUserAndStatusParams struct {
-	UserID uuid.UUID         `json:"user_id"`
-	Status JoinRequestStatus `json:"status"`
+	UserID uuid.UUID             `json:"user_id"`
+	Status TeamJoinRequestStatus `json:"status"`
 }
 
 func (q *Queries) DeleteJoinRequestsByUserAndStatus(ctx context.Context, arg DeleteJoinRequestsByUserAndStatusParams) error {
@@ -111,23 +111,23 @@ ORDER BY tjr.created_at DESC
 `
 
 type ListJoinRequestsByTeamAndStatusWithUserParams struct {
-	TeamID uuid.UUID         `json:"team_id"`
-	Status JoinRequestStatus `json:"status"`
+	TeamID uuid.UUID   `json:"team_id"`
+	Status interface{} `json:"status"`
 }
 
 type ListJoinRequestsByTeamAndStatusWithUserRow struct {
-	ID                uuid.UUID         `json:"id"`
-	TeamID            uuid.UUID         `json:"team_id"`
-	UserID            uuid.UUID         `json:"user_id"`
-	RequestMessage    *string           `json:"request_message"`
-	Status            JoinRequestStatus `json:"status"`
-	ProcessedByUserID *uuid.UUID        `json:"processed_by_user_id"`
-	ProcessedAt       *time.Time        `json:"processed_at"`
-	CreatedAt         time.Time         `json:"created_at"`
-	UpdatedAt         time.Time         `json:"updated_at"`
-	UserEmail         *string           `json:"user_email"`
-	UserName          string            `json:"user_name"`
-	UserImage         *string           `json:"user_image"`
+	ID                uuid.UUID             `json:"id"`
+	TeamID            uuid.UUID             `json:"team_id"`
+	UserID            uuid.UUID             `json:"user_id"`
+	RequestMessage    *string               `json:"request_message"`
+	Status            TeamJoinRequestStatus `json:"status"`
+	ProcessedByUserID *uuid.UUID            `json:"processed_by_user_id"`
+	ProcessedAt       *time.Time            `json:"processed_at"`
+	CreatedAt         time.Time             `json:"created_at"`
+	UpdatedAt         time.Time             `json:"updated_at"`
+	UserEmail         *string               `json:"user_email"`
+	UserName          string                `json:"user_name"`
+	UserImage         *string               `json:"user_image"`
 }
 
 func (q *Queries) ListJoinRequestsByTeamAndStatusWithUser(ctx context.Context, arg ListJoinRequestsByTeamAndStatusWithUserParams) ([]ListJoinRequestsByTeamAndStatusWithUserRow, error) {
@@ -171,8 +171,8 @@ ORDER BY created_at DESC
 `
 
 type ListTeamJoinRequestsByTeamIDAndStatusParams struct {
-	TeamID uuid.UUID         `json:"team_id"`
-	Status JoinRequestStatus `json:"status"`
+	TeamID uuid.UUID   `json:"team_id"`
+	Status interface{} `json:"status"`
 }
 
 func (q *Queries) ListTeamJoinRequestsByTeamIDAndStatus(ctx context.Context, arg ListTeamJoinRequestsByTeamIDAndStatusParams) ([]TeamJoinRequest, error) {
@@ -219,8 +219,8 @@ ORDER BY tjr.created_at DESC
 `
 
 type ListTeamJoinRequestsByUserAndStatusParams struct {
-	UserID uuid.UUID         `json:"user_id"`
-	Status JoinRequestStatus `json:"status"`
+	UserID uuid.UUID             `json:"user_id"`
+	Status TeamJoinRequestStatus `json:"status"`
 }
 
 func (q *Queries) ListTeamJoinRequestsByUserAndStatus(ctx context.Context, arg ListTeamJoinRequestsByUserAndStatusParams) ([]TeamJoinRequest, error) {
@@ -304,15 +304,15 @@ RETURNING id, team_id, user_id, request_message, status, processed_by_user_id, p
 `
 
 type UpdateTeamJoinRequestParams struct {
-	RequestMessageDoUpdate    bool              `json:"request_message_do_update"`
-	RequestMessage            *string           `json:"request_message"`
-	StatusDoUpdate            bool              `json:"status_do_update"`
-	Status                    JoinRequestStatus `json:"status"`
-	ProcessedByUserIDDoUpdate bool              `json:"processed_by_user_id_do_update"`
-	ProcessedByUserID         uuid.UUID         `json:"processed_by_user_id"`
-	ProcessedAtDoUpdate       bool              `json:"processed_at_do_update"`
-	ProcessedAt               time.Time         `json:"processed_at"`
-	ID                        uuid.UUID         `json:"id"`
+	RequestMessageDoUpdate    bool        `json:"request_message_do_update"`
+	RequestMessage            *string     `json:"request_message"`
+	StatusDoUpdate            bool        `json:"status_do_update"`
+	Status                    interface{} `json:"status"`
+	ProcessedByUserIDDoUpdate bool        `json:"processed_by_user_id_do_update"`
+	ProcessedByUserID         uuid.UUID   `json:"processed_by_user_id"`
+	ProcessedAtDoUpdate       bool        `json:"processed_at_do_update"`
+	ProcessedAt               time.Time   `json:"processed_at"`
+	ID                        uuid.UUID   `json:"id"`
 }
 
 func (q *Queries) UpdateTeamJoinRequest(ctx context.Context, arg UpdateTeamJoinRequestParams) (TeamJoinRequest, error) {

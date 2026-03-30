@@ -20,7 +20,7 @@ INSERT INTO team_members (
     $1,
     $2
 )
-RETURNING user_id, team_id, joined_at
+RETURNING user_id, team_id, joined_at, hackathon_id
 `
 
 type AddTeamMemberParams struct {
@@ -31,14 +31,19 @@ type AddTeamMemberParams struct {
 func (q *Queries) AddTeamMember(ctx context.Context, arg AddTeamMemberParams) (TeamMember, error) {
 	row := q.db.QueryRow(ctx, addTeamMember, arg.UserID, arg.TeamID)
 	var i TeamMember
-	err := row.Scan(&i.UserID, &i.TeamID, &i.JoinedAt)
+	err := row.Scan(
+		&i.UserID,
+		&i.TeamID,
+		&i.JoinedAt,
+		&i.HackathonID,
+	)
 	return i, err
 }
 
 const createTeamMember = `-- name: CreateTeamMember :one
 INSERT INTO team_members (team_id, user_id)
 VALUES ($1, $2)
-RETURNING user_id, team_id, joined_at
+RETURNING user_id, team_id, joined_at, hackathon_id
 `
 
 type CreateTeamMemberParams struct {
@@ -49,12 +54,17 @@ type CreateTeamMemberParams struct {
 func (q *Queries) CreateTeamMember(ctx context.Context, arg CreateTeamMemberParams) (TeamMember, error) {
 	row := q.db.QueryRow(ctx, createTeamMember, arg.TeamID, arg.UserID)
 	var i TeamMember
-	err := row.Scan(&i.UserID, &i.TeamID, &i.JoinedAt)
+	err := row.Scan(
+		&i.UserID,
+		&i.TeamID,
+		&i.JoinedAt,
+		&i.HackathonID,
+	)
 	return i, err
 }
 
 const getTeamMemberByUserId = `-- name: GetTeamMemberByUserId :one
-SELECT tm.user_id, tm.team_id, tm.joined_at
+SELECT tm.user_id, tm.team_id, tm.joined_at, tm.hackathon_id
 FROM team_members tm
 JOIN teams t on tm.team_id = t.id
 WHERE tm.user_id = $1
@@ -64,7 +74,12 @@ LIMIT 1
 func (q *Queries) GetTeamMemberByUserId(ctx context.Context, userID uuid.UUID) (TeamMember, error) {
 	row := q.db.QueryRow(ctx, getTeamMemberByUserId, userID)
 	var i TeamMember
-	err := row.Scan(&i.UserID, &i.TeamID, &i.JoinedAt)
+	err := row.Scan(
+		&i.UserID,
+		&i.TeamID,
+		&i.JoinedAt,
+		&i.HackathonID,
+	)
 	return i, err
 }
 
@@ -84,11 +99,11 @@ WHERE
 `
 
 type GetTeamMembersRow struct {
-	UserID   uuid.UUID  `json:"user_id"`
-	Email    *string    `json:"email"`
-	Image    *string    `json:"image"`
-	Name     string     `json:"name"`
-	JoinedAt *time.Time `json:"joined_at"`
+	UserID   uuid.UUID `json:"user_id"`
+	Email    *string   `json:"email"`
+	Image    *string   `json:"image"`
+	Name     string    `json:"name"`
+	JoinedAt time.Time `json:"joined_at"`
 }
 
 func (q *Queries) GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]GetTeamMembersRow, error) {

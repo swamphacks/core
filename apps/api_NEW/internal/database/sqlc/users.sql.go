@@ -271,8 +271,8 @@ WHERE id = $2::uuid
 `
 
 type UpdateRoleParams struct {
-	Role   RoleType  `json:"role"`
-	UserID uuid.UUID `json:"user_id"`
+	Role   interface{} `json:"role"`
+	UserID uuid.UUID   `json:"user_id"`
 }
 
 func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) error {
@@ -319,7 +319,7 @@ type UpdateUserParams struct {
 	RfidDoUpdate           bool       `json:"rfid_do_update"`
 	Rfid                   *string    `json:"rfid"`
 	RoleDoUpdate           bool       `json:"role_do_update"`
-	Role                   RoleType   `json:"role"`
+	Role                   UserRole   `json:"role"`
 	ID                     uuid.UUID  `json:"id"`
 }
 

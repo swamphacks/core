@@ -102,136 +102,136 @@ func (ns NullBatRunStatus) Value() (driver.Value, error) {
 	return string(ns.BatRunStatus), nil
 }
 
-type InvitationStatus string
+type TeamInvitationStatus string
 
 const (
-	InvitationStatusPending  InvitationStatus = "pending"
-	InvitationStatusAccepted InvitationStatus = "accepted"
-	InvitationStatusExpired  InvitationStatus = "expired"
-	InvitationStatusRejected InvitationStatus = "rejected"
+	TeamInvitationStatusPending  TeamInvitationStatus = "pending"
+	TeamInvitationStatusAccepted TeamInvitationStatus = "accepted"
+	TeamInvitationStatusExpired  TeamInvitationStatus = "expired"
+	TeamInvitationStatusRejected TeamInvitationStatus = "rejected"
 )
 
-func (e *InvitationStatus) Scan(src interface{}) error {
+func (e *TeamInvitationStatus) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = InvitationStatus(s)
+		*e = TeamInvitationStatus(s)
 	case string:
-		*e = InvitationStatus(s)
+		*e = TeamInvitationStatus(s)
 	default:
-		return fmt.Errorf("unsupported scan type for InvitationStatus: %T", src)
+		return fmt.Errorf("unsupported scan type for TeamInvitationStatus: %T", src)
 	}
 	return nil
 }
 
-type NullInvitationStatus struct {
-	InvitationStatus InvitationStatus `json:"invitation_status"`
-	Valid            bool             `json:"valid"` // Valid is true if InvitationStatus is not NULL
+type NullTeamInvitationStatus struct {
+	TeamInvitationStatus TeamInvitationStatus `json:"team_invitation_status"`
+	Valid                bool                 `json:"valid"` // Valid is true if TeamInvitationStatus is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullInvitationStatus) Scan(value interface{}) error {
+func (ns *NullTeamInvitationStatus) Scan(value interface{}) error {
 	if value == nil {
-		ns.InvitationStatus, ns.Valid = "", false
+		ns.TeamInvitationStatus, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.InvitationStatus.Scan(value)
+	return ns.TeamInvitationStatus.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullInvitationStatus) Value() (driver.Value, error) {
+func (ns NullTeamInvitationStatus) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.InvitationStatus), nil
+	return string(ns.TeamInvitationStatus), nil
 }
 
-type JoinRequestStatus string
+type TeamJoinRequestStatus string
 
 const (
-	JoinRequestStatusPending  JoinRequestStatus = "pending"
-	JoinRequestStatusApproved JoinRequestStatus = "approved"
-	JoinRequestStatusRejected JoinRequestStatus = "rejected"
+	TeamJoinRequestStatusPending  TeamJoinRequestStatus = "pending"
+	TeamJoinRequestStatusApproved TeamJoinRequestStatus = "approved"
+	TeamJoinRequestStatusRejected TeamJoinRequestStatus = "rejected"
 )
 
-func (e *JoinRequestStatus) Scan(src interface{}) error {
+func (e *TeamJoinRequestStatus) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = JoinRequestStatus(s)
+		*e = TeamJoinRequestStatus(s)
 	case string:
-		*e = JoinRequestStatus(s)
+		*e = TeamJoinRequestStatus(s)
 	default:
-		return fmt.Errorf("unsupported scan type for JoinRequestStatus: %T", src)
+		return fmt.Errorf("unsupported scan type for TeamJoinRequestStatus: %T", src)
 	}
 	return nil
 }
 
-type NullJoinRequestStatus struct {
-	JoinRequestStatus JoinRequestStatus `json:"join_request_status"`
-	Valid             bool              `json:"valid"` // Valid is true if JoinRequestStatus is not NULL
+type NullTeamJoinRequestStatus struct {
+	TeamJoinRequestStatus TeamJoinRequestStatus `json:"team_join_request_status"`
+	Valid                 bool                  `json:"valid"` // Valid is true if TeamJoinRequestStatus is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullJoinRequestStatus) Scan(value interface{}) error {
+func (ns *NullTeamJoinRequestStatus) Scan(value interface{}) error {
 	if value == nil {
-		ns.JoinRequestStatus, ns.Valid = "", false
+		ns.TeamJoinRequestStatus, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.JoinRequestStatus.Scan(value)
+	return ns.TeamJoinRequestStatus.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullJoinRequestStatus) Value() (driver.Value, error) {
+func (ns NullTeamJoinRequestStatus) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.JoinRequestStatus), nil
+	return string(ns.TeamJoinRequestStatus), nil
 }
 
-type RoleType string
+type UserRole string
 
 const (
-	RoleTypeAdmin     RoleType = "admin"
-	RoleTypeStaff     RoleType = "staff"
-	RoleTypeAttendee  RoleType = "attendee"
-	RoleTypeApplicant RoleType = "applicant"
-	RoleTypeVisitor   RoleType = "visitor"
+	UserRoleAdmin     UserRole = "admin"
+	UserRoleStaff     UserRole = "staff"
+	UserRoleAttendee  UserRole = "attendee"
+	UserRoleApplicant UserRole = "applicant"
+	UserRoleVisitor   UserRole = "visitor"
 )
 
-func (e *RoleType) Scan(src interface{}) error {
+func (e *UserRole) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = RoleType(s)
+		*e = UserRole(s)
 	case string:
-		*e = RoleType(s)
+		*e = UserRole(s)
 	default:
-		return fmt.Errorf("unsupported scan type for RoleType: %T", src)
+		return fmt.Errorf("unsupported scan type for UserRole: %T", src)
 	}
 	return nil
 }
 
-type NullRoleType struct {
-	RoleType RoleType `json:"role_type"`
-	Valid    bool     `json:"valid"` // Valid is true if RoleType is not NULL
+type NullUserRole struct {
+	UserRole UserRole `json:"user_role"`
+	Valid    bool     `json:"valid"` // Valid is true if UserRole is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullRoleType) Scan(value interface{}) error {
+func (ns *NullUserRole) Scan(value interface{}) error {
 	if value == nil {
-		ns.RoleType, ns.Valid = "", false
+		ns.UserRole, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.RoleType.Scan(value)
+	return ns.UserRole.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullRoleType) Value() (driver.Value, error) {
+func (ns NullUserRole) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.RoleType), nil
+	return string(ns.UserRole), nil
 }
 
 type Account struct {
@@ -262,7 +262,7 @@ type Application struct {
 	PassionRating      *int32            `json:"passion_rating"`
 	AssignedReviewerID *uuid.UUID        `json:"assigned_reviewer_id"`
 	WaitlistJoinTime   *time.Time        `json:"waitlist_join_time"`
-	HackathonIteration string            `json:"hackathon_iteration"`
+	HackathonID        string            `json:"hackathon_id"`
 }
 
 type BatRun struct {
@@ -272,9 +272,11 @@ type BatRun struct {
 	Status             BatRunStatus `json:"status"`
 	CreatedAt          time.Time    `json:"created_at"`
 	CompletedAt        *time.Time   `json:"completed_at"`
+	HackathonID        string       `json:"hackathon_id"`
 }
 
 type Hackathon struct {
+	ID                       string     `json:"id"`
 	Name                     string     `json:"name"`
 	Description              *string    `json:"description"`
 	Location                 *string    `json:"location"`
@@ -288,27 +290,29 @@ type Hackathon struct {
 	EndTime                  time.Time  `json:"end_time"`
 	WebsiteUrl               *string    `json:"website_url"`
 	IsPublished              *bool      `json:"is_published"`
-	CreatedAt                *time.Time `json:"created_at"`
-	UpdatedAt                *time.Time `json:"updated_at"`
+	CreatedAt                time.Time  `json:"created_at"`
+	UpdatedAt                time.Time  `json:"updated_at"`
 	Banner                   *string    `json:"banner"`
 	ApplicationReviewStarted bool       `json:"application_review_started"`
 	OnerowID                 bool       `json:"onerow_id"`
 }
 
 type InterestSubmission struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	Source    *string   `json:"source"`
+	ID          uuid.UUID `json:"id"`
+	Email       string    `json:"email"`
+	CreatedAt   time.Time `json:"created_at"`
+	Source      *string   `json:"source"`
+	HackathonID string    `json:"hackathon_id"`
 }
 
 type Redeemable struct {
-	ID            uuid.UUID  `json:"id"`
-	Name          string     `json:"name"`
-	Amount        int32      `json:"amount"`
-	MaxUserAmount int32      `json:"max_user_amount"`
-	CreatedAt     *time.Time `json:"created_at"`
-	UpdatedAt     *time.Time `json:"updated_at"`
+	ID            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	Amount        int32     `json:"amount"`
+	MaxUserAmount int32     `json:"max_user_amount"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	HackathonID   string    `json:"hackathon_id"`
 }
 
 type Session struct {
@@ -323,41 +327,43 @@ type Session struct {
 }
 
 type Team struct {
-	ID        uuid.UUID  `json:"id"`
-	Name      string     `json:"name"`
-	OwnerID   *uuid.UUID `json:"owner_id"`
-	CreatedAt *time.Time `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
+	ID          uuid.UUID  `json:"id"`
+	Name        string     `json:"name"`
+	OwnerID     *uuid.UUID `json:"owner_id"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	HackathonID string     `json:"hackathon_id"`
 }
 
 type TeamInvitation struct {
-	ID              uuid.UUID        `json:"id"`
-	TeamID          uuid.UUID        `json:"team_id"`
-	InvitedByUserID uuid.UUID        `json:"invited_by_user_id"`
-	InvitedEmail    string           `json:"invited_email"`
-	InvitedUserID   *uuid.UUID       `json:"invited_user_id"`
-	Status          InvitationStatus `json:"status"`
-	ExpiresAt       *time.Time       `json:"expires_at"`
-	CreatedAt       time.Time        `json:"created_at"`
-	UpdatedAt       time.Time        `json:"updated_at"`
+	ID              uuid.UUID            `json:"id"`
+	TeamID          uuid.UUID            `json:"team_id"`
+	InvitedByUserID uuid.UUID            `json:"invited_by_user_id"`
+	InvitedEmail    string               `json:"invited_email"`
+	InvitedUserID   *uuid.UUID           `json:"invited_user_id"`
+	Status          TeamInvitationStatus `json:"status"`
+	ExpiresAt       *time.Time           `json:"expires_at"`
+	CreatedAt       time.Time            `json:"created_at"`
+	UpdatedAt       time.Time            `json:"updated_at"`
 }
 
 type TeamJoinRequest struct {
-	ID                uuid.UUID         `json:"id"`
-	TeamID            uuid.UUID         `json:"team_id"`
-	UserID            uuid.UUID         `json:"user_id"`
-	RequestMessage    *string           `json:"request_message"`
-	Status            JoinRequestStatus `json:"status"`
-	ProcessedByUserID *uuid.UUID        `json:"processed_by_user_id"`
-	ProcessedAt       *time.Time        `json:"processed_at"`
-	CreatedAt         time.Time         `json:"created_at"`
-	UpdatedAt         time.Time         `json:"updated_at"`
+	ID                uuid.UUID             `json:"id"`
+	TeamID            uuid.UUID             `json:"team_id"`
+	UserID            uuid.UUID             `json:"user_id"`
+	RequestMessage    *string               `json:"request_message"`
+	Status            TeamJoinRequestStatus `json:"status"`
+	ProcessedByUserID *uuid.UUID            `json:"processed_by_user_id"`
+	ProcessedAt       *time.Time            `json:"processed_at"`
+	CreatedAt         time.Time             `json:"created_at"`
+	UpdatedAt         time.Time             `json:"updated_at"`
 }
 
 type TeamMember struct {
-	UserID   uuid.UUID  `json:"user_id"`
-	TeamID   uuid.UUID  `json:"team_id"`
-	JoinedAt *time.Time `json:"joined_at"`
+	UserID      uuid.UUID `json:"user_id"`
+	TeamID      uuid.UUID `json:"team_id"`
+	JoinedAt    time.Time `json:"joined_at"`
+	HackathonID string    `json:"hackathon_id"`
 }
 
 type User struct {
@@ -374,13 +380,14 @@ type User struct {
 	CheckedInAt    *time.Time `json:"checked_in_at"`
 	Rfid           *string    `json:"rfid"`
 	RoleAssignedAt *time.Time `json:"role_assigned_at"`
-	Role           RoleType   `json:"role"`
+	Role           UserRole   `json:"role"`
 }
 
 type UserRedemption struct {
-	UserID       uuid.UUID  `json:"user_id"`
-	RedeemableID uuid.UUID  `json:"redeemable_id"`
-	Amount       int32      `json:"amount"`
-	CreatedAt    *time.Time `json:"created_at"`
-	UpdatedAt    *time.Time `json:"updated_at"`
+	UserID       uuid.UUID `json:"user_id"`
+	RedeemableID uuid.UUID `json:"redeemable_id"`
+	Amount       int32     `json:"amount"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	HackathonID  string    `json:"hackathon_id"`
 }

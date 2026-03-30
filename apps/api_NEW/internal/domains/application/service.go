@@ -175,7 +175,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 
 		err = s.userRepo.UpdateRole(ctx, sqlc.UpdateRoleParams{
 			UserID: userId,
-			Role:   sqlc.RoleTypeApplicant,
+			Role:   sqlc.UserRoleApplicant,
 		})
 		if err != nil {
 			s.logger.Err(err).Msg("submit application assign role fail")
@@ -577,7 +577,7 @@ func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userId uuid
 		return txUserRepo.UpdateRole(ctx,
 			sqlc.UpdateRoleParams{
 				UserID: userId,
-				Role:   sqlc.RoleTypeApplicant,
+				Role:   sqlc.UserRoleApplicant,
 			},
 		)
 	})
@@ -594,7 +594,7 @@ func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, us
 	err := s.userRepo.UpdateRole(ctx,
 		sqlc.UpdateRoleParams{
 			UserID: userId,
-			Role:   sqlc.RoleTypeAttendee,
+			Role:   sqlc.UserRoleAttendee,
 		},
 	)
 	if err != nil {

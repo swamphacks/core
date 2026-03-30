@@ -34,7 +34,7 @@ INSERT INTO hackathon (
     coalesce($12, NULL),
     coalesce($13, FALSE)
 ) 
-RETURNING name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started, onerow_id
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started, onerow_id
 `
 
 type CreateHackathonParams struct {
@@ -71,6 +71,7 @@ func (q *Queries) CreateHackathon(ctx context.Context, arg CreateHackathonParams
 	)
 	var i Hackathon
 	err := row.Scan(
+		&i.ID,
 		&i.Name,
 		&i.Description,
 		&i.Location,
@@ -175,13 +176,14 @@ func (q *Queries) GetAttendeesWithDiscord(ctx context.Context) ([]GetAttendeesWi
 }
 
 const getHackathon = `-- name: GetHackathon :one
-SELECT name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started, onerow_id FROM hackathon
+SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started, onerow_id FROM hackathon
 `
 
 func (q *Queries) GetHackathon(ctx context.Context) (Hackathon, error) {
 	row := q.db.QueryRow(ctx, getHackathon)
 	var i Hackathon
 	err := row.Scan(
+		&i.ID,
 		&i.Name,
 		&i.Description,
 		&i.Location,
@@ -262,7 +264,7 @@ SET
     is_published = CASE WHEN $25::boolean THEN $26 ELSE is_published END,
     banner = CASE WHEN $27::boolean THEN $28 ELSE banner END,
     application_review_started = CASE WHEN $29::boolean THEN $30 ELSE application_review_started END
-RETURNING name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started, onerow_id
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, website_url, is_published, created_at, updated_at, banner, application_review_started, onerow_id
 `
 
 type UpdateHackathonParams struct {

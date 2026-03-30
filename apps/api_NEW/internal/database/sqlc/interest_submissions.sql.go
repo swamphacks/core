@@ -16,7 +16,7 @@ INSERT INTO interest_submissions (
 ) VALUES (
     $1, $2
 )
-RETURNING id, email, created_at, source
+RETURNING id, email, created_at, source, hackathon_id
 `
 
 type AddEmailParams struct {
@@ -35,6 +35,7 @@ func (q *Queries) AddEmail(ctx context.Context, arg AddEmailParams) (InterestSub
 		&i.Email,
 		&i.CreatedAt,
 		&i.Source,
+		&i.HackathonID,
 	)
 	return i, err
 }

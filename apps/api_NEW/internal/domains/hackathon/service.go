@@ -141,7 +141,7 @@ func (s *HackathonService) CheckInAttendee(ctx context.Context, userId uuid.UUID
 		return repository.ErrUserNotFound
 	}
 
-	if user.Role != sqlc.RoleTypeAttendee {
+	if user.Role != sqlc.UserRoleAttendee {
 		return ErrUserNotAttendee
 	}
 
@@ -154,7 +154,7 @@ func (s *HackathonService) CheckInAttendee(ctx context.Context, userId uuid.UUID
 	return s.userRepo.UpdateUser(ctx, sqlc.UpdateUserParams{
 		ID: userId,
 
-		Role:         sqlc.RoleTypeAttendee,
+		Role:         sqlc.UserRoleAttendee,
 		RoleDoUpdate: true,
 
 		CheckedInAt:         &now,

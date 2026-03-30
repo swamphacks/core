@@ -4,13 +4,13 @@
 -- TYPES
 create type application_status as enum ('started', 'submitted', 'under_review', 'accepted', 'rejected', 'waitlisted', 'withdrawn');
 
-create type invitation_status as enum ('pending', 'accepted', 'expired', 'rejected');
+create type team_invitation_status as enum ('pending', 'accepted', 'expired', 'rejected');
 
-create type join_request_status as enum ('pending', 'approved', 'rejected');
+create type team_join_request_status as enum ('pending', 'approved', 'rejected');
 
 create type bat_run_status as enum ('running', 'completed', 'failed');
 
-create type role_type as enum ('admin', 'staff', 'attendee', 'applicant', 'visitor');
+create type user_role as enum ('admin', 'staff', 'attendee', 'applicant', 'visitor');
 
 -- TABLES
 create table users
@@ -28,7 +28,7 @@ create table users
 	checked_in_at timestamptz,
 	rfid text,
 	role_assigned_at timestamptz,
-	role role_type default 'visitor'::role_type not null
+	role user_role default 'visitor'::user_role not null
 );
 
 create table accounts
@@ -63,6 +63,7 @@ create table sessions
 
 create table hackathon
 (
+	id text not null unique,
 	name text not null,
 	description text,
 	location text,
@@ -76,8 +77,8 @@ create table hackathon
 	end_time timestamptz not null,
 	website_url text,
 	is_published boolean default false,
-	created_at timestamptz default now(),
-	updated_at timestamptz default now(),
+	created_at timestamptz default now() not null,
+	updated_at timestamptz default now() not null,
 	banner text,
 	application_review_started boolean default false not null,
 	onerow_id boolean default true not null
@@ -89,9 +90,7 @@ create table hackathon
 
 create table applications
 (
-	user_id uuid not null primary key
-		references users
-			on delete cascade,
+	user_id uuid not null primary key references users on delete cascade,
 	status application_status default 'started'::application_status not null,
 	application jsonb default '{}'::jsonb not null,
 	created_at timestamptz default now() not null,
@@ -100,78 +99,60 @@ create table applications
 	submitted_at timestamptz,
 	experience_rating integer,
 	passion_rating integer,
-	assigned_reviewer_id uuid
-		references users
-			on delete set null,
+	assigned_reviewer_id uuid references users on delete set null,
 	waitlist_join_time timestamptz,
-	hackathon_iteration text not null
+	hackathon_id text not null references hackathon(id)
 );
 
 create table bat_runs
 (
-	id uuid default gen_random_uuid() not null
-		primary key,
+	id uuid default gen_random_uuid() not null primary key,
 	accepted_applicants uuid[] default '{}'::uuid[],
 	rejected_applicants uuid[] default '{}'::uuid[],
 	status bat_run_status default 'running'::bat_run_status not null,
 	created_at timestamptz default now() not null,
-	completed_at timestamptz
+	completed_at timestamptz,
+	hackathon_id text not null references hackathon(id)
 );
 
 create table interest_submissions
 (
-	id uuid default gen_random_uuid() not null
-		constraint interest_submissions_pkey
-			primary key,
-	email text not null
-		constraint unique_emails
-			unique,
+	id uuid default gen_random_uuid() not null primary key,
+	email text unique not null,
 	created_at timestamptz default now() not null,
-	source text
+	source text,
+	hackathon_id text not null references hackathon(id)
 );
 
 create table redeemables
 (
-	id uuid default gen_random_uuid() not null
-		primary key,
+	id uuid default gen_random_uuid() not null primary key,
 	name varchar(255) not null,
-	amount integer not null
-		constraint redeemables_amount_check
-			check (amount >= 0),
-	max_user_amount integer not null
-		constraint redeemables_max_user_amount_check
-			check (max_user_amount >= 1),
-	created_at timestamptz default CURRENT_TIMESTAMP,
-	updated_at timestamptz default CURRENT_TIMESTAMP
+	amount integer not null constraint redeemables_amount_check check (amount >= 0),
+	max_user_amount integer not null constraint redeemables_max_user_amount_check check (max_user_amount >= 1),
+	created_at timestamptz default now() not null,
+	updated_at timestamptz default now() not null,
+	hackathon_id text not null references hackathon(id)
 );
 
 create table teams
 (
-	id uuid default gen_random_uuid() not null
-		primary key,
+	id uuid default gen_random_uuid() not null primary key,
 	name text not null,
-	owner_id uuid
-		references users
-			on delete set null,
-	created_at timestamptz default now(),
-	updated_at timestamptz default now()
+	owner_id uuid references users on delete set null,
+	created_at timestamptz default now() not null,
+	updated_at timestamptz default now() not null,
+	hackathon_id text not null references hackathon(id)
 );
 
 create table team_invitations
 (
-	id uuid default gen_random_uuid() not null
-		primary key,
-	team_id uuid not null
-		references teams
-			on delete cascade,
-	invited_by_user_id uuid not null
-		references users
-			on delete cascade,
+	id uuid default gen_random_uuid() not null primary key,
+	team_id uuid not null references teams on delete cascade,
+	invited_by_user_id uuid not null references users on delete cascade,
 	invited_email text not null,
-	invited_user_id uuid
-		references users
-			on delete cascade,
-	status invitation_status default 'pending'::invitation_status not null,
+	invited_user_id uuid references users on delete cascade,
+	status team_invitation_status default 'pending'::team_invitation_status not null,
 	expires_at timestamptz,
 	created_at timestamptz default now() not null,
 	updated_at timestamptz default now() not null
@@ -179,19 +160,12 @@ create table team_invitations
 
 create table team_join_requests
 (
-	id uuid default gen_random_uuid() not null
-		primary key,
-	team_id uuid not null
-		references teams
-			on delete cascade,
-	user_id uuid not null
-		references users
-			on delete cascade,
+	id uuid default gen_random_uuid() not null primary key,
+	team_id uuid not null references teams on delete cascade,
+	user_id uuid not null references users on delete cascade,
 	request_message text,
-	status join_request_status default 'pending'::join_request_status not null,
-	processed_by_user_id uuid
-		references users
-			on delete set null,
+	status team_join_request_status default 'pending'::team_join_request_status not null,
+	processed_by_user_id uuid references users on delete set null,
 	processed_at timestamptz,
 	created_at timestamptz default now() not null,
 	updated_at timestamptz default now() not null
@@ -199,36 +173,28 @@ create table team_join_requests
 
 create table team_members
 (
-	user_id uuid not null
-		references users
-			on delete cascade,
-	team_id uuid not null
-		references teams
-			on delete cascade,
-	joined_at timestamptz default now(),
+	user_id uuid not null references users on delete cascade,
+	team_id uuid not null references teams on delete cascade,
+	joined_at timestamptz default now() not null,
+	hackathon_id text not null references hackathon(id),
 	primary key (user_id, team_id)
 );
 
 create table user_redemptions
 (
-	user_id uuid not null
-		references users
-			on delete cascade,
-	redeemable_id uuid not null
-		references redeemables
-			on delete cascade,
-	amount integer not null
-		constraint user_redemptions_amount_check
-			check (amount >= 0),
-	created_at timestamptz default CURRENT_TIMESTAMP,
-	updated_at timestamptz default CURRENT_TIMESTAMP,
+	user_id uuid not null references users on delete cascade,
+	redeemable_id uuid not null references redeemables on delete cascade,
+	amount integer not null constraint user_redemptions_amount_check check (amount >= 0),
+	created_at timestamptz default now() not null,
+	updated_at timestamptz default now() not null,
+	hackathon_id text not null references hackathon(id),
 	primary key (user_id, redeemable_id)
 );
 
 -- INDEXES
 create unique index idx_unique_pending_request
 	on team_join_requests (team_id, user_id)
-	where (status = 'pending'::join_request_status);
+	where (status = 'pending'::team_join_request_status);
 
 create index idx_applications_status
 	on applications (status);
@@ -364,12 +330,12 @@ drop table users;
 
 drop type application_status;
 
-drop type invitation_status;
+drop type team_invitation_status;
 
-drop type join_request_status;
+drop type team_join_request_status;
 
 drop type bat_run_status;
 
-drop type role_type;
+drop type user_role;
 
 drop function update_modified_column;

@@ -558,7 +558,7 @@ func (h *handler) handleGetResumePresignedUrl(ctx context.Context, input *struct
 		return nil, huma.Error400BadRequest("Invalid applicant id")
 	}
 
-	if userCtx.Role != sqlc.RoleTypeStaff && userCtx.Role != sqlc.RoleTypeAdmin && userCtx.UserID != applicantId {
+	if userCtx.Role != sqlc.UserRoleStaff && userCtx.Role != sqlc.UserRoleAdmin && userCtx.UserID != applicantId {
 		return nil, huma.Error400BadRequest("You are not allowed to see other ppls resumes :(")
 	}
 
