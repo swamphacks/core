@@ -1,5 +1,5 @@
 -- name: AddBatRun :one
-INSERT INTO bat_runs DEFAULT VALUES RETURNING *;
+INSERT INTO bat_runs (hackathon_id) VALUES ($1) RETURNING *;
 
 -- name: GetBatRunById :one
 SELECT *

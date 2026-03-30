@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -57,7 +58,7 @@ func NewService(
 	}
 }
 
-func (s *ApplicationService) CreateApplication(ctx context.Context, userId uuid.UUID) (*sqlc.Application, error) {
+func (s *ApplicationService) CreateApplication(ctx context.Context, userID uuid.UUID) (*sqlc.Application, error) {
 	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
 
 	if err != nil {
@@ -72,7 +73,11 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, userId uuid.
 		return nil, ErrApplicationNotOpened
 	}
 
-	application, err := s.applicationRepo.CreateApplication(ctx, userId)
+	// TODO: don't hardcode the hackathonId
+	application, err := s.applicationRepo.CreateApplication(ctx, sqlc.CreateApplicationParams{
+		UserID:      userID,
+		HackathonID: "xii",
+	})
 
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())
@@ -82,8 +87,8 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, userId uuid.
 	return application, nil
 }
 
-func (s *ApplicationService) GetApplicationByUserId(ctx context.Context, userId uuid.UUID) (*sqlc.Application, error) {
-	application, err := s.applicationRepo.GetApplicationByUserId(ctx, userId)
+func (s *ApplicationService) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) (*sqlc.Application, error) {
+	application, err := s.applicationRepo.GetApplicationByUserId(ctx, userID)
 
 	if err != nil {
 		if errors.Is(err, database.ErrApplicationNotFound) {
@@ -139,7 +144,7 @@ type ApplicationSubmissionFields struct {
 	AgreeToMLHEmails        string `json:"agreeToMLHEmails"`
 }
 
-func (s *ApplicationService) SubmitApplication(ctx context.Context, data ApplicationSubmissionFields, resume []byte, userId uuid.UUID) error {
+func (s *ApplicationService) SubmitApplication(ctx context.Context, data ApplicationSubmissionFields, resume []byte, userID uuid.UUID) error {
 	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
 
 	if err != nil {
@@ -154,11 +159,27 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		return ErrApplicationNotOpened
 	}
 
+	dataJSON, err := json.Marshal(data)
+
+	if err != nil {
+		return errors.New("Failed to parse application data")
+	}
+
 	// Submitting application is an atomic operation
 	err = s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.applicationRepo.NewTx(tx)
 
-		err := txAppRepo.SubmitApplication(ctx, data, userId)
+		err := txAppRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+			StatusDoUpdate:      true,
+			Status:              sqlc.ApplicationStatusSubmitted,
+			ApplicationDoUpdate: true,
+			Application:         dataJSON,
+			SubmittedAtDoUpdate: true,
+			SubmittedAt:         time.Now(),
+			SavedAtDoUpdate:     true,
+			SavedAt:             time.Now(),
+			UserID:              userID,
+		})
 
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
@@ -166,7 +187,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		}
 
 		contentType := "application/pdf"
-		err = s.storage.Store(ctx, s.buckets.ApplicationResumes, userId.String(), resume, &contentType)
+		err = s.storage.Store(ctx, s.buckets.ApplicationResumes, userID.String(), resume, &contentType)
 
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
@@ -174,7 +195,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		}
 
 		err = s.userRepo.UpdateRole(ctx, sqlc.UpdateRoleParams{
-			UserID: userId,
+			UserID: userID,
 			Role:   sqlc.UserRoleApplicant,
 		})
 		if err != nil {
@@ -195,7 +216,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 	return nil
 }
 
-func (s *ApplicationService) SaveApplication(ctx context.Context, data any, userId uuid.UUID) error {
+func (s *ApplicationService) SaveApplication(ctx context.Context, data any, userID uuid.UUID) error {
 	// Guard clauses to ensure application can be saved
 	// 1) Check if applications are open for the event
 	// 2) Ensure application status is "started" (Reject all other statuses)
@@ -203,7 +224,7 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 		return ErrApplicationNotOpened
 	}
 
-	application, err := s.GetApplicationByUserId(ctx, userId)
+	application, err := s.GetApplicationByUserId(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -217,7 +238,21 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 		return errors.New("application has already been submitted and cannot be modified")
 	}
 
-	err = s.applicationRepo.SaveApplication(ctx, data, userId)
+	dataJSON, err := json.Marshal(data)
+
+	if err != nil {
+		return errors.New("Failed to parse application data")
+	}
+
+	err = s.applicationRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+		StatusDoUpdate:      true,
+		Status:              sqlc.ApplicationStatusStarted,
+		ApplicationDoUpdate: true,
+		Application:         dataJSON,
+		UserID:              userID,
+		SavedAtDoUpdate:     true,
+		SavedAt:             time.Now(),
+	})
 
 	if err != nil {
 		s.logger.Err(err).Msg("Save application fail")
@@ -238,7 +273,7 @@ func (s *ApplicationService) SubmitApplicationReview(ctx context.Context) (*sqlc
 	return nil, nil
 }
 
-func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userId uuid.UUID, lifetimeSecs int64) (*storage.PresignedRequest, error) {
+func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userID uuid.UUID, lifetimeSecs int64) (*storage.PresignedRequest, error) {
 	presignableStorage, ok := s.storage.(storage.PresignableStorage)
 
 	if !ok {
@@ -252,7 +287,7 @@ func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userId uu
 		return nil, err
 	}
 
-	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, userId.String(), lifetimeSecs)
+	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, userID.String(), lifetimeSecs)
 
 	if err != nil {
 		s.logger.Err(err).Msg("fail presign get object")
@@ -334,7 +369,7 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context) (*App
 }
 
 type ReviewerAssignment struct {
-	ID     uuid.UUID `json:"userId"` // User/Reviewer ID
+	ID     uuid.UUID `json:"userID"` // User/Reviewer ID
 	Amount *int      `json:"amount"` // Number of applications assigned (nil if autoassign)
 }
 
@@ -423,7 +458,11 @@ func (s *ApplicationService) AssignReviewers(ctx context.Context, reviewers []Re
 		txHackathonRepo := s.hackathonRepo.NewTx(tx)
 
 		for _, allocation := range finalAllocations {
-			err := txAppRepo.AssignApplicationToReview(ctx, allocation.ReviewerID, allocation.AssignedApplicationIDs)
+			err := txAppRepo.AssignApplicationToReview(ctx, sqlc.AssignApplicationsToReviewerParams{
+				ReviewerID:     allocation.ReviewerID,
+				ApplicationIds: allocation.AssignedApplicationIDs,
+			})
+
 			if err != nil {
 				s.logger.Err(err).Msg("assign applicattion to review fail while allocating")
 				return err
@@ -538,8 +577,8 @@ func (s *ApplicationService) CheckApplicationReviewsComplete(ctx context.Context
 	return len(nonReviewedApplicantUUIDs) == 0, nil
 }
 
-func (s *ApplicationService) JoinWaitlist(ctx context.Context, userId uuid.UUID) error {
-	err := s.applicationRepo.JoinWaitlist(ctx, userId)
+func (s *ApplicationService) JoinWaitlist(ctx context.Context, userID uuid.UUID) error {
+	err := s.applicationRepo.JoinWaitlist(ctx, userID)
 	if err != nil {
 		s.logger.Err(err).Msg("Join waitlist fail")
 		return err
@@ -547,9 +586,9 @@ func (s *ApplicationService) JoinWaitlist(ctx context.Context, userId uuid.UUID)
 	return nil
 }
 
-func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userId uuid.UUID) error {
+func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userID uuid.UUID) error {
 	err := s.applicationRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
-		UserID:         userId,
+		UserID:         userID,
 		StatusDoUpdate: true,
 		Status:         sqlc.ApplicationStatusWithdrawn,
 	})
@@ -560,14 +599,14 @@ func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userId uuid
 	return nil
 }
 
-func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userId uuid.UUID) error {
+func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userID uuid.UUID) error {
 	// Make atomic
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.applicationRepo.NewTx(tx)
 		txUserRepo := s.userRepo.NewTx(tx)
 
 		if err := txAppRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
-			UserID:         userId,
+			UserID:         userID,
 			StatusDoUpdate: true,
 			Status:         sqlc.ApplicationStatusWithdrawn,
 		}); err != nil {
@@ -576,7 +615,7 @@ func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userId uuid
 
 		return txUserRepo.UpdateRole(ctx,
 			sqlc.UpdateRoleParams{
-				UserID: userId,
+				UserID: userID,
 				Role:   sqlc.UserRoleApplicant,
 			},
 		)
@@ -588,12 +627,12 @@ func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userId uuid
 	return nil
 }
 
-func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, userId uuid.UUID) error {
+func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, userID uuid.UUID) error {
 	// is a check for a user being accepted necessary here? or is the frontend enough
 
 	err := s.userRepo.UpdateRole(ctx,
 		sqlc.UpdateRoleParams{
-			UserID: userId,
+			UserID: userID,
 			Role:   sqlc.UserRoleAttendee,
 		},
 	)
@@ -660,8 +699,8 @@ func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Contex
 		return err
 	}
 
-	for _, userId := range acceptedUserIds {
-		userContactInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userId)
+	for _, userID := range acceptedUserIds {
+		userContactInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userID)
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
 			return err
@@ -717,12 +756,17 @@ func (s *ApplicationService) ReleaseDecisions(ctx context.Context, batRunId uuid
 	err = s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.applicationRepo.NewTx(tx)
 
-		err := txAppRepo.UpdateApplicationsStatuses(ctx, sqlc.ApplicationStatusAccepted, batRun.AcceptedApplicants)
+		err := txAppRepo.UpdateApplicationsStatuses(ctx, sqlc.UpdateApplicationStatusParams{
+			Status:  sqlc.ApplicationStatusAccepted,
+			UserIds: batRun.AcceptedApplicants,
+		})
 		if err != nil {
 			return err
 		}
-
-		return txAppRepo.UpdateApplicationsStatuses(ctx, sqlc.ApplicationStatusRejected, batRun.RejectedApplicants)
+		return txAppRepo.UpdateApplicationsStatuses(ctx, sqlc.UpdateApplicationStatusParams{
+			Status:  sqlc.ApplicationStatusRejected,
+			UserIds: batRun.RejectedApplicants,
+		})
 	})
 	if err != nil {
 		return err

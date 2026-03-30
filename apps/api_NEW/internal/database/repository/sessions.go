@@ -35,6 +35,6 @@ func (r *SessionRepository) Create(ctx context.Context, params sqlc.CreateSessio
 	return &session, err
 }
 
-func (r *SessionRepository) Invalidate(ctx context.Context, sessionId uuid.UUID) error {
-	return r.db.Query.InvalidateSessionByID(ctx, sessionId)
+func (r *SessionRepository) Invalidate(ctx context.Context, sessionID uuid.UUID) error {
+	return r.db.Query.InvalidateSessionByID(ctx, sessionID)
 }

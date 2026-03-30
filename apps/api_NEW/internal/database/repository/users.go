@@ -97,13 +97,7 @@ func (r *UserRepository) GetUserByRFID(ctx context.Context, rfid string) (*sqlc.
 	return &user, nil
 }
 
-func (r *UserRepository) GetAllUsers(ctx context.Context, search *string, limit, offset int32) ([]sqlc.User, error) {
-	params := sqlc.GetUsersParams{
-		Search: search,
-		Limit:  limit,
-		Offset: offset,
-	}
-
+func (r *UserRepository) GetAllUsers(ctx context.Context, params sqlc.GetUsersParams) ([]sqlc.User, error) {
 	return r.db.Query.GetUsers(ctx, params)
 }
 
@@ -111,8 +105,8 @@ func (r *UserRepository) UpdateRole(ctx context.Context, updateRoleParams sqlc.U
 	return r.db.Query.UpdateRole(ctx, updateRoleParams)
 }
 
-func (r *UserRepository) RemoveRole(ctx context.Context, userId uuid.UUID) error {
-	return r.db.Query.RemoveRole(ctx, userId)
+func (r *UserRepository) RemoveRole(ctx context.Context, userID uuid.UUID) error {
+	return r.db.Query.RemoveRole(ctx, userID)
 }
 
 func (r *UserRepository) UpdateCheckInTime(ctx context.Context, updateCheckInParams sqlc.UpdateCheckInTimeParams) error {

@@ -30,11 +30,16 @@ func (q *Queries) AssignApplicationsToReviewer(ctx context.Context, arg AssignAp
 }
 
 const createApplication = `-- name: CreateApplication :one
-INSERT INTO applications (user_id) VALUES ($1) RETURNING user_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time, hackathon_id
+INSERT INTO applications (user_id, hackathon_id) VALUES ($1, $2) RETURNING user_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time, hackathon_id
 `
 
-func (q *Queries) CreateApplication(ctx context.Context, userID uuid.UUID) (Application, error) {
-	row := q.db.QueryRow(ctx, createApplication, userID)
+type CreateApplicationParams struct {
+	UserID      uuid.UUID `json:"user_id"`
+	HackathonID string    `json:"hackathon_id"`
+}
+
+func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationParams) (Application, error) {
+	row := q.db.QueryRow(ctx, createApplication, arg.UserID, arg.HackathonID)
 	var i Application
 	err := row.Scan(
 		&i.UserID,

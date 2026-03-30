@@ -2,9 +2,7 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -33,8 +31,8 @@ func (r *ApplicationRepository) NewTx(tx pgx.Tx) *ApplicationRepository {
 	}
 }
 
-func (r *ApplicationRepository) CreateApplication(ctx context.Context, userId uuid.UUID) (*sqlc.Application, error) {
-	application, err := r.db.Query.CreateApplication(ctx, userId)
+func (r *ApplicationRepository) CreateApplication(ctx context.Context, params sqlc.CreateApplicationParams) (*sqlc.Application, error) {
+	application, err := r.db.Query.CreateApplication(ctx, params)
 
 	if err != nil {
 		return nil, err
@@ -43,8 +41,12 @@ func (r *ApplicationRepository) CreateApplication(ctx context.Context, userId uu
 	return &application, nil
 }
 
-func (r *ApplicationRepository) GetApplicationByUserId(ctx context.Context, userId uuid.UUID) (*sqlc.Application, error) {
-	application, err := r.db.Query.GetApplicationByUserId(ctx, userId)
+func (r *ApplicationRepository) UpdateApplication(ctx context.Context, params sqlc.UpdateApplicationParams) error {
+	return r.db.Query.UpdateApplication(ctx, params)
+}
+
+func (r *ApplicationRepository) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) (*sqlc.Application, error) {
+	application, err := r.db.Query.GetApplicationByUserId(ctx, userID)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -57,11 +59,8 @@ func (r *ApplicationRepository) GetApplicationByUserId(ctx context.Context, user
 	return &application, nil
 }
 
-func (r *ApplicationRepository) UpdateApplicationsStatuses(ctx context.Context, status sqlc.ApplicationStatus, userIds uuid.UUIDs) error {
-	return r.db.Query.UpdateApplicationStatus(ctx, sqlc.UpdateApplicationStatusParams{
-		Status:  status,
-		UserIds: userIds,
-	})
+func (r *ApplicationRepository) UpdateApplicationsStatuses(ctx context.Context, params sqlc.UpdateApplicationStatusParams) error {
+	return r.db.Query.UpdateApplicationStatus(ctx, params)
 }
 
 // List all candidates considered for admission.
@@ -71,73 +70,16 @@ func (r *ApplicationRepository) ListAdmissionCandidates(ctx context.Context) ([]
 	return r.db.Query.ListAdmissionCandidates(ctx)
 }
 
-func (r *ApplicationRepository) SubmitApplication(ctx context.Context, data any, userId uuid.UUID) error {
-	jsonBytes, err := json.Marshal(data)
-
-	if err != nil {
-		return err
-	}
-
-	err = r.db.Query.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
-		StatusDoUpdate:      true,
-		Status:              sqlc.ApplicationStatusSubmitted,
-		ApplicationDoUpdate: true,
-		Application:         jsonBytes,
-		SubmittedAtDoUpdate: true,
-		SubmittedAt:         time.Now(),
-		SavedAtDoUpdate:     true,
-		SavedAt:             time.Now(),
-		UserID:              userId,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *ApplicationRepository) SaveApplication(ctx context.Context, data any, userId uuid.UUID) error {
-	jsonBytes, err := json.Marshal(data)
-
-	if err != nil {
-		return err
-	}
-
-	err = r.db.Query.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
-		StatusDoUpdate:      true,
-		Status:              sqlc.ApplicationStatusStarted,
-		ApplicationDoUpdate: true,
-		Application:         jsonBytes,
-		UserID:              userId,
-		SavedAtDoUpdate:     true,
-		SavedAt:             time.Now(),
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *ApplicationRepository) UpdateApplication(ctx context.Context, params sqlc.UpdateApplicationParams) error {
-	return r.db.Query.UpdateApplication(ctx, params)
-}
-
 func (r *ApplicationRepository) ListAvailableApplications(ctx context.Context) ([]uuid.UUID, error) {
 	return r.db.Query.ListAvailableApplications(ctx)
 }
 
-func (r *ApplicationRepository) AssignApplicationToReview(ctx context.Context, reviewerId uuid.UUID, applicationIDs []uuid.UUID) error {
-	return r.db.Query.AssignApplicationsToReviewer(ctx, sqlc.AssignApplicationsToReviewerParams{
-		ReviewerID:     reviewerId,
-		ApplicationIds: applicationIDs,
-	})
+func (r *ApplicationRepository) AssignApplicationToReview(ctx context.Context, params sqlc.AssignApplicationsToReviewerParams) error {
+	return r.db.Query.AssignApplicationsToReviewer(ctx, params)
 }
 
-func (r *ApplicationRepository) ListApplicationByReviewer(ctx context.Context, reviewerId uuid.UUID) ([]sqlc.ListApplicationByReviewerRow, error) {
-	return r.db.Query.ListApplicationByReviewer(ctx, &reviewerId)
+func (r *ApplicationRepository) ListApplicationByReviewer(ctx context.Context, reviewerID uuid.UUID) ([]sqlc.ListApplicationByReviewerRow, error) {
+	return r.db.Query.ListApplicationByReviewer(ctx, &reviewerID)
 }
 
 func (r *ApplicationRepository) ResetApplicationReviews(ctx context.Context) error {
@@ -176,8 +118,8 @@ func (r *ApplicationRepository) GetSubmissionTimes(ctx context.Context) ([]sqlc.
 	return r.db.Query.GetSubmissionTimes(ctx)
 }
 
-func (r *ApplicationRepository) JoinWaitlist(ctx context.Context, userId uuid.UUID) error {
-	return r.db.Query.JoinWaitlist(ctx, userId)
+func (r *ApplicationRepository) JoinWaitlist(ctx context.Context, userID uuid.UUID) error {
+	return r.db.Query.JoinWaitlist(ctx, userID)
 }
 
 func (r *ApplicationRepository) TransitionAcceptedApplicationsToWaitlist(ctx context.Context) error {

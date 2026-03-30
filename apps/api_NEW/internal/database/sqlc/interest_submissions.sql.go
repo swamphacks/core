@@ -12,23 +12,25 @@ import (
 const addEmail = `-- name: AddEmail :one
 INSERT INTO interest_submissions (
     email,
-    source
+    source,
+    hackathon_id
 ) VALUES (
-    $1, $2
+    $1, $2, $3
 )
 RETURNING id, email, created_at, source, hackathon_id
 `
 
 type AddEmailParams struct {
-	Email  string  `json:"email"`
-	Source *string `json:"source"`
+	Email       string  `json:"email"`
+	Source      *string `json:"source"`
+	HackathonID string  `json:"hackathon_id"`
 }
 
 // Adds a new email to the mailing list for a specific user.
 // The unique constraint on `email` will prevent duplicates.
 // Returns the newly created email record.
 func (q *Queries) AddEmail(ctx context.Context, arg AddEmailParams) (InterestSubmission, error) {
-	row := q.db.QueryRow(ctx, addEmail, arg.Email, arg.Source)
+	row := q.db.QueryRow(ctx, addEmail, arg.Email, arg.Source, arg.HackathonID)
 	var i InterestSubmission
 	err := row.Scan(
 		&i.ID,

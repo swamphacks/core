@@ -288,13 +288,11 @@ type Hackathon struct {
 	DecisionRelease          *time.Time `json:"decision_release"`
 	StartTime                time.Time  `json:"start_time"`
 	EndTime                  time.Time  `json:"end_time"`
-	WebsiteUrl               *string    `json:"website_url"`
-	IsPublished              *bool      `json:"is_published"`
+	IsActive                 bool       `json:"is_active"`
 	CreatedAt                time.Time  `json:"created_at"`
 	UpdatedAt                time.Time  `json:"updated_at"`
 	Banner                   *string    `json:"banner"`
 	ApplicationReviewStarted bool       `json:"application_review_started"`
-	OnerowID                 bool       `json:"onerow_id"`
 }
 
 type InterestSubmission struct {
@@ -360,10 +358,9 @@ type TeamJoinRequest struct {
 }
 
 type TeamMember struct {
-	UserID      uuid.UUID `json:"user_id"`
-	TeamID      uuid.UUID `json:"team_id"`
-	JoinedAt    time.Time `json:"joined_at"`
-	HackathonID string    `json:"hackathon_id"`
+	UserID   uuid.UUID `json:"user_id"`
+	TeamID   uuid.UUID `json:"team_id"`
+	JoinedAt time.Time `json:"joined_at"`
 }
 
 type User struct {

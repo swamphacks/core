@@ -13,11 +13,11 @@ import (
 )
 
 const addBatRun = `-- name: AddBatRun :one
-INSERT INTO bat_runs DEFAULT VALUES RETURNING id, accepted_applicants, rejected_applicants, status, created_at, completed_at, hackathon_id
+INSERT INTO bat_runs (hackathon_id) VALUES ($1) RETURNING id, accepted_applicants, rejected_applicants, status, created_at, completed_at, hackathon_id
 `
 
-func (q *Queries) AddBatRun(ctx context.Context) (BatRun, error) {
-	row := q.db.QueryRow(ctx, addBatRun)
+func (q *Queries) AddBatRun(ctx context.Context, hackathonID string) (BatRun, error) {
+	row := q.db.QueryRow(ctx, addBatRun, hackathonID)
 	var i BatRun
 	err := row.Scan(
 		&i.ID,

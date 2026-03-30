@@ -67,41 +67,6 @@ func NewHandler(authService *AuthService, config *config.Config, logger zerolog.
 	}
 }
 
-var stateStore = map[string]bool{}
-
-type LoginOutput struct {
-	Location  string      `header:"Location"`
-	SetCookie http.Cookie `header:"Set-Cookie"`
-}
-
-func (h *handler) handleLogin(ctx context.Context, input *struct{}) (*LoginOutput, error) {
-	// Generate state
-	state := OAuthState{
-		Nonce:    "none",
-		Provider: "discord",
-		Redirect: "/docs",
-	}
-
-	stateJSON, _ := json.Marshal(state)
-
-	params := url.Values{
-		"client_id":     {h.config.Auth.Discord.ClientID},
-		"redirect_uri":  {h.config.Auth.Discord.RedirectURI},
-		"response_type": {"code"},
-		"scope":         {"identify email"},
-		"state":         {base64.StdEncoding.EncodeToString(stateJSON)},
-	}
-
-	resp := &LoginOutput{Location: "https://discord.com/oauth2/authorize?" + params.Encode()}
-	resp.SetCookie = http.Cookie{
-		Name:     "sh_auth_nonce",
-		Value:    "test",
-		SameSite: http.SameSiteLaxMode,
-		// Path:     "/",
-	}
-	return resp, nil
-}
-
 type LogoutOutput struct {
 	SetCookie http.Cookie `header:"Set-Cookie"`
 }

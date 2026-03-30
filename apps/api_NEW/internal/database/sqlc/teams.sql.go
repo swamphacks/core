@@ -14,21 +14,24 @@ import (
 const createTeam = `-- name: CreateTeam :one
 INSERT INTO teams (
     name,
-    owner_id
+    owner_id,
+    hackathon_id
 ) VALUES (
     $1,
-    $2
+    $2,
+    $3
 )
 RETURNING id, name, owner_id, created_at, updated_at, hackathon_id
 `
 
 type CreateTeamParams struct {
-	Name    string     `json:"name"`
-	OwnerID *uuid.UUID `json:"owner_id"`
+	Name        string     `json:"name"`
+	OwnerID     *uuid.UUID `json:"owner_id"`
+	HackathonID string     `json:"hackathon_id"`
 }
 
 func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, error) {
-	row := q.db.QueryRow(ctx, createTeam, arg.Name, arg.OwnerID)
+	row := q.db.QueryRow(ctx, createTeam, arg.Name, arg.OwnerID, arg.HackathonID)
 	var i Team
 	err := row.Scan(
 		&i.ID,

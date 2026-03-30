@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-playground/validator/v10"
@@ -263,8 +264,19 @@ func NewHandler(
 	}
 }
 
+type HackerApplication struct {
+	UserID      uuid.UUID              `json:"userId"`
+	Status      sqlc.ApplicationStatus `json:"status"`
+	Application []byte                 `json:"application"`
+	CreatedAt   time.Time              `json:"createdAt"`
+	SavedAt     time.Time              `json:"savedAt"`
+	UpdatedAt   time.Time              `json:"updatedAt"`
+	SubmittedAt *time.Time             `json:"submittedAt"`
+	HackathonID string                 `json:"hackathonId"`
+}
+
 type GetApplicationOutput struct {
-	Body *sqlc.Application
+	Body HackerApplication
 }
 
 func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*GetApplicationOutput, error) {
@@ -283,7 +295,15 @@ func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*G
 				return nil, huma.Error500InternalServerError("can't create application")
 			}
 
-			return &GetApplicationOutput{Body: newApplication}, nil
+			return &GetApplicationOutput{Body: HackerApplication{
+				UserID:      newApplication.UserID,
+				Application: newApplication.Application,
+				CreatedAt:   newApplication.CreatedAt,
+				SavedAt:     newApplication.SavedAt,
+				UpdatedAt:   newApplication.UpdatedAt,
+				SubmittedAt: newApplication.SubmittedAt,
+				HackathonID: newApplication.HackathonID,
+			}}, nil
 		}
 		if errors.Is(err, ErrApplicationNotOpened) {
 			return nil, huma.Error400BadRequest("application is unavailable")
@@ -292,7 +312,15 @@ func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*G
 		return nil, huma.Error500InternalServerError("error retrieving application")
 	}
 
-	return &GetApplicationOutput{Body: application}, nil
+	return &GetApplicationOutput{Body: HackerApplication{
+		UserID:      application.UserID,
+		Application: application.Application,
+		CreatedAt:   application.CreatedAt,
+		SavedAt:     application.SavedAt,
+		UpdatedAt:   application.UpdatedAt,
+		SubmittedAt: application.SubmittedAt,
+		HackathonID: application.HackathonID,
+	}}, nil
 }
 
 type SaveApplicationOutput struct {

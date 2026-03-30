@@ -109,13 +109,13 @@ func (s *HackathonService) GetAttendeesWithDiscord(ctx context.Context) ([]sqlc.
 }
 
 func (s *HackathonService) GetAttendeeUserIds(ctx context.Context) ([]uuid.UUID, error) {
-	userIds, err := s.hackathonRepo.GetAttendeeUserIds(ctx)
+	userIDs, err := s.hackathonRepo.GetAttendeeUserIds(ctx)
 
 	if err != nil {
 		return nil, errors.New("Failed to get attendee user ids")
 	}
 
-	return userIds, nil
+	return userIDs, nil
 }
 
 func (s *HackathonService) GetAttendeeCount(ctx context.Context) (int64, error) {
@@ -134,9 +134,9 @@ var (
 	ErrUserCheckedIn   = errors.New("user already checked in")
 )
 
-func (s *HackathonService) CheckInAttendee(ctx context.Context, userId uuid.UUID, RFID *string) error {
+func (s *HackathonService) CheckInAttendee(ctx context.Context, userID uuid.UUID, RFID *string) error {
 	// Retrieve user with their current event role
-	user, err := s.userRepo.GetUserByID(ctx, userId)
+	user, err := s.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		return repository.ErrUserNotFound
 	}
@@ -152,7 +152,7 @@ func (s *HackathonService) CheckInAttendee(ctx context.Context, userId uuid.UUID
 	now := time.Now()
 	// Update user role checked in AND rfid
 	return s.userRepo.UpdateUser(ctx, sqlc.UpdateUserParams{
-		ID: userId,
+		ID: userID,
 
 		Role:         sqlc.UserRoleAttendee,
 		RoleDoUpdate: true,
@@ -166,12 +166,11 @@ func (s *HackathonService) CheckInAttendee(ctx context.Context, userId uuid.UUID
 }
 
 func (s *HackathonService) SubmitInterestEmail(ctx context.Context, email string, source *string) (*sqlc.InterestSubmission, error) {
-	params := sqlc.AddEmailParams{
-		Email:  email,
-		Source: source,
-	}
-
-	result, err := s.eventInterestsRepo.AddEmail(ctx, params)
+	result, err := s.eventInterestsRepo.AddEmail(ctx, sqlc.AddEmailParams{
+		Email:       email,
+		Source:      source,
+		HackathonID: "xii",
+	})
 	if err != nil && errors.Is(err, database.ErrDuplicateEmails) {
 		return nil, errors.New("Duplicate email")
 	} else if err != nil {

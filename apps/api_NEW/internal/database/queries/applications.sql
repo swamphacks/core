@@ -1,5 +1,5 @@
 -- name: CreateApplication :one
-INSERT INTO applications (user_id) VALUES ($1) RETURNING *;
+INSERT INTO applications (user_id, hackathon_id) VALUES ($1, $2) RETURNING *;
 
 -- name: GetApplicationByUserId :one
 SELECT * FROM applications WHERE user_id = $1;

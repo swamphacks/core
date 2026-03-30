@@ -35,11 +35,8 @@ func (r *TeamRepository) NewTx(tx pgx.Tx) *TeamRepository {
 	}
 }
 
-func (r *TeamRepository) Create(ctx context.Context, name string, owner_id uuid.UUID) (*sqlc.Team, error) {
-	team, err := r.db.Query.CreateTeam(ctx, sqlc.CreateTeamParams{
-		Name:    name,
-		OwnerID: &owner_id,
-	})
+func (r *TeamRepository) Create(ctx context.Context, arg sqlc.CreateTeamParams) (*sqlc.Team, error) {
+	team, err := r.db.Query.CreateTeam(ctx, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +44,8 @@ func (r *TeamRepository) Create(ctx context.Context, name string, owner_id uuid.
 	return &team, err
 }
 
-func (r *TeamRepository) GetByID(ctx context.Context, teamId uuid.UUID) (*sqlc.Team, error) {
-	team, err := r.db.Query.GetTeamById(ctx, teamId)
+func (r *TeamRepository) GetByID(ctx context.Context, teamID uuid.UUID) (*sqlc.Team, error) {
+	team, err := r.db.Query.GetTeamById(ctx, teamID)
 	if err != nil && database.IsNotFound(err) {
 		return nil, ErrTeamNotFound
 	}
@@ -56,8 +53,8 @@ func (r *TeamRepository) GetByID(ctx context.Context, teamId uuid.UUID) (*sqlc.T
 	return &team, err
 }
 
-func (r *TeamRepository) GetTeamByMember(ctx context.Context, userId uuid.UUID) (*sqlc.GetUserTeamRow, error) {
-	team, err := r.db.Query.GetUserTeam(ctx, userId)
+func (r *TeamRepository) GetTeamByMember(ctx context.Context, userID uuid.UUID) (*sqlc.GetUserTeamRow, error) {
+	team, err := r.db.Query.GetUserTeam(ctx, userID)
 
 	if err != nil && database.IsNotFound(err) {
 		return nil, ErrTeamNotFound
@@ -66,30 +63,27 @@ func (r *TeamRepository) GetTeamByMember(ctx context.Context, userId uuid.UUID) 
 	return &team, err
 }
 
-func (r *TeamRepository) GetTeamsWithMembers(ctx context.Context, limit, offset int32) ([]sqlc.ListTeamsWithMembersRow, error) {
-	return r.db.Query.ListTeamsWithMembers(ctx, sqlc.ListTeamsWithMembersParams{
-		Limit:  limit,
-		Offset: offset,
-	})
+func (r *TeamRepository) GetTeamsWithMembers(ctx context.Context, params sqlc.ListTeamsWithMembersParams) ([]sqlc.ListTeamsWithMembersRow, error) {
+	return r.db.Query.ListTeamsWithMembers(ctx, params)
 }
 
-func (r *TeamRepository) Delete(ctx context.Context, teamId uuid.UUID) error {
-	return r.db.Query.DeleteTeam(ctx, teamId)
+func (r *TeamRepository) Delete(ctx context.Context, teamID uuid.UUID) error {
+	return r.db.Query.DeleteTeam(ctx, teamID)
 }
 
-func (r *TeamRepository) Update(ctx context.Context, teamId uuid.UUID, name *string, ownerId *uuid.UUID) (*sqlc.Team, error) {
-	params := sqlc.UpdateTeamByIdParams{
-		ID:              teamId,
-		OwnerIDDoUpdate: ownerId != nil && *ownerId != uuid.Nil,
-		NameDoUpdate:    name != nil && *name != "",
-	}
+func (r *TeamRepository) Update(ctx context.Context, params sqlc.UpdateTeamByIdParams) (*sqlc.Team, error) {
+	// params := sqlc.UpdateTeamByIdParams{
+	// 	ID:              teamId,
+	// 	OwnerIDDoUpdate: ownerId != nil && *ownerId != uuid.Nil,
+	// 	NameDoUpdate:    name != nil && *name != "",
+	// }
 
-	if ownerId != nil {
-		params.OwnerID = ownerId
-	}
-	if name != nil {
-		params.Name = *name
-	}
+	// if ownerId != nil {
+	// 	params.OwnerID = ownerId
+	// }
+	// if name != nil {
+	// 	params.Name = *name
+	// }
 
 	team, err := r.db.Query.UpdateTeamById(ctx, params)
 	return &team, err

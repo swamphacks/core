@@ -11,18 +11,18 @@ LEFT JOIN user_redemptions ur ON r.id = ur.redeemable_id
 GROUP BY r.id;
 
 -- name: RedeemRedeemable :one
-INSERT INTO user_redemptions (user_id, redeemable_id, amount)
-SELECT $1, $2, 1
+INSERT INTO user_redemptions (user_id, redeemable_id, hackathon_id, amount)
+SELECT @user_id, @redeemable_id, 1
 WHERE (
     SELECT COALESCE(SUM(amount), 0) 
     FROM user_redemptions 
-    WHERE redeemable_id = $2
-) < (SELECT amount FROM redeemables WHERE id = $2)
+    WHERE redeemable_id = @redeemable_id
+) < (SELECT amount FROM redeemables WHERE id = @redeemable_id)
 ON CONFLICT (user_id, redeemable_id) 
 DO UPDATE SET 
     amount = user_redemptions.amount + 1,
     updated_at = CURRENT_TIMESTAMP
-WHERE user_redemptions.amount < (SELECT max_user_amount FROM redeemables WHERE id = $2)
+WHERE user_redemptions.amount < (SELECT max_user_amount FROM redeemables WHERE id = @redeemable_id)
 RETURNING *;
 
 -- name: GetRedemptionInfoByRedeemableID :many
@@ -31,8 +31,8 @@ FROM user_redemptions ur
 WHERE ur.redeemable_id = $1;
 
 -- name: CreateRedeemable :one
-INSERT INTO redeemables (name, amount, max_user_amount)
-VALUES ($1, $2, $3)
+INSERT INTO redeemables (name, amount, max_user_amount, hackathon_id)
+VALUES (@name, @amount, @max_user_amount, @hackthon_id)
 RETURNING *;
 
 -- name: UpdateRedeemable :one

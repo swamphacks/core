@@ -56,9 +56,9 @@ func NewService(
 }
 
 // TODO: Remove all join requests after creating a team
-func (s *TeamService) CreateTeam(ctx context.Context, name string, userId uuid.UUID) (*sqlc.Team, error) {
+func (s *TeamService) CreateTeam(ctx context.Context, name string, userID uuid.UUID) (*sqlc.Team, error) {
 	// Check if user already has a team for this event.
-	member, err := s.teamMemberRepo.GetTeamMemberByUser(ctx, userId)
+	member, err := s.teamMemberRepo.GetTeamMemberByUser(ctx, userID)
 	if err == nil && member != nil {
 		// User already has a team
 		return nil, ErrTeamExists
@@ -76,16 +76,26 @@ func (s *TeamService) CreateTeam(ctx context.Context, name string, userId uuid.U
 		txTeamJoinRequestRepo := s.teamJoinRequestRepo.NewTx(tx)
 
 		// Delete any pending join requests by the user for this event
-		if err := txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, userId, sqlc.TeamJoinRequestStatusPending); err != nil {
+		if err := txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, sqlc.DeleteJoinRequestsByUserAndStatusParams{
+			UserID: userID,
+			Status: sqlc.TeamJoinRequestStatusPending,
+		}); err != nil {
 			return err
 		}
 
-		team, err := txTeamRepo.Create(ctx, name, userId)
+		team, err := txTeamRepo.Create(ctx, sqlc.CreateTeamParams{
+			Name:        name,
+			OwnerID:     &userID,
+			HackathonID: "xii",
+		})
 		if err != nil {
 			return err
 		}
 
-		if _, err = txTeamMemberRepo.Create(ctx, team.ID, userId); err != nil {
+		if _, err = txTeamMemberRepo.Create(ctx, sqlc.CreateTeamMemberParams{
+			TeamID: team.ID,
+			UserID: userID,
+		}); err != nil {
 			return err
 		}
 
@@ -99,7 +109,7 @@ func (s *TeamService) CreateTeam(ctx context.Context, name string, userId uuid.U
 }
 
 type MemberWithUserInfo struct {
-	UserID   uuid.UUID `json:"userId"`
+	UserID   uuid.UUID `json:"userID"`
 	Email    *string   `json:"email"`
 	Image    *string   `json:"image"`
 	Name     string    `json:"name"`
@@ -113,8 +123,8 @@ type TeamWithMembers struct {
 	Members []MemberWithUserInfo `json:"members"`
 }
 
-func (s *TeamService) GetUserTeamWithMembers(ctx context.Context, userId uuid.UUID) (*TeamWithMembers, error) {
-	team, err := s.teamRepo.GetTeamByMember(ctx, userId)
+func (s *TeamService) GetUserTeamWithMembers(ctx context.Context, userID uuid.UUID) (*TeamWithMembers, error) {
+	team, err := s.teamRepo.GetTeamByMember(ctx, userID)
 	if err != nil {
 		// If no team, just return nil
 		if errors.Is(err, repository.ErrTeamNotFound) {
@@ -150,7 +160,11 @@ func (s *TeamService) GetUserTeamWithMembers(ctx context.Context, userId uuid.UU
 }
 
 func (s *TeamService) GetTeamsWithMembers(ctx context.Context, limit, offset int32) ([]TeamWithMembers, error) {
-	teams, err := s.teamRepo.GetTeamsWithMembers(ctx, limit, offset)
+	teams, err := s.teamRepo.GetTeamsWithMembers(ctx, sqlc.ListTeamsWithMembersParams{
+		Limit:  limit,
+		Offset: offset,
+	})
+
 	if err != nil {
 		return []TeamWithMembers{}, err
 	}
@@ -175,8 +189,8 @@ func (s *TeamService) GetTeamsWithMembers(ctx context.Context, limit, offset int
 	return result, nil
 }
 
-func (s *TeamService) GetTeamWithMembersByTeamId(ctx context.Context, teamId uuid.UUID) (*TeamWithMembers, error) {
-	team, err := s.teamRepo.GetByID(ctx, teamId)
+func (s *TeamService) GetTeamWithMembersByTeamId(ctx context.Context, teamID uuid.UUID) (*TeamWithMembers, error) {
+	team, err := s.teamRepo.GetByID(ctx, teamID)
 	if err != nil {
 		// If no team, just return nil
 		if errors.Is(err, repository.ErrTeamNotFound) {
@@ -211,13 +225,16 @@ func (s *TeamService) GetTeamWithMembersByTeamId(ctx context.Context, teamId uui
 	return &teamWithMembers, nil
 }
 
-func (s *TeamService) JoinTeam(ctx context.Context, userId, teamId uuid.UUID) error {
-	_, err := s.teamMemberRepo.Create(ctx, teamId, userId)
+func (s *TeamService) JoinTeam(ctx context.Context, userID, teamID uuid.UUID) error {
+	_, err := s.teamMemberRepo.Create(ctx, sqlc.CreateTeamMemberParams{
+		UserID: userID,
+		TeamID: teamID,
+	})
 	return err
 }
 
-func (s *TeamService) LeaveTeam(ctx context.Context, userId, teamId uuid.UUID) error {
-	team, err := s.teamRepo.GetByID(ctx, teamId)
+func (s *TeamService) LeaveTeam(ctx context.Context, userID, teamID uuid.UUID) error {
+	team, err := s.teamRepo.GetByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, repository.ErrTeamNotFound) {
 			return ErrTeamNotFound
@@ -226,8 +243,11 @@ func (s *TeamService) LeaveTeam(ctx context.Context, userId, teamId uuid.UUID) e
 	}
 
 	// Check if user is NOT the owner
-	if team.OwnerID == nil || *team.OwnerID != userId {
-		return s.teamMemberRepo.Delete(ctx, team.ID, userId)
+	if team.OwnerID == nil || *team.OwnerID != userID {
+		return s.teamMemberRepo.Delete(ctx, sqlc.RemoveTeamMemberParams{
+			TeamID: teamID,
+			UserID: userID,
+		})
 	}
 
 	// User IS the owner
@@ -248,7 +268,10 @@ func (s *TeamService) LeaveTeam(ctx context.Context, userId, teamId uuid.UUID) e
 			txTeamRepo := s.teamRepo.NewTx(tx)
 			txTeamMemberRepo := s.teamMemberRepo.NewTx(tx)
 
-			if err := txTeamMemberRepo.Delete(ctx, team.ID, userId); err != nil {
+			if err := txTeamMemberRepo.Delete(ctx, sqlc.RemoveTeamMemberParams{
+				TeamID: teamID,
+				UserID: userID,
+			}); err != nil {
 				return err
 			}
 			return txTeamRepo.Delete(ctx, team.ID)
@@ -258,7 +281,7 @@ func (s *TeamService) LeaveTeam(ctx context.Context, userId, teamId uuid.UUID) e
 	// Choose the next owner deterministically
 	var nextOwner sqlc.GetTeamMembersRow
 	for _, m := range members {
-		if m.UserID != userId {
+		if m.UserID != userID {
 			nextOwner = m
 			break
 		}
@@ -274,18 +297,26 @@ func (s *TeamService) LeaveTeam(ctx context.Context, userId, teamId uuid.UUID) e
 		txTeamRepo := s.teamRepo.NewTx(tx)
 		txTeamMemberRepo := s.teamMemberRepo.NewTx(tx)
 
-		if err := txTeamMemberRepo.Delete(ctx, team.ID, userId); err != nil {
+		if err := txTeamMemberRepo.Delete(ctx, sqlc.RemoveTeamMemberParams{
+			TeamID: teamID,
+			UserID: userID,
+		}); err != nil {
 			return err
 		}
 
-		_, err := txTeamRepo.Update(ctx, team.ID, nil, &nextOwner.UserID)
+		// _, err := txTeamRepo.Update(ctx, team.ID, nil, &nextOwner.UserID)
+		_, err := txTeamRepo.Update(ctx, sqlc.UpdateTeamByIdParams{
+			ID:              team.ID,
+			OwnerIDDoUpdate: true,
+			OwnerID:         &nextOwner.UserID,
+		})
 		return err
 	})
 }
 
-func (s *TeamService) RequestToJoinTeam(ctx context.Context, teamId, userId uuid.UUID, message *string) (*sqlc.TeamJoinRequest, error) {
+func (s *TeamService) RequestToJoinTeam(ctx context.Context, teamID, userID uuid.UUID, message *string) (*sqlc.TeamJoinRequest, error) {
 	// Ensure user is not already on a team (User's can't request to join a team if they are already on a team)
-	_, err := s.teamMemberRepo.GetTeamMemberByUser(ctx, userId)
+	_, err := s.teamMemberRepo.GetTeamMemberByUser(ctx, userID)
 	if err != nil && !errors.Is(err, repository.ErrTeamMemberNotFound) {
 		return nil, err
 	}
@@ -294,7 +325,12 @@ func (s *TeamService) RequestToJoinTeam(ctx context.Context, teamId, userId uuid
 		return nil, ErrUserOnTeam
 	}
 
-	request, err := s.teamJoinRequestRepo.Create(ctx, teamId, userId, message)
+	request, err := s.teamJoinRequestRepo.Create(ctx, sqlc.CreateTeamJoinRequestParams{
+		TeamID:         teamID,
+		UserID:         userID,
+		RequestMessage: message,
+	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -302,18 +338,22 @@ func (s *TeamService) RequestToJoinTeam(ctx context.Context, teamId, userId uuid
 	return request, nil
 }
 
-func (s *TeamService) GetPendingJoinRequestForTeam(ctx context.Context, userId, teamId uuid.UUID) ([]sqlc.ListJoinRequestsByTeamAndStatusWithUserRow, error) {
+func (s *TeamService) GetPendingJoinRequestForTeam(ctx context.Context, userID, teamID uuid.UUID) ([]sqlc.ListJoinRequestsByTeamAndStatusWithUserRow, error) {
 	// Get team and check if user is the owner of the tema
-	team, err := s.teamRepo.GetByID(ctx, teamId)
+	team, err := s.teamRepo.GetByID(ctx, teamID)
 	if err != nil {
 		return []sqlc.ListJoinRequestsByTeamAndStatusWithUserRow{}, err
 	}
 
-	if *team.OwnerID != userId {
+	if *team.OwnerID != userID {
 		return []sqlc.ListJoinRequestsByTeamAndStatusWithUserRow{}, ErrUserNotTeamOwner
 	}
 
-	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByTeamWithUser(ctx, teamId, sqlc.TeamJoinRequestStatusPending)
+	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByTeamWithUser(ctx, sqlc.ListJoinRequestsByTeamAndStatusWithUserParams{
+		TeamID: teamID,
+		Status: sqlc.TeamJoinRequestStatusPending,
+	})
+
 	if err != nil {
 		return []sqlc.ListJoinRequestsByTeamAndStatusWithUserRow{}, err
 	}
@@ -321,8 +361,12 @@ func (s *TeamService) GetPendingJoinRequestForTeam(ctx context.Context, userId, 
 	return requests, nil
 }
 
-func (s *TeamService) GetUserPendingJoinRequests(ctx context.Context, userId uuid.UUID) ([]sqlc.TeamJoinRequest, error) {
-	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByUserAndStatus(ctx, userId, sqlc.TeamJoinRequestStatusPending)
+func (s *TeamService) GetUserPendingJoinRequests(ctx context.Context, userID uuid.UUID) ([]sqlc.TeamJoinRequest, error) {
+	requests, err := s.teamJoinRequestRepo.ListJoinRequestsByUserAndStatus(ctx, sqlc.ListTeamJoinRequestsByUserAndStatusParams{
+		UserID: userID,
+		Status: sqlc.TeamJoinRequestStatusPending,
+	})
+
 	if err != nil {
 		return []sqlc.TeamJoinRequest{}, err
 	}
@@ -330,9 +374,9 @@ func (s *TeamService) GetUserPendingJoinRequests(ctx context.Context, userId uui
 	return requests, nil
 }
 
-func (s *TeamService) RespondToJoinRequest(ctx context.Context, ownerId, requestId uuid.UUID, accept bool) error {
+func (s *TeamService) RespondToJoinRequest(ctx context.Context, ownerID, requestID uuid.UUID, accept bool) error {
 	// Retrieve the join request
-	oldRequest, err := s.teamJoinRequestRepo.GetById(ctx, requestId)
+	oldRequest, err := s.teamJoinRequestRepo.GetById(ctx, requestID)
 	if err != nil {
 		return err
 	}
@@ -342,7 +386,7 @@ func (s *TeamService) RespondToJoinRequest(ctx context.Context, ownerId, request
 	if err != nil {
 		return err
 	}
-	if *team.OwnerID != ownerId {
+	if *team.OwnerID != ownerID {
 		return ErrUserNotTeamOwner
 	}
 
@@ -388,40 +432,57 @@ func (s *TeamService) RespondToJoinRequest(ctx context.Context, ownerId, request
 			txTeamMemberRepo := s.teamMemberRepo.NewTx(tx)
 			txTeamJoinRequestRepo := s.teamJoinRequestRepo.NewTx(tx)
 
-			if _, err := txTeamMemberRepo.Create(ctx, oldRequest.TeamID, oldRequest.UserID); err != nil {
+			if _, err := txTeamMemberRepo.Create(ctx, sqlc.CreateTeamMemberParams{
+				TeamID: oldRequest.TeamID,
+				UserID: oldRequest.UserID,
+			}); err != nil {
 				return err
 			}
 
-			if _, err := txTeamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.TeamJoinRequestStatusApproved); err != nil {
+			if _, err := txTeamJoinRequestRepo.UpdateStatus(ctx, sqlc.UpdateTeamJoinRequestParams{
+				ID:             requestID,
+				StatusDoUpdate: true,
+				Status:         sqlc.TeamJoinRequestStatusApproved,
+			}); err != nil {
 				return err
 			}
 
 			// Delete all other pending requests by the user for this event
-			return txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, oldRequest.UserID, sqlc.TeamJoinRequestStatusPending)
+			return txTeamJoinRequestRepo.DeleteByUserAndStatus(ctx, sqlc.DeleteJoinRequestsByUserAndStatusParams{
+				UserID: oldRequest.UserID,
+				Status: sqlc.TeamJoinRequestStatusPending,
+			})
 		})
 	} else {
 		// Rejecting the request: just update request status
-		_, err := s.teamJoinRequestRepo.UpdateStatus(ctx, requestId, sqlc.TeamJoinRequestStatusRejected)
+		_, err := s.teamJoinRequestRepo.UpdateStatus(ctx, sqlc.UpdateTeamJoinRequestParams{
+			ID:             requestID,
+			StatusDoUpdate: true,
+			Status:         sqlc.TeamJoinRequestStatusApproved,
+		})
 		return err
 	}
 }
 
-func (s *TeamService) KickMemberFromTeam(ctx context.Context, memberId, teamId, userId uuid.UUID) error {
-	team, err := s.teamRepo.GetByID(ctx, teamId)
+func (s *TeamService) KickMemberFromTeam(ctx context.Context, memberID, teamID, userID uuid.UUID) error {
+	team, err := s.teamRepo.GetByID(ctx, teamID)
 	if err != nil {
 		return err
 	}
 
-	if *team.OwnerID != userId {
-		s.logger.Warn().Str("team_owner", team.OwnerID.String()).Str("user", userId.String()).Msg("User attempting to kick member is not the team owner")
+	if *team.OwnerID != userID {
+		s.logger.Warn().Str("team_owner", team.OwnerID.String()).Str("user", userID.String()).Msg("User attempting to kick member is not the team owner")
 		return ErrUserNotTeamOwner
 	}
 
 	// Prevent owner from kicking themselves
-	if memberId == userId {
+	if memberID == userID {
 		s.logger.Warn().Str("team_owner", team.OwnerID.String()).Msg("Team owner attempting to kick themselves")
 		return ErrKickOwnerSelf
 	}
 
-	return s.teamMemberRepo.Delete(ctx, team.ID, memberId)
+	return s.teamMemberRepo.Delete(ctx, sqlc.RemoveTeamMemberParams{
+		TeamID: teamID,
+		UserID: memberID,
+	})
 }

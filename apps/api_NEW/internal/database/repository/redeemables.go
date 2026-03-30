@@ -26,18 +26,14 @@ func (r *RedeemablesRepository) GetRedeemables(ctx context.Context) (*[]sqlc.Get
 	return &redeemables, nil
 }
 
-func (r *RedeemablesRepository) CreateRedeemable(ctx context.Context, name string, amount int, maxUserAmount int) (*sqlc.Redeemable, error) {
-	params := sqlc.CreateRedeemableParams{
-		Name:          name,
-		Amount:        int32(amount),
-		MaxUserAmount: int32(maxUserAmount),
-	}
+func (r *RedeemablesRepository) CreateRedeemable(ctx context.Context, params sqlc.CreateRedeemableParams) (*sqlc.Redeemable, error) {
 	redeemable, err := r.db.Query.CreateRedeemable(ctx, params)
 	if err != nil {
 		return nil, err
 	}
 	return &redeemable, nil
 }
+
 func (r *RedeemablesRepository) DeleteRedeemable(ctx context.Context, redeemableID uuid.UUID) error {
 	err := r.db.Query.DeleteRedeemable(ctx, redeemableID)
 	if err != nil {
@@ -45,23 +41,8 @@ func (r *RedeemablesRepository) DeleteRedeemable(ctx context.Context, redeemable
 	}
 	return nil
 }
-func (r *RedeemablesRepository) UpdateRedeemable(ctx context.Context, redeemableID uuid.UUID, name *string, amount *int, maxUserAmount *int) (*sqlc.Redeemable, error) {
-	var amount32 *int32
-	if amount != nil {
-		v := int32(*amount)
-		amount32 = &v
-	}
-	var maxUserAmount32 *int32
-	if maxUserAmount != nil {
-		v := int32(*maxUserAmount)
-		maxUserAmount32 = &v
-	}
-	params := sqlc.UpdateRedeemableParams{
-		ID:            redeemableID,
-		Name:          name,
-		Amount:        amount32,
-		MaxUserAmount: maxUserAmount32,
-	}
+
+func (r *RedeemablesRepository) UpdateRedeemable(ctx context.Context, params sqlc.UpdateRedeemableParams) (*sqlc.Redeemable, error) {
 	redeemable, err := r.db.Query.UpdateRedeemable(ctx, params)
 	if err != nil {
 		return nil, err
@@ -69,11 +50,7 @@ func (r *RedeemablesRepository) UpdateRedeemable(ctx context.Context, redeemable
 	return &redeemable, nil
 }
 
-func (r *RedeemablesRepository) RedeemRedeemable(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID) (*sqlc.UserRedemption, error) {
-	params := sqlc.RedeemRedeemableParams{
-		RedeemableID: redeemableID,
-		UserID:       userID,
-	}
+func (r *RedeemablesRepository) RedeemRedeemable(ctx context.Context, params sqlc.RedeemRedeemableParams) (*sqlc.UserRedemption, error) {
 	redemption, err := r.db.Query.RedeemRedeemable(ctx, params)
 	if err != nil {
 		return nil, err
@@ -81,12 +58,8 @@ func (r *RedeemablesRepository) RedeemRedeemable(ctx context.Context, redeemable
 	return &redemption, nil
 }
 
-func (r *RedeemablesRepository) UpdateRedemption(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID, amount int) error {
-	err := r.db.Query.UpdateRedemption(ctx, sqlc.UpdateRedemptionParams{
-		RedeemableID: redeemableID,
-		UserID:       userID,
-		Amount:       int32(amount),
-	})
+func (r *RedeemablesRepository) UpdateRedemption(ctx context.Context, params sqlc.UpdateRedemptionParams) error {
+	err := r.db.Query.UpdateRedemption(ctx, params)
 	if err != nil {
 		return err
 	}

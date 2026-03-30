@@ -13,8 +13,8 @@ import (
 )
 
 const createRedeemable = `-- name: CreateRedeemable :one
-INSERT INTO redeemables (name, amount, max_user_amount)
-VALUES ($1, $2, $3)
+INSERT INTO redeemables (name, amount, max_user_amount, hackathon_id)
+VALUES ($1, $2, $3, $4)
 RETURNING id, name, amount, max_user_amount, created_at, updated_at, hackathon_id
 `
 
@@ -22,10 +22,16 @@ type CreateRedeemableParams struct {
 	Name          string `json:"name"`
 	Amount        int32  `json:"amount"`
 	MaxUserAmount int32  `json:"max_user_amount"`
+	HackthonID    string `json:"hackthon_id"`
 }
 
 func (q *Queries) CreateRedeemable(ctx context.Context, arg CreateRedeemableParams) (Redeemable, error) {
-	row := q.db.QueryRow(ctx, createRedeemable, arg.Name, arg.Amount, arg.MaxUserAmount)
+	row := q.db.QueryRow(ctx, createRedeemable,
+		arg.Name,
+		arg.Amount,
+		arg.MaxUserAmount,
+		arg.HackthonID,
+	)
 	var i Redeemable
 	err := row.Scan(
 		&i.ID,
@@ -141,7 +147,7 @@ func (q *Queries) GetRedemptionInfoByRedeemableID(ctx context.Context, redeemabl
 }
 
 const redeemRedeemable = `-- name: RedeemRedeemable :one
-INSERT INTO user_redemptions (user_id, redeemable_id, amount)
+INSERT INTO user_redemptions (user_id, redeemable_id, hackathon_id, amount)
 SELECT $1, $2, 1
 WHERE (
     SELECT COALESCE(SUM(amount), 0) 

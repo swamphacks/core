@@ -54,7 +54,8 @@ var (
 
 func (s *BatService) AddRun(ctx context.Context) (*sqlc.BatRun, error) {
 
-	run, err := s.batRunsRepo.AddRun(ctx)
+	// TODO: don't hardcode the hackathonId
+	run, err := s.batRunsRepo.AddRun(ctx, "xii")
 	if err != nil && errors.Is(err, database.ErrDuplicateRun) {
 		s.logger.Err(err).Msg("Could not insert result as it already exists.")
 		return nil, ErrRunConflict

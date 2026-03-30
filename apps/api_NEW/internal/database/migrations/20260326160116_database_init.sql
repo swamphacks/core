@@ -61,9 +61,9 @@ create table sessions
 	last_used_at timestamptz default now() not null
 );
 
-create table hackathon
+create table hackathons
 (
-	id text not null unique,
+	id text not null primary key,
 	name text not null,
 	description text,
 	location text,
@@ -75,17 +75,11 @@ create table hackathon
 	decision_release timestamptz,
 	start_time timestamptz not null,
 	end_time timestamptz not null,
-	website_url text,
-	is_published boolean default false,
+	is_active boolean default false not null,
 	created_at timestamptz default now() not null,
 	updated_at timestamptz default now() not null,
 	banner text,
-	application_review_started boolean default false not null,
-	onerow_id boolean default true not null
-		constraint hackathon_pkey
-			primary key
-		constraint onerow_uni
-			check (onerow_id)
+	application_review_started boolean default false not null
 );
 
 create table applications
@@ -101,7 +95,7 @@ create table applications
 	passion_rating integer,
 	assigned_reviewer_id uuid references users on delete set null,
 	waitlist_join_time timestamptz,
-	hackathon_id text not null references hackathon(id)
+	hackathon_id text not null references hackathons(id)
 );
 
 create table bat_runs
@@ -112,7 +106,7 @@ create table bat_runs
 	status bat_run_status default 'running'::bat_run_status not null,
 	created_at timestamptz default now() not null,
 	completed_at timestamptz,
-	hackathon_id text not null references hackathon(id)
+	hackathon_id text not null references hackathons(id)
 );
 
 create table interest_submissions
@@ -121,7 +115,7 @@ create table interest_submissions
 	email text unique not null,
 	created_at timestamptz default now() not null,
 	source text,
-	hackathon_id text not null references hackathon(id)
+	hackathon_id text not null references hackathons(id)
 );
 
 create table redeemables
@@ -132,7 +126,7 @@ create table redeemables
 	max_user_amount integer not null constraint redeemables_max_user_amount_check check (max_user_amount >= 1),
 	created_at timestamptz default now() not null,
 	updated_at timestamptz default now() not null,
-	hackathon_id text not null references hackathon(id)
+	hackathon_id text not null references hackathons(id)
 );
 
 create table teams
@@ -142,7 +136,7 @@ create table teams
 	owner_id uuid references users on delete set null,
 	created_at timestamptz default now() not null,
 	updated_at timestamptz default now() not null,
-	hackathon_id text not null references hackathon(id)
+	hackathon_id text not null references hackathons(id)
 );
 
 create table team_invitations
@@ -176,7 +170,6 @@ create table team_members
 	user_id uuid not null references users on delete cascade,
 	team_id uuid not null references teams on delete cascade,
 	joined_at timestamptz default now() not null,
-	hackathon_id text not null references hackathon(id),
 	primary key (user_id, team_id)
 );
 
@@ -187,11 +180,13 @@ create table user_redemptions
 	amount integer not null constraint user_redemptions_amount_check check (amount >= 0),
 	created_at timestamptz default now() not null,
 	updated_at timestamptz default now() not null,
-	hackathon_id text not null references hackathon(id),
+	hackathon_id text not null references hackathons(id),
 	primary key (user_id, redeemable_id)
 );
 
 -- INDEXES
+create unique index only_one_hackathon_active on hackathons (is_active) where is_active = true;
+
 create unique index idx_unique_pending_request
 	on team_join_requests (team_id, user_id)
 	where (status = 'pending'::team_join_request_status);
@@ -246,7 +241,7 @@ create trigger set_updated_at_sessions
 
 create trigger set_updated_at_hackathon
 	before update
-	on hackathon
+	on hackathons
 	for each row
 	execute procedure update_modified_column();
 
@@ -282,6 +277,8 @@ create trigger set_updated_at_user_redemptions
 
 -- +goose StatementEnd
 -- +goose Down
+drop index if exists only_one_hackathon_active;
+
 drop index if exists idx_unique_pending_request;
 
 drop index if exists idx_applications_status;
@@ -323,7 +320,7 @@ drop table redeemables;
 drop table interest_submissions;
 drop table bat_runs;
 drop table applications;
-drop table hackathon;
+drop table hackathons;
 drop table sessions;
 drop table accounts;
 drop table users;

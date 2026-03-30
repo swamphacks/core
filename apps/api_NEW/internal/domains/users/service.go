@@ -28,8 +28,8 @@ func NewService(userRepo *repository.UserRepository, logger zerolog.Logger) *Use
 	}
 }
 
-func (s *UserService) GetUserById(ctx context.Context, userId uuid.UUID) (*sqlc.User, error) {
-	user, err := s.userRepo.GetUserByID(ctx, userId)
+func (s *UserService) GetUserById(ctx context.Context, userID uuid.UUID) (*sqlc.User, error) {
+	user, err := s.userRepo.GetUserByID(ctx, userID)
 
 	if err != nil {
 		if err == repository.ErrUserNotFound {
@@ -58,8 +58,8 @@ func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*sqlc.U
 	return user, nil
 }
 
-func (s *UserService) GetUserEmailInfoById(ctx context.Context, userId uuid.UUID) (*sqlc.GetUserEmailInfoByIdRow, error) {
-	emailInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userId)
+func (s *UserService) GetUserEmailInfoById(ctx context.Context, userID uuid.UUID) (*sqlc.GetUserEmailInfoByIdRow, error) {
+	emailInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userID)
 
 	if err != nil {
 		if err == repository.ErrUserNotFound {
@@ -88,8 +88,8 @@ func (s *UserService) GetUserByRFID(ctx context.Context, rfid string) (*sqlc.Use
 	return user, nil
 }
 
-// func (s *UserService) GetCheckedInStatusByUserId(ctx context.Context, userId uuid.UUID) (bool, error) {
-// 	checkedIn, err := s.userRepo.GetCheckedInStatusByUserId(ctx, userId)
+// func (s *UserService) GetCheckedInStatusByUserId(ctx context.Context, userID uuid.UUID) (bool, error) {
+// 	checkedIn, err := s.userRepo.GetCheckedInStatusByUserId(ctx, userID)
 
 // 	if err != nil {
 // 		s.logger.Err(err).Msg("check in status fail")
@@ -99,8 +99,8 @@ func (s *UserService) GetUserByRFID(ctx context.Context, rfid string) (*sqlc.Use
 // 	return checkedIn, nil
 // }
 
-func (s *UserService) UpdateUser(ctx context.Context, userId uuid.UUID, params sqlc.UpdateUserParams) error {
-	params.ID = userId
+func (s *UserService) UpdateUser(ctx context.Context, userID uuid.UUID, params sqlc.UpdateUserParams) error {
+	params.ID = userID
 
 	err := s.userRepo.UpdateUser(ctx, params)
 	if err != nil {
@@ -116,9 +116,9 @@ func (s *UserService) UpdateUser(ctx context.Context, userId uuid.UUID, params s
 	return nil
 }
 
-func (s *UserService) CompleteOnboarding(ctx context.Context, userId uuid.UUID, name, email string) error {
+func (s *UserService) CompleteOnboarding(ctx context.Context, userID uuid.UUID, name, email string) error {
 	params := sqlc.UpdateUserParams{
-		ID:                     userId,
+		ID:                     userID,
 		NameDoUpdate:           true,
 		Name:                   name,
 		PreferredEmailDoUpdate: true,
@@ -127,11 +127,15 @@ func (s *UserService) CompleteOnboarding(ctx context.Context, userId uuid.UUID, 
 		Onboarded:              true,
 	}
 
-	return s.UpdateUser(ctx, userId, params)
+	return s.UpdateUser(ctx, userID, params)
 }
 
 func (s *UserService) GetAllUsers(ctx context.Context, search *string, limit, offset int32) ([]sqlc.User, error) {
-	users, err := s.userRepo.GetAllUsers(ctx, search, limit, offset)
+	users, err := s.userRepo.GetAllUsers(ctx, sqlc.GetUsersParams{
+		Limit:  limit,
+		Offset: offset,
+		Search: search,
+	})
 
 	if err != nil {
 		s.logger.Err(err).Msg("get all users fail")
@@ -141,8 +145,8 @@ func (s *UserService) GetAllUsers(ctx context.Context, search *string, limit, of
 	return users, nil
 }
 
-// func (s *UserService) GetRole(ctx context.Context, userId uuid.UUID) (*sqlc.RoleType, error) {
-// 	role, err := s.eventRolesRepo.GetRoleByUserId(ctx, userId)
+// func (s *UserService) GetRole(ctx context.Context, userID uuid.UUID) (*sqlc.RoleType, error) {
+// 	role, err := s.eventRolesRepo.GetRoleByUserId(ctx, userID)
 
 // 	if err != nil {
 // 		return nil, err
@@ -151,16 +155,16 @@ func (s *UserService) GetAllUsers(ctx context.Context, search *string, limit, of
 // 	return role, nil
 // }
 
-func (s *UserService) AssignRole(ctx context.Context, userId *uuid.UUID, email *string, role sqlc.UserRole) error {
-	if userId == nil && email == nil {
-		return errors.New("must provide either userId or email")
+func (s *UserService) AssignRole(ctx context.Context, userID *uuid.UUID, email *string, role sqlc.UserRole) error {
+	if userID == nil && email == nil {
+		return errors.New("must provide either userID or email")
 	}
 
 	var selectedUser *sqlc.User
 	var err error
 
-	if userId != nil {
-		selectedUser, err = s.userRepo.GetUserByID(ctx, *userId)
+	if userID != nil {
+		selectedUser, err = s.userRepo.GetUserByID(ctx, *userID)
 		// Do not return if user not found, the query needs to fallback to other optiosn
 		if err != nil && !errors.Is(err, repository.ErrUserNotFound) {
 			s.logger.Err(err).Msg("Something went wrong getting by id")
@@ -194,24 +198,24 @@ func (s *UserService) AssignRole(ctx context.Context, userId *uuid.UUID, email *
 	return nil
 }
 
-func (s *UserService) RevokeRole(ctx context.Context, userId uuid.UUID) error {
-	return s.userRepo.RemoveRole(ctx, userId)
+func (s *UserService) RevokeRole(ctx context.Context, userID uuid.UUID) error {
+	return s.userRepo.RemoveRole(ctx, userID)
 }
 
-func (s *UserService) UpdateRole(ctx context.Context, userId uuid.UUID, role sqlc.UserRole) error {
+func (s *UserService) UpdateRole(ctx context.Context, userID uuid.UUID, role sqlc.UserRole) error {
 	return s.userRepo.UpdateRole(ctx, sqlc.UpdateRoleParams{
-		UserID: userId,
+		UserID: userID,
 		Role:   role,
 	})
 }
 
-// func (s *UserService) UpdateRoleById(ctx context.Context, userId uuid.UUID, role *sqlc.RoleType, checkedInAt *time.Time, RFID *string) error {
+// func (s *UserService) UpdateRoleById(ctx context.Context, userID uuid.UUID, role *sqlc.RoleType, checkedInAt *time.Time, RFID *string) error {
 // 	if role == nil && checkedInAt == nil && RFID == nil {
 // 		return errors.New("no fields provided to update")
 // 	}
 
 // 	return s.eventRolesRepo.UpdateRoleByUserId(ctx, sqlc.UpdateRoleByUserIdParams{
-// 		UserID:       userId,
+// 		UserID:       userID,
 // 		Role:         *role,
 // 		RoleDoUpdate: role != nil,
 

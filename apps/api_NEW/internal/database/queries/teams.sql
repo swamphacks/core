@@ -1,10 +1,12 @@
 -- name: CreateTeam :one
 INSERT INTO teams (
     name,
-    owner_id
+    owner_id,
+    hackathon_id
 ) VALUES (
     $1,
-    $2
+    $2,
+    $3
 )
 RETURNING *;
 

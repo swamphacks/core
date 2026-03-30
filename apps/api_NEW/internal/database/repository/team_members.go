@@ -35,30 +35,24 @@ func (r *TeamMemberRepository) NewTx(tx pgx.Tx) *TeamMemberRepository {
 	}
 }
 
-func (r *TeamMemberRepository) GetTeamMembers(ctx context.Context, teamId uuid.UUID) ([]sqlc.GetTeamMembersRow, error) {
-	return r.db.Query.GetTeamMembers(ctx, teamId)
+func (r *TeamMemberRepository) GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]sqlc.GetTeamMembersRow, error) {
+	return r.db.Query.GetTeamMembers(ctx, teamID)
 }
 
-func (r *TeamMemberRepository) GetTeamMemberByUser(ctx context.Context, userId uuid.UUID) (*sqlc.TeamMember, error) {
-	member, err := r.db.Query.GetTeamMemberByUserId(ctx, userId)
+func (r *TeamMemberRepository) GetTeamMemberByUser(ctx context.Context, userID uuid.UUID) (*sqlc.TeamMember, error) {
+	member, err := r.db.Query.GetTeamMemberByUserId(ctx, userID)
 	if err != nil && database.IsNotFound(err) {
 		return nil, ErrTeamMemberNotFound
 	}
 	return &member, err
 }
 
-func (r *TeamMemberRepository) Create(ctx context.Context, teamId, userId uuid.UUID) (*sqlc.TeamMember, error) {
-	member, err := r.db.Query.CreateTeamMember(ctx, sqlc.CreateTeamMemberParams{
-		TeamID: teamId,
-		UserID: userId,
-	})
+func (r *TeamMemberRepository) Create(ctx context.Context, params sqlc.CreateTeamMemberParams) (*sqlc.TeamMember, error) {
+	member, err := r.db.Query.CreateTeamMember(ctx, params)
 
 	return &member, err
 }
 
-func (r *TeamMemberRepository) Delete(ctx context.Context, teamId, userId uuid.UUID) error {
-	return r.db.Query.RemoveTeamMember(ctx, sqlc.RemoveTeamMemberParams{
-		UserID: userId,
-		TeamID: teamId,
-	})
+func (r *TeamMemberRepository) Delete(ctx context.Context, params sqlc.RemoveTeamMemberParams) error {
+	return r.db.Query.RemoveTeamMember(ctx, params)
 }

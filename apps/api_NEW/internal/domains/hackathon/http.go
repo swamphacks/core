@@ -23,13 +23,25 @@ func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Mi
 		OperationID: "get-hackathon",
 		Method:      http.MethodGet,
 		Summary:     "Get Hackathon",
-		Description: "Returns information of the hackathon",
+		Description: "Returns public information of the hackathon",
 		Tags:        []string{"Hackathon"},
 		Path:        "",
 		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
 		Errors:      []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
 	}, hackathonHandler.handleGetHackathon)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "get-hackathon-for-staff",
+		Method:      http.MethodGet,
+		Summary:     "Get Detailed Hackathon",
+		Description: "Returns all information of the hackathon",
+		Tags:        []string{"Hackathon"},
+		Path:        "/detailed",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Errors:      []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, hackathonHandler.handleGetHackathonForStaff)
 
 	huma.Register(group, huma.Operation{
 		OperationID:   "update-hackathon",
@@ -155,8 +167,22 @@ func NewHandler(hackathonService *HackathonService, config *config.Config, logge
 	}
 }
 
+type PublicHackathon struct {
+	ID               string     `json:"id"`
+	Name             string     `json:"name"`
+	Description      *string    `json:"description"`
+	Location         *string    `json:"location"`
+	LocationUrl      *string    `json:"locationUrl"`
+	ApplicationOpen  time.Time  `json:"applicationOpen"`
+	ApplicationClose time.Time  `json:"applicationClose"`
+	RsvpDeadline     *time.Time `json:"rsvpDeadline"`
+	StartTime        time.Time  `json:"startTime"`
+	EndTime          time.Time  `json:"endTime"`
+	Banner           *string    `json:"banner"`
+}
+
 type GetHackathonOutput struct {
-	Body *sqlc.Hackathon
+	Body PublicHackathon
 }
 
 func (h *handler) handleGetHackathon(ctx context.Context, input *struct{}) (*GetHackathonOutput, error) {
@@ -170,7 +196,37 @@ func (h *handler) handleGetHackathon(ctx context.Context, input *struct{}) (*Get
 		return nil, huma.Error500InternalServerError("Failed to get hackathon")
 	}
 
-	return &GetHackathonOutput{Body: hackathon}, nil
+	return &GetHackathonOutput{Body: PublicHackathon{
+		ID:               hackathon.ID,
+		Name:             hackathon.Name,
+		Description:      hackathon.Description,
+		Location:         hackathon.Location,
+		LocationUrl:      hackathon.LocationUrl,
+		ApplicationOpen:  hackathon.ApplicationOpen,
+		ApplicationClose: hackathon.ApplicationClose,
+		RsvpDeadline:     hackathon.RsvpDeadline,
+		StartTime:        hackathon.StartTime,
+		EndTime:          hackathon.EndTime,
+		Banner:           hackathon.Banner,
+	}}, nil
+}
+
+type GetHackathonForStaffOutput struct {
+	Body *sqlc.Hackathon
+}
+
+func (h *handler) handleGetHackathonForStaff(ctx context.Context, input *struct{}) (*GetHackathonForStaffOutput, error) {
+	hackathon, err := h.hackathonService.GetHackathon(ctx)
+
+	if err != nil {
+		h.logger.Err(err).Msg("")
+		if errors.Is(err, database.ErrEntityNotFound) {
+			return nil, huma.Error404NotFound("Hackathon not found")
+		}
+		return nil, huma.Error500InternalServerError("Failed to get hackathon")
+	}
+
+	return &GetHackathonForStaffOutput{Body: hackathon}, nil
 }
 
 type UpdateHackathonOutput struct {
@@ -189,8 +245,6 @@ type UpdateHackathonRequest struct {
 	DecisionRelease  OmittableNullable[*time.Time] `json:"decisionRelease,omitempty"`
 	StartTime        OmittableNullable[time.Time]  `json:"startTime,omitempty"`
 	EndTime          OmittableNullable[time.Time]  `json:"endTime,omitempty"`
-	WebsiteUrl       OmittableNullable[*string]    `json:"websiteUrl,omitempty"`
-	IsPublished      OmittableNullable[bool]       `json:"isPublished,omitempty"`
 }
 
 func (h *handler) handleUpdateHackathon(ctx context.Context, input *struct {
@@ -229,12 +283,6 @@ func (h *handler) handleUpdateHackathon(ctx context.Context, input *struct {
 
 		EndTimeDoUpdate: input.Body.EndTime.Sent,
 		EndTime:         input.Body.EndTime.Value,
-
-		WebsiteUrlDoUpdate: input.Body.WebsiteUrl.Sent,
-		WebsiteUrl:         input.Body.WebsiteUrl.Value,
-
-		IsPublishedDoUpdate: input.Body.IsPublished.Sent,
-		IsPublished:         &input.Body.IsPublished.Value,
 
 		BannerDoUpdate: false, // Banners are uploaded using a separate endpoint
 		Banner:         nil,
@@ -285,14 +333,14 @@ type GetAttendeeUserIdsOutput struct {
 }
 
 func (h *handler) handleGetAttendeeUserIds(ctx context.Context, input *struct{}) (*GetAttendeeUserIdsOutput, error) {
-	userIds, err := h.hackathonService.GetAttendeeUserIds(ctx)
+	userIDs, err := h.hackathonService.GetAttendeeUserIds(ctx)
 
 	if err != nil {
 		h.logger.Err(err).Msg("")
 		return nil, huma.Error500InternalServerError("Failed to get attendee user ids")
 	}
 
-	return &GetAttendeeUserIdsOutput{Body: userIds}, nil
+	return &GetAttendeeUserIdsOutput{Body: userIDs}, nil
 }
 
 type GetAttendeeCountOutput struct {
@@ -311,7 +359,7 @@ func (h *handler) handleGetAttendeeCount(ctx context.Context, input *struct{}) (
 }
 
 type CheckInRequest struct {
-	UserID uuid.UUID `json:"userId"`
+	UserID uuid.UUID `json:"userID"`
 	RFID   *string   `json:"rfid"`
 }
 

@@ -4,8 +4,9 @@
 -- Returns the newly created email record.
 INSERT INTO interest_submissions (
     email,
-    source
+    source,
+    hackathon_id
 ) VALUES (
-    $1, $2
+    $1, $2, $3
 )
 RETURNING *;

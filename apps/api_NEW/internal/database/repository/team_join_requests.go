@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
-	"github.com/swamphacks/core/apps/api/internal/logger"
 )
 
 type TeamJoinRequestRepository struct {
@@ -31,15 +30,9 @@ func (r *TeamJoinRequestRepository) NewTx(tx pgx.Tx) *TeamJoinRequestRepository 
 	}
 }
 
-func (r *TeamJoinRequestRepository) Create(ctx context.Context, teamId, userId uuid.UUID, message *string) (*sqlc.TeamJoinRequest, error) {
+func (r *TeamJoinRequestRepository) Create(ctx context.Context, params sqlc.CreateTeamJoinRequestParams) (*sqlc.TeamJoinRequest, error) {
+	request, err := r.db.Query.CreateTeamJoinRequest(ctx, params)
 
-	l := logger.New()
-	l.Debug().Msg("Before creating...")
-	request, err := r.db.Query.CreateTeamJoinRequest(ctx, sqlc.CreateTeamJoinRequestParams{
-		TeamID:         teamId,
-		UserID:         userId,
-		RequestMessage: message,
-	})
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +40,8 @@ func (r *TeamJoinRequestRepository) Create(ctx context.Context, teamId, userId u
 	return &request, nil
 }
 
-func (r *TeamJoinRequestRepository) GetById(ctx context.Context, requestId uuid.UUID) (*sqlc.TeamJoinRequest, error) {
-	request, err := r.db.Query.GetTeamJoinRequestByID(ctx, requestId)
+func (r *TeamJoinRequestRepository) GetById(ctx context.Context, requestID uuid.UUID) (*sqlc.TeamJoinRequest, error) {
+	request, err := r.db.Query.GetTeamJoinRequestByID(ctx, requestID)
 	if err != nil {
 		return nil, err
 	}
@@ -56,44 +49,29 @@ func (r *TeamJoinRequestRepository) GetById(ctx context.Context, requestId uuid.
 	return &request, nil
 }
 
-func (r *TeamJoinRequestRepository) ListJoinRequestsByUser(ctx context.Context, userId uuid.UUID) ([]sqlc.TeamJoinRequest, error) {
-	return r.db.Query.ListTeamJoinRequestsByUserID(ctx, userId)
+func (r *TeamJoinRequestRepository) ListJoinRequestsByUser(ctx context.Context, userID uuid.UUID) ([]sqlc.TeamJoinRequest, error) {
+	return r.db.Query.ListTeamJoinRequestsByUserID(ctx, userID)
 }
 
-func (r *TeamJoinRequestRepository) ListJoinRequestsByTeam(ctx context.Context, teamId uuid.UUID, status sqlc.TeamJoinRequestStatus) ([]sqlc.TeamJoinRequest, error) {
-	return r.db.Query.ListTeamJoinRequestsByTeamIDAndStatus(ctx, sqlc.ListTeamJoinRequestsByTeamIDAndStatusParams{
-		TeamID: teamId,
-		Status: status,
-	})
+func (r *TeamJoinRequestRepository) ListJoinRequestsByTeam(ctx context.Context, params sqlc.ListTeamJoinRequestsByTeamIDAndStatusParams) ([]sqlc.TeamJoinRequest, error) {
+	return r.db.Query.ListTeamJoinRequestsByTeamIDAndStatus(ctx, params)
 }
 
-func (r *TeamJoinRequestRepository) ListJoinRequestsByTeamWithUser(ctx context.Context, teamId uuid.UUID, status sqlc.TeamJoinRequestStatus) ([]sqlc.ListJoinRequestsByTeamAndStatusWithUserRow, error) {
-	return r.db.Query.ListJoinRequestsByTeamAndStatusWithUser(ctx, sqlc.ListJoinRequestsByTeamAndStatusWithUserParams{
-		TeamID: teamId,
-		Status: status,
-	})
+func (r *TeamJoinRequestRepository) ListJoinRequestsByTeamWithUser(ctx context.Context, params sqlc.ListJoinRequestsByTeamAndStatusWithUserParams) ([]sqlc.ListJoinRequestsByTeamAndStatusWithUserRow, error) {
+	return r.db.Query.ListJoinRequestsByTeamAndStatusWithUser(ctx, params)
 }
 
-func (r *TeamJoinRequestRepository) ListJoinRequestsByUserAndStatus(ctx context.Context, userId uuid.UUID, status sqlc.TeamJoinRequestStatus) ([]sqlc.TeamJoinRequest, error) {
-	return r.db.Query.ListTeamJoinRequestsByUserAndStatus(ctx, sqlc.ListTeamJoinRequestsByUserAndStatusParams{
-		UserID: userId,
-		Status: status,
-	})
+func (r *TeamJoinRequestRepository) ListJoinRequestsByUserAndStatus(ctx context.Context, params sqlc.ListTeamJoinRequestsByUserAndStatusParams) ([]sqlc.TeamJoinRequest, error) {
+	return r.db.Query.ListTeamJoinRequestsByUserAndStatus(ctx, params)
 }
 
-func (r *TeamJoinRequestRepository) DeleteByUserAndStatus(ctx context.Context, userId uuid.UUID, status sqlc.TeamJoinRequestStatus) error {
-	return r.db.Query.DeleteJoinRequestsByUserAndStatus(ctx, sqlc.DeleteJoinRequestsByUserAndStatusParams{
-		UserID: userId,
-		Status: status,
-	})
+func (r *TeamJoinRequestRepository) DeleteByUserAndStatus(ctx context.Context, params sqlc.DeleteJoinRequestsByUserAndStatusParams) error {
+	return r.db.Query.DeleteJoinRequestsByUserAndStatus(ctx, params)
 }
 
-func (r *TeamJoinRequestRepository) UpdateStatus(ctx context.Context, requestId uuid.UUID, status sqlc.TeamJoinRequestStatus) (*sqlc.TeamJoinRequest, error) {
-	request, err := r.db.Query.UpdateTeamJoinRequest(ctx, sqlc.UpdateTeamJoinRequestParams{
-		ID:             requestId,
-		StatusDoUpdate: true,
-		Status:         status,
-	})
+func (r *TeamJoinRequestRepository) UpdateStatus(ctx context.Context, params sqlc.UpdateTeamJoinRequestParams) (*sqlc.TeamJoinRequest, error) {
+	request, err := r.db.Query.UpdateTeamJoinRequest(ctx, params)
+
 	if err != nil {
 		return nil, err
 	}

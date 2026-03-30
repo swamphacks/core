@@ -47,7 +47,7 @@ func RegisterRoutes(userHandler *handler, group huma.API, mw *middleware.Middlew
 		Summary:     "Get User By Id",
 		Description: "Returns the user associated with the user id",
 		Tags:        []string{"Users"},
-		Path:        "/userid/{userId}",
+		Path:        "/userid/{userID}",
 		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
 		Errors:      []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusBadRequest, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
@@ -146,7 +146,7 @@ func RegisterRoutes(userHandler *handler, group huma.API, mw *middleware.Middlew
 		Summary:     "Revoke Role",
 		Description: "Remove a user's role",
 		Tags:        []string{"Users"},
-		Path:        "/roles/revoke/{userId}",
+		Path:        "/roles/revoke/{userID}",
 		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
 		Errors:      []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
@@ -210,15 +210,15 @@ type GetUserByIdOutput struct {
 }
 
 func (h *handler) handleGetUserById(ctx context.Context, input *struct {
-	UserId string `path:"userId"`
+	UserId string `path:"userID"`
 }) (*GetUserByIdOutput, error) {
-	userId, err := uuid.Parse(input.UserId)
+	userID, err := uuid.Parse(input.UserId)
 
 	if err != nil {
 		return nil, huma.Error400BadRequest("Invalid user id")
 	}
 
-	user, err := h.userService.GetUserById(ctx, userId)
+	user, err := h.userService.GetUserById(ctx, userID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to get user by id")
@@ -417,7 +417,7 @@ func (h *handler) handleGetUsers(ctx context.Context, input *struct {
 
 type AssignRoleRequest struct {
 	Email  *string       `json:"email"`
-	UserID *string       `json:"userId"`
+	UserID *string       `json:"userID"`
 	Role   sqlc.UserRole `json:"role"`
 }
 
@@ -428,21 +428,21 @@ type AssignRoleOutput struct {
 func (h *handler) handleAssignRole(ctx context.Context, input *struct {
 	Body AssignRoleRequest
 }) (*AssignRoleOutput, error) {
-	var userId *uuid.UUID
+	var userID *uuid.UUID
 
 	if input.Body.UserID == nil {
-		userId = nil
+		userID = nil
 	} else {
-		userIdTemp, err := uuid.Parse(*input.Body.UserID)
+		userIDTemp, err := uuid.Parse(*input.Body.UserID)
 
 		if err != nil {
-			userId = nil
+			userID = nil
 		} else {
-			userId = &userIdTemp
+			userID = &userIDTemp
 		}
 	}
 
-	err := h.userService.AssignRole(ctx, userId, input.Body.Email, input.Body.Role)
+	err := h.userService.AssignRole(ctx, userID, input.Body.Email, input.Body.Role)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to assign role")
@@ -463,9 +463,9 @@ func (h *handler) handleBatchAssignRoles(ctx context.Context, input *struct {
 	Body AssignRoleBatchRequest
 }) (*BatchAssignRolesOutput, error) {
 	for _, assignment := range input.Body.Assignments {
-		userId := ParseUUIDOrNil(assignment.UserID)
+		userID := ParseUUIDOrNil(assignment.UserID)
 
-		err := h.userService.AssignRole(ctx, userId, assignment.Email, assignment.Role)
+		err := h.userService.AssignRole(ctx, userID, assignment.Email, assignment.Role)
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Failed to batch assign roles")
 		}
@@ -479,15 +479,15 @@ type RevokeEventRoleOutput struct {
 }
 
 func (h *handler) handleRevokeEventRole(ctx context.Context, input *struct {
-	UserId string `path:"userId"`
+	UserId string `path:"userID"`
 }) (*RevokeEventRoleOutput, error) {
-	userId, err := uuid.Parse(input.UserId)
+	userID, err := uuid.Parse(input.UserId)
 
 	if err != nil {
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err = h.userService.RevokeRole(ctx, userId)
+	err = h.userService.RevokeRole(ctx, userID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to revoke role")

@@ -62,8 +62,8 @@ func (s *EmailService) QueueConfirmationEmail(recipient string, name string) err
 	return nil
 }
 
-func (s *EmailService) QueueWelcomeEmail(ctx context.Context, recipient string, name string, userId uuid.UUID) error {
-	qrString := fmt.Sprintf("IDENT::%s", userId)
+func (s *EmailService) QueueWelcomeEmail(ctx context.Context, recipient string, name string, userID uuid.UUID) error {
+	qrString := fmt.Sprintf("IDENT::%s", userID)
 	qrPng, err := qrcode.Encode(qrString, qrcode.Medium, 256)
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to generate QR code png")
@@ -75,13 +75,13 @@ func (s *EmailService) QueueWelcomeEmail(ctx context.Context, recipient string, 
 		s.logger.Err(err).Msg("A R2 client must be connected for this function to run")
 		return err
 	}
-	err = s.storage.Store(ctx, s.config.CoreBuckets.QRCodes, userId.String(), qrPng, &contentType)
+	err = s.storage.Store(ctx, s.config.CoreBuckets.QRCodes, userID.String(), qrPng, &contentType)
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to upload QR code to R2")
 		return err
 	}
 
-	qrPngLink := fmt.Sprintf("%s/%s", s.config.CoreBuckets.QRCodesBaseUrl, userId.String())
+	qrPngLink := fmt.Sprintf("%s/%s", s.config.CoreBuckets.QRCodesBaseUrl, userID.String())
 
 	subject := "SwampHacks XII – A welcome from our Organizers!"
 	templateEmailFilepath := s.config.EmailTemplateDirectory + "WelcomeEmail.html"
@@ -93,7 +93,7 @@ func (s *EmailService) QueueWelcomeEmail(ctx context.Context, recipient string, 
 	_, err = s.QueueSendHtmlEmailTask(recipient, subject, emailTemplateData{Name: name, QRPngLink: qrPngLink}, templateEmailFilepath)
 
 	if err != nil {
-		s.logger.Err(err).Msgf("Failed to send welcome email to recipient with userId %s", userId.String())
+		s.logger.Err(err).Msgf("Failed to send welcome email to recipient with userID %s", userID.String())
 		return err
 	}
 
@@ -204,25 +204,25 @@ func (s *EmailService) SendWelcomeEmailToAttendees(ctx context.Context) error {
 
 	s.logger.Info().Msgf("Sending welcome emails to %v attendees", len(attendees))
 
-	for _, userId := range attendees {
-		contactInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userId)
+	for _, userID := range attendees {
+		contactInfo, err := s.userRepo.GetUserEmailInfoById(ctx, userID)
 		if err != nil {
-			s.logger.Err(err).Msgf("Could not get contact info for user with id %s", userId)
+			s.logger.Err(err).Msgf("Could not get contact info for user with id %s", userID)
 			return err
 		}
 		contactEmail, ok := contactInfo.ContactEmail.(string)
 		if !ok {
-			s.logger.Err(err).Msgf("could got convert id %s", userId)
+			s.logger.Err(err).Msgf("could got convert id %s", userID)
 			continue
 		}
 		if contactEmail == "" {
-			s.logger.Err(err).Msgf("empty contact email found for user with id %s", userId)
+			s.logger.Err(err).Msgf("empty contact email found for user with id %s", userID)
 			continue
 		}
 
-		err = s.QueueWelcomeEmail(ctx, contactEmail, contactInfo.Name, userId)
+		err = s.QueueWelcomeEmail(ctx, contactEmail, contactInfo.Name, userID)
 		if err != nil {
-			s.logger.Err(err).Msgf("Could not queue welcome email for user with id %s", userId)
+			s.logger.Err(err).Msgf("Could not queue welcome email for user with id %s", userID)
 			return err
 		}
 	}

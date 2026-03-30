@@ -20,8 +20,8 @@ func NewBatRunsRepository(db *database.DB) *BatRunsRepository {
 	}
 }
 
-func (r *BatRunsRepository) AddRun(ctx context.Context) (*sqlc.BatRun, error) {
-	run, err := r.db.Query.AddBatRun(ctx)
+func (r *BatRunsRepository) AddRun(ctx context.Context, hackathonID string) (*sqlc.BatRun, error) {
+	run, err := r.db.Query.AddBatRun(ctx, hackathonID)
 	if err != nil {
 		if database.IsUniqueViolation(err) {
 			return nil, database.ErrDuplicateRun

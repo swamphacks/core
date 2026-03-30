@@ -22,6 +22,7 @@ func main() {
 	endTime := time.Date(2026, 10, 29, 19, 13, 20, 0, time.UTC)
 
 	_, err := hackathonRepo.CreateHackathon(context.TODO(), sqlc.CreateHackathonParams{
+		ID:               "xii",
 		Name:             "SwampHacks XII",
 		ApplicationOpen:  appOpenTime,
 		ApplicationClose: appCloseTime,
@@ -33,8 +34,7 @@ func main() {
 		MaxAttendees:     nil,
 		RsvpDeadline:     nil,
 		DecisionRelease:  nil,
-		WebsiteUrl:       nil,
-		IsPublished:      nil,
+		IsActive:         true,
 	})
 
 	if err != nil {
