@@ -62,7 +62,7 @@ nav:
       - Installation & Setup: api/installation.md
       - Project Structure: api/structure.md
       - Authentication & Roles: api/auth.md
-      - Database Schema (Neon): api/database.md
+      - Database Schema: api/database.md
       - Migrations: api/migrations.md
       - Database Testing: api/db_testing.md
       - OpenAPI: api/openapi.md

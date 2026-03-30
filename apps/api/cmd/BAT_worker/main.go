@@ -5,11 +5,15 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/swamphacks/core/apps/api/internal/config"
-	"github.com/swamphacks/core/apps/api/internal/db"
-	"github.com/swamphacks/core/apps/api/internal/db/repository"
-	"github.com/swamphacks/core/apps/api/internal/email"
+	"github.com/swamphacks/core/apps/api/internal/database"
+	"github.com/swamphacks/core/apps/api/internal/database/repository"
+	"github.com/swamphacks/core/apps/api/internal/domains/application"
+	"github.com/swamphacks/core/apps/api/internal/domains/bat"
+	"github.com/swamphacks/core/apps/api/internal/domains/email"
+	"github.com/swamphacks/core/apps/api/internal/domains/hackathon"
+	"github.com/swamphacks/core/apps/api/internal/emailutils"
 	"github.com/swamphacks/core/apps/api/internal/logger"
-	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/storage"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 	"github.com/swamphacks/core/apps/api/internal/workers"
 )
@@ -34,7 +38,7 @@ V    V         V          }' `\ /' `{          V         V    V
 
 func main() {
 	logger := logger.New()
-	cfg := config.Load()
+	cfg := config.LoadConfig()
 
 	redisOpt, err := asynq.ParseRedisURI(cfg.RedisURL)
 	if err != nil {
@@ -70,23 +74,24 @@ func main() {
 	taskQueueClient := asynq.NewClient(redisOpt)
 	defer taskQueueClient.Close()
 
-	database := db.NewDB(cfg.DatabaseURL)
-	defer database.Close()
+	db := database.NewDB(cfg.DatabaseURL)
+	defer db.Close()
 
-	txm := db.NewTransactionManager(database)
+	txm := database.NewTransactionManager(db)
 
-	applicationRepo := repository.NewApplicationRepository(database)
-	eventRepo := repository.NewEventRespository(database)
-	userRepo := repository.NewUserRepository(database)
-	eventService := services.NewEventService(eventRepo, userRepo, nil, nil, logger)
-	batRunsRepo := repository.NewBatRunsRepository(database)
+	hackathonRepo := repository.NewHackathonRepository(db)
+	applicationRepo := repository.NewApplicationRepository(db)
+	userRepo := repository.NewUserRepository(db)
+	batRunsRepo := repository.NewBatRunsRepository(db)
+	eventInterestsRepo := repository.NewEventInterestsRepository(db)
 
-	sesClient := email.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
-	emailService := services.NewEmailService(taskQueueClient, sesClient, nil, logger)
-	batService := services.NewBatService(applicationRepo, eventRepo, userRepo, batRunsRepo, emailService, txm, nil, scheduler, logger)
-	applicationService := services.NewApplicationService(applicationRepo, userRepo, eventService, emailService, txm, nil, nil, scheduler, logger)
+	sesClient := emailutils.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
+	emailService := email.NewEmailService(hackathonRepo, userRepo, taskQueueClient, sesClient, nil, logger, cfg)
+	batService := bat.NewBatService(applicationRepo, hackathonRepo, userRepo, batRunsRepo, emailService, txm, nil, scheduler, cfg, logger)
+	applicationService := application.NewService(applicationRepo, userRepo, hackathonRepo, txm, nil, nil, scheduler, emailService, batService, cfg, logger)
+	hackathonService := hackathon.NewService(hackathonRepo, userRepo, eventInterestsRepo, &storage.R2Client{}, nil, logger)
 
-	BATWorker := workers.NewBATWorker(batService, applicationService, eventService, scheduler, taskQueueClient, logger)
+	BATWorker := workers.NewBATWorker(batService, applicationService, hackathonService, scheduler, taskQueueClient, cfg, logger)
 
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(tasks.TypeCalculateAdmissions, BATWorker.HandleCalculateAdmissionsTask)

@@ -9,13 +9,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/api/cookie"
 	"github.com/swamphacks/core/apps/api/internal/api/response"
 	"github.com/swamphacks/core/apps/api/internal/config"
-	"github.com/swamphacks/core/apps/api/internal/cookie"
-	"github.com/swamphacks/core/apps/api/internal/db"
-	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/database"
+	"github.com/swamphacks/core/apps/api/internal/database/repository"
+	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
 type ctxKey string
@@ -23,11 +26,13 @@ type ctxKey string
 // Use this variable to retrieve the user object later from context!
 const UserContextKey ctxKey = "user"
 const SessionContextKey ctxKey = "session"
+const UserRoleContextKey ctxKey = "eventRole"
 
 type AuthMiddleware struct {
-	db     *db.DB
-	logger zerolog.Logger
-	cfg    *config.Config
+	db       *database.DB
+	logger   zerolog.Logger
+	cfg      *config.Config
+	userRepo *repository.UserRepository
 }
 
 // UserContext represents the authenticated user in API requests.
@@ -49,25 +54,82 @@ type UserContext struct {
 	Onboarded bool `json:"onboarded" example:"true"`
 
 	// Optional profile image URL
-	Image *string `json:"image,omitempty" example:"https://cdn.example.com/avatar.png" extensions:"nullable"`
+	Image *string `json:"image" example:"https://cdn.example.com/avatar.png"`
 
 	// Role assigned to the user
-	Role sqlc.AuthUserRole `json:"role"`
+	Role sqlc.UserRole `json:"role" enum:"admin,staff,attendee,applicant,visitor"`
 
 	// Whether the user agreed to receive emails
 	EmailConsent bool `json:"emailConsent" example:"false"`
+
+	Rfid *string `json:"rfid"`
+
+	CheckedInAt *time.Time `json:"checkedInAt"`
 }
 
 type SessionContext struct {
 	SessionID uuid.UUID
 }
 
-func NewAuthMiddleware(db *db.DB, logger zerolog.Logger, cfg *config.Config) *AuthMiddleware {
+func NewAuthMiddleware(userRepo *repository.UserRepository, db *database.DB, logger zerolog.Logger, cfg *config.Config) *AuthMiddleware {
 	return &AuthMiddleware{
-		db:     db,
-		logger: logger.With().Str("middleware", "AuthMiddleware").Str("component", "api").Logger(),
-		cfg:    cfg,
+		db:       db,
+		logger:   logger.With().Str("middleware", "AuthMiddleware").Logger(),
+		cfg:      cfg,
+		userRepo: userRepo,
 	}
+}
+
+type RawWriterKey struct{}
+type RawRequestKey struct{}
+
+func (m *AuthMiddleware) RawHTTPMiddlewareHuma(ctx huma.Context, next func(huma.Context)) {
+	r, w := humachi.Unwrap(ctx)
+
+	newCtx := context.WithValue(ctx.Context(), RawWriterKey{}, w)
+	newCtx = context.WithValue(newCtx, RawRequestKey{}, r)
+
+	next(huma.WithContext(ctx, newCtx))
+}
+
+// TODO: remove this extra layer and use RequireAuth directly
+func (m *AuthMiddleware) RequireAuthHuma(ctx huma.Context, next func(huma.Context)) {
+	r, w := humachi.Unwrap(ctx)
+
+	m.RequireAuth(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
+		next(huma.WithContext(ctx, newR.Context()))
+	})).ServeHTTP(w, r.WithContext(ctx.Context()))
+}
+
+// TODO: remove this extra layer and use RequireRole directly
+func (m *AuthMiddleware) RequireRoleHuma(roles []sqlc.UserRole) func(ctx huma.Context, next func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		r, w := humachi.Unwrap(ctx)
+
+		m.RequireRoles(roles)(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
+			next(huma.WithContext(ctx, newR.Context()))
+		})).ServeHTTP(w, r.WithContext(ctx.Context()))
+	}
+}
+
+func (m *AuthMiddleware) RequireAdminHuma(ctx huma.Context, next func(huma.Context)) {
+	r, w := humachi.Unwrap(ctx)
+
+	mwHandler := m.RequireRoles([]sqlc.UserRole{sqlc.UserRoleAdmin})
+
+	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
+		next(huma.WithContext(ctx, newR.Context()))
+	})).ServeHTTP(w, r.WithContext(ctx.Context()))
+}
+
+func (m *AuthMiddleware) RequireStaffHuma(ctx huma.Context, next func(huma.Context)) {
+	r, w := humachi.Unwrap(ctx)
+
+	mwHandler := m.RequireRoles([]sqlc.UserRole{sqlc.UserRoleAdmin, sqlc.UserRoleStaff})
+
+	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
+		next(huma.WithContext(ctx, newR.Context()))
+	})).ServeHTTP(w, r.WithContext(ctx.Context()))
 }
 
 func (m *AuthMiddleware) RequireMobileAuth(next http.Handler) http.Handler {
@@ -101,7 +163,7 @@ func (m *AuthMiddleware) RequireMobileAuth(next http.Handler) http.Handler {
 func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.logger.Trace().Msg("Checking auth status")
-		cookie, err := r.Cookie("sh_session_id")
+		cookie, err := r.Cookie(cookie.SessionCookieName)
 		if err != nil {
 			m.logger.Warn().Msg("Missing session cookie.")
 			response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized"))
@@ -127,6 +189,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
+		// TODO: I don't think we need UserContext here, just return sqlc.User directly
 		userContext := UserContext{
 			UserID:         user.UserID,
 			Name:           user.Name,
@@ -136,6 +199,8 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			Onboarded:      user.Onboarded,
 			Role:           user.Role,
 			EmailConsent:   user.EmailConsent,
+			Rfid:           user.Rfid,
+			CheckedInAt:    user.CheckedInAt,
 		}
 
 		sessionContext := SessionContext{
@@ -146,11 +211,12 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 
 		ctx := context.WithValue(r.Context(), UserContextKey, &userContext)
 		ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func (m *AuthMiddleware) RequirePlatformRole(roles []sqlc.AuthUserRole) func(http.Handler) http.Handler {
+func (m *AuthMiddleware) RequireRoles(roles []sqlc.UserRole) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// get user from context
@@ -161,14 +227,13 @@ func (m *AuthMiddleware) RequirePlatformRole(roles []sqlc.AuthUserRole) func(htt
 				return
 			}
 
-			if userCtx.Role == sqlc.AuthUserRoleSuperuser {
+			if userCtx.Role == sqlc.UserRoleAdmin {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// check if user role matches required role
 			if !slices.Contains(roles, userCtx.Role) {
-				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions as role %s", r.URL.Path, string(userCtx.Role))
+				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions (eventRole: %s)", r.URL.Path, string(userCtx.Role))
 				response.SendError(w, http.StatusForbidden, response.NewError("forbidden", "You are forbidden from this resource."))
 				return
 			}

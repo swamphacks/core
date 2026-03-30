@@ -7,16 +7,18 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/swamphacks/core/apps/api/internal/config"
-	"github.com/swamphacks/core/apps/api/internal/email"
+	"github.com/swamphacks/core/apps/api/internal/database"
+	"github.com/swamphacks/core/apps/api/internal/database/repository"
+	"github.com/swamphacks/core/apps/api/internal/domains/email"
+	"github.com/swamphacks/core/apps/api/internal/emailutils"
 	"github.com/swamphacks/core/apps/api/internal/logger"
-	"github.com/swamphacks/core/apps/api/internal/services"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 	"github.com/swamphacks/core/apps/api/internal/workers"
 )
 
 func main() {
 	logger := logger.New()
-	cfg := config.Load()
+	cfg := config.LoadConfig()
 
 	redisOpt, err := asynq.ParseRedisURI(cfg.RedisURL)
 	if err != nil {
@@ -38,10 +40,19 @@ func main() {
 		},
 	)
 
-	// Create ses client
-	sesClient := email.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
+	taskQueueClient := asynq.NewClient(redisOpt)
+	defer taskQueueClient.Close()
 
-	emailService := services.NewEmailService(nil, sesClient, nil, logger)
+	db := database.NewDB(cfg.DatabaseURL)
+	defer db.Close()
+
+	hackathonRepo := repository.NewHackathonRepository(db)
+	userRepo := repository.NewUserRepository(db)
+
+	// Create ses client
+	sesClient := emailutils.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
+
+	emailService := email.NewEmailService(hackathonRepo, userRepo, taskQueueClient, sesClient, nil, logger, cfg)
 	emailWorker := workers.NewEmailWorker(emailService, logger)
 
 	mux := asynq.NewServeMux()

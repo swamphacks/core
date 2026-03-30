@@ -7,19 +7,19 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
-	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/domains/email"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 )
 
 type EmailWorker struct {
-	emailService *services.EmailService
+	emailService *email.EmailService
 	logger       zerolog.Logger
 }
 
-func NewEmailWorker(emailService *services.EmailService, logger zerolog.Logger) *EmailWorker {
+func NewEmailWorker(emailService *email.EmailService, logger zerolog.Logger) *EmailWorker {
 	return &EmailWorker{
 		emailService: emailService,
-		logger:       logger.With().Str("worker", "EmailWorker").Str("component", "email").Logger(),
+		logger:       logger.With().Str("worker", "EmailWorker").Logger(),
 	}
 }
 

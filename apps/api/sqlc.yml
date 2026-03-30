@@ -1,12 +1,12 @@
 version: "2"
 sql:
   - engine: postgresql
-    queries: "internal/db/queries/"
-    schema: "internal/db/migrations/"
+    queries: "internal/database/queries/"
+    schema: "internal/database/migrations/"
     gen:
       go:
         package: "sqlc"
-        out: "internal/db/sqlc"
+        out: "internal/database/sqlc"
         emit_json_tags: true
         emit_prepared_queries: false
         emit_interface: false
@@ -19,6 +19,9 @@ sql:
             go_type:
               import: "github.com/google/uuid"
               type: "UUID"
+          - db_type: "uuid"
+            nullable: true
+            go_type: "*github.com/google/uuid.UUID"
           - db_type: "timestamptz"
             go_type:
               type: "time.Time"
@@ -26,6 +29,10 @@ sql:
             nullable: true
             go_type:
               type: "*time.Time"
-          - db_type: uuid
+          - db_type: "timestamp with time zone"
             nullable: true
-            go_type: "*github.com/google/uuid.UUID"
+            go_type:
+              type: "*time.Time"
+          - db_type: "timestamp with time zone"
+            go_type:
+              type: "time.Time"
