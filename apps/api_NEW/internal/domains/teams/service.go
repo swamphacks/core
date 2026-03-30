@@ -99,16 +99,16 @@ func (s *TeamService) CreateTeam(ctx context.Context, name string, userId uuid.U
 }
 
 type MemberWithUserInfo struct {
-	UserID   uuid.UUID `json:"user_id"`
+	UserID   uuid.UUID `json:"userId"`
 	Email    *string   `json:"email"`
 	Image    *string   `json:"image"`
 	Name     string    `json:"name"`
-	JoinedAt time.Time `json:"joined_at"`
+	JoinedAt time.Time `json:"joinedAt"`
 }
 
 type TeamWithMembers struct {
 	ID      uuid.UUID            `json:"id"`
-	OwnerId *uuid.UUID           `json:"owner_id"`
+	OwnerId *uuid.UUID           `json:"ownerId"`
 	Name    string               `json:"name"`
 	Members []MemberWithUserInfo `json:"members"`
 }

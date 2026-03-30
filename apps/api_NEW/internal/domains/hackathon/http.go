@@ -181,16 +181,16 @@ type UpdateHackathonRequest struct {
 	Name             OmittableNullable[string]     `json:"name,omitempty"`
 	Description      OmittableNullable[*string]    `json:"description,omitempty"`
 	Location         OmittableNullable[*string]    `json:"location,omitempty"`
-	LocationUrl      OmittableNullable[*string]    `json:"location_url,omitempty"`
-	MaxAttendees     OmittableNullable[*int32]     `json:"max_attendees,omitempty"`
-	ApplicationOpen  OmittableNullable[time.Time]  `json:"application_open,omitempty"`
-	ApplicationClose OmittableNullable[time.Time]  `json:"application_close,omitempty"`
-	RsvpDeadline     OmittableNullable[*time.Time] `json:"rsvp_deadline,omitempty"`
-	DecisionRelease  OmittableNullable[*time.Time] `json:"decision_release,omitempty"`
-	StartTime        OmittableNullable[time.Time]  `json:"start_time,omitempty"`
-	EndTime          OmittableNullable[time.Time]  `json:"end_time,omitempty"`
-	WebsiteUrl       OmittableNullable[*string]    `json:"website_url,omitempty"`
-	IsPublished      OmittableNullable[bool]       `json:"is_published,omitempty"`
+	LocationUrl      OmittableNullable[*string]    `json:"locationUrl,omitempty"`
+	MaxAttendees     OmittableNullable[*int32]     `json:"maxAttendees,omitempty"`
+	ApplicationOpen  OmittableNullable[time.Time]  `json:"applicationOpen,omitempty"`
+	ApplicationClose OmittableNullable[time.Time]  `json:"applicationClose,omitempty"`
+	RsvpDeadline     OmittableNullable[*time.Time] `json:"rsvpDeadline,omitempty"`
+	DecisionRelease  OmittableNullable[*time.Time] `json:"decisionRelease,omitempty"`
+	StartTime        OmittableNullable[time.Time]  `json:"startTime,omitempty"`
+	EndTime          OmittableNullable[time.Time]  `json:"endTime,omitempty"`
+	WebsiteUrl       OmittableNullable[*string]    `json:"websiteUrl,omitempty"`
+	IsPublished      OmittableNullable[bool]       `json:"isPublished,omitempty"`
 }
 
 func (h *handler) handleUpdateHackathon(ctx context.Context, input *struct {
@@ -311,7 +311,7 @@ func (h *handler) handleGetAttendeeCount(ctx context.Context, input *struct{}) (
 }
 
 type CheckInRequest struct {
-	UserID uuid.UUID `json:"user_id"`
+	UserID uuid.UUID `json:"userId"`
 	RFID   *string   `json:"rfid"`
 }
 

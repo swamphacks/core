@@ -125,7 +125,7 @@ func (h *handler) handleGetRedeemables(ctx context.Context, input *struct{}) (*G
 type CreateRedeemableRequest struct {
 	Name          string `json:"name" minLength:"1"`
 	Amount        int    `json:"amount" minimum:"1"`
-	MaxUserAmount int    `json:"max_user_amount"`
+	MaxUserAmount int    `json:"maxUserAmount"`
 }
 
 type CreateRedeemableOutput struct {
@@ -146,8 +146,8 @@ func (h *handler) handleCreateRedeemable(ctx context.Context, input *struct {
 
 type UpdateRedeemableRequest struct {
 	Name          *string `json:"name,omitempty"`
-	Amount        *int    `json:"total_stock,omitempty"`
-	MaxUserAmount *int    `json:"max_user_amount,omitempty"`
+	Amount        *int    `json:"totalStock,omitempty"`
+	MaxUserAmount *int    `json:"maxUserAmount,omitempty"`
 }
 
 type UpdateRedeemableOutput struct {
@@ -224,7 +224,7 @@ func (h *handler) handleRedeemRedeemable(ctx context.Context, input *struct {
 }
 
 type UpdateRedemptionRequest struct {
-	Amount int `json:"new_amount,omitempty"`
+	Amount int `json:"newAmount,omitempty"`
 }
 
 type UpdateRedemptionOutput struct {

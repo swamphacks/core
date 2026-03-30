@@ -257,7 +257,7 @@ type UpdateUserOutput struct {
 
 type UpdateUserRequest struct {
 	Name           string `json:"name"`
-	PreferredEmail string `json:"preferred_email"`
+	PreferredEmail string `json:"preferredEmail"`
 }
 
 func (h *handler) handleUpdateUser(ctx context.Context, input *struct {
@@ -308,7 +308,7 @@ type UpdateEmailConsentOutput struct {
 }
 
 type UpdateEmailConsentRequest struct {
-	EmailConsent bool `json:"email_consent"`
+	EmailConsent bool `json:"emailConsent"`
 }
 
 func (h *handler) handleUpdateEmailConsent(ctx context.Context, input *struct {
@@ -349,7 +349,7 @@ type OnboardingOutput struct {
 
 type OnboardingRequest struct {
 	Name           string `json:"name"`
-	PreferredEmail string `json:"preferred_email"`
+	PreferredEmail string `json:"preferredEmail"`
 }
 
 func (h *handler) handleOnboarding(ctx context.Context, input *struct {
@@ -417,7 +417,7 @@ func (h *handler) handleGetUsers(ctx context.Context, input *struct {
 
 type AssignRoleRequest struct {
 	Email  *string       `json:"email"`
-	UserID *string       `json:"user_id"`
+	UserID *string       `json:"userId"`
 	Role   sqlc.UserRole `json:"role"`
 }
 

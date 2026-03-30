@@ -263,12 +263,12 @@ func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userId uu
 }
 
 type ApplicationStatistics struct {
-	GenderStatistics sqlc.GetApplicationGenderSplitRow   `json:"gender_stats"`
-	AgeStatistics    sqlc.GetApplicationAgeSplitRow      `json:"age_stats"`
-	RaceStatistics   []sqlc.GetApplicationRaceSplitRow   `json:"race_stats"`
-	MajorStatistics  []sqlc.GetApplicationMajorSplitRow  `json:"major_stats"`
-	SchoolStatistics []sqlc.GetApplicationSchoolSplitRow `json:"school_stats"`
-	StatusStatistics sqlc.GetApplicationStatusSplitRow   `json:"status_stats"`
+	GenderStatistics sqlc.GetApplicationGenderSplitRow   `json:"genderStats"`
+	AgeStatistics    sqlc.GetApplicationAgeSplitRow      `json:"ageStats"`
+	RaceStatistics   []sqlc.GetApplicationRaceSplitRow   `json:"raceStats"`
+	MajorStatistics  []sqlc.GetApplicationMajorSplitRow  `json:"majorStats"`
+	SchoolStatistics []sqlc.GetApplicationSchoolSplitRow `json:"schoolStats"`
+	StatusStatistics sqlc.GetApplicationStatusSplitRow   `json:"statusStats"`
 }
 
 func (s *ApplicationService) GetApplicationStatistics(ctx context.Context) (*ApplicationStatistics, error) {
@@ -339,8 +339,8 @@ type ReviewerAssignment struct {
 }
 
 type ReviewerAllocation struct {
-	ReviewerID             uuid.UUID   `json:"reviewer_id"`
-	AssignedApplicationIDs []uuid.UUID `json:"assigned_application_ids"`
+	ReviewerID             uuid.UUID   `json:"reviewerIdd"`
+	AssignedApplicationIDs []uuid.UUID `json:"assignedApplicationIds"`
 }
 
 func (s *ApplicationService) AssignReviewers(ctx context.Context, reviewers []ReviewerAssignment) error {

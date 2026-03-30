@@ -456,8 +456,8 @@ func (h *handler) handleGetApplicationStatistics(ctx context.Context, input *str
 }
 
 type ReviewRatings struct {
-	PassionRating    int `json:"passion_rating" minLength:"1" maxLength:"5" required:"true"`
-	ExperienceRating int `json:"experience_rating" minLength:"1" maxLength:"5" required:"true"`
+	PassionRating    int `json:"passionRating" minLength:"1" maxLength:"5" required:"true"`
+	ExperienceRating int `json:"experienceRating" minLength:"1" maxLength:"5" required:"true"`
 }
 
 type SubmitApplicationReviewOutput struct {
