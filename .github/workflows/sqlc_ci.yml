@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: sqlc-dev/setup-sqlc@v3
         with:
-          sqlc-version: '1.29.0'
+          sqlc-version: '1.30.0'
       - run: sqlc diff
 
   vet:
@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: sqlc-dev/setup-sqlc@v3
         with:
-          sqlc-version: '1.29.0'
+          sqlc-version: '1.30.0'
       # Start a PostgreSQL server
       - uses: sqlc-dev/action-setup-postgres@master
         with:
