@@ -54,27 +54,12 @@ Every request to a protected route goes through `RequireAuth` middleware:
 | `Name` | string | Display name |
 | `Onboarded` | bool | Whether onboarding is complete |
 | `Image` | `*string` | Profile image URL |
-| `Role` | `AuthUserRole` | Platform role (`user` or `superuser`) |
+| `Role` | `UserRole` | `admin`, `staff`, `attendee`, `applicant`, `visitor` |
 | `EmailConsent` | bool | Whether the user opted into emails |
 
 ---
 
-## Platform Roles
-
-Two platform-level roles are defined in `auth_user_role`:
-
-| Role | Description |
-|---|---|
-| `user` | Default role for all registered users |
-| `superuser` | Full access; bypasses all role checks |
-
-Platform roles are enforced by `RequirePlatformRole(roles)` middleware. Superusers bypass this check unconditionally.
-
----
-
-## Event Roles
-
-Users can have a role within a specific event, stored in `event_roles`:
+## User Roles
 
 | Role | Description |
 |---|---|
@@ -82,8 +67,9 @@ Users can have a role within a specific event, stored in `event_roles`:
 | `staff` | Event operations (check-in, review applications, manage redeemables) |
 | `attendee` | Accepted attendee |
 | `applicant` | Has submitted an application |
+| `visitor` | Has made an account, but never submitted an application |
 
-Event roles are enforced by `RequireEventRole(roles)` middleware, which fetches the user's role for the event from the URL path. Superusers bypass event role checks.
+R oles are enforced by `RequireEventRole(roles)` middleware, which fetches the user's role for the event from the URL path. Superusers bypass event role checks.
 
 ---
 
@@ -104,5 +90,5 @@ Routes under `/mobile` require this header. The key is configured via the `MOBIL
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | `GET` | `/auth/callback` | None | OAuth2 callback |
-| `GET` | `/auth/me` | Session | Get current user |
+| `GET` | `/users/me` | Session | Get current user |
 | `POST` | `/auth/logout` | Session | Invalidate session |

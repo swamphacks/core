@@ -22,7 +22,7 @@ docker compose version
 
 ### Node.js (via nvm)
 
-The web app requires **Node 22.16**. Use [nvm](https://github.com/nvm-sh/nvm) to manage versions.
+The web app requires **Node 22.16+**. Use [nvm](https://github.com/nvm-sh/nvm) to manage versions.
 
 You can install [nvm here](https://github.com/nvm-sh/nvm) (MacOS / Linux / WSL).
 

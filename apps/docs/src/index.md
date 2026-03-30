@@ -12,11 +12,11 @@ Whether you are a new organizer joining the technical team or looking to underst
 
 Our platform is built with a modern, scalable stack designed for rapid development and high availability during the event:
 
-* **Frontend:** React + Vite
+* **Frontend:** React & TypeScript + Vite
 * **Backend:** Go 
-* **Database:** Neon DB (Serverless Postgres)
+* **Database:** TODO (previously Neon DB)
 * **Secrets Management:** Infisical
-* **Infrastructure:** Docker & DigitalOcean
+* **Infrastructure:** Docker & DigitalOcean, Github Actions
 * **Community:** Discord Bot (Custom)
 
 ---

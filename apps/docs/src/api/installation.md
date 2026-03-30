@@ -17,19 +17,17 @@ If you are writing migrations, modifying database queries, or updating the OpenA
 go version
 ```
 
+**2. Install Huma:**
+
+```bash
+go get github.com/danielgtaylor/huma/v2
+```
+
 **2. Install goose and sqlc:**
 
 ```bash
 go install github.com/pressly/goose/v3/cmd/goose@latest
 go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-```
-
-**3. Install swag** (custom fork, `v2` branch):
-
-```bash
-git clone -b v2 https://github.com/hieunguyent12/swag.git
-cd swag
-go install ./cmd/swag
 ```
 
 All three are invoked via `make` targets in `apps/api/`. See [Migrations](migrations.md) and [OpenAPI](openapi.md) for usage.
@@ -79,11 +77,11 @@ make backend
 
 ## Migrations
 
-Database migrations run automatically on startup. To run them manually from the host:
+Database migrations must be run manually on the development database.
 
 ```bash
 cd apps/api
-go run ./cmd/migrate
+make migrate-up
 ```
 
 > The `DATABASE_URL_MIGRATION` variable points to `localhost:5432` (host network) rather than the Docker internal hostname, so migrations work when run outside the container.

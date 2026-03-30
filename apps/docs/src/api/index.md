@@ -6,7 +6,7 @@ The SwampHacks API is the central backend for the platform. It handles authentic
 
 | Component | Technology |
 |---|---|
-| Language | Go 1.24 |
+| Language | Go 1.26+ |
 | Router | [chi](https://github.com/go-chi/chi) |
 | Database | PostgreSQL 17 (via [pgx](https://github.com/jackc/pgx)) |
 | Query layer | [sqlc](https://sqlc.dev) (generated, type-safe) |
@@ -14,7 +14,7 @@ The SwampHacks API is the central backend for the platform. It handles authentic
 | Object storage | Cloudflare R2 (S3-compatible) |
 | Email | AWS SES |
 | Auth | Discord OAuth2 + session cookies |
-| API docs | [Scalar](https://scalar.com) (served at `/docs`) |
+| API docs | [Huma Framework](https://huma.rocks/) (served at `/docs`) |
 
 ## Architecture
 
@@ -46,7 +46,7 @@ Both workers share the same codebase and configuration as the API but are starte
 |---|---|
 | Auth | Discord OAuth2 login, session management |
 | Users | Profiles, onboarding, email consent |
-| Events | Hackathon event lifecycle, banners, scopes |
+| Hackathon | Hackathon event lifecycle, banners, scopes |
 | Applications | Submission, review assignment, BAT decisions, waitlist |
 | Teams | Creation, join requests, membership |
 | Redeemables | Prize tracking and redemption |
@@ -56,6 +56,7 @@ Both workers share the same codebase and configuration as the API but are starte
 
 ## API Documentation
 
-Interactive API documentation is available at `/docs` when the server is running. The raw OpenAPI spec is at `apps/api/docs/swagger.yaml`.
+Interactive API documentation is available at `/docs` when the server is running. The raw OpenAPI spec is at `apps/api/docs/openapi.json`.
+Because our OpenAPI documentation is code-first, we have to manually the raw openapi.json file whenever we update the documentation inside our code. To do this, `cd` into `/apps/api/` and run the `download-openapi.sh` script inside the terminal.
 
-An external hosted version is available at [core.apidocumentation.com](https://core.apidocumentation.com/guide/swamphacks-core-api).
+<!-- An external hosted version is available at [core.apidocumentation.com](https://core.apidocumentation.com/guide/swamphacks-core-api). -->
