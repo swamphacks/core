@@ -15,17 +15,14 @@ const (
 )
 
 type CalculateAdmissionsPayload struct {
-	EventID  uuid.UUID
 	BatRunID uuid.UUID
 }
 
 type ScheduleTransitionWaitlistPayload struct {
-	EventID uuid.UUID
-	Period  string
+	Period string
 }
 
 type TransitionWaitlistPayload struct {
-	EventID                 uuid.UUID
 	AcceptFromWaitlistCount uint32
 	MaxAcceptedApplications uint32
 }

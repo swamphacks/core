@@ -10,8 +10,9 @@ import (
 )
 
 type CookieConfig struct {
-	Domain string `env:"DOMAIN"`
-	Secure bool   `env:"SECURE"`
+	SessionName string `env:"SESSION_NAME"`
+	Domain      string `env:"DOMAIN"`
+	Secure      bool   `env:"SECURE"`
 }
 
 type OAuthConfig struct {
@@ -47,16 +48,17 @@ type AWSConfig struct {
 }
 
 type CoreBuckets struct {
-	Avatars            string `env:"USER_AVATARS" envDefault:"core-user-avatars-dev"`
-	QRCodes            string `env:"USER_QRCODES" envDefault:"core-user-qrcodes-dev"`
-	ApplicationResumes string `env:"APPLICATION_RESUMES" envDefault:"core-application-resumes-dev"`
-	EventAssets        string `env:"EVENT_ASSETS" envDefault:"core-event-assets-dev"`
+	Avatars            string `env:"USER_AVATARS" envDefault:"xii-core-user-avatars-dev"`
+	QRCodes            string `env:"USER_QRCODES" envDefault:"xii-core-user-qrcodes-dev"`
+	ApplicationResumes string `env:"APPLICATION_RESUMES" envDefault:"xii-core-application-resumes-dev"`
+	EventAssets        string `env:"EVENT_ASSETS" envDefault:"xii-core-event-assets-dev"`
 	AvatarsBaseUrl     string `env:"USER_AVATARS_BASE_URL"`
 	QRCodesBaseUrl     string `env:"USER_QRCODES_BASE_URL"`
 	EventAssetsBaseUrl string `env:"EVENT_ASSETS_BASE_URL"`
 }
 
 type Config struct {
+	AppEnv                   string   `env:"APP_ENV"`
 	DatabaseURL              string   `env:"DATABASE_URL"`
 	RedisURL                 string   `env:"REDIS_URL"`
 	Port                     string   `env:"PORT" envDefault:"8080"`
@@ -79,7 +81,7 @@ type Config struct {
 	MobileAuthKey string `env:"MOBILE_AUTH_KEY"`
 }
 
-func Load() *Config {
+func LoadConfig() *Config {
 	loadEnv()
 
 	cfg, err := env.ParseAs[Config]()

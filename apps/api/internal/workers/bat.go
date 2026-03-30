@@ -9,8 +9,10 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/config"
-	"github.com/swamphacks/core/apps/api/internal/db/sqlc"
-	"github.com/swamphacks/core/apps/api/internal/services"
+	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/domains/application"
+	"github.com/swamphacks/core/apps/api/internal/domains/bat"
+	"github.com/swamphacks/core/apps/api/internal/domains/hackathon"
 	"github.com/swamphacks/core/apps/api/internal/tasks"
 )
 
@@ -26,21 +28,27 @@ var (
 // other decision heuristics. It operates asynchronously to ensure
 // fair, consistent, and scalable admissions handling.
 type BATWorker struct {
-	batService         *services.BatService
-	applicationService *services.ApplicationService
-	eventService       *services.EventService
+	batService         *bat.BatService
+	applicationService *application.ApplicationService
+	hackathonService   *hackathon.HackathonService
 	scheduler          *asynq.Scheduler
 	taskQueue          *asynq.Client
+	config             *config.Config
 	logger             zerolog.Logger
 }
 
-func NewBATWorker(batService *services.BatService, applicationService *services.ApplicationService, eventService *services.EventService, scheduler *asynq.Scheduler, taskQueue *asynq.Client, logger zerolog.Logger) *BATWorker {
+func NewBATWorker(
+	batService *bat.BatService, applicationService *application.ApplicationService,
+	hackathonService *hackathon.HackathonService, scheduler *asynq.Scheduler,
+	taskQueue *asynq.Client, config *config.Config, logger zerolog.Logger,
+) *BATWorker {
 	return &BATWorker{
 		batService:         batService,
 		applicationService: applicationService,
-		eventService:       eventService,
-		logger:             logger.With().Str("worker", "BATWorker").Str("component", "BAT").Logger(),
+		hackathonService:   hackathonService,
+		logger:             logger.With().Str("worker", "BATWorker").Logger(),
 		scheduler:          scheduler,
+		config:             config,
 		taskQueue:          taskQueue,
 	}
 }
@@ -52,20 +60,17 @@ func (w *BATWorker) HandleCalculateAdmissionsTask(ctx context.Context, t *asynq.
 		return err
 	}
 
-	err := w.batService.CalculateAdmissions(ctx, p.EventID, p.BatRunID)
+	err := w.batService.CalculateAdmissions(ctx, p.BatRunID)
 
 	// On error, mark run as failed.
 	// To be fair, this should be handled more granulary. Like for example,
 	// what if the original run was never created? Just food for thought for now.
 	if err != nil {
 		w.logger.Err(err).Msg("Something went wrong calculating admissions.")
-		_, _ = w.batService.UpdateRunById(ctx, sqlc.UpdateRunByIdParams{
+		_, _ = w.batService.UpdateRunById(ctx, sqlc.UpdateBatRunByIdParams{
 			ID:             p.BatRunID,
 			StatusDoUpdate: true,
-			Status: sqlc.NullBatRunStatus{
-				BatRunStatus: sqlc.BatRunStatusFailed,
-				Valid:        true,
-			},
+			Status:         sqlc.BatRunStatusFailed,
 		})
 
 		return err
@@ -80,23 +85,20 @@ func (w *BATWorker) HandleScheduleTransitionWaitlistTask(ctx context.Context, t 
 		return err
 	}
 
-	// Get event start date, error if past the start of the event.
-	event, err := w.eventService.GetEventByID(ctx, payload.EventID)
+	hackathon, err := w.hackathonService.GetHackathon(ctx)
 	if err != nil {
-		w.logger.Err(err).Msg(err.Error())
+		w.logger.Err(err).Msg("Failed to get hackathon in HandleScheduleTransitionWaitlistTask")
 		return err
 	}
 	currentTime := time.Now()
-	if currentTime.After(event.StartTime) {
+	if currentTime.After(hackathon.StartTime) {
 		w.logger.Err(ErrEventAlreadyStarted).Msg("Could not transition waitlisted applications: the event has already started.")
 		return ErrEventAlreadyStarted
 	}
 
-	cfg := config.Load()
 	task, err := tasks.NewTaskTransitionWaitlist(tasks.TransitionWaitlistPayload{
-		EventID:                 payload.EventID,
-		AcceptFromWaitlistCount: cfg.AcceptFromWaitlistCount,
-		MaxAcceptedApplications: cfg.MaxAcceptedApplications,
+		AcceptFromWaitlistCount: w.config.AcceptFromWaitlistCount,
+		MaxAcceptedApplications: w.config.MaxAcceptedApplications,
 	})
 
 	// The scheduler will make its first run after the period cycles once. So we queue our task immediately as well.
@@ -119,7 +121,7 @@ func (w *BATWorker) HandleTransitionWaitlistTask(ctx context.Context, t *asynq.T
 		return err
 	}
 
-	err := w.applicationService.TransitionWaitlistedApplications(ctx, payload.EventID, payload.AcceptFromWaitlistCount, payload.MaxAcceptedApplications)
+	err := w.applicationService.TransitionWaitlistedApplications(ctx, payload.AcceptFromWaitlistCount, payload.MaxAcceptedApplications)
 	if err != nil {
 		w.logger.Err(err)
 		return nil
