@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Heading, DialogTrigger, Text } from "react-aria-components";
 
 import { Button } from "@/components/ui/Button";
-import { AddEventModal } from "@/features/PlatformAdmin/EventManager/components/AddEventModal";
-import { useAdminEvents } from "@/features/PlatformAdmin/EventManager/hooks/useAdminEvents";
-import { EventDetailsCard } from "@/features/PlatformAdmin/EventManager/components/EventDetailsCard";
+import { AddEventModal } from "@/modules/PlatformAdmin/EventManager/AddEventModal";
+import { useAdminEvents } from "@/modules/PlatformAdmin/EventManager/hooks/useAdminEvents";
+import { EventDetailsCard } from "@/modules/PlatformAdmin/EventManager/EventDetailsCard";
 
 export const Route = createFileRoute("/_protected/admin/events-management")({
   component: RouteComponent,

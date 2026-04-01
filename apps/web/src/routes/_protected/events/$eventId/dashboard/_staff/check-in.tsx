@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
 import { Scanner, type IDetectedBarcode } from "@yudiel/react-qr-scanner";
 import { useState } from "react";
-import CheckInModal from "@/features/CheckIn/components/CheckInModal";
+import CheckInModal from "@/modules/CheckIn/components/CheckInModal";
 import { parseQrIntent } from "@/lib/qr-intents/parse";
 import { Intent } from "@/lib/qr-intents/intent";
 

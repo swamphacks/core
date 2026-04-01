@@ -1,4 +1,4 @@
-import ApplicationStatistics from "@/features/Application/components/ApplicationStatistics";
+import ApplicationStatistics from "@/modules/Application/ApplicationStatistics";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute(

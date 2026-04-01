@@ -1,18 +1,16 @@
-# SwampHacks Event Management Portal
+# SwampHacks Portal Frontend
 
-### Overview
-
-This is the official event management portal for SwampHacks, built with modern web technologies including **Vite**, **React**, and **TypeScript**. It leverages:
+Built with **Vite**, **React**, and **TypeScript**. It uses:
 
 - 🧭 [TanStack Router](https://tanstack.com/router/latest) for routing
-- 🔄 [TanStack Query](https://tanstack.com/query/latest) + [Axios](https://axios-http.com/) for data fetching and caching
+- 🔄 [TanStack Query](https://tanstack.com/query/latest) for data fetching
 - 🧩 [React Aria](https://react-spectrum.adobe.com/react-aria/index.html) for accessible and customizable UI components
 
 ### Setup Instructions
 
 To get started:
 
-1. Clone the repo and make sure [pNPm](https://pnpm.io/) is installed on your system.
+1. Clone the repo and make sure [pnpm](https://pnpm.io/) is installed on your system.
 
 ```bash
 git clone https://github.com/swamphacks/core.git
@@ -31,7 +29,7 @@ pnpm install
 cp .env.example .env
 ```
 
-Fill in the required keys and tokens in your new `.env` file. The prefix `SWAMPHACKS` is required for the environment variables to load properly.
+Fill in the required keys and tokens in your new `.env` file. The prefix `VITE_` is required for the environment variables to load properly.
 
 4. Finally, launch the app
 

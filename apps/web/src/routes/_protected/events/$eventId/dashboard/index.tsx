@@ -1,5 +1,5 @@
-import AttendeeOverview from "@/features/EventOverview/components/AttendeeOverview";
-import StaffOverview from "@/features/EventOverview/components/StaffOverview";
+import AttendeeOverview from "@/modules/EventOverview/AttendeeOverview";
+import StaffOverview from "@/modules/EventOverview/StaffOverview";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_protected/events/$eventId/dashboard/")({

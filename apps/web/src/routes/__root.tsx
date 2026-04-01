@@ -1,5 +1,5 @@
 import { ThemeSwitch } from "@/components/ThemeProvider";
-import NotFoundPage from "@/features/NotFound/NotFoundPage";
+import NotFoundPage from "@/modules/NotFound/NotFoundPage";
 import type { auth } from "@/lib/authClient";
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";

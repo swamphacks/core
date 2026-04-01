@@ -1,10 +1,10 @@
-import AttendeeAppShell from "@/features/Dashboard/components/AttendeeAppShell";
-import ApplicantAppShell from "@/features/Dashboard/components/ApplicantAppShell";
-import StaffAppShell from "@/features/Dashboard/components/StaffAppShell";
-import { getUserEventRole } from "@/features/Event/api/getUserEventRole";
-import NotFoundPage from "@/features/NotFound/NotFoundPage";
+import AttendeeAppShell from "@/modules/Dashboard/AttendeeAppShell";
+import ApplicantAppShell from "@/modules/Dashboard/ApplicantAppShell";
+import StaffAppShell from "@/modules/Dashboard/StaffAppShell";
+import { getUserEventRole } from "@/modules/Event/api/getUserEventRole";
+import NotFoundPage from "@/modules/NotFound/NotFoundPage";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { fetchEvent, getEventQueryKey } from "@/features/Event/hooks/useEvent";
+import { fetchEvent, getEventQueryKey } from "@/modules/Event/hooks/useEvent";
 
 export const Route = createFileRoute("/_protected/events/$eventId/dashboard")({
   component: RouteComponent,

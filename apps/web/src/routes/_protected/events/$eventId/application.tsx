@@ -1,9 +1,9 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { ErrorBoundary } from "react-error-boundary";
-import { ApplicationForm } from "@/features/Application/components/ApplicationForm";
+import { ApplicationForm } from "@/modules/Application/ApplicationForm";
 import TablerAlertCircle from "~icons/tabler/alert-circle";
 import { useEffect } from "react";
-import { useEvent } from "@/features/Event/hooks/useEvent";
+import { useEvent } from "@/modules/Event/hooks/useEvent";
 import { Button } from "@/components/ui/Button";
 
 export const Route = createFileRoute("/_protected/events/$eventId/application")(

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/Button";
-import AddStaffModal from "@/features/EventAdmin/components/AddStaffModal";
-import StaffTable from "@/features/EventAdmin/components/StaffTable";
-import { useEventStaffUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
+import AddStaffModal from "@/modules/EventAdmin/AddStaffModal";
+import StaffTable from "@/modules/EventAdmin/StaffTable";
+import { useEventStaffUsers } from "@/modules/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
 import { createFileRoute } from "@tanstack/react-router";
 import { DialogTrigger, Heading } from "react-aria-components";
 import { PageLoading } from "@/components/PageLoading";

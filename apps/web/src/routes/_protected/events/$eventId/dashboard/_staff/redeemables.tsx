@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RedeemableCard } from "@/features/Redeemables/components/RedeemableCard";
-import { CreateRedeemableModal } from "@/features/Redeemables/components/CreateRedeemableModal";
-import { useRedeemables } from "@/features/Redeemables/hooks/useRedeemables";
+import { RedeemableCard } from "@/modules/Redeemables//RedeemableCard";
+import { CreateRedeemableModal } from "@/modules/Redeemables/CreateRedeemableModal";
+import { useRedeemables } from "@/modules/Redeemables/hooks/useRedeemables";
 import { Button } from "@/components/ui/Button";
 import { DialogTrigger, Heading, Text } from "react-aria-components";
 

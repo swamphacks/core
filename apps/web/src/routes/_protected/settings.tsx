@@ -1,4 +1,4 @@
-import { SettingsPage } from "@/features/Settings/components/SettingsPage";
+import { SettingsPage } from "@/modules/Settings/SettingsPage";
 import { auth } from "@/lib/authClient";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 

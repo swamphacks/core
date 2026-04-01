@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
-import ResetReviewWarningModal from "@/features/ApplicationReview/components/ResetReviewModal";
-import ApplicationReviewPage from "@/features/ApplicationReview/components/Review/ApplicationReviewPage";
-import ReviewNotStarted from "@/features/ApplicationReview/components/ReviewNotStarted/ReviewNotStarted";
-import { useAppReviewAdminActions } from "@/features/ApplicationReview/hooks/useAppReviewAdminActions";
-import { useEvent } from "@/features/Event/hooks/useEvent";
+import ResetReviewWarningModal from "@/modules/ApplicationReview/ResetReviewModal";
+import ApplicationReviewPage from "@/modules/ApplicationReview/Review/ApplicationReviewPage";
+import ReviewNotStarted from "@/modules/ApplicationReview/ReviewNotStarted/ReviewNotStarted";
+import { useAppReviewAdminActions } from "@/modules/ApplicationReview/hooks/useAppReviewAdminActions";
+import { useEvent } from "@/modules/Event/hooks/useEvent";
 import { createFileRoute } from "@tanstack/react-router";
 import { DialogTrigger, Heading } from "react-aria-components";
 import { toast } from "react-toastify";

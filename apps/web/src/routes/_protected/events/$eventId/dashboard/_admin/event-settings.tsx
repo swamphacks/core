@@ -1,6 +1,6 @@
-import EventBannerUploader from "@/features/Event/components/EventBannerUploader";
-import EventSettingsForm from "@/features/Event/components/EventSettingsForm";
-import { useEvent } from "@/features/Event/hooks/useEvent";
+import EventBannerUploader from "@/modules/Event/components/EventBannerUploader";
+import EventSettingsForm from "@/modules/Event/components/EventSettingsForm";
+import { useEvent } from "@/modules/Event/hooks/useEvent";
 import { createFileRoute } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
 

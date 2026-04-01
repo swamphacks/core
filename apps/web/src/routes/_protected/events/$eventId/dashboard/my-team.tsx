@@ -1,7 +1,7 @@
-import MyTeamCard from "@/features/Team/components/MyTeamCard";
-import NoTeamCard from "@/features/Team/components/NoTeamCard";
-import TeamJoinRequestSection from "@/features/Team/components/TeamJoinRequestSection";
-import { useMyTeam } from "@/features/Team/hooks/useMyTeam";
+import MyTeamCard from "@/modules/Team/MyTeamCard";
+import NoTeamCard from "@/modules/Team/NoTeamCard";
+import TeamJoinRequestSection from "@/modules/Team/TeamJoinRequestSection";
+import { useMyTeam } from "@/modules/Team/hooks/useMyTeam";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
 

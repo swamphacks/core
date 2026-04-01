@@ -1,9 +1,9 @@
-import { EventCard } from "@/features/Event/components/EventCard";
-import { useEventsWithUserInfo } from "@/features/Event/hooks/useEventsWithUserInfo";
+import { EventCard } from "@/modules/Event/components/EventCard";
+import { useEventsWithUserInfo } from "@/modules/Event/hooks/useEventsWithUserInfo";
 import { createFileRoute } from "@tanstack/react-router";
 import { Heading, Text } from "react-aria-components";
 import { useState } from "react";
-import { OnboardingModal } from "@/features/Onboarding/components/OnboardingModal";
+import { OnboardingModal } from "@/modules/Onboarding/OnboardingModal";
 import Cookies from "js-cookie";
 import { auth } from "@/lib/authClient";
 

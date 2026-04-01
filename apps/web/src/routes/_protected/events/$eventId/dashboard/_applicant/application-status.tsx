@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import ApplicationStatus from "@/features/Application/components/ApplicationStatus";
+import ApplicationStatus from "@/modules/Application/ApplicationStatus";
 
 export const Route = createFileRoute(
   "/_protected/events/$eventId/dashboard/_applicant/application-status",

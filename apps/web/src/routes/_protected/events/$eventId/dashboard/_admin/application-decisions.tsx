@@ -1,4 +1,4 @@
-import { useEvent } from "@/features/Event/hooks/useEvent";
+import { useEvent } from "@/modules/Event/hooks/useEvent";
 import { createFileRoute } from "@tanstack/react-router";
 import { Heading } from "react-aria-components";
 

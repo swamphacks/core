@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEventUsers } from "@/features/PlatformAdmin/EventManager/hooks/useEventUsers";
-import UserTable from "@/features/EventAdmin/components/UserTable";
+import { useEventUsers } from "@/modules/PlatformAdmin/EventManager/hooks/useEventUsers";
+import UserTable from "@/modules/EventAdmin/UserTable";
 import { Heading } from "react-aria-components";
 import { PageLoading } from "@/components/PageLoading";
 
