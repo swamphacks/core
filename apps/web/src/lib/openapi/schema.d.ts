@@ -4,3249 +4,4277 @@
  */
 
 export interface paths {
-  "/auth/callback": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Application
+         * @description Get the application of the current user
+         */
+        get: operations["get-application"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/accept-acceptance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Accept Application Acceptance
+         * @description Accept an acceptance after being accepted. Sets event role to attendee, from applicant.
+         */
+        patch: operations["accept-application-acceptance"];
+        trace?: never;
+    };
+    "/application/assigned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Assigned Applications
+         * @description Returns assigned applications and their review progress for the authenticated reviewer
+         */
+        get: operations["get-assigned-applications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/calculate-admissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Admissions Calculation Request
+         * @description Queues an admission calculation task to the BAT worker
+         */
+        post: operations["calculate-admissions-request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/join-waitlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Join Waitlist
+         * @description Adds a waitlist join time to application. Sets status to waitlisted
+         */
+        patch: operations["join-waitlist"];
+        trace?: never;
+    };
+    "/application/release-decisions/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Release Decisions
+         * @description Releases decisions that were calculated by the worker from a specific run id
+         */
+        post: operations["release-decisions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Resume Download URL
+         * @description Returns a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.
+         */
+        get: operations["get-download-resume-url"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/review/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Assign Application Reviewers
+         * @description Assigns applications to reviewers for the application review process.
+         */
+        post: operations["assign-application-reviewers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/review/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Application Reviews
+         * @description Resets all application reviews, clearing any existing reviewer assignments.
+         */
+        post: operations["reset-application-reviews"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/review/{applicantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Application Review
+         * @description Handles ratings submissions from staff during the application review process
+         */
+        post: operations["submit-application-review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/review/{applicantId}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Resume URL (for review process)
+         * @description Returns a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.
+         */
+        get: operations["get-resume"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Application
+         * @description Save user's progress on the application. File/Upload fields are not saved (eg. resumes).
+         */
+        post: operations["save-application"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Application Statistics
+         * @description Aggregates applications by race, gender, age, majors, and schools
+         */
+        get: operations["get-application-statistics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Application
+         * @description Submit the application
+         */
+        post: operations["submit-application"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/application/transition-waitlisted-applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Transition Waitlisted Applications
+         * @description Transitions all accepted users to waitlist, and accepts 50 from the waitlist. Sets application status from accepted to rejected.
+         */
+        patch: operations["transition-waitlist"];
+        trace?: never;
+    };
+    "/application/withdraw-acceptance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Withdraw Acceptance
+         * @description Withdraw an acceptance after being accepted to an event. Sets application status from accepted to rejected.
+         */
+        patch: operations["withdraw-acceptance"];
+        trace?: never;
+    };
+    "/application/withdraw-attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Withdraw Attendance
+         * @description Withdraw attendance after accepting to go to the hackathon. Sets application status from accepted to withdrawn. Sets event role from attendee, back to applicant.
+         */
+        patch: operations["withdraw-attendance"];
+        trace?: never;
+    };
+    "/auth/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * OAuth Callback
+         * @description Handles the OAuth provider callback, validates state and nonce, and sets the session cookie.
+         */
+        get: operations["oauth-callback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Logout
+         * @description Logs out the authenticated user by invalidating their session
+         */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hackathon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hackathon
+         * @description Returns information of the hackathon
+         */
+        get: operations["get-hackathon"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Hackathon
+         * @description Updates the information of the hackathon
+         */
+        patch: operations["update-hackathon"];
+        trace?: never;
+    };
+    "/hackathon/attendees/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hackathon Attendees Count
+         * @description Returns the number of users who is attending the hackathon
+         */
+        get: operations["get-hackathon-attendees-count"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hackathon/attendees/discord": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hackathon Attendees with Discord
+         * @description Returns all users with a discord account that is also attending the hackathon
+         */
+        get: operations["get-hackathon-attendees-with-discord"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hackathon/attendees/userids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hackathon Attendees User Ids
+         * @description Returns all users ids of users who are attending the hackathon
+         */
+        get: operations["get-hackathon-attendees-userids"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hackathon/checkin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check In User
+         * @description Staff route for checking a user to an event. The user to check in must be an attendee and have never been checked in yet.
+         */
+        get: operations["check-in"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hackathon/interest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Interest Email
+         * @description Submits an email to interest/mailing list for the hackathon
+         */
+        post: operations["submit-interest-email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hackathon/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hackathon Staff
+         * @description Returns the users who are part of the current staff of the hackathon
+         */
+        get: operations["get-hackathon-staff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/redeemables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Redeemables
+         * @description Returns a list of all redeemable items
+         */
+        get: operations["get-redeemables"];
+        put?: never;
+        /**
+         * Create Redeemable
+         * @description Creates a new redeemable item
+         */
+        post: operations["create-redeemable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/redeemables/{redeemableId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Redeemable
+         * @description Deletes a redeemable by id
+         */
+        delete: operations["delete-redeemable"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Redeemable
+         * @description Update specific fields (name, stock, max per user) of a redeemable
+         */
+        patch: operations["update-redeemable"];
+        trace?: never;
+    };
+    "/redeemables/{redeemableId}/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redeem Redeemable
+         * @description Redeems a redeemable by id. Creates a redemption record linking a specific user to a redeemable item
+         */
+        post: operations["redeem-redeemable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Redemption
+         * @description Updates a redemption created by the user.
+         */
+        patch: operations["update-redemption"];
+        trace?: never;
+    };
+    "/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Team
+         * @description Creates a new team and assigns the user as the owner. Returns the team.
+         */
+        post: operations["create-team"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Team
+         * @description Returns the team information and the full list of team members for the currently authenticated user
+         */
+        get: operations["get-my-team"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/me/pending-joins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User's Pending Join Requests
+         * @description Returns the current user's pending requests for teams.
+         */
+        get: operations["get-my-pending-join-requests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{requestId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept Team Join Request
+         * @description Accepts a pending team join request. Only the team owner can perform this action.
+         */
+        post: operations["accept-team-join-request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{requestId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject Team Join Request
+         * @description Rejects a pending team join request. Only the team owner can perform this action.
+         */
+        post: operations["reject-team-join-request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{teamId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Team
+         * @description Returns the team information and the full list of team members by team id
+         */
+        get: operations["get-team"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{teamId}/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request to Join Team
+         * @description Requests to join a team or fails if user is already on a team.
+         */
+        post: operations["create-join-team-request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{teamId}/kick/{memberId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kick Team Member
+         * @description Kicks a member from a team. Only the team owner can perform this action.
+         */
+        post: operations["kick-member-from-team"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{teamId}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Leave Team
+         * @description Leaves a team if the user is on the team.
+         */
+        post: operations["leave-team"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/teams/{teamId}/pending-joins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Pending Join Requests for Team
+         * @description Returns a team's pending join requests. This is only allowed for the team's owner.
+         */
+        get: operations["get-pending-join-team-requests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Users
+         * @description Get or search for users by name or email. If no search term is provided, returns all users with pagination.
+         */
+        get: operations["get-users"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/email/{email}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User By Email
+         * @description Returns the user associated with the email
+         */
+        get: operations["get-user-by-email"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Me
+         * @description Returns the authenticated user's profile
+         */
+        get: operations["get-me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update User
+         * @description Updates information of the authenticated user
+         */
+        patch: operations["update-user"];
+        trace?: never;
+    };
+    "/users/me/email-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Email Consent
+         * @description Updates the user's email consent setting
+         */
+        patch: operations["update-email-consent"];
+        trace?: never;
+    };
+    "/users/me/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Onboard User
+         * @description Allows the user to submit information such as name and preferred email, and complete the onboarding process
+         */
+        patch: operations["onboard-user"];
+        trace?: never;
+    };
+    "/users/rfid/{rfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User By RFID
+         * @description Returns the user associated with the RFID
+         */
+        get: operations["get-user-by-rfid"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/roles/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Assign Role
+         * @description Assigns/modify a user's role
+         */
+        post: operations["assign-role"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/roles/batch-assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Batch Assign Roles
+         * @description Batch assign/modify multiple users' roles
+         */
+        post: operations["batch-assign-roles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/roles/revoke/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke Role
+         * @description Remove a user's role
+         */
+        post: operations["revoke-role"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/userid/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User By Id
+         * @description Returns the user associated with the user id
+         */
+        get: operations["get-user-by-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * OAuth2 Auth Callback
-     * @description This route is used for OAuth authentication methods to verify and login/create an account.
-     */
-    post: {
-      parameters: {
-        query: {
-          /** @description The OAuth code passed back from the provider. Part of the PKCE flow. */
-          code: string;
-          /** @description The state containing a base64 encoded version of the nonce, provider, and redirect url. */
-          state: string;
-        };
-        header: {
-          /** @description The nonce for comparing against the callback state decoded to prevent CSRF attacks. */
-          sh_auth_nonce: string;
-        };
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK: User is logged in successfully */
-        200: {
-          headers: {
-            /** @description Sets a sh_session cookie to signify auth status */
-            "Set-Cookie"?: string;
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Found: Logged in and redirected to a requested location */
-        302: {
-          headers: {
-            /** @description Sets a sh_session cookie to signify auth status */
-            "Set-Cookie"?: string;
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad Request: Something went wrong with the request queries or their properties */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Forbidden: Something went wrong verifying identity or authenticating. */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Bad Gateway: Authenticating OAuth server did not respond or user does not exist */
-        502: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Current User​
-     * @description Get the currently authenticated user's information.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["middleware.UserContext"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/email/queue": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Queue an Email Request
-     * @description Push an email request to the task queue
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Email data */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.QueueTextEmailRequest"];
-        };
-      };
-      responses: {
-        /** @description OK: Email request queued */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": string;
-          };
-        };
-        /** @description Bad request/Malformed request. The email request is potentially invalid. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: The server went kaput while queueing email sending */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get events
-     * @description Gets events with a nullable event role for authenticated users.
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Can be scoped to either published, scoped, or all. Scoped means admins and staff can see unpublished events */
-          scope?: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK: Events returned */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.GetEventsWithUserInfoRow"][];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Create a new event
-     * @description Create a new event with the provided details
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Event creation data */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.CreateEventFields"];
-        };
-      };
-      responses: {
-        /** @description OK: Event created */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.Event"];
-          };
-        };
-        /** @description Bad request/Malformed request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description endTime is before startTime or applicationClose is before applicationOpen */
-        409: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get an event
-     * @description Get a specific event by ID
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK - Event received */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.Event"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    /**
-     * Delete an event
-     * @description Delete an existing event
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK - Event deleted */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    /**
-     * Update an event
-     * @description Update an existing event
-     */
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK - Event updated (patched) */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    trace?: never;
-  };
-  "/events/{eventId}/application": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Current User's Application by Event ID
-     * @description Get the current user's application progress for an event. If this is their first time filling out the application, a new application will be created.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK: An application was found */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json":
-              | components["schemas"]["sqlc.Application"]
-              | {
-                  [key: string]: unknown;
-                };
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error retrieving application"\ */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/{applicationId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get an application based on a user id and event id.
-     * @description Retrieves an application using the user id and event id primary keys and unique constraints. Only accessible by event staff and admins.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-          /** @description Application ID (Technically user ID) */
-          applicationId: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK: An application was found */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.Application"];
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error retrieving assigned application */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/{applicationId}/resume": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get resume for application review
-     * @description This handler creates a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-          /** @description The application ID (userId of applicant) */
-          applicationId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": string;
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error handling download resume request */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/assign-reviewers": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Assign application to reviewers
-     * @description Assigns applications for an event to reviewers for the application review process.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      /** @description Reviewer assignmnet payload */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["services.ReviewerAssignment"][];
-        };
-      };
-      responses: {
-        /** @description Reviewers assigned */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error assigning reviewers */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/assigned": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Assigned Application IDs and Progress
-     * @description Retrieves assigned applications and their review progress for the authenticated reviewer.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK: An application was found */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["services.AssignedApplication"][];
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error retrieving assigned application */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/download-resume": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Download the user's uploaded resume from their event application
-     * @description This handler creates a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": string;
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error handling download resume request */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/reset-reviews": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Reset application reviews
-     * @description Resets all application reviews for a given event, clearing any existing reviewer assignments.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID of the event to reset reviews for */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Application reviews reset successfully */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad request: invalid event ID */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server error: failed to reset application reviews */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/save": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Save Application
-     * @description Save user's progress on the application. File/Upload fields are not saved.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      /** @description Form data */
-      requestBody: {
-        content: {
-          "application/json": Record<string, never> | Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error saving application */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/stats": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Gets an event's submitted application statistics
-     * @description This aggregates applications by race, gender, age, majors, and schools. This route is only available to event staff and admins.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["services.ApplicationStatistics"];
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error getting statistics */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/submit": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Submit Application
-     * @description Submit the application for an event.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      /** @description Submission form data */
-      requestBody: {
-        content: {
-          "application/json": Record<string, never>;
-          "application/x-www-form-urlencoded": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error submitting application */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/application/submit-review": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Submit application review
-     * @description Handles ratings submissions from staff during the application review process.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description An object containing the passion and experience ratings */
-      requestBody: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error submitting application review */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/interest": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Make an interest submission for an event (email list)
-     * @description Submit email for event interest/mailing list
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      /** @description Interest submission data */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.AddEmailRequest"];
-        };
-      };
-      responses: {
-        /** @description OK: Interest email created */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": string;
-          };
-        };
-        /** @description Bad request/Malformed request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Duplicate email found in DB */
-        409: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/overview": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Retrieves general information about the event
-     * @description Returns data such as event details (name, description, location, dates, etc..) and basic application statistics
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["services.EventOverview"];
-          };
-        };
-        /** @description Bad request/Malformed request. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: error getting statistics */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/role": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get the current user's event role for an event
-     * @description Get current user's role for a specific event
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK - Return role */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["handlers.NullableEventRole"];
-          };
-        };
-        /** @description Not Found - Role not found */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Not Found - Role not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/roles": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Change or add event role of a user
-     * @description Modify user's role for a specific event
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      /** @description Event role data */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.AssignRoleFields"];
-        };
-      };
-      responses: {
-        /** @description OK - Role updated */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Not Found - User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/roles/{userId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Revoke event role of a user
-     * @description Remove user's role for a specific event
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-          /** @description User ID */
-          userId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK - Role revoked */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Not Found - User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/roles/batch": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Change or add event role of a user in batch
-     * @description Modify users' role for a specific event
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      /** @description Event roles data */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.AssignRoleBatch"];
-        };
-      };
-      responses: {
-        /** @description OK - Roles updated */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-        /** @description Not Found - User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/staff": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get all staff users for an event
-     * @description Gets all users with role STAFF or ADMIN
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK - Return users */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.GetEventStaffRow"][];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/teams": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get an event's teams
-     * @description Gets all teams for a specific event.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the event */
-          event_id: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Teams successfully retrieved. */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["services.TeamWithMembers"][];
-          };
-        };
-        /** @description Bad Request: Missing or malformed parameters. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went seriously wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Create a new team
-     * @description Creates a new team for a specific event and assigns the creator as the owner.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the event */
-          event_id: number;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      /** @description Team Creation Payload */
-      requestBody: {
-        content: {
-          "application/json":
-            | Record<string, never>
-            | components["schemas"]["handlers.CreateTeamRequest"];
-        };
-      };
-      responses: {
-        /** @description A team object */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.Team"];
-          };
-        };
-        /** @description Bad request: you had request parameters needed for this method. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Conflict: You already have a team. */
-        409: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went seriously wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/teams/{teamId}/join": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Request to join a team
-     * @description Requests to join a team or fails if user is already on a team.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the team */
-          team_id: string;
-          /** @description The ID of the event */
-          event_id: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      /** @description Team Creation Payload */
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["handlers.CreateJoinRequest"];
-        };
-      };
-      responses: {
-        /** @description Successfully left the team */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad Request: Missing or malformed parameters. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Conflict: User is already on a team. */
-        409: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went seriously wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/teams/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get the authenticated user's team and its members for this specific event.
-     * @description Retrieves the team information and the full list of team members for the currently authenticated user within a specified event.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the event */
-          event_id: number;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Team information and members successfully retrieved. */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["services.TeamWithMembers"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Team not found for the user in this event. */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went seriously wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/teams/me/pending-joins": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get your pending requests
-     * @description Retrieves the current user's pending requests for a specific event's teams.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the team */
-          team_id: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Successfully retrieved pending requests */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.TeamJoinRequest"][];
-          };
-        };
-        /** @description Bad Request: Missing or malformed parameters. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went seriously wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/events/{eventId}/users": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get all users for an event
-     * @description Gets all users with any role for the event
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Event ID */
-          eventId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK - Return users */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.GetEventStaffRow"][];
-          };
-        };
-        /** @description Server Error: Something went terribly wrong on our end. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{teamId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get a team and its members by team id.
-     * @description Retrieves the team information and the full list of team members by a team id.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the team */
-          team_id: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Team information and members successfully retrieved. */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["services.TeamWithMembers"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Team not found for the user in this event. */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went seriously wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{teamId}/members/{userId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Kick a member from a team
-     * @description Kicks a member from a team. Only the team owner can perform this action.
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the team */
-          team_id: string;
-          /** @description The ID of the user to be kicked */
-          userId: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Successfully kicked the team member */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad Request: Missing or malformed parameters. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Forbidden: Requester is not allowed to perform this action. */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{teamId}/members/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Leave a team
-     * @description Leaves a team if the requester is on the team. Depends on cookies for user retrieval.
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the team */
-          team_id: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Successfully left the team */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad Request: Missing or malformed parameters. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went seriously wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{teamId}/pending-joins": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get team's pending join requests
-     * @description Retrieves a team's pending join requests. This is only allowed for the team's owner.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the team */
-          team_id: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Successfully retrieved pending requests */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.ListJoinRequestsByTeamAndStatusWithUserRow"][];
-          };
-        };
-        /** @description Bad Request: Missing or malformed parameters. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Forbidden: Requester is not allowed to perform this action. */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went seriously wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/join/{requestId}/accept": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Accept a team join request
-     * @description Accepts a pending team join request. Only the team owner can perform this action.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the team */
-          team_id: string;
-          /** @description The ID of the join request */
-          request_id: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Successfully accepted the join request */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad Request: Missing or malformed parameters. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Forbidden: Requester is not allowed to perform this action. */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Not Found: The join request does not exist. */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Conflict: The join request has already been responded to. */
-        409: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/join/{requestId}/reject": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Reject a team join request
-     * @description Rejects a pending team join request. Only the team owner can perform this action.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description The ID of the team */
-          team_id: string;
-          /** @description The ID of the join request */
-          request_id: string;
-        };
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session_id: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Successfully accepted the join request */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Bad Request: Missing or malformed parameters. */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Forbidden: Requester is not allowed to perform this action. */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Not Found: The join request does not exist. */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Conflict: The join request has already been responded to. */
-        409: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get/Search for users
-     * @description Get or search for users by name or email. If no search term is provided, returns all users with pagination.
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Search term to filter users by name or email (optional) */
-          search?: string;
-          /** @description Maximum number of users to return (default is 50) */
-          limit?: number;
-          /** @description Number of users to skip for pagination (default is 0) */
-          offset?: number;
-        };
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK: Returns a list of users matching the search criteria, or all users if no search term is provided. */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.AuthUser"][];
-          };
-        };
-        /** @description Invalid query parameter(s) */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Failed to retrieve users */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users/email-consent": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update Email Consent
-     * @description Update the user's email consent setting
-     */
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      /** @description The update email consent request body */
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["handlers.UpdateEmailConsentRequest"];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Invalid request body */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Failed to update email consent */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    trace?: never;
-  };
-  "/users/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get User Profile
-     * @description Get profile information of the currently authenticated user.
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["sqlc.AuthUser"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description User profile not found. */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Something went seriously wrong. */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update User
-     * @description Update the user's information
-     */
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      /** @description The update profile request body */
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["handlers.UpdateProfileRequest"];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Invalid request body */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Failed to update user profile */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    trace?: never;
-  };
-  "/users/me/onboarding": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Complete Onboarding
-     * @description Onboard the user.
-     */
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie: {
-          /** @description The authenticated session token/id */
-          sh_session: string;
-        };
-      };
-      /** @description The onboarding request body */
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["handlers.CompleteOnboardingRequest"];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Invalid request body */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Unauthenticated: Requester is not currently authenticated. */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description User not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-        /** @description Failed to complete onboarding */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["response.ErrorResponse"];
-          };
-        };
-      };
-    };
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    "handlers.AddEmailRequest": {
-      email: string;
-      source: string;
+    schemas: {
+        Application: {
+            application: string;
+            assigned_reviewer_id: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int32 */
+            experience_rating: number | null;
+            hackathon_iteration: string;
+            /** Format: int32 */
+            passion_rating: number | null;
+            /** Format: date-time */
+            saved_at: string;
+            status: components["schemas"]["NullApplicationStatus"];
+            /** Format: date-time */
+            submitted_at: string | null;
+            /** Format: date-time */
+            updated_at: string;
+            user_id: string;
+            /** Format: date-time */
+            waitlist_join_time: string | null;
+        };
+        ApplicationStatistics: {
+            age_stats: components["schemas"]["GetApplicationAgeSplitRow"];
+            gender_stats: components["schemas"]["GetApplicationGenderSplitRow"];
+            major_stats: components["schemas"]["GetApplicationMajorSplitRow"][] | null;
+            race_stats: components["schemas"]["GetApplicationRaceSplitRow"][] | null;
+            school_stats: components["schemas"]["GetApplicationSchoolSplitRow"][] | null;
+            status_stats: components["schemas"]["GetApplicationStatusSplitRow"];
+        };
+        AssignRoleBatchRequest: {
+            assignments: components["schemas"]["AssignRoleRequest"][] | null;
+        };
+        AssignRoleRequest: {
+            email: string | null;
+            role: string;
+            user_id: string | null;
+        };
+        AssignedApplication: {
+            applicantId: string;
+            status: string;
+        };
+        CheckInRequest: {
+            rfid: string | null;
+            user_id: string;
+        };
+        CreateJoinRequest: {
+            message: string | null;
+        };
+        CreateRedeemableRequest: {
+            /** Format: int64 */
+            amount: number;
+            /** Format: int64 */
+            max_user_amount: number;
+            name: string;
+        };
+        CreateTeamRequest: {
+            name: string;
+        };
+        ErrorDetail: {
+            /** @description Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id' */
+            location?: string;
+            /** @description Error message text */
+            message?: string;
+            /** @description The value at the given location */
+            value?: unknown;
+        };
+        ErrorModel: {
+            /** @description A human-readable explanation specific to this occurrence of the problem. */
+            detail?: string;
+            /** @description Optional list of individual error details */
+            errors?: components["schemas"]["ErrorDetail"][] | null;
+            /**
+             * Format: uri
+             * @description A URI reference that identifies the specific occurrence of the problem.
+             */
+            instance?: string;
+            /**
+             * Format: int64
+             * @description HTTP status code
+             */
+            status?: number;
+            /** @description A short, human-readable summary of the problem type. This value should not change between occurrences of the error. */
+            title?: string;
+            /**
+             * Format: uri
+             * @description A URI reference to human-readable documentation for the error.
+             * @default about:blank
+             */
+            type: string;
+        };
+        GetApplicationAgeSplitRow: {
+            /** Format: int64 */
+            age_18: number;
+            /** Format: int64 */
+            age_19: number;
+            /** Format: int64 */
+            age_20: number;
+            /** Format: int64 */
+            age_21: number;
+            /** Format: int64 */
+            age_22: number;
+            /** Format: int64 */
+            age_23_plus: number;
+            /** Format: int64 */
+            underage: number;
+        };
+        GetApplicationGenderSplitRow: {
+            /** Format: int64 */
+            female: number;
+            /** Format: int64 */
+            male: number;
+            /** Format: int64 */
+            non_binary: number;
+            /** Format: int64 */
+            other: number;
+        };
+        GetApplicationMajorSplitRow: {
+            /** Format: int64 */
+            count: number;
+            major: string;
+        };
+        GetApplicationRaceSplitRow: {
+            /** Format: int64 */
+            count: number;
+            race_group: string;
+        };
+        GetApplicationSchoolSplitRow: {
+            /** Format: int64 */
+            count: number;
+            school: string;
+        };
+        GetApplicationStatusSplitRow: {
+            /** Format: int64 */
+            accepted: number;
+            /** Format: int64 */
+            rejected: number;
+            /** Format: int64 */
+            started: number;
+            /** Format: int64 */
+            submitted: number;
+            /** Format: int64 */
+            under_review: number;
+            /** Format: int64 */
+            waitlisted: number;
+            /** Format: int64 */
+            withdrawn: number;
+        };
+        GetAttendeesWithDiscordRow: {
+            discord_id: string;
+            email: string | null;
+            name: string;
+            user_id: string;
+        };
+        GetRedeemablesRow: {
+            /** Format: date-time */
+            created_at: string | null;
+            id: string;
+            /** Format: int32 */
+            max_user_amount: number;
+            name: string;
+            total_redeemed: unknown;
+            /** Format: int32 */
+            total_stock: number;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        Hackathon: {
+            /** Format: date-time */
+            application_close: string;
+            /** Format: date-time */
+            application_open: string;
+            application_review_started: boolean;
+            banner: string | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            decision_release: string | null;
+            description: string | null;
+            /** Format: date-time */
+            end_time: string;
+            is_published: boolean | null;
+            location: string | null;
+            location_url: string | null;
+            /** Format: int32 */
+            max_attendees: number | null;
+            name: string;
+            onerow_id: boolean;
+            /** Format: date-time */
+            rsvp_deadline: string | null;
+            /** Format: date-time */
+            start_time: string;
+            /** Format: date-time */
+            updated_at: string | null;
+            website_url: string | null;
+        };
+        ListJoinRequestsByTeamAndStatusWithUserRow: {
+            /** Format: date-time */
+            created_at: string;
+            id: string;
+            /** Format: date-time */
+            processed_at: string | null;
+            processed_by_user_id: string;
+            request_message: string | null;
+            status: string;
+            team_id: string;
+            /** Format: date-time */
+            updated_at: string;
+            user_email: string | null;
+            user_id: string;
+            user_image: string | null;
+            user_name: string;
+        };
+        MemberWithUserInfo: {
+            email: string | null;
+            image: string | null;
+            /** Format: date-time */
+            joined_at: string | null;
+            name: string;
+            user_id: string;
+        };
+        NullApplicationStatus: {
+            application_status: string;
+            valid: boolean;
+        };
+        OnboardingRequest: {
+            name: string;
+            preferred_email: string;
+        };
+        Redeemable: {
+            /** Format: int32 */
+            amount: number;
+            /** Format: date-time */
+            created_at: string | null;
+            id: string;
+            /** Format: int32 */
+            max_user_amount: number;
+            name: string;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        ReviewRatings: {
+            /** Format: int64 */
+            experience_rating: number;
+            /** Format: int64 */
+            passion_rating: number;
+        };
+        ReviewerAssignment: {
+            /** Format: int64 */
+            amount: number | null;
+            userId: string;
+        };
+        SubmitInterestEmailRequest: {
+            email: string;
+            source: string | null;
+        };
+        Team: {
+            /** Format: date-time */
+            created_at: string | null;
+            id: string;
+            name: string;
+            owner_id: string;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        TeamJoinRequest: {
+            /** Format: date-time */
+            created_at: string;
+            id: string;
+            /** Format: date-time */
+            processed_at: string | null;
+            processed_by_user_id: string;
+            request_message: string | null;
+            status: string;
+            team_id: string;
+            /** Format: date-time */
+            updated_at: string;
+            user_id: string;
+        };
+        TeamWithMembers: {
+            id: string;
+            members: components["schemas"]["MemberWithUserInfo"][] | null;
+            name: string;
+            owner_id: string;
+        };
+        UpdateEmailConsentRequest: {
+            email_consent: boolean;
+        };
+        UpdateHackathonRequest: {
+            /** Format: date-time */
+            application_close: string;
+            /** Format: date-time */
+            application_open: string;
+            /** Format: date-time */
+            decision_release: string | null;
+            description: string | null;
+            /** Format: date-time */
+            end_time: string;
+            is_published: boolean;
+            location: string | null;
+            location_url: string | null;
+            /** Format: int32 */
+            max_attendees: number | null;
+            name: string;
+            /** Format: date-time */
+            rsvp_deadline: string | null;
+            /** Format: date-time */
+            start_time: string;
+            website_url: string | null;
+        };
+        UpdateRedeemableRequest: {
+            /** Format: int64 */
+            max_user_amount?: number;
+            name?: string;
+            /** Format: int64 */
+            total_stock?: number;
+        };
+        UpdateRedemptionRequest: {
+            /** Format: int64 */
+            new_amount?: number;
+        };
+        UpdateUserRequest: {
+            name: string;
+            preferred_email: string;
+        };
+        User: {
+            /** Format: date-time */
+            checked_in_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            email: string | null;
+            email_consent: boolean;
+            email_verified: boolean;
+            id: string;
+            image: string | null;
+            name: string;
+            onboarded: boolean;
+            preferred_email: string | null;
+            rfid: string | null;
+            role: string;
+            /** Format: date-time */
+            role_assigned_at: string | null;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UserContext: {
+            /** Format: date-time */
+            checkedInAt: string | null;
+            email: string | null;
+            emailConsent: boolean;
+            image: string | null;
+            name: string;
+            onboarded: boolean;
+            preferredEmail: string | null;
+            rfid: string | null;
+            /** @enum {string} */
+            role: "admin" | "staff" | "attendee" | "applicant" | "visitor";
+            /** Format: uuid */
+            userId: string;
+        };
     };
-    "handlers.AssignRoleBatch": {
-      assignments: components["schemas"]["handlers.AssignRoleFields"][];
-    };
-    "handlers.AssignRoleFields": {
-      email: string;
-      role: components["schemas"]["sqlc.EventRoleType"];
-      user_id: string;
-    };
-    "handlers.CompleteOnboardingRequest": {
-      name: string;
-      preferred_email: string;
-    };
-    "handlers.CreateEventFields": {
-      application_close: string;
-      application_open: string;
-      decision_release: string;
-      description: string;
-      end_time: string;
-      is_published: boolean;
-      location: string;
-      location_url: string;
-      max_attendees: number;
-      name: string;
-      rsvp_deadline: string;
-      start_time: string;
-      website_url: string;
-    };
-    "handlers.CreateJoinRequest": {
-      message: string;
-    };
-    "handlers.CreateTeamRequest": {
-      name: string;
-    };
-    "handlers.NullableEventRole": {
-      assigned_at: string;
-      event_id: string;
-      role: components["schemas"]["sqlc.EventRoleType"];
-      user_id: string;
-    };
-    "handlers.QueueTextEmailRequest": {
-      body: string;
-      subject: string;
-      to: string[];
-    };
-    "handlers.UpdateEmailConsentRequest": {
-      email_consent: boolean;
-    };
-    "handlers.UpdateProfileRequest": {
-      name: string;
-      preferred_email: string;
-    };
-    /** @description Information about the current user session. */
-    "middleware.UserContext": {
-      /**
-       * @description Primary email address (nullable)
-       * @example user@example.com
-       */
-      email: string;
-      /**
-       * @description Whether the user agreed to receive emails
-       * @example false
-       */
-      emailConsent: boolean;
-      /**
-       * @description Optional profile image URL
-       * @example https://cdn.example.com/avatar.png
-       */
-      image: string | null;
-      /**
-       * @description Full display name
-       * @example Jane Doe
-       */
-      name: string;
-      /**
-       * @description Whether the user completed onboarding
-       * @example true
-       */
-      onboarded: boolean;
-      /**
-       * @description Preferred email address for communications
-       * @example user.alt@example.com
-       */
-      preferredEmail: string;
-      role: components["schemas"]["sqlc.AuthUserRole"];
-      /**
-       * Format: uuid
-       * @description Unique identifier for the user
-       * @example 550e8400-e29b-41d4-a716-446655440000
-       */
-      userId: string;
-    };
-    "response.ErrorResponse": {
-      error: string;
-      message: string;
-    };
-    /** @enum {string} */
-    "services.ApplicationReviewStatus": "in_progress" | "completed";
-    "services.ApplicationStatistics": {
-      age_stats: components["schemas"]["sqlc.GetApplicationAgeSplitRow"];
-      gender_stats: components["schemas"]["sqlc.GetApplicationGenderSplitRow"];
-      major_stats: components["schemas"]["sqlc.GetApplicationMajorSplitRow"][];
-      race_stats: components["schemas"]["sqlc.GetApplicationRaceSplitRow"][];
-      school_stats: components["schemas"]["sqlc.GetApplicationSchoolSplitRow"][];
-      status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
-    };
-    "services.AssignedApplication": {
-      status: components["schemas"]["services.ApplicationReviewStatus"];
-      user_id: string;
-    };
-    "services.EventOverview": {
-      application_status_stats: components["schemas"]["sqlc.GetApplicationStatusSplitRow"];
-      application_submission_stats: components["schemas"]["services.SubmissionTimesStatistics"][];
-      event_details: components["schemas"]["sqlc.Event"];
-    };
-    "services.MemberWithUserInfo": {
-      email: string;
-      image: string;
-      joined_at: string;
-      name: string;
-      user_id: string;
-    };
-    "services.ReviewerAssignment": {
-      /** @description Number of applications assigned (nil if autoassign) */
-      amount: number;
-      /** @description User/Reviewer ID */
-      id: string;
-    };
-    "services.SubmissionTimesStatistics": {
-      count: number;
-      /** Format: date-time */
-      day: string;
-    };
-    "services.TeamWithMembers": {
-      event_id: string;
-      id: string;
-      members: components["schemas"]["services.MemberWithUserInfo"][];
-      name: string;
-      owner_id: string;
-    };
-    "sqlc.Application": {
-      application: number[];
-      assigned_reviewer_id: string;
-      created_at: string;
-      event_id: string;
-      experience_rating: number;
-      passion_rating: number;
-      saved_at: string;
-      status: components["schemas"]["sqlc.NullApplicationStatus"];
-      submitted_at: string;
-      updated_at: string;
-      user_id: string;
-    };
-    /** @enum {string} */
-    "sqlc.ApplicationStatus":
-      | "started"
-      | "submitted"
-      | "under_review"
-      | "accepted"
-      | "rejected"
-      | "waitlisted"
-      | "withdrawn";
-    "sqlc.AuthUser": {
-      created_at: string;
-      email: string;
-      email_consent: boolean;
-      email_verified: boolean;
-      id: string;
-      image: string;
-      name: string;
-      onboarded: boolean;
-      preferred_email: string;
-      role: components["schemas"]["sqlc.AuthUserRole"];
-      updated_at: string;
-    };
-    /**
-     * @description Role assigned to the user
-     * @enum {string}
-     */
-    "sqlc.AuthUserRole": "user" | "superuser";
-    "sqlc.Event": {
-      application_close: string;
-      application_open: string;
-      application_review_started: boolean;
-      banner: string;
-      created_at: string;
-      decision_release: string;
-      description: string;
-      end_time: string;
-      id: string;
-      is_published: boolean;
-      location: string;
-      location_url: string;
-      max_attendees: number;
-      name: string;
-      rsvp_deadline: string;
-      start_time: string;
-      updated_at: string;
-      website_url: string;
-    };
-    /** @enum {string} */
-    "sqlc.EventRoleType": "admin" | "staff" | "attendee" | "applicant";
-    "sqlc.GetApplicationAgeSplitRow": {
-      age_18: number;
-      age_19: number;
-      age_20: number;
-      age_21: number;
-      age_22: number;
-      age_23_plus: number;
-      underage: number;
-    };
-    "sqlc.GetApplicationGenderSplitRow": {
-      female: number;
-      male: number;
-      non_binary: number;
-      other: number;
-    };
-    "sqlc.GetApplicationMajorSplitRow": {
-      count: number;
-      major: string;
-    };
-    "sqlc.GetApplicationRaceSplitRow": {
-      count: number;
-      race_group: string;
-    };
-    "sqlc.GetApplicationSchoolSplitRow": {
-      count: number;
-      school: string;
-    };
-    "sqlc.GetApplicationStatusSplitRow": {
-      accepted: number;
-      rejected: number;
-      started: number;
-      submitted: number;
-      under_review: number;
-      waitlisted: number;
-      withdrawn: number;
-    };
-    "sqlc.GetEventStaffRow": {
-      created_at: string;
-      email: string;
-      email_consent: boolean;
-      email_verified: boolean;
-      event_role: components["schemas"]["sqlc.EventRoleType"];
-      id: string;
-      image: string;
-      name: string;
-      onboarded: boolean;
-      preferred_email: string;
-      role: components["schemas"]["sqlc.AuthUserRole"];
-      updated_at: string;
-    };
-    "sqlc.GetEventsWithUserInfoRow": {
-      application_close: string;
-      application_open: string;
-      application_review_started: boolean;
-      application_status: components["schemas"]["sqlc.NullApplicationStatus"];
-      banner: string;
-      created_at: string;
-      decision_release: string;
-      description: string;
-      end_time: string;
-      event_role: components["schemas"]["sqlc.NullEventRoleType"];
-      id: string;
-      is_published: boolean;
-      location: string;
-      location_url: string;
-      max_attendees: number;
-      name: string;
-      rsvp_deadline: string;
-      start_time: string;
-      updated_at: string;
-      website_url: string;
-    };
-    /** @enum {string} */
-    "sqlc.JoinRequestStatus": "PENDING" | "APPROVED" | "REJECTED";
-    "sqlc.ListJoinRequestsByTeamAndStatusWithUserRow": {
-      created_at: string;
-      id: string;
-      processed_at: string;
-      processed_by_user_id: string;
-      request_message: string;
-      status: components["schemas"]["sqlc.JoinRequestStatus"];
-      team_id: string;
-      updated_at: string;
-      user_email: string;
-      user_id: string;
-      user_image: string;
-      user_name: string;
-    };
-    "sqlc.NullApplicationStatus": {
-      application_status: components["schemas"]["sqlc.ApplicationStatus"];
-      /** @description Valid is true if ApplicationStatus is not NULL */
-      valid: boolean;
-    };
-    "sqlc.NullEventRoleType": {
-      event_role_type: components["schemas"]["sqlc.EventRoleType"];
-      /** @description Valid is true if EventRoleType is not NULL */
-      valid: boolean;
-    };
-    "sqlc.Team": {
-      created_at: string;
-      event_id: string;
-      id: string;
-      name: string;
-      owner_id: string;
-      updated_at: string;
-    };
-    "sqlc.TeamJoinRequest": {
-      created_at: string;
-      id: string;
-      processed_at: string;
-      processed_by_user_id: string;
-      request_message: string;
-      status: components["schemas"]["sqlc.JoinRequestStatus"];
-      team_id: string;
-      updated_at: string;
-      user_id: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    "get-application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Application"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "accept-application-acceptance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-assigned-applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignedApplication"][] | null;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "calculate-admissions-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "join-waitlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "release-decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-download-resume-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "assign-application-reviewers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewerAssignment"][] | null;
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "reset-application-reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "submit-application-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicantId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewRatings"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicantId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "save-application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-application-statistics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationStatistics"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "submit-application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "transition-waitlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "withdraw-acceptance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "withdraw-attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "oauth-callback": {
+        parameters: {
+            query: {
+                /** @description OAuth authorization code */
+                code: string;
+                /** @description Base64 encoded OAuth state */
+                state: string;
+            };
+            header?: {
+                /** @description Client user agent */
+                "User-Agent"?: string;
+            };
+            path?: never;
+            cookie: {
+                /** @description Auth nonce cookie for CSRF protection */
+                sh_auth_nonce: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    Location?: string;
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-hackathon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Hackathon"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "update-hackathon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateHackathonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-hackathon-attendees-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-hackathon-attendees-with-discord": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetAttendeesWithDiscordRow"][] | null;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-hackathon-attendees-userids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[] | null;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckInRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "submit-interest-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitInterestEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-hackathon-staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][] | null;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-redeemables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetRedeemablesRow"][] | null;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "create-redeemable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRedeemableRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Redeemable"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "delete-redeemable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                redeemableId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "update-redeemable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                redeemableId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRedeemableRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "redeem-redeemable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                redeemableId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "update-redemption": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                redeemableId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRedemptionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "create-team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTeamRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-my-team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamWithMembers"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-my-pending-join-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamJoinRequest"][] | null;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "accept-team-join-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "reject-team-join-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teamId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamWithMembers"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "create-join-team-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teamId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateJoinRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamJoinRequest"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "kick-member-from-team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+                teamId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "leave-team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teamId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-pending-join-team-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teamId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListJoinRequestsByTeamAndStatusWithUserRow"][] | null;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-users": {
+        parameters: {
+            query?: {
+                search?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][] | null;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-user-by-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                email: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserContext"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "update-user": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "update-email-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEmailConsentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "onboard-user": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnboardingRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-user-by-rfid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rfid: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "assign-role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "batch-assign-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignRoleBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "revoke-role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-user-by-id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+}

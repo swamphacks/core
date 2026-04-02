@@ -38,7 +38,7 @@ export async function _getUser(): Promise<AuthUserResponse> {
     // Attempt to parse response in AuthUserResponse schema
     const userContext = userContextSchema.safeParse(await res.json());
     if (!userContext.success) {
-      console.error("userContext parsing failed");
+      console.error("userContext parsing failed: ", userContext.error);
       return {
         user: null,
         error: {

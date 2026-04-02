@@ -3,7 +3,7 @@ import config from "@/config";
 export const authConfig = {
   // General Auth API URLs for SwampHacks Core Backend
   OAUTH_REDIRECT_URL: `${config.BASE_API_URL}/auth/callback`,
-  AUTH_ME_URL: `${config.BASE_API_URL}/auth/me`,
+  AUTH_ME_URL: `${config.BASE_API_URL}/users/me`,
   AUTH_SESSION_URL: `${config.BASE_API_URL}/auth/session`,
   AUTH_LOGOUT_URL: `${config.BASE_API_URL}/auth/logout`,
 
