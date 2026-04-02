@@ -1,8 +1,8 @@
 Hi there, Phoenix here.
 
-One thing that seems to be not taught in school and mostly picked up on the fly is good software engineering practices. I don't even think SWE [a software engineering class] teaches these.
+One thing that seems to be not taught in school and mostly picked up on the fly is good software engineering practices. I don't even think SWE teaches these.
 
-As part of the SH tech team, you are entrusted with the valuable task of making sure everything goes well. The frameworks you choose and the way you solve problems ultimately will not matter besides getting expected functionality that everyone wants and making your deadlines. This means that, despite there
+As part of the SH tech team, you are entrusted with the valuable task of making sure everything goes well. The frameworks you choose and the way you solve problems ultimately will not matter besides getting the expected functionality that everyone wants and making your deadlines. This means that, despite there
 usually being more than one way to solve most of your problems, you're probably going to want to choose ones that will save you and your team members the most headache. There will also be people who may read your code long after you leave and go on to do greater things.
 
 On top of this, some weeks you're a busy student without much time to get things done, and, well, may have to implement something the quick and dirty way and refactor later.
