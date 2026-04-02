@@ -42,6 +42,7 @@ nav:
   - Home:
       - Introduction: index.md
       - Getting Started: getting-started.md
+      - Tips & Tricks: development-tips.md
   - Web:
       - Overview: web/index.md
       - Installation: web/installation.md
@@ -58,6 +59,8 @@ nav:
   - Docs:
       - Overview: docs/index.md
       - Installation: docs/installation.md
+  - Hackathon Management:
+    - Overview: hackathon-management/index.md
 
 extra:
   generator: false
