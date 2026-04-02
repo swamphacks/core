@@ -39,4 +39,4 @@ jobs:
 
       - name: Deploy docs
         working-directory: ./apps/docs
-        run: mkdocs gh-deploy --force
+        run: mkdocs gh-deploy
