@@ -42,7 +42,7 @@ nav:
   - Home:
       - Introduction: index.md
       - Getting Started: getting-started.md
-      - Tips & Tricks: development-tips.md
+      - Letter to new tech teams: letter-to-new-people.md
   - Web:
       - Overview: web/index.md
       - Installation: web/installation.md
