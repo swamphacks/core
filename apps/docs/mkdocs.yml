@@ -49,7 +49,7 @@ nav:
       - System Architecture: architecture.md
       - Repository Structure: repo-structure.md
       - Getting Started: getting-started.md
-      - Development Workflow: workflow.md
+      - Letter To New Tech Teams: letter-to-new-people.md
   - Web:
       - Overview: web/index.md
       - Installation & Setup: web/installation.md
@@ -84,4 +84,8 @@ nav:
   - Docs:
       - Overview: docs/index.md
       - Installation: docs/installation.md
-      - Writing Guide: docs/writing-guide.md
+  - Hackathon Management:
+    - Overview: hackathon-management/index.md
+
+extra:
+  generator: false
