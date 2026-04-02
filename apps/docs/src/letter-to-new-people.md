@@ -47,17 +47,20 @@ And are you only backing up production data? If so, how often should you do it? 
 
 My suggestion is to use a 3-2-1 backup strategy. If you find a better strategy, and everyone agrees with it, then great. use that. But at least strategize *how*
 you're going to do the backups. And the earlier you set that up the better. Basically:
-- You want *3* copies of your data
-- On two types of storage media (SSDs and HDDs can fail differently, use a tape drive if you want the data to outlast you)
-- and most importantly *1* offsite.
 
-For our database we used Neon, which is just a Postgres db you can interface with. At the time of writing Neon allows you to rollback your database,
+* You want *3* copies of your data
+
+* On *2* types of storage media (SSDs and HDDs can fail differently, use a tape drive if you want peak reliability)
+
+* and most importantly *1* backup in a different location from your main db (offsite).
+
+For our database we used Neon, which is just a managed Postgres db you can interface with. At the time of writing Neon allows you to rollback your database,
 but that couldn't be done past a certain elapsed time and was expensive. Thus, I wrote a script to dump the database to a personal server that I owned
 every 6 hours during the event, as well as before huge changes were made, like running the decisions algo. You will probably want something more substantial than that,
 and I hope this team manages to create a more permanent backup solution. Realistically, while people are signing up, a backup should be made at least once a day.
 
 ### Erroring, logging, and observability
-Expect them. Expect them in places where you think they would never happen, even though the program works with validated inputs or whatever. This is also
+Expect errors. Expect them in places where you think they would never happen, even though the program works with validated inputs or whatever. This is also
 one huge benefit for using Golang for our backend. Many functions return an error value and un-used variables force the program to not compile. That's
 an intentional choice by the authors of this language skewing developers to better programming practices.
 
@@ -67,12 +70,12 @@ months after another will cause some errors to throw that you've previously writ
 We also used something called a structured logging tool. This basically means that logs output to the console have a certain type and fields. Using a structured
 logger also means that you can scan your logs for errors or warnings, and know what kinds there are.
 
-This may seem like it just makes good console output, but if you use an observability tool (like Grafana) you can actually send out a notification to the tech team
-when a spike of errors hits the system, or when certain errors happen that you *know* shouldn't. Say for example, a warning saying that someone's UserID can't be
-found while running functionality on a page only authorized people have access to, potentially shedding light on a security vulnerability.
+This may seem like it just makes readable console output, but if these are taken in by an observability tool (like Grafana) you can actually send out a notification to the tech team
+when a spike of errors hits the system, or when certain errors happen that you *know* shouldn't. Say for example, you could set an alert for a warning log saying that someone's UserID can't be
+found while running functionality on a page only authorized people have access to, potentially shedding light on a security vulnerability. That's big.
 
 ### Clever solution != a smart one
-In other words, the very complicated cool way of doing things should be avoided over a simple and easy to understand one.
+In other words, the very complicated cool way of doing things should be avoided over a simple and easy to understand solution.
 
 You should aim to write software that looks so plain and simple that everything it does is obvious. Reduce complexity at all costs.
 
@@ -81,15 +84,23 @@ someone else may have to try to understand that, and if they can't, it might be 
 you and other people, you should strive to make everything as clear and simple as possible. There are many guides online explaining how to do this.
 
 Some hints I follow while programming that tells me when my code might be complicated are usually:
-- my code begins nesting too much
-- the order which functionality happens is not clear
-- the functionality of a certain block of code is not clear
+
+* my code begins nesting too much
+
+* the order which functionality happens is not clear
+
+* the functionality of a certain block of code is not clear
+
+* what package is that function in again...?
 
 I would also avoid
-- tracking too much state (avoid state desyncronization)
+
+* tracking too much state (avoid state desyncronization)
 
 And try to
-- group functionality together as well as possible
+
+* group functionality together as well as possible, file and folder wise
+    * yes i have problems with the way the current backend is structured. look at a more mature go repository for the reason why.
 
 ### Your code should be self documenting
 Comments are important, but they should not be over-utilized. Code should be simple enough to the point where what happens is clearly understandable, like I've been saying.
@@ -100,7 +111,7 @@ reading your code won't understand things too clearly. How much do you think the
 I.e., you need to understand your audience when writing them.
 
 In my opinion, people maintaining this codebase should have at least a working proficiency with the libraries and tech stack used, or are otherwise expected to learn enough to be at that level. Especially
-if they are taking ownership of a feature across the stack. When writing your comments, you should assume your readers know these basics so you don't over-explain.
+whoever is reading the segment of code you're commenting on. When writing your comments, you should assume your readers know basics so you don't need to over-explain.
 
 One practical example of this could be with HTTP status codes. People working on the HTTP API should be expected to know what these are, so you don't need
 to explain what 400 and 500 codes are and where they should be used inside the codebase.
@@ -127,7 +138,7 @@ While that might be intimidating at first, please understand that as a member of
 done and are completely free to argue about cutting features, suggesting an alternative solution to something they expect, etc. 
 
 It is important that when they really want something done, to keep them in the loop and respond timely. But you are also able to set their expectations when
-you say what things are currently like. Please understand that you can use that to make your life easier or more difficult.
+you say what things are currently like. Please understand that you can use that to make the everyone on the team's life easier or more difficult.
 
 ### Blame
 If something goes terribly wrong, I urge you to not try and single out any one person as the reason why something happened the way it happened.

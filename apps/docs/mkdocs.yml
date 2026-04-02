@@ -49,7 +49,7 @@ nav:
       - System Architecture: architecture.md
       - Repository Structure: repo-structure.md
       - Getting Started: getting-started.md
-      - Tips & Tricks: development-tips.md
+      - Letter to new tech teams: letter-to-new-people.md
   - Web:
       - Overview: web/index.md
       - Installation & Setup: web/installation.md
