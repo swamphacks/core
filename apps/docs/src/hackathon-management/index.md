@@ -2,16 +2,21 @@ SwampHacks has a few major events which the tech team is required to provide ser
 
 ---
 ### Pre-applications release
-* coming soon page
+
+Coming Soon Page
+
   * A landing page will be needed to inform people that SwampHacks will indeed be happening soon. More importantly however, this page allows us to begin constructing an email list of people
     who are interested early on, which we can send emails to later asking them to apply.
     A simple form with an email input will be needed. Make sure to validate emails appropriately (preferrably on both the front and back end) and return visible errors to the user.
+
   * Note: you should also try to use last year's emails in your email list.
 
 ### Applications Release
-* This is when we open the forms for people to start registering for the hackathon. While MLH gives some basic guidelines for what information should be included (including the stuff that
+
+This is when we open the forms for people to start registering for the hackathon. While MLH gives some basic guidelines for what information should be included (including the stuff that
 they specifically need to know), the form data you include beyond this can help make deciding who to accept easier. 
-* Note that while you are probably wanting as many people to apply as possible, you only will be letting a certain amount of people participate after decisions. More people signing up means more people will be
+
+Note that while you are probably wanting as many people to apply as possible, you only will be letting a certain amount of people participate after decisions. More people signing up means more people will be
 rejected, and this will ultimately effect a lot of people's self-perception of skill, career potential, etc. During XI we tried to keep things as fair as possible by also prioritizing people in "early-career," as well as
 their passion for engineering on top of experience. We will get into this more later, but at the very least, you need to carefully consider what information will let you make the most informed, fair decisions later on.
 
@@ -19,29 +24,38 @@ Also, it might be a good idea to get data that allows you to track some statisti
 Very vaugely, this could be data representative of people participating in the hackathon from in and out of state.
 
 * Data that can show a person's experience
-  * This is pretty simple. Have them upload their resume. We then stored the resume in an amazon S3 bucket (using cloudflare r2 as a wrapper), using their userID as the filename. Files should be able
-    to replaced, preferrably under the last filename as before. Please make sure that only platform admins (the people who will be making decisions based off of resumes) and the uploaders
-    are the only people able to see these resumes.
+
+    * This is pretty simple. Have them upload their resume. We then stored the resume in an amazon S3 bucket (using cloudflare r2 as a wrapper), using their userID as the filename. Files should be able to replaced, preferrably under the last filename as before. Please make sure that only platform admins (the people who will be making decisions based off of resumes) and the uploaders are the only people able to see these resumes.
+
 * Data that can show a person's passion
-  * This is a bit trickier. We had people answer a couple of essay questions that we thought would get a good understanding on if people actually like what they do or are just in their major for the money. There's
-    also some benefit in filtering out people who aren't willing to write something to apply.
+    * This is a bit trickier. We had people answer a couple of essay questions that we thought would get a good understanding on if people actually like what they do or are just in their major for the money. There's also some benefit in filtering out people who aren't willing to write something to apply.
+
 * Email compliance laws
-  * You should also include a check box & togglable setting for knowing whether or not certain candidates want emails from SwampHacks. This is to comply with laws that prevent buisnesses from spamming people.
-    https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business
+
+    * You should also include a check box & togglable setting for knowing whether or not certain candidates want emails from SwampHacks. This is to comply with laws that prevent buisnesses from spamming people. https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business
 
 ### Decisions
 
 Decisions happened in XI like this:
+
 * Have staff individually review each application, and assign each person an experience and passion score on a 1-5 scale
-  * NOTE NOTE NOTE NOTE NOTE:
-    * PLEAAASE do not just make a 1-5 button for each one. Instead (say for Experience) make 1 = "Never programmed before", 3 = "Has had an internship", 4 = "Has had multiple internships", 5 = "Has worked at FANNG or big tech".
-      This way, *everyone* grading applications has a clear idea of what a 1, 2, 3, 4, and 5 mean, and aren't going to grade people differently. Represent the values 1-5 internally, but on the UI just show what they mean pls
+
+    * NOTE NOTE NOTE NOTE NOTE:
+
+        * PLEAAASE do not just make a 1-5 button for each one. Instead (say for Experience) make 1 = "Never programmed before", 3 = "Has had an internship", 4 = "Has had multiple internships", 5 = "Has worked at FANNG or big tech".
+          This way, *everyone* grading applications has a clear idea of what a 1, 2, 3, 4, and 5 mean, and aren't going to grade people differently. Represent the values 1-5 internally, but on the UI just show what they mean pls
+
 * After all applications are done, run an algorithm that turns the raw scores into a ranked list, where every person is above and below someone else. Take the first X amount of values you want to hit your admissions quota.
-  * We also accounted for certain quotas we had to hit, like having 40% acceptances be people in early career, and 60% of people be from UF. Alex Wala wrote a pretty good blog post about how we did it: 
+
+    * We also accounted for certain quotas we had to hit, like having 40% acceptances be people in early career, and 60% of people be from UF. Alex Wala wrote a pretty good blog post about how we did it: 
+
 * Send out acceptance and rejection letters to everyone
+
 * If there are some rejected people you want part of the hackathon, change their user's status, and send them an email saying that they're actually accepted now
-  * We didn't have a system in place for this, but because there are some people you are certain you may want accepted or rejected no matter what (perhaps exlcuding them from the quota used by the admissions algo too) you should make
-    a feature for flaging people
+
+    * We didn't have a system in place for this, but because there are some people you are certain you may want accepted or rejected no matter what (perhaps exlcuding them from the quota used by the admissions algo too) you should make
+      a feature for flaging people
+
 * Now, for all of the accepted people, they will have to click a button to confirm their attendance. Not everyone will do this, so we need a way to let some of the rejected people back in. Which leads us to...
 
 ### Waitlist
@@ -75,9 +89,26 @@ was done by storing the QR codes as images in S3, and putting their appropriate 
 During the check-in line, people would show the QR-code to someone with a phone. The person would scan the QR-code, verify that the user's name and profile icon was theirs, be assigned a badge after scanning it, and on they went to hack.
 
 However, there are some edge cases you should know:
+
  * Some people will arrive late
-   * Have a simple late form people can fill out *before* arriving late, with their expected time and preferrably a Discord/phone number to contact. Make sure to have someone check them in once they arrive.
+
+    * Have a simple late form people can fill out *before* arriving late, with their expected time and preferrably a Discord/phone number to contact. Make sure to have someone check them in once they arrive.
+
  * Some people will show up without having submitted an application, and we are under quota
-   * Have them register on a form, accept them internally and check them in if everything looks good.
+
+    * Have them register on a form, accept them internally and check them in if everything looks good.
+
  * Some people will show up still on the waitlist / rejected, and we are under quota
-   * If using the XI system, get the email associated with their Discord account, look them up in the database, change their status to accepted, and check them in. We should have a SQL script that does this btw
+
+    * If using the XI system, get the email associated with their Discord account, look them up in the database, change their status to accepted, and check them in. We should have a SQL script that does this btw
+
+### Judging
+
+### After
+
+Congratulations, at this point, the hackathon is over! yatta!! I hope that the experience is overall something that teaches you a lot and is enjoyable. There are a lot of moving parts, features, and testing, but you will
+come out as a much more experienced engineer, and hopefully have some stories to tell. A lot of people will have a direct benefit from the services that you the tech team provided, whether they know it or not.
+
+If you want some advice to making sure that all of the major points of this article goes well, please take a look at "Letter To New Tech Teams" in the main section of this documentation.
+
+Good Luck Have Fun :)
