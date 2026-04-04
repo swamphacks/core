@@ -133,6 +133,9 @@ func Run() {
 	hackathon.RegisterRoutes(hackathonHandler, huma.NewGroup(api, "/hackathon"), mw)
 
 	emailService := email.NewEmailService(hackathonRepo, userRepo, taskQueueClient, sesClient, r2Client, logger, config)
+	emailHandler := email.NewHandler(emailService, logger)
+	email.RegisterRoutes(emailHandler, huma.NewGroup(api, "/email"), mw)
+
 	batService := bat.NewBatService(applicationRepo, hackathonRepo, userRepo, batRunsRepo, emailService, txm, taskQueueClient, nil, config, logger)
 	applicationService := application.NewService(applicationRepo, userRepo, hackathonRepo, txm, r2Client, &config.CoreBuckets, nil, emailService, batService, config, logger)
 	applicationHandler := application.NewHandler(applicationService, batService, config, logger)
