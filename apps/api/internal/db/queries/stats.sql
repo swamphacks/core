@@ -48,7 +48,7 @@ SELECT
     COUNT(*) AS count
 FROM applications
 WHERE status <> 'started' AND status IS NOT NULL
-  AND event_id = $1
+  AND event_id = $1 AND (application->>'school') IS NOT NULL
 GROUP BY (application->>'school')::text
 ORDER BY count DESC;
 

@@ -68,7 +68,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: coredb
+      POSTGRES_DB: coredb_old
     ports:
       - 5432:5432
     attach: false
