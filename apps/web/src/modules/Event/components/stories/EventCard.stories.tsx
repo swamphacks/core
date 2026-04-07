@@ -23,7 +23,7 @@ export const EventCard: Story = {
   args: {
     eventId: "test id",
     status: "rejected",
-    title: "SwampHacks XI",
+    title: "SwampHacks XII",
     description: "UF’s flagship hackathon celebrates its 11th iteration.",
     date: "Jan 25 - 26",
     location: "Newell Hall",

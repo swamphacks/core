@@ -50,11 +50,11 @@ export function getFormValidationSchemaAndFields(
 ): {
   validationSchema: z.ZodType;
   fields: string[];
-  fieldsMeta: Record<string, keyof typeof QuestionTypes>;
+  fieldsTypes: Record<string, keyof typeof QuestionTypes>;
 } {
   const schema: Record<string, z.ZodType<any>> = {};
   const fields: string[] = [];
-  const fieldsMeta: Record<string, keyof typeof QuestionTypes> = {};
+  const fieldsTypes: Record<string, keyof typeof QuestionTypes> = {};
 
   const traverseFormContent = (content: FormItemSchemaType[]) => {
     // For every question, attempt to parse its validation schema from the `validation` field if exist.
@@ -62,12 +62,14 @@ export function getFormValidationSchemaAndFields(
       if (item.type === "question") {
         schema[item.name] = getFormItemValidationSchema(item);
         fields.push(item.name);
-        fieldsMeta[item.name] = item.questionType;
+        fieldsTypes[item.name] = item.questionType;
 
         if (item.questionType === QuestionTypes.select) {
+          // the `hasOther` bool indicates whether or not a select question has a option "other". If user selects it,
+          // a text field will be displayed for them to input any other values if needed.
           if (item.hasOther) {
             fields.push(`${item.name}-other`);
-            fieldsMeta[`${item.name}-other`] = QuestionTypes.shortAnswer;
+            fieldsTypes[`${item.name}-other`] = QuestionTypes.shortAnswer;
             schema[`${item.name}-other`] = getFormItemValidationSchema({
               ...item,
               isRequired: false,
@@ -85,25 +87,26 @@ export function getFormValidationSchemaAndFields(
   return {
     validationSchema: z.object(schema),
     fields,
-    fieldsMeta,
+    fieldsTypes,
   };
 }
 
 // this function ensure that default values are in the proper shape according to their question's zod schema
+// TODO: can we check if this is needed anymore?
 function transformDefaultValues(
   defaultValues: Record<string, any>,
-  fieldsMeta: Record<string, keyof typeof QuestionTypes>,
+  fieldsTypes: Record<string, keyof typeof QuestionTypes>,
 ): Record<string, any> {
   for (const field in defaultValues) {
-    if (fieldsMeta[field] === QuestionTypes.checkbox) {
+    if (fieldsTypes[field] === QuestionTypes.checkbox) {
       if (typeof defaultValues[field] === "string") {
         defaultValues[field] = defaultValues[field].split(",");
       }
-    } else if (fieldsMeta[field] === QuestionTypes.multiselect) {
+    } else if (fieldsTypes[field] === QuestionTypes.multiselect) {
       if (typeof defaultValues[field] === "string") {
         defaultValues[field] = defaultValues[field].split(",");
       }
-    } else if (fieldsMeta[field] === QuestionTypes.number) {
+    } else if (fieldsTypes[field] === QuestionTypes.number) {
       defaultValues[field] = defaultValues[field].toString();
     }
   }
@@ -130,7 +133,7 @@ export interface FormProps {
 export function build(formObject: FormObject): {
   Form: (props: FormProps) => ReactNode;
   fields: string[];
-  fieldsMeta: Record<string, keyof typeof QuestionTypes>;
+  fieldsTypes: Record<string, keyof typeof QuestionTypes>;
   defaultFieldValues: Record<string, undefined>;
 } {
   const { error, data } = FormSchema.safeParse(formObject);
@@ -140,7 +143,7 @@ export function build(formObject: FormObject): {
     throw error;
   }
 
-  const { validationSchema, fields, fieldsMeta } =
+  const { validationSchema, fields, fieldsTypes } =
     getFormValidationSchemaAndFields(data.content);
 
   const defaultFieldValues: Record<string, undefined> = {};
@@ -151,7 +154,7 @@ export function build(formObject: FormObject): {
 
   return {
     fields,
-    fieldsMeta,
+    fieldsTypes,
     defaultFieldValues,
     Form: memo(function Component({
       onSubmit,
@@ -168,7 +171,7 @@ export function build(formObject: FormObject): {
       const [otherFields, setOtherFields] = useState<string[]>([]);
 
       const transformedDefaultValues = useMemo(
-        () => transformDefaultValues(defaultValues, fieldsMeta),
+        () => transformDefaultValues(defaultValues, fieldsTypes),
         [defaultValues],
       );
 
@@ -182,6 +185,8 @@ export function build(formObject: FormObject): {
           await onSubmit?.(value);
         },
       });
+      const formRef = useRef<HTMLFormElement>(null);
+      const formErrors = useFormErrors(form);
 
       const isDirty = useDebounce(form.state.isDirty, onChangeDelayMs);
       const formValues = useDebounce(
@@ -189,6 +194,8 @@ export function build(formObject: FormObject): {
         onChangeDelayMs,
       ) as Record<string, any>;
 
+      // Call the external onChange function whenever the user edits the form. This is debounced to ensure it is called efficiently.
+      // Maybe we should rename onChange to onChangeDebounced to indicate the caller this is method is debounced.
       useEffect(() => {
         if (isSubmitting || isSubmittedProp) return;
 
@@ -200,12 +207,13 @@ export function build(formObject: FormObject): {
         }
       }, [isDirty, formValues, isSubmitting, isSubmittedProp]);
 
+      // If the user selects `other` for a Select question, display a text field for them to type in any additional information as they wish.
       useEffect(() => {
         const newOtherFields = [];
         for (const field in form.state.values) {
           if (
             form.state.values[field] === "other" &&
-            fieldsMeta[field] === QuestionTypes.select
+            fieldsTypes[field] === QuestionTypes.select
           ) {
             newOtherFields.push(field);
           }
@@ -218,10 +226,6 @@ export function build(formObject: FormObject): {
           setOtherFields(newOtherFields);
         }
       }, [form.state.isDirty, form.state.values]);
-
-      const formRef = useRef<HTMLFormElement>(null);
-
-      const formErrors = useFormErrors(form);
 
       // Recursively create form field components based on field type (section, layout, or question) and question types
       const buildFormContent = (content: FormItemSchemaType[]) => {
@@ -411,6 +415,8 @@ export function build(formObject: FormObject): {
         [otherFields],
       );
 
+      // I don't know the difference betwen `formErrors` and `errors`. Surely they must serve a purpose but I don't remember why I did this.
+      // It seems to work for now.
       const errors = useStore(form.store, (state) => {
         return state.errors;
       });
@@ -458,7 +464,6 @@ export function build(formObject: FormObject): {
 
       const isSubmitted = (isSubmittedState || isSubmittedProp) && !isInvalid;
 
-      // TODO: find a better way to handle this, maybe just let the parent component handle the form component instead of doing it in here
       const formContainer = useMemo(() => {
         return (
           <Form

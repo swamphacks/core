@@ -1,17 +1,17 @@
 import { api } from "@/lib/ky";
+import type { Application } from "@/lib/openapi/types";
 import { useQuery } from "@tanstack/react-query";
 
-export const myApplicationBaseKey = ["events", "application"];
+export const myApplicationQueryKey = ["my-application"];
 
-export async function fetchMyApplication(eventId: string): Promise<any> {
-  const result = await api.get<any>(`events/${eventId}/application`).json();
-  return result;
+export async function fetchMyApplication(): Promise<Application> {
+  return await api.get<Application>(`application`).json();
 }
 
-export function useMyApplication(eventId: string) {
+export function useMyApplication() {
   return useQuery({
-    queryKey: [...myApplicationBaseKey, eventId],
-    queryFn: () => fetchMyApplication(eventId),
+    queryKey: myApplicationQueryKey,
+    queryFn: () => fetchMyApplication(),
     staleTime: Infinity,
   });
 }

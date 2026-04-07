@@ -297,6 +297,7 @@ func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*G
 
 			return &GetApplicationOutput{Body: HackerApplication{
 				UserID:      newApplication.UserID,
+				Status:      newApplication.Status,
 				Application: newApplication.Application,
 				CreatedAt:   newApplication.CreatedAt,
 				SavedAt:     newApplication.SavedAt,
@@ -314,6 +315,7 @@ func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*G
 
 	return &GetApplicationOutput{Body: HackerApplication{
 		UserID:      application.UserID,
+		Status:      application.Status,
 		Application: application.Application,
 		CreatedAt:   application.CreatedAt,
 		SavedAt:     application.SavedAt,
@@ -356,6 +358,8 @@ func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) 
 	if userCtx == nil {
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
+
+	// TODO: refactor this to using Huma's request API instead of using the raw http package
 
 	r := ctx.Value(middleware.RawRequestKey{}).(*http.Request)
 

@@ -187,7 +187,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		}
 
 		contentType := "application/pdf"
-		err = s.storage.Store(ctx, s.buckets.ApplicationResumes, userID.String(), resume, &contentType)
+		err = s.storage.Store(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+userID.String(), resume, &contentType)
 
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
