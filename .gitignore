@@ -41,3 +41,4 @@ venv
 
 .env.dev.discord
 uv.lock
+apps/web/package-lock.json
