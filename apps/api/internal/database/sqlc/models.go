@@ -102,6 +102,140 @@ func (ns NullBatRunStatus) Value() (driver.Value, error) {
 	return string(ns.BatRunStatus), nil
 }
 
+type EmailCampaignFormat string
+
+const (
+	EmailCampaignFormatText EmailCampaignFormat = "text"
+	EmailCampaignFormatHtml EmailCampaignFormat = "html"
+)
+
+func (e *EmailCampaignFormat) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EmailCampaignFormat(s)
+	case string:
+		*e = EmailCampaignFormat(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EmailCampaignFormat: %T", src)
+	}
+	return nil
+}
+
+type NullEmailCampaignFormat struct {
+	EmailCampaignFormat EmailCampaignFormat `json:"email_campaign_format"`
+	Valid               bool                `json:"valid"` // Valid is true if EmailCampaignFormat is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEmailCampaignFormat) Scan(value interface{}) error {
+	if value == nil {
+		ns.EmailCampaignFormat, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EmailCampaignFormat.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEmailCampaignFormat) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EmailCampaignFormat), nil
+}
+
+type EmailCampaignStatus string
+
+const (
+	EmailCampaignStatusDraft     EmailCampaignStatus = "draft"
+	EmailCampaignStatusScheduled EmailCampaignStatus = "scheduled"
+	EmailCampaignStatusSending   EmailCampaignStatus = "sending"
+	EmailCampaignStatusSent      EmailCampaignStatus = "sent"
+	EmailCampaignStatusFailed    EmailCampaignStatus = "failed"
+)
+
+func (e *EmailCampaignStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EmailCampaignStatus(s)
+	case string:
+		*e = EmailCampaignStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EmailCampaignStatus: %T", src)
+	}
+	return nil
+}
+
+type NullEmailCampaignStatus struct {
+	EmailCampaignStatus EmailCampaignStatus `json:"email_campaign_status"`
+	Valid               bool                `json:"valid"` // Valid is true if EmailCampaignStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEmailCampaignStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.EmailCampaignStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EmailCampaignStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEmailCampaignStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EmailCampaignStatus), nil
+}
+
+type EmailRecipientType string
+
+const (
+	EmailRecipientTypeAdmins               EmailRecipientType = "admins"
+	EmailRecipientTypeStaff                EmailRecipientType = "staff"
+	EmailRecipientTypeAcceptedApplicants   EmailRecipientType = "accepted_applicants"
+	EmailRecipientTypeRejectedApplicants   EmailRecipientType = "rejected_applicants"
+	EmailRecipientTypeWaitlistedApplicants EmailRecipientType = "waitlisted_applicants"
+	EmailRecipientTypeVisitors             EmailRecipientType = "visitors"
+	EmailRecipientTypeInterestSubscribers  EmailRecipientType = "interest_subscribers"
+)
+
+func (e *EmailRecipientType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EmailRecipientType(s)
+	case string:
+		*e = EmailRecipientType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EmailRecipientType: %T", src)
+	}
+	return nil
+}
+
+type NullEmailRecipientType struct {
+	EmailRecipientType EmailRecipientType `json:"email_recipient_type"`
+	Valid              bool               `json:"valid"` // Valid is true if EmailRecipientType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEmailRecipientType) Scan(value interface{}) error {
+	if value == nil {
+		ns.EmailRecipientType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EmailRecipientType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEmailRecipientType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EmailRecipientType), nil
+}
+
 type TeamInvitationStatus string
 
 const (
@@ -273,6 +407,25 @@ type BatRun struct {
 	CreatedAt          time.Time    `json:"created_at"`
 	CompletedAt        *time.Time   `json:"completed_at"`
 	HackathonID        string       `json:"hackathon_id"`
+}
+
+type EmailCampaign struct {
+	ID              uuid.UUID            `json:"id"`
+	HackathonID     string               `json:"hackathon_id"`
+	Title           string               `json:"title"`
+	Description     *string              `json:"description"`
+	Subject         string               `json:"subject"`
+	Body            string               `json:"body"`
+	Format          EmailCampaignFormat  `json:"format"`
+	RecipientTypes  []EmailRecipientType `json:"recipient_types"`
+	Status          EmailCampaignStatus  `json:"status"`
+	ScheduledAt     *time.Time           `json:"scheduled_at"`
+	SentAt          *time.Time           `json:"sent_at"`
+	LastError       *string              `json:"last_error"`
+	CreatedByUserID *uuid.UUID           `json:"created_by_user_id"`
+	UpdatedByUserID *uuid.UUID           `json:"updated_by_user_id"`
+	CreatedAt       time.Time            `json:"created_at"`
+	UpdatedAt       time.Time            `json:"updated_at"`
 }
 
 type Hackathon struct {
