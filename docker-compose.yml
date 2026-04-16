@@ -93,8 +93,8 @@ services:
     command: "-config.file=/etc/loki/config.yml"
     volumes:
       - ./monitoring/loki-config.yml:/etc/loki/config.yml
-    ports:
-      - "3100:3100"
+    expose:
+      - "3100"
 
   alloy:
     image: grafana/alloy:v1.15.0
@@ -112,13 +112,16 @@ services:
     env_file: "./monitoring/.env"
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_PROXY_ENABLED=true
+      - GF_AUTH_PROXY_HEADER_NAME=X-WEBAUTH-USER
+      - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Admin
+      - GF_SERVER_ROOT_URL=/grafana
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - ./monitoring/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     depends_on:
       - loki
 
