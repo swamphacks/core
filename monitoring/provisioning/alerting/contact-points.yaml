@@ -1,0 +1,9 @@
+apiVersion: 1
+
+contactPoints:
+  - name: discord
+    receivers:
+      - uid: discord_webhook
+        type: discord
+        settings:
+          url: $DISCORD_WEBHOOK

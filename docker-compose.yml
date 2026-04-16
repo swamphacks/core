@@ -87,6 +87,41 @@ services:
       retries: 5
       start_period: 5s
 
+  loki:
+    image: grafana/loki:3.7.1
+    container_name: loki
+    command: "-config.file=/etc/loki/config.yml"
+    volumes:
+      - ./monitoring/loki-config.yml:/etc/loki/config.yml
+    ports:
+      - "3100:3100"
+
+  alloy:
+    image: grafana/alloy:v1.15.0
+    container_name: alloy
+    command: run /etc/alloy/config.alloy
+    volumes:
+      - ./monitoring/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:12.4.2
+    container_name: grafana
+    env_file: "./monitoring/.env"
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./monitoring/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loki
+
   # web-devcontainer:
   #   build:
   #     context: ./.devcontainer/web
@@ -106,5 +141,4 @@ services:
 
 volumes:
   postgres_data:
-    
-    
+  grafana_data:
