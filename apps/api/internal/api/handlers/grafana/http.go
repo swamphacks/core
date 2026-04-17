@@ -17,7 +17,6 @@ type handler struct {
 }
 
 func RegisterRoutes(grafanaHandler *handler, mw *middleware.Middleware, router *chi.Mux) {
-	// grafanaURL, err := url.Parse("http://host.docker.internal:1234")
 	grafanaURL, err := url.Parse("http://grafana:3000")
 	if err != nil {
 		grafanaHandler.logger.Error().Err(err).Msg("Failed to parse grafana URL")
