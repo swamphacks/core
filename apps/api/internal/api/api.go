@@ -24,6 +24,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/domains/redeemables"
 	"github.com/swamphacks/core/apps/api/internal/domains/teams"
 	"github.com/swamphacks/core/apps/api/internal/domains/users"
+	"github.com/swamphacks/core/apps/api/internal/domains/workshops"
 	"github.com/swamphacks/core/apps/api/internal/emailutils"
 	"github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/storage"
@@ -116,6 +117,7 @@ func Run() {
 	redeemablesRepo := repository.NewRedeemablesRepository(db)
 	batRunsRepo := repository.NewBatRunsRepository(db)
 	eventInterestsRepo := repository.NewEventInterestsRepository(db)
+	workshopRepo := repository.NewWorkshopsRepository(db)
 
 	mw := mw.NewMiddleware(userRepo, db, logger, config)
 
@@ -148,6 +150,10 @@ func Run() {
 	redeemablesService := redeemables.NewService(redeemablesRepo, logger)
 	redeemablesHandler := redeemables.NewHandler(redeemablesService, config, logger)
 	redeemables.RegisterRoutes(redeemablesHandler, huma.NewGroup(api, "/redeemables"), mw)
+
+	workshopService := workshops.NewService(workshopRepo, logger)
+	workshopHandler := workshops.NewHandler(workshopService, logger)
+	workshops.RegisterRoutes(workshopHandler, huma.NewGroup(api, "/workshops"), mw)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "ping",
