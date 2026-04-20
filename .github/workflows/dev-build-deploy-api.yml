@@ -62,9 +62,10 @@ jobs:
       - name: SSH proxy commmand
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.API_HOST}}
+          host: ${{ secrets.API_HOST }}
           username: root
-          password: ${{ secrets.API_PASSWORD}}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # password: ${{ secrets.API_PASSWORD}}
           script: |
             cd /root/core/infra
             git fetch
