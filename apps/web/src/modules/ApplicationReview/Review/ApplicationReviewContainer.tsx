@@ -3,10 +3,10 @@ import { useApplication } from "@/modules/Application/hooks/useApplication";
 import EssayResponse from "./EssayResponse";
 import { RatingFields } from "./RatingFields";
 import type { AssignedApplications } from "@/modules/Application/hooks/useAssignedApplication";
-import { useApplicationResume } from "../../hooks/useAppResume";
-import { useRatings } from "../../hooks/useRatings";
+import { useApplicationResume } from "../hooks/useAppResume";
+import { useRatings } from "../hooks/useRatings";
 import { ReviewNavigation } from "./ReviewNavigation";
-import { useAppReviewActions } from "../../hooks/useAppReviewActions";
+import { useAppReviewActions } from "../hooks/useAppReviewActions";
 import { toast } from "react-toastify";
 
 interface ApplicationReviewContainerProps {

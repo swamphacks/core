@@ -3,7 +3,7 @@ import type { EventOverview } from "@/modules/EventOverview/hooks/useEventOvervi
 import TablerArrowNarrowRight from "~icons/tabler/arrow-narrow-right";
 import { Link } from "react-aria-components";
 import { useRouter } from "@tanstack/react-router";
-import SubmissionsChart from "@/modules/Application/components/SubmissionsChart";
+import SubmissionsChart from "@/modules/Application/SubmissionsChart";
 
 interface ApplicationOverviewProps {
   data: EventOverview;

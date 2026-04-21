@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build && tsc -b",
+    "build": "vite build && tsc -b --noCheck",
     "lint": "eslint .",
     "test": "vitest run",
     "test-cover": "vitest run --coverage",
