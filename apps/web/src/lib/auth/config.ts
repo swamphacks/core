@@ -9,5 +9,6 @@ export const authConfig = {
 
   // Discord Specific OAuth Config
   DISCORD_OAUTH_BASE_URL: "https://discord.com/oauth2/authorize",
-  DISCORD_OAUTH_CLIENT_ID: config.DISCORD_OAUTH_CLIENT_ID, // Copy this over from env.ts
+  // DISCORD_OAUTH_CLIENT_ID: config.DISCORD_OAUTH_CLIENT_ID, // Copy this over from env.ts
+  DISCORD_OAUTH_CLIENT_ID: import.meta.env["VITE_DISCORD_OAUTH_CLIENT_ID"],
 };
