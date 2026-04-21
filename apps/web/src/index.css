@@ -13,6 +13,10 @@
   --toastify-toast-width: auto;
 }
 
+html {
+  /* scrollbar-gutter: stable; */
+}
+
 html,
 body,
 #root {

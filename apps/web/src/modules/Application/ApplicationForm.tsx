@@ -1,46 +1,37 @@
-import { useRouter } from "@tanstack/react-router";
 import { build } from "@/modules/FormBuilder/build";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QuestionTypes } from "@/modules/FormBuilder/types";
 import { showToast } from "@/lib/toast/toast";
 import TablerCircleCheck from "~icons/tabler/circle-check";
-import { Link } from "react-aria-components";
-import TablerArrowLeft from "~icons/tabler/arrow-left";
 import { api } from "@/lib/ky";
 import { Spinner } from "@/components/ui/Spinner";
 import { useMyApplication } from "@/modules/Application/hooks/useMyApplication";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
 
-// TODO: can we put these in the assets folder?
-import Cloud from "./cloud.svg?react";
-import Cloud2 from "./cloud2.svg?react";
-import Cloud3 from "./cloud3.svg?react";
-import Cloud4 from "./cloud4.svg?react";
-import Tower from "./tower.svg?react";
-import Bell from "./bell.svg?react";
+import Cloud from "./assets/cloud.svg?react";
+import Cloud2 from "./assets/cloud2.svg?react";
+import Cloud3 from "./assets/cloud3.svg?react";
+import Cloud4 from "./assets/cloud4.svg?react";
+import Tower from "./assets/tower.svg?react";
+import Bell from "./assets/bell.svg?react";
 
 // TODO: dynamically fetch application json data from somewhere (backend, cdn?) instead of hardcoding it in the frontend
-import data from "@/forms/application.json";
+import data from "./application.json";
 
 const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
-interface ApplicationFormProps {
-  eventId: string;
-}
-
-export function ApplicationForm({ eventId }: ApplicationFormProps) {
+export function ApplicationForm() {
   // TODO: make the `build` api better so components that use this function doesn't have to call useMemo on it?
-  const { Form, fieldsMeta } = useMemo(() => build(data), []);
+  const { Form, fieldsTypes } = useMemo(() => build(data), []);
   const fileFields = useRef(new Set<string>());
   const [isInvalid, setIsInvalid] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const application = useMyApplication(eventId);
-
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>(undefined);
   const [savedText, setSavedText] = useState<string | undefined>("");
+
+  const application = useMyApplication();
 
   // Update saved text every second. Restart interval when lastSavedAt changes.
   useEffect(() => {
@@ -55,16 +46,17 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
     return () => clearInterval(id);
   }, [lastSavedAt]);
 
+  // Update saved at status message, if any.
   useEffect(() => {
     if (!application || application.isLoading) return;
 
-    if (application.data?.saved_at) {
-      const parsed = parseISO(application.data.saved_at);
+    if (application.data?.savedAt) {
+      const parsed = parseISO(application.data.savedAt);
       setLastSavedAt(parsed);
     } else {
       setLastSavedAt(undefined);
     }
-  }, [application?.data?.saved_at, application?.isLoading]);
+  }, [application?.data?.savedAt, application?.isLoading]);
 
   const onSubmit = useCallback(async (data: Record<string, any>) => {
     setIsSubmitting(true);
@@ -72,7 +64,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
     const formData = new FormData();
 
     for (const key in data) {
-      if (fieldsMeta[key] === QuestionTypes.upload) {
+      if (fieldsTypes[key] === QuestionTypes.upload) {
         for (const file of data[key]) {
           formData.append(`${key}[]`, file);
         }
@@ -81,7 +73,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
       }
     }
 
-    const res = await api.post(`events/${eventId}/application/submit`, {
+    const res = await api.post(`application/submit`, {
       body: formData,
     });
 
@@ -120,7 +112,7 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
         delete formValues[field];
       }
 
-      await api.post(`events/${eventId}/application/save`, {
+      await api.post(`application/save`, {
         json: formValues,
       });
 
@@ -145,52 +137,48 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
     );
   }
 
-  const applicationStatusSubmitted =
-    application.data["status"]["application_status"] !== "started";
+  if (!application.data) {
+    throw new Error("Application data is empty.");
+  }
+
+  const isApplicationSubmitted = application.data.status !== "started";
 
   const saveStatus = (
     <>
       {isSaving && !isSubmitted && <span>Autosaving...</span>}
-      {!isSaving &&
-        savedText &&
-        !isSubmitted &&
-        !applicationStatusSubmitted && <span>{savedText}</span>}
+      {!isSaving && savedText && !isSubmitted && !isApplicationSubmitted && (
+        <span>{savedText}</span>
+      )}
     </>
   );
 
   return (
     <>
-      <div className="hidden fixed xl:inline-flex w-fit z-[999] bottom-3 left-3 text-xs">
-        {saveStatus}
-      </div>
       <div className="flex-col">
         <Form
           defaultValues={
-            applicationStatusSubmitted
+            isApplicationSubmitted
               ? undefined
-              : JSON.parse(atob(application.data["application"]))
+              : JSON.parse(atob(application.data.application))
           }
           onSubmit={onSubmit}
           onNewAttachments={onNewAttachments}
           onChangeDelayMs={SAVE_DELAY_MS}
           onChange={onChange}
-          SubmitSuccessComponent={SubmitSuccess}
+          SubmitSuccessComponent={() => (
+            <SubmitSuccess submittedAt={application.data.savedAt} />
+          )}
           isInvalid={isInvalid}
-          isSubmitted={isSubmitted || applicationStatusSubmitted}
+          isSubmitted={isSubmitted || isApplicationSubmitted}
           isSubmitting={isSubmitting}
-          // TODO: figure out how to handle this through the JSON file, including how to import the SVG files there as well
           renderFormHeader={(metadata) => {
             return (
-              <div className="space-y-3 py-3 rounded-md relative overflow-hidden bg-[#f6fafc] dark:bg-gray-700 px-4 mt-1">
+              <div className="space-y-3 py-3 rounded-md relative overflow-hidden bg-[#ebf7fc] dark:bg-gray-700 px-4 mt-1">
                 <div className="opacity-85">
                   <div className="absolute -bottom-50 -right-33 z-10">
                     <div className="relative inline-block">
-                      <Tower
-                        className="relative size-90 [transform:rotateX(25deg)_scale(1,0.9)]
-               [transform-origin:bottom_center] z-20"
-                      />
+                      <Tower className="relative size-90 [transform:rotateX(25deg)_scale(1,0.9)] [transform-origin:bottom_center] z-20" />
                       <Bell className="absolute top-20 right-39 z-10 size-8" />
-
                       <Cloud className="absolute -top-4 right-20 z-10 size-20 opacity-70 sm:opacity-100" />
                       <Cloud2 className="absolute top-10 right-47 z-10 size-20 opacity-50 sm:opacity-100" />
                       <Cloud3 className="absolute top-1 right-32 z-10 size-20 opacity-50 sm:opacity-100" />
@@ -199,10 +187,10 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
                   </div>
                 </div>
 
-                <p className="relative text-2xl text-text-main font-medium z-50 -top-1">
+                <p className="relative text-2xl text-text-main font-medium z-11 -top-1">
                   {metadata.title}
                 </p>
-                <p className="relative text-text-main z-50 w-[85%] -top-1 font-medium sm:font-normal">
+                <p className="relative text-text-main z-11 w-[85%] -top-1 font-medium sm:font-normal">
                   {metadata.description}
                 </p>
               </div>
@@ -213,31 +201,30 @@ export function ApplicationForm({ eventId }: ApplicationFormProps) {
           <div className="lg:hidden">{saveStatus}</div>
         </div>
       </div>
+      <div className="hidden fixed xl:inline-flex w-fit z-[999] bottom-3 left-67 text-xs">
+        {saveStatus}
+      </div>
     </>
   );
 }
 
-function SubmitSuccess() {
-  const router = useRouter();
-
+function SubmitSuccess({ submittedAt }: { submittedAt: string }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2 py-3 pl-3 bg-badge-bg-accepted/50 text-badge-text-accepted font-medium">
+    <div>
+      <div className="flex items-center gap-2 font-medium bg-badge-bg-accepted/50 text-badge-text-accepted rounded-md py-3 pl-3">
         <TablerCircleCheck />
         <p>Thank you! Your application has been received.</p>
       </div>
-      <Link
-        onClick={() =>
-          router.navigate({
-            to: "/portal",
-            replace: true,
-            reloadDocument: true,
-          })
-        }
-        className="flex items-center gap-1 text-blue-500 select-none cursor-pointer hover:underline"
-      >
-        <TablerArrowLeft /> Back to dashboard
-      </Link>
+      <p className="text-gray-500 mt-2">
+        Submitted at:{" "}
+        {new Intl.DateTimeFormat("en-US", {
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        }).format(new Date(submittedAt))}
+      </p>
     </div>
   );
 }

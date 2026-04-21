@@ -4,7 +4,7 @@ import { CheckInBadge } from "./CheckInBadge";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { useUserEventInfo } from "../hooks/useUserEventInfo";
-import RoleBadge from "@/modules/EventAdmin/components/RoleBadge";
+import RoleBadge from "@/modules/EventAdmin/RoleBadge";
 import TablerCheck from "~icons/tabler/check";
 import TablerX from "~icons/tabler/x";
 import { toast } from "react-toastify";

@@ -64,7 +64,7 @@ WHERE rfid = $1;
 
 -- name: UpdateRole :exec
 UPDATE users
-SET role = @role::role_type,
+SET role = @role::user_role,
     role_assigned_at = NOW()
 WHERE id = @user_id::uuid;
 

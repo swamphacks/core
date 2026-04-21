@@ -9,7 +9,7 @@ export default function NotFoundPage() {
 
   const goBackFn = router.history.canGoBack()
     ? router.history.back
-    : () => router.navigate({ to: "/portal" });
+    : () => router.navigate({ to: "/information" });
 
   return (
     <main className="relative w-screen h-screen flex flex-col justify-center items-center px-4 sm:px-6 text-center max-w-3xl mx-auto gap-8">
@@ -32,7 +32,7 @@ export default function NotFoundPage() {
           variant="primary"
           size="lg"
           className="w-full flex items-center justify-center gap-2 sm:gap-4"
-          onClick={() => router.navigate({ to: "/portal" })}
+          onClick={() => router.navigate({ to: "/information" })}
         >
           <TablerHome className="w-5 h-5" />
           <span>Dashboard</span>

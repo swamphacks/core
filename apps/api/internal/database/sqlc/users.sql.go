@@ -265,14 +265,14 @@ func (q *Queries) UpdateRFID(ctx context.Context, arg UpdateRFIDParams) error {
 
 const updateRole = `-- name: UpdateRole :exec
 UPDATE users
-SET role = $1::role_type,
+SET role = $1::user_role,
     role_assigned_at = NOW()
 WHERE id = $2::uuid
 `
 
 type UpdateRoleParams struct {
-	Role   interface{} `json:"role"`
-	UserID uuid.UUID   `json:"user_id"`
+	Role   UserRole  `json:"role"`
+	UserID uuid.UUID `json:"user_id"`
 }
 
 func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) error {

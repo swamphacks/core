@@ -1,5 +1,5 @@
-import type { components, paths } from "./schema";
+import type { components } from "./schema";
 
-// export type ErrorResponse = components["schemas"]["response.ErrorResponse"];
 export type UserContext = components["schemas"]["UserContext"];
-// export type Role = components["schemas"][""];
+export type Application = components["schemas"]["HackerApplication"];
+export type Hackathon = components["schemas"]["PublicHackathon"];

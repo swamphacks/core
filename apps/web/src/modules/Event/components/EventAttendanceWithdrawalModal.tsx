@@ -5,7 +5,7 @@ import { api } from "@/lib/ky";
 import { showToast } from "@/lib/toast/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { eventsQueryKey } from "../hooks/useEventsWithUserInfo";
-import { myApplicationBaseKey } from "@/modules/Application/hooks/useMyApplication";
+import { myApplicationQueryKey } from "@/modules/Application/hooks/useMyApplication";
 import { useNavigate } from "@tanstack/react-router";
 
 interface EventAttendanceWithdrawalModalProps {
@@ -40,7 +40,7 @@ function EventAttendanceWithdrawalModal({
         queryKey: eventsQueryKey,
       });
       await queryClient.invalidateQueries({
-        queryKey: [...myApplicationBaseKey, eventId],
+        queryKey: [...myApplicationQueryKey, eventId],
       });
       navigate({
         to: "/portal",

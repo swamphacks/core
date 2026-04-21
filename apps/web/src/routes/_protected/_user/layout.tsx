@@ -5,9 +5,8 @@ import {
   useLocation,
   useRouter,
 } from "@tanstack/react-router";
-import TablerLayoutCollage from "~icons/tabler/layout-collage";
-import TablerBooks from "~icons/tabler/books";
-import TablerSocial from "~icons/tabler/social";
+import TablerCode from "~icons/tabler/code";
+import TablerClipboard from "~icons/tabler/clipboard";
 import { AppShell } from "@/components/AppShell/AppShell";
 import { PageLoading } from "@/components/PageLoading";
 import { Logo } from "@/components/Logo";
@@ -26,7 +25,7 @@ function RouteComponent() {
       <AppShell.Header>
         <div className="items-center gap-2 ml-3 flex">
           <Logo
-            onClick={() => router.navigate({ to: "/portal" })}
+            onClick={() => router.navigate({ to: "/information" })}
             className="py-2 cursor-pointer"
             label="SwampHacks"
           />
@@ -35,35 +34,17 @@ function RouteComponent() {
 
       <AppShell.Navbar>
         <NavLink
-          label="Events Portal"
-          href="/portal"
-          leftSection={<TablerLayoutCollage className="w-5 aspect-square" />}
-          active={pathname.startsWith("/portal")}
+          label="Information"
+          href="/information"
+          leftSection={<TablerCode className="w-5 aspect-square" />}
+          active={pathname.startsWith("/information")}
         />
 
         <NavLink
-          label="Resources"
-          href="/_protected/resources"
-          initialExpanded={pathname.startsWith("/resources")}
-          leftSection={<TablerBooks className="w-5 aspect-square" />}
-        >
-          <NavLink
-            label="Programming"
-            href="/resources/programming"
-            active={pathname.startsWith("/resources/programming")}
-          />
-          <NavLink
-            label="Sponsors"
-            href="/resources/sponsors"
-            active={pathname.startsWith("/resources/sponsors")}
-          />
-        </NavLink>
-
-        <NavLink
-          label="Community"
-          href="/community"
-          leftSection={<TablerSocial className="w-5 aspect-square" />}
-          active={pathname.startsWith("/community")}
+          label="Application"
+          href="/application"
+          leftSection={<TablerClipboard className="w-5 aspect-square" />}
+          active={pathname.startsWith("/application")}
         />
       </AppShell.Navbar>
 

@@ -270,8 +270,8 @@ class General(commands.Cog):
             return
         # next ensure the thread is in the support channel specifically (check if the thread's parent exists as well)
         if not interaction.channel.parent or interaction.channel.parent.name != "support":
-            if not interaction.channel.category or interaction.channel.category.name != "--- SwampHacks XI (Support-VCs) ---":
-                await interaction.response.send_message('This command can only be used in the "--- SwampHacks XI (Support-VCs) ---" category.', ephemeral=True)
+            if not interaction.channel.category or interaction.channel.category.name != "--- SwampHacks XII (Support-VCs) ---":
+                await interaction.response.send_message('This command can only be used in the "--- SwampHacks XII (Support-VCs) ---" category.', ephemeral=True)
             return
         
         # check if user is already in the thread
@@ -294,7 +294,7 @@ class General(commands.Cog):
     @has_bot_full_access_or_hacker()
     async def create_vc(self, interaction: discord.Interaction) -> None:
         """
-        Create a voice channel for support, requires a --- SwampHacks XI (Support-VCs) --- category and a Mentor role
+        Create a voice channel for support, requires a --- SwampHacks XII (Support-VCs) --- category and a Mentor role
         Can only be used in a thread, and only one VC per thread is allowed.
 
         Args:
@@ -349,7 +349,7 @@ class General(commands.Cog):
         else:
             mentor_role = discord.utils.get(interaction.guild.roles, name=mentor_role_name)
         
-        category = discord.utils.get(interaction.guild.categories, name="--- SwampHacks XI (Support-VCs) ---")
+        category = discord.utils.get(interaction.guild.categories, name="--- SwampHacks XII (Support-VCs) ---")
         vc_author = interaction.user
         if not mentor_role:
             await interaction.response.send_message(
@@ -359,7 +359,7 @@ class General(commands.Cog):
             return
         if not category:
             await interaction.response.send_message(
-                "Error: Could not find the --- SwampHacks XI (Support-VCs) --- category. Please create it before using this command.",
+                "Error: Could not find the --- SwampHacks XII (Support-VCs) --- category. Please create it before using this command.",
                 ephemeral=True
             )
             return
@@ -418,7 +418,7 @@ class General(commands.Cog):
     @has_bot_full_access_or_hacker()
     async def grant_vc_access(self, interaction: discord.Interaction, user: discord.Member) -> None:
         """
-        Grant a user access to a voice channel, can only be used in a voice channel under the --- SwampHacks XI (Support-VCs) --- category
+        Grant a user access to a voice channel, can only be used in a voice channel under the --- SwampHacks XII (Support-VCs) --- category
         
         Args:
             interaction: The interaction that triggered this command
@@ -432,8 +432,8 @@ class General(commands.Cog):
             )
             return
         # next ensure the channel is in the support category specifically
-        if not interaction.channel.category or interaction.channel.category.name != "--- SwampHacks XI (Support-VCs) ---":
-            await interaction.response.send_message('This command can only be used in the "--- SwampHacks XI (Support-VCs) ---" category.', ephemeral=True)
+        if not interaction.channel.category or interaction.channel.category.name != "--- SwampHacks XII (Support-VCs) ---":
+            await interaction.response.send_message('This command can only be used in the "--- SwampHacks XII (Support-VCs) ---" category.', ephemeral=True)
             return
         
         # check if user already has access to the voice channel

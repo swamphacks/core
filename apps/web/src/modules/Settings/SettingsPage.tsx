@@ -72,11 +72,7 @@ export function SettingsPage({ logout }: { logout: () => void }) {
   };
 
   return (
-    <div
-      className={cn(
-        "absolute inset-0 z-40 bg-white dark:bg-background transition-all duration-200 p-6",
-      )}
-    >
+    <div className={cn("absolute inset-0 z-40 bg-background p-6")}>
       <div className="flex justify-center">
         <div className="sm:w-117 flex flex-col gap-8">
           <div className="flex flex-col gap-2">

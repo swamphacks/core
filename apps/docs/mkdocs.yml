@@ -84,6 +84,8 @@ nav:
   - Docs:
       - Overview: docs/index.md
       - Installation: docs/installation.md
+  - Hackathon Management 101:
+    - Overview: hackathon-management/index.md
 
 extra:
   generator: false
