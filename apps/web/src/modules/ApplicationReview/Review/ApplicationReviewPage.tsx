@@ -1,9 +1,9 @@
 import TablerLoader from "~icons/tabler/loader-2";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { useAssignedApplications } from "../../hooks/useAssignedApplications";
-import { useAppReviewTutorial } from "../../hooks/useAppReviewTutorial";
-import { useAppReviewProgress } from "../../hooks/useAppReviewProgress";
+import { useAssignedApplications } from "../hooks/useAssignedApplications";
+import { useAppReviewTutorial } from "../hooks/useAppReviewTutorial";
+import { useAppReviewProgress } from "../hooks/useAppReviewProgress";
 import ApplicationReviewContainer from "./ApplicationReviewContainer";
 
 interface ApplicationReviewPageProps {

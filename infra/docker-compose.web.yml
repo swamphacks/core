@@ -6,7 +6,7 @@ services:
     networks:
       - caddy_net
     expose:
-      - "80"  # accessible to Caddy via Docker network
+      - "80" # accessible to Caddy via Docker network
   web:
     image: ghcr.io/swamphacks/core-web:latest
     env_file:
@@ -14,7 +14,7 @@ services:
     networks:
       - caddy_net
     expose:
-      - "80"  # accessible to Caddy via Docker network
+      - "80" # accessible to Caddy via Docker network
 
   discord:
     image: ghcr.io/swamphacks/core-discord:latest
@@ -26,7 +26,7 @@ services:
     image: ghcr.io/caddybuilds/caddy-cloudflare:latest
     container_name: caddy
     env_file:
-      - ./secrets/.env.cf # This needs to be pulled first since Caddy needs to compelte DNS challenge!
+      - ./secrets/.env.dev.web # This needs to be pulled first since Caddy needs to compelte DNS challenge!
     ports:
       - "80:80"
       - "443:443"
