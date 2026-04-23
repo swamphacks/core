@@ -12,6 +12,18 @@ discovery.relabel "logs_integrations_docker" {
   }
 
   rule {
+    target_label = "env"
+    replacement = "prod"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex = ".*-dev.*"
+    target_label = "env"
+    replacement = "dev"
+  }
+
+  rule {
     target_label = "instance"
     replacement  = constants.hostname
   }
@@ -28,7 +40,7 @@ loki.process "logs" {
   forward_to = [loki.write.default.receiver]
 
   stage.match {
-    selector = "{container_name=~\"core-api.*\"}"
+    selector = "{container_name=~\".*-api.*\"}"
 
     stage.json {
       expressions = {

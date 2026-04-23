@@ -14,10 +14,11 @@ import (
 
 type handler struct {
 	logger zerolog.Logger
+	url    string
 }
 
 func RegisterRoutes(grafanaHandler *handler, mw *middleware.Middleware, router *chi.Mux) {
-	grafanaURL, err := url.Parse("http://grafana:3000")
+	grafanaURL, err := url.Parse(grafanaHandler.url)
 	if err != nil {
 		grafanaHandler.logger.Error().Err(err).Msg("Failed to parse grafana URL")
 		return
@@ -41,8 +42,9 @@ func RegisterRoutes(grafanaHandler *handler, mw *middleware.Middleware, router *
 	router.Handle("/grafana/*", handler)
 }
 
-func NewHandler(logger zerolog.Logger) *handler {
+func NewHandler(logger zerolog.Logger, url string) *handler {
 	return &handler{
 		logger: logger.With().Str("handler", "GrafanaHandler").Logger(),
+		url:    url,
 	}
 }

@@ -1,13 +1,13 @@
 apiVersion: 1
 
 groups:
-  - name: api-alerts
+  - name: api-dev-alerts
     folder: Services
     interval: 1m
 
     rules:
-      - uid: api_errors
-        title: API errors detected
+      - uid: api_dev_errors
+        title: API Dev errors detected
         condition: C
 
         data:
@@ -19,7 +19,7 @@ groups:
             datasourceUid: loki_uid
             model:
               queryType: range
-              expr: count_over_time({container_name=~".*-api.*", env="prod"} | json | level="error" [5m])
+              expr: count_over_time({container_name=~".*-api-dev.*"} | json | level="error" [5m])
               refId: A
           - refId: reducer
             queryType: expression
@@ -82,7 +82,7 @@ groups:
         labels:
           severity: warning
           scope: global
-          alertname: api_errors
+          alertname: api_dev_errors
 
         notification_settings:
           receiver: discord
