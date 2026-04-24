@@ -7,3 +7,4 @@ contactPoints:
         type: discord
         settings:
           url: $MONITORING_DISCORD_WEBHOOK
+          message: '{{ template "discord_template" . }}'

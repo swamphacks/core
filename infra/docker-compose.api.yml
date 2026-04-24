@@ -172,6 +172,7 @@ services:
       - GF_AUTH_PROXY_ENABLED=true
       - GF_AUTH_PROXY_HEADER_NAME=X-WEBAUTH-USER
       - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Admin
+      - GF_SERVER_ROOT_URL=https://grafana.swamphacks.com/
     volumes:
       - ../monitoring/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
@@ -189,6 +190,7 @@ services:
       - GF_AUTH_PROXY_ENABLED=true
       - GF_AUTH_PROXY_HEADER_NAME=X-WEBAUTH-USER
       - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Admin
+      - GF_SERVER_ROOT_URL=https://dev-grafana.swamphacks.com/
     volumes:
       - ../monitoring/provisioning-dev:/etc/grafana/provisioning
       - grafana_data_dev:/var/lib/grafana

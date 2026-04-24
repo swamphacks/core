@@ -1,14 +1,14 @@
 apiVersion: 1
 
 groups:
-  - name: api-alerts
+  - name: api-prod-alerts
     folder: Services
     interval: 1m
 
     rules:
-      - uid: api_errors
-        title: API errors detected
-        condition: C
+      - uid: api_prod_errors
+        title: API Prod errors detected
+        condition: B
 
         data:
           - refId: A
@@ -18,11 +18,12 @@ groups:
               to: 0
             datasourceUid: loki_uid
             model:
-              queryType: range
-              expr: count_over_time({container_name=~".*-api.*", env="prod"} | json | level="error" [5m])
+              expr: |
+                count_over_time(
+                  {container_name=~".*-api.*", env="prod", level="error"}[5m]
+                )
               refId: A
-          - refId: reducer
-            queryType: expression
+          - refId: B
             datasourceUid: __expr__
             model:
               conditions:
@@ -44,45 +45,22 @@ groups:
                   type: __expr__
                   uid: __expr__
               expression: A
+              hide: false
               intervalMs: 1000
               maxDataPoints: 43200
               reducer: last
-              refId: reducer
+              refId: B
               type: reduce
-          - refId: C
-            datasourceUid: __expr__
-            model:
-              conditions:
-                  - evaluator:
-                      params:
-                          - 0
-                      type: gt
-                    operator:
-                      type: and
-                    query:
-                      params: []
-                    reducer:
-                      params: []
-                      type: last
-                    type: query
-              datasource:
-                  type: __expr__
-                  uid: __expr__
-              expression: reducer
-              intervalMs: 1000
-              maxDataPoints: 43200
-              refId: C
-              type: threshold
+
+        noDataState: OK
+        execErrState: Error
 
         for: 1m
-
-        noDataState: NoData
-        execErrState: Error
 
         labels:
           severity: warning
           scope: global
-          alertname: api_errors
+          alertname: api_prod_errors
 
         notification_settings:
           receiver: discord

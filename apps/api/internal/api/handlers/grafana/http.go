@@ -37,7 +37,7 @@ func RegisterRoutes(grafanaHandler *handler, mw *middleware.Middleware, router *
 				}
 
 				// For local development, dashboard is accessed via /grafana, so don't trim prefix
-				if grafanaHandler.environment != "dev" {
+				if grafanaHandler.environment != "local" {
 					r.URL.Path = strings.TrimPrefix(r.URL.Path, "/grafana")
 					if r.URL.Path == "" {
 						r.URL.Path = "/"
