@@ -21,6 +21,6 @@ templates:
       Starts: {{ .StartsAt }}
 
       🔎 **View Logs:**
-      {{ $.ExternalURL }}explore?orgId=1&left={{ urlquery `["now-5m","now","Loki",{"expr":"{container_name=~\".*-api.*\",env=\"prod\",level=\"error\"}"}]` }}
+      {{ $.ExternalURL }}explore?orgId=1&left={{ urlquery `["now-5m","now","Loki",{"expr":"{container_name=~\".*-api.*\",env=\"dev\",level=\"error\"}"}]` }}
       {{ end }}
       {{ end }}
