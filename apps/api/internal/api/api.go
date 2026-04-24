@@ -164,7 +164,7 @@ func Run() {
 	})
 
 	// Grafana proxy (used for authentication)
-	grafanaHandler := grafana.NewHandler(logger, config.GrafanaURL)
+	grafanaHandler := grafana.NewHandler(logger, config)
 	grafana.RegisterRoutes(grafanaHandler, mw, r)
 
 	logger.Info().Msgf("API listening on port %s", config.Port)

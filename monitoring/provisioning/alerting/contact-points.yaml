@@ -6,4 +6,4 @@ contactPoints:
       - uid: discord_webhook
         type: discord
         settings:
-          url: $DISCORD_WEBHOOK
+          url: $MONITORING_DISCORD_WEBHOOK

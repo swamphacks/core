@@ -19,7 +19,7 @@ groups:
             datasourceUid: loki_uid
             model:
               queryType: range
-              expr: count_over_time({container_name=~".*-api-dev.*"} | json | level="error" [5m])
+              expr: count_over_time({container_name=~".*-api.*", env="dev"} | json | level="error" [5m])
               refId: A
           - refId: reducer
             queryType: expression

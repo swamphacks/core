@@ -4,17 +4,20 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/middleware"
 	auth "github.com/swamphacks/core/apps/api/internal/api/middleware"
+	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
 type handler struct {
-	logger zerolog.Logger
-	url    string
+	logger      zerolog.Logger
+	url         string
+	environment string
 }
 
 func RegisterRoutes(grafanaHandler *handler, mw *middleware.Middleware, router *chi.Mux) {
@@ -33,6 +36,14 @@ func RegisterRoutes(grafanaHandler *handler, mw *middleware.Middleware, router *
 					r.Header.Set("X-WEBAUTH-USER", userCtx.UserID.String())
 				}
 
+				// For local development, dashboard is accessed via /grafana, so don't trim prefix
+				if grafanaHandler.environment != "dev" {
+					r.URL.Path = strings.TrimPrefix(r.URL.Path, "/grafana")
+					if r.URL.Path == "" {
+						r.URL.Path = "/"
+					}
+				}
+
 				grafanaProxy.ServeHTTP(w, r)
 			}),
 		),
@@ -42,9 +53,10 @@ func RegisterRoutes(grafanaHandler *handler, mw *middleware.Middleware, router *
 	router.Handle("/grafana/*", handler)
 }
 
-func NewHandler(logger zerolog.Logger, url string) *handler {
+func NewHandler(logger zerolog.Logger, config *config.Config) *handler {
 	return &handler{
-		logger: logger.With().Str("handler", "GrafanaHandler").Logger(),
-		url:    url,
+		logger:      logger.With().Str("handler", "GrafanaHandler").Logger(),
+		url:         config.GrafanaURL,
+		environment: config.AppEnv,
 	}
 }
