@@ -2,6 +2,7 @@
 INSERT INTO hackathons (
     id, name,
     application_open, application_close,
+    accept_early_applications, early_application_open, early_application_close,
     start_time, end_time,
     description, location, location_url, max_attendees,
     rsvp_deadline, decision_release, is_active
@@ -9,6 +10,9 @@ INSERT INTO hackathons (
     -- FIXME: The second parameter in coalesce MUST be the default value created in the schema. I have not found a more automated way to insert the default value.
     @id, @name,
     @application_open, @application_close,
+    @accept_early_applications, 
+    coalesce(sqlc.narg(early_application_open), NULL::TIMESTAMPTZ), 
+    coalesce(sqlc.narg(early_application_close), NULL::TIMESTAMPTZ),
     @start_time, @end_time,
     coalesce(sqlc.narg(description), NULL),
     coalesce(sqlc.narg(location), NULL),

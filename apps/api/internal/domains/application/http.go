@@ -292,7 +292,7 @@ func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*G
 			newApplication, err := h.applicationService.CreateApplication(ctx, userCtx.UserID)
 
 			if err != nil || newApplication == nil {
-				return nil, huma.Error500InternalServerError("can't create application")
+				return nil, huma.Error500InternalServerError(err.Error())
 			}
 
 			return &GetApplicationOutput{Body: HackerApplication{
@@ -306,8 +306,9 @@ func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*G
 				HackathonID: newApplication.HackathonID,
 			}}, nil
 		}
+
 		if errors.Is(err, ErrApplicationNotOpened) {
-			return nil, huma.Error400BadRequest("application is unavailable")
+			return nil, huma.Error400BadRequest(err.Error())
 		}
 
 		return nil, huma.Error500InternalServerError("error retrieving application")
@@ -342,7 +343,7 @@ func (h *handler) handleSaveApplication(ctx context.Context, input *struct {
 	err := h.applicationService.SaveApplication(ctx, input.Body, userCtx.UserID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to save application")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &SaveApplicationOutput{Status: http.StatusOK}, nil

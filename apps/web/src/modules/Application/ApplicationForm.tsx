@@ -17,10 +17,16 @@ import Bell from "./assets/bell.svg?react";
 
 // TODO: dynamically fetch application json data from somewhere (backend, cdn?) instead of hardcoding it in the frontend
 import data from "./application.json";
+import type { Hackathon } from "@/lib/openapi/types";
+import { HTTPError } from "ky";
 
 const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
-export function ApplicationForm() {
+interface ApplicationFormProps {
+  hackathon: Hackathon;
+}
+
+export function ApplicationForm({ hackathon }: ApplicationFormProps) {
   // TODO: make the `build` api better so components that use this function doesn't have to call useMemo on it?
   const { Form, fieldsTypes } = useMemo(() => build(data), []);
   const fileFields = useRef(new Set<string>());
@@ -73,23 +79,25 @@ export function ApplicationForm() {
       }
     }
 
-    const res = await api.post(`application/submit`, {
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const resBody: any = await res.json();
-
-      showToast({
-        title: "Submission Error",
-        message: resBody.message || "Something went wrong",
-        type: "error",
+    try {
+      await api.post(`application/submit`, {
+        body: formData,
       });
 
-      setIsInvalid(true);
-    } else {
       setIsSubmitted(true);
       setIsInvalid(false);
+    } catch (err) {
+      let message = "Something went wrong";
+      if (err instanceof HTTPError) {
+        const resBody = await err.response.json();
+        message = resBody.detail || message;
+      }
+      showToast({
+        title: "Submission Error",
+        message: message,
+        type: "error",
+      });
+      setIsInvalid(true);
     }
 
     setIsSubmitting(false);
@@ -152,6 +160,12 @@ export function ApplicationForm() {
     </>
   );
 
+  const now = new Date();
+  const isAccessingEarlyApplication =
+    hackathon.acceptEarlyApplications &&
+    now >= new Date(hackathon.earlyApplicationOpen as string) &&
+    now <= new Date(hackathon.earlyApplicationClose as string);
+
   return (
     <>
       <div className="flex-col">
@@ -188,7 +202,9 @@ export function ApplicationForm() {
                 </div>
 
                 <p className="relative text-2xl text-text-main font-medium z-11 -top-1">
-                  {metadata.title}
+                  {isAccessingEarlyApplication
+                    ? metadata.earlyTitle
+                    : metadata.title}
                 </p>
                 <p className="relative text-text-main z-11 w-[85%] -top-1 font-medium sm:font-normal">
                   {metadata.description}

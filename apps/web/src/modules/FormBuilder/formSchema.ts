@@ -65,6 +65,7 @@ export const FormItemSchema = z.discriminatedUnion("type", [
 
 export const FormMetadataSchema = z.object({
   title: z.string().min(1, "Form must have a title."),
+  earlyTitle: z.string(),
   description: z.string().optional(),
 });
 
