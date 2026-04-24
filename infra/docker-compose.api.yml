@@ -151,8 +151,6 @@ services:
     command: "-config.file=/etc/loki/config.yml"
     volumes:
       - ../monitoring/loki-config.yml:/etc/loki/config.yml
-    expose:
-      - "3100"
 
   alloy:
     image: grafana/alloy:v1.15.0
@@ -177,8 +175,6 @@ services:
     volumes:
       - ../monitoring/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
-    expose:
-      - "3000"
     depends_on:
       - alloy
       - api
@@ -196,8 +192,6 @@ services:
     volumes:
       - ../monitoring/provisioning-dev:/etc/grafana/provisioning
       - grafana_data_dev:/var/lib/grafana
-    expose:
-      - "3001"
     depends_on:
       - alloy
       - api-dev
