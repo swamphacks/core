@@ -7,9 +7,28 @@ SELECT w.* FROM workshops w
 WHERE w.start_time > CURRENT_TIMESTAMP
 ORDER BY w.start_time ASC;
 
+-- name: ViewAllWorkshops :many
+SELECT w.* FROM workshops w
+ORDER BY w.start_time ASC;
+
 -- name: DeleteWorkshop :exec
 DELETE FROM workshops
 WHERE id = @workshop_id;
+
+-- name: DeleteWorkshopAll :exec
+DELETE FROM workshops
+WHERE 1=1;
+
+-- name: UpdateWorkshop :one
+UPDATE workshops
+SET title = @title,
+description = @description,
+start_time = @start_time,
+end_time = @end_time,
+location = @location,
+presenter = @presenter
+WHERE id = @workshop_id
+RETURNING *;
 
 -- name: CreateWorkshop :one
 INSERT INTO workshops (title, description, start_time, end_time, location, presenter)

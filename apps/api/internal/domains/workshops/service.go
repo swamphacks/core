@@ -26,11 +26,8 @@ func NewService(workshopsRepo *repository.WorkshopsRepository, logger zerolog.Lo
 }
 
 
-//get specific workshop so need its id
 func (s *WorkshopService) GetWorkshop(ctx context.Context, workshopID uuid.UUID) (*sqlc.Workshop, error) {
-	// params := sqlc.GetWorkshopParams{
-	// 	ID: workshopId,
-	// }
+	
 
 	workshop, err := s.workshopsRepo.GetWorkshop(ctx, workshopID)
 
@@ -52,8 +49,17 @@ func (s *WorkshopService) GetAllWorkshops(ctx context.Context) ([]sqlc.Workshop,
 	return workshops, nil
 }
 
-// func (s *WorkshopService) UpdateWorkshop(ctx context.Context, workshopID uuid.UUID, )
-//http.go needs more work for this to be doable, following pattern of hackathon update
+func (s *WorkshopService) ViewAllWorkshops(ctx context.Context) ([]sqlc.Workshop, error){
+	workshops, err := s.workshopsRepo.ViewAllWorkshops(ctx)
+
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to get all workshops")
+		return nil, errors.New("Failed to get all workshop")
+	}
+	return workshops, nil
+}
+
+
 
 func (s *WorkshopService) DeleteWorkshop(ctx context.Context, workshopID uuid.UUID) error {
 	err := s.workshopsRepo.DeleteWorkshop(ctx, workshopID)
@@ -61,6 +67,16 @@ func (s *WorkshopService) DeleteWorkshop(ctx context.Context, workshopID uuid.UU
 	if err != nil {
 		s.logger.Err(err).Msg("")
 		return errors.New("Failed to delete workshop")
+	}
+	return nil
+}
+
+func (s *WorkshopService) DeleteAllWorkshops(ctx context.Context) error {
+	err := s.workshopsRepo.DeleteWorkshopAll(ctx)
+
+	if err != nil {
+		s.logger.Err(err).Msg("")
+		return errors.New("Failed to delete all workshops")
 	}
 	return nil
 }
@@ -92,9 +108,7 @@ func (s *WorkshopService) RegisterWorkshop(ctx context.Context, userID uuid.UUID
 		s.logger.Err(err).Msg("failed to increment attendees")
 		return nil, errors.New("failed to update attendees")
 	}
-	// params := sqlc.GetWorkshopParams{
-	// 	ID: workshopId,
-	// }
+
 	workshop, err := s.workshopsRepo.GetWorkshop(ctx, workshopID)
 	if err != nil {
 		s.logger.Err(err).Msg("failed to fetch updated workshop")
@@ -125,15 +139,26 @@ func (s *WorkshopService) UnregisterWorkshop(ctx context.Context,userID uuid.UUI
 		s.logger.Err(err).Msg("failed to decrement attendees")
 		return errors.New("failed to update attendees")
 	}
-	// params := sqlc.GetWorkshopParams{
-	// 	ID: workshopId,
-	// }
-	// err := s.workshopsRepo.GetWorkshop(ctx, workshopID)
-	// if err != nil {
-	// 	s.logger.Err(err).Msg("failed to fetch updated workshop")
-	// 	return errors.New("failed to fetch workshop")
-	// }
 	
 
 	return nil
+}
+
+func (s *WorkshopService) UpdateWorkshop(ctx context.Context, params sqlc.UpdateWorkshopParams) (*sqlc.Workshop, error) {
+	workshop, err := s.workshopsRepo.UpdateWorkshop(ctx, sqlc.UpdateWorkshopParams{
+		Title: params.Title,
+		Description: params.Description,
+		StartTime: params.StartTime,
+		EndTime: params.EndTime,
+		Location: params.Location,
+		Presenter: params.Presenter,
+		WorkshopID: params.WorkshopID,
+	})
+
+	if err != nil {
+		s.logger.Err(err).Msg("")
+		return nil, errors.New("Failed to update workshop")
+	}
+
+	return workshop, nil
 }

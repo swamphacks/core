@@ -28,6 +28,15 @@ func (r *WorkshopsRepository) GetWorkshop(ctx context.Context, workshopID uuid.U
 	return &workshop, nil
 }
 
+func (r *WorkshopsRepository) UpdateWorkshop(ctx context.Context, params sqlc.UpdateWorkshopParams) (*sqlc.Workshop, error) {
+	workshop, err := r.db.Query.UpdateWorkshop(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	
+	return &workshop, nil
+}
+
 func (r *WorkshopsRepository) GetAllWorkshops(ctx context.Context) ([]sqlc.Workshop, error){
 	workshop, err := r.db.Query.GetAllWorkshops(ctx)
 	if err != nil {
@@ -44,6 +53,24 @@ func (r *WorkshopsRepository) DeleteWorkshop(ctx context.Context, workshopID uui
 	}
 
 	return nil
+}
+
+func (r *WorkshopsRepository) DeleteWorkshopAll(ctx context.Context) error {
+	err := r.db.Query.DeleteWorkshopAll(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *WorkshopsRepository) ViewAllWorkshops(ctx context.Context) ([]sqlc.Workshop, error){
+	workshop, err := r.db.Query.ViewAllWorkshops(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return workshop, nil
 }
 
 func (r *WorkshopsRepository) UnregisterUserForWorkshop(ctx context.Context, params sqlc.UnregisterUserForWorkshopParams) error {

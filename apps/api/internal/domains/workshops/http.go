@@ -13,35 +13,20 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/ctxutils"
+
 )
 
-/*
-
-Will remove comments when fully done
-
-
-	register for a workshop
-	get a workshop
-	get all workshops
-	update a workshop (staff only)
-	delete a workshop (staff only)
-	create a workshop (staff only)
-	unregister for a workshop
-
-
-
-	ask questions about the path and what pattern they would like me to follow
-*/
 
 func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Middleware) {
 	huma.Register(group, huma.Operation{
 		OperationID: "register-for-workshop",
 		Method: http.MethodPost,
 		Summary: "Register for a workshop",
-		Description: "Lets a user register for a workshop.", //will workshops have a capacity?
+		Description: "Lets a user register for a workshop.", 
 		Tags: []string{"Workshops"},
-		Path: "/{workshopID}/register", //leave this empty
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma}, //for staff stuff give mw.Auth.RequireStaffHuma
+		Path: "/{workshopId}/register", 
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma}, 
 		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError},
 		Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
 	}, workshopHandler.handleRegisterForWorkshop) 
@@ -49,7 +34,7 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 	huma.Register(group, huma.Operation{
 		OperationID: "get-workshop",
 		Method: http.MethodGet,
-		Summary: "Get a workshop",
+		Summary: "Get a workshop off of workshopID",
 		Description: "Returns a workshop based on the provided id.",
 		Tags: []string{"Workshops"},
 		Path: "/{workshopId}",
@@ -61,7 +46,7 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 	huma.Register(group, huma.Operation{
 		OperationID: "get-all-workshops",
 		Method: http.MethodGet,
-		Summary: "Get all workshops",
+		Summary: "Get all UPCOMING workshops",
 		Description: "Returns a list of all workshops.",
 		Tags: []string{"Workshops"},
 		Path: "",
@@ -70,17 +55,19 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 		Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
 	}, workshopHandler.handleGetAllWorkshops)
 
-	// huma.Register(group, huma.Operation{
-	// 	OperationID: "update-workshop",
-	// 	Method: http.MethodPatch,
-	// 	Summary: "Update a workshop",
-	// 	Description: "Updates a workshop based on the provided id and body. Only the fields provided in the body will be updated.",
-	// 	Tags: []string{"Workshops"},
-	// 	Path: "/{workshopId}",
-	// 	Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-	// 	Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError, http.StatusBadRequest},
-	// 	Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
-	// }, workshopHandler.handleUpdateWorkshop)
+	huma.Register(group, huma.Operation{
+		OperationID: "update-workshop",
+		Method: http.MethodPatch,
+		Summary: "Update a workshop",
+		Description: "Updates a workshop based on the provided id and body. Only the fields provided in the body will be updated.",
+		Tags: []string{"Workshops"},
+		Path: "/{workshopId}",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+
+		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError, http.StatusBadRequest},
+		Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
+	}, workshopHandler.handleUpdateWorkshop)
 
 	huma.Register(group, huma.Operation{
 		OperationID: "delete-workshop",
@@ -89,8 +76,8 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 		Description: "Deletes a workshop based on the provided id.",
 		Tags: []string{"Workshops"},
 		Path: "/{workshopId}",
-		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
 
 		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError, http.StatusBadRequest},
 		Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
@@ -103,8 +90,8 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 		Description: "Creates a workshop based on the provided body.",
 		Tags: []string{"Workshops"},
 		Path: "",
-		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
 
 		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError, http.StatusBadRequest},
 		Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
@@ -121,6 +108,34 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError, http.StatusBadRequest},
 		Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
 	}, workshopHandler.handleUnregisterForWorkshop)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "view-all-workshops",
+		Method: http.MethodGet,
+		Summary: "View all workshops ever made",
+		Description: "Returns a list of all workshops, including past workshops.",
+		Tags: []string{"Workshops"},
+		Path: "/view-all",
+		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+
+		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError},
+		Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
+	}, workshopHandler.handleViewAllWorkshops)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "delete-all-workshops",
+		Method: http.MethodDelete,
+		Summary: "Delete all workshops",
+		Description: "Deletes all the workshops",
+		Tags: []string{"Workshops"},
+		Path: "/delete-all",
+		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+
+		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError},
+		Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
+	}, workshopHandler.handleDeleteAllWorkshops)
 }
 
 
@@ -131,12 +146,34 @@ func deref(s *string) string {
 	return *s
 }
 
+func derefTime(t *time.Time) time.Time {
+	if t == nil {
+		return time.Time{}
+	}
+	return *t
+}
+
+func coalesceString(input, fallback string) string {
+    if input == "" {
+        return fallback
+    }
+    return input
+}
+
+func coalesceTime(input, fallback time.Time) time.Time {
+    if input.IsZero() {
+        return fallback
+    }
+    return input
+}
+
 type handler struct {
 	workshopService *WorkshopService
 	logger zerolog.Logger
 }
 
 func NewHandler(workshopService *WorkshopService, logger zerolog.Logger) *handler {
+	
 	return &handler{
 		workshopService: workshopService,
 		logger: logger,
@@ -145,7 +182,7 @@ func NewHandler(workshopService *WorkshopService, logger zerolog.Logger) *handle
 
 type OpenWorkshop struct {
 	ID		  string `json:"id"`
-	Title      string `json:"name"`
+	Title      string `json:"title"`
 	StartTime time.Time `json:"start_time"`
 	EndTime   time.Time `json:"end_time"`
 	Location  string `json:"location"`
@@ -154,8 +191,17 @@ type OpenWorkshop struct {
 	Attendees int `json:"attendees"`
 }
 
+type UpdateWorkshopInput struct {
+	Title       *string    `json:"title"`
+	Description *string    `json:"description"`
+	StartTime   *time.Time `json:"start_time"`
+	EndTime     *time.Time `json:"end_time"`
+	Location    *string    `json:"location"`
+	Presenter   *string    `json:"presenter"`
+}
+
 type CreateWorkshopInput struct {
-	Title        string    `json:"name"`
+	Title        string    `json:"title"`
 	Description string    `json:"description"`
 	StartTime   time.Time `json:"start_time"`
 	EndTime     time.Time `json:"end_time"`
@@ -163,9 +209,6 @@ type CreateWorkshopInput struct {
 	Presenter   string    `json:"presenter"`
 }
 
-type WorkshopIdInput struct{
-	WorkshopID uuid.UUID 
-}
 
 type GetWorkshopOutput struct {
 	Body OpenWorkshop
@@ -175,11 +218,29 @@ type GetAllWorkshopsOutput struct {
 	Body []sqlc.Workshop 
 }
 
+type DeleteWorkshopOutput struct {
+	Status int
+}
 
 
-func (h *handler) handleRegisterForWorkshop(ctx context.Context, input *WorkshopIdInput)(*GetWorkshopOutput, error) {
-	userID := ctx.Value(middleware.UserContextKey).(uuid.UUID)
-	workshop, err := h.workshopService.RegisterWorkshop(ctx, userID, input.WorkshopID)
+func (h *handler) handleRegisterForWorkshop(ctx context.Context, input *struct {
+	WorkshopID string `path:"workshopId"`
+})(*GetWorkshopOutput, error) {
+	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
+	}
+	
+	workshopID, err := uuid.Parse(input.WorkshopID)
+
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid workshop id")
+	}
+
+
+	workshop, err := h.workshopService.RegisterWorkshop(ctx, userCtx.UserID, workshopID)
 
 	if err != nil {
 		return nil, huma.Error400BadRequest("Couldn't register for workshop")
@@ -196,14 +257,25 @@ func (h *handler) handleRegisterForWorkshop(ctx context.Context, input *Workshop
 		Attendees: int(workshop.CurrAttendees),
 	}}, nil
 }
-//I am trying to follow the structure of the other files
-//but for this one I think I may need some assistance
-//I am very new with go so I am not sure if here I should return the new user?
-//or just the workshop? Idea i have for now is registerForWorkshop would update attendee number
 
-func (h *handler) handleUnregisterForWorkshop(ctx context.Context, input *WorkshopIdInput) (*DeleteWorkshopOutput, error) {
-	userID := ctx.Value(middleware.UserContextKey).(uuid.UUID)
-	err := h.workshopService.UnregisterWorkshop(ctx, userID, input.WorkshopID)
+
+func (h *handler) handleUnregisterForWorkshop(ctx context.Context, input *struct {
+	WorkshopID string `path:"workshopId"`
+}) (*GetWorkshopOutput, error) {
+	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
+	}
+
+	workshopID, err := uuid.Parse(input.WorkshopID)
+
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid workshop id")
+	}
+
+	err = h.workshopService.UnregisterWorkshop(ctx, userCtx.UserID, workshopID)
 
 	if err != nil {
 		if errors.Is(err, database.ErrEntityNotFound) {
@@ -212,11 +284,34 @@ func (h *handler) handleUnregisterForWorkshop(ctx context.Context, input *Worksh
 		return nil, huma.Error500InternalServerError("Couldn't unregister for workshop")
 	}
 
-	return &DeleteWorkshopOutput{Status: http.StatusOK}, nil
+	workshop, repoErr := h.workshopService.GetWorkshop(ctx, workshopID)
+
+	if repoErr != nil {
+		return nil, huma.Error500InternalServerError("Failed to get workshop")
+	}
+
+	return &GetWorkshopOutput{Body: OpenWorkshop{
+		ID: workshop.ID.String(),
+		Title: workshop.Title,
+		StartTime: workshop.StartTime,
+		EndTime: workshop.EndTime,
+		Location: deref(workshop.Location),
+		Description: deref(workshop.Description),
+		Presenter: deref(workshop.Presenter),
+		Attendees: int(workshop.CurrAttendees),
+	}}, nil
 }
 
-func (h *handler) handleGetWorkshop(ctx context.Context, input *WorkshopIdInput) (*GetWorkshopOutput, error) {
-	workshop, err := h.workshopService.GetWorkshop(ctx, input.WorkshopID)
+func (h *handler) handleGetWorkshop(ctx context.Context, input *struct {
+	WorkshopID string `path:"workshopId"`
+}) (*GetWorkshopOutput, error) {
+	workshopID, err := uuid.Parse(input.WorkshopID)
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid workshop id")
+	}
+
+	workshop, err := h.workshopService.GetWorkshop(ctx, workshopID)
 
 	if err != nil {
 		if errors.Is(err, database.ErrEntityNotFound) {
@@ -247,34 +342,87 @@ func (h *handler) handleGetAllWorkshops(ctx context.Context, input *struct{}) (*
 	return &GetAllWorkshopsOutput{Body: workshops}, nil
 }
 
-// func (h *handler) handleUpdateWorkshop(ctx context.Context, input *WorkshopIdInput) (*GetWorkshopOutput, error) {
-// 	workshop, err := h.workshopService.UpdateWorkshop(ctx, input.WorkshopID)
+func (h *handler) handleViewAllWorkshops(ctx context.Context, input *struct{}) (*GetAllWorkshopsOutput, error) {
+	workshops, err := h.workshopService.ViewAllWorkshops(ctx)
 
-// 	if err != nil {
-// 		if errors.Is(err, database.ErrEntityNotFound) {
-// 			return nil, huma.Error404NotFound("Workshop not found")
-// 		}
-// 		return nil, huma.Error500InternalServerError("Failed to update workshop")
-// 	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to get workshops")
+	}
 
-// 	return &GetWorkshopOutput{Body: OpenWorkshop{
-// 		ID: workshop.ID.String(),
-// 		Title: workshop.Title,
-// 		StartTime: workshop.StartTime,
-// 		EndTime: workshop.EndTime,
-// 		Location: deref(workshop.Location),
-// 		Description: deref(workshop.Description),
-// 		Presenter: deref(workshop.Presenter),
-// 		Attendees: int(workshop.CurrAttendees),
-// 	}}, nil
-// }
-
-type DeleteWorkshopOutput struct {
-	Status int
+	return &GetAllWorkshopsOutput{Body: workshops}, nil
 }
 
-func (h *handler) handleDeleteWorkshop(ctx context.Context, input *WorkshopIdInput) (*DeleteWorkshopOutput, error) {
-	err := h.workshopService.DeleteWorkshop(ctx, input.WorkshopID)
+func (h *handler) handleUpdateWorkshop(ctx context.Context, input *struct{
+	WorkshopID string `path:"workshopId"`
+	Body UpdateWorkshopInput
+}) (*GetWorkshopOutput, error) {
+	
+	workshopID, err := uuid.Parse(input.WorkshopID)
+
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid workshop id")
+	}
+
+	currWorkshop, getErr := h.workshopService.GetWorkshop(ctx, workshopID)
+
+	if getErr != nil {
+		if errors.Is(getErr, database.ErrEntityNotFound) {
+			return nil, huma.Error404NotFound("Workshop not found")
+		}
+		return nil, huma.Error500InternalServerError("Failed to get workshop")
+	}
+
+
+	title := coalesceString(deref(input.Body.Title), currWorkshop.Title)
+	desc := coalesceString(deref(input.Body.Description), deref(currWorkshop.Description))
+	startTime := coalesceTime(derefTime(input.Body.StartTime), currWorkshop.StartTime)
+	endTime := coalesceTime(derefTime(input.Body.EndTime), currWorkshop.EndTime)
+	loc := coalesceString(deref(input.Body.Location), deref(currWorkshop.Location))
+	pres := coalesceString(deref(input.Body.Presenter), deref(currWorkshop.Presenter))
+
+	params := sqlc.UpdateWorkshopParams{
+		Title:       title,
+		Description: &desc,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		Location:    &loc,
+		Presenter:   &pres,
+		WorkshopID: workshopID,
+	}
+
+	workshop, repoErr := h.workshopService.UpdateWorkshop(ctx, params)
+
+	if repoErr != nil {
+		if errors.Is(repoErr, database.ErrEntityNotFound) {
+			return nil, huma.Error404NotFound("Workshop not found")
+		}
+		return nil, huma.Error500InternalServerError("Failed to update workshop")
+	}
+
+	return &GetWorkshopOutput{Body: OpenWorkshop{
+		ID: workshop.ID.String(),
+		Title: workshop.Title,
+		StartTime: workshop.StartTime,
+		EndTime: workshop.EndTime,
+		Location: deref(workshop.Location),
+		Description: deref(workshop.Description),
+		Presenter: deref(workshop.Presenter),
+		Attendees: int(workshop.CurrAttendees),
+	}}, nil
+}
+
+
+func (h *handler) handleDeleteWorkshop(ctx context.Context, input *struct {
+	WorkshopID string `path:"workshopId"`
+}) (*DeleteWorkshopOutput, error) {
+	workshopID, err := uuid.Parse(input.WorkshopID)
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid workshop id")
+	}
+
+	err = h.workshopService.DeleteWorkshop(ctx, workshopID)
 
 	if err != nil {
 		if errors.Is(err, database.ErrEntityNotFound) {
@@ -286,15 +434,28 @@ func (h *handler) handleDeleteWorkshop(ctx context.Context, input *WorkshopIdInp
 	return &DeleteWorkshopOutput{Status: http.StatusOK}, nil
 }
 
-func (h *handler) handleCreateWorkshop(ctx context.Context, input *CreateWorkshopInput) (*GetWorkshopOutput, error) {
+func (h *handler) handleDeleteAllWorkshops(ctx context.Context, input *struct{}) (*DeleteWorkshopOutput, error) {
+
+	err := h.workshopService.DeleteAllWorkshops(ctx)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to delete workshop")
+	}
+
+	return &DeleteWorkshopOutput{Status: http.StatusOK}, nil
+}
+
+func (h *handler) handleCreateWorkshop(ctx context.Context, input *struct{
+	Body CreateWorkshopInput
+}) (*GetWorkshopOutput, error) {
 
 	params := sqlc.CreateWorkshopParams{
-		Title:       input.Title,
-		Description: &input.Description,
-		StartTime:   input.StartTime,
-		EndTime:     input.EndTime,
-		Location:    &input.Location,
-		Presenter:   &input.Presenter,
+		Title:       input.Body.Title,
+		Description: &input.Body.Description,
+		StartTime:   input.Body.StartTime,
+		EndTime:     input.Body.EndTime,
+		Location:    &input.Body.Location,
+		Presenter:   &input.Body.Presenter,
 	}
 
 	workshop, err := h.workshopService.CreateWorkshop(ctx, params)
