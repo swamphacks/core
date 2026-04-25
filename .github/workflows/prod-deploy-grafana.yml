@@ -23,8 +23,8 @@ jobs:
           script: |
             cd /root/core/infra
             git fetch
-            git checkout dev
-            git reset --hard origin/dev
+            git checkout master
+            git reset --hard origin/master
             git pull
 
             export INFISICAL_TOKEN=$(infisical login \
@@ -42,5 +42,5 @@ jobs:
               --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
               > ./secrets/.env.api
 
-            docker compose -f docker-compose.api.yml pull alloy loki grafana-dev
+            docker compose -f docker-compose.api.yml pull alloy loki grafana
             docker compose -f docker-compose.api.yml up -d --no-deps --force-recreate alloy loki grafana

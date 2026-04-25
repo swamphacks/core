@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog/log"
-	"github.com/swamphacks/core/apps/api/internal/api/handlers/grafana"
+	"github.com/swamphacks/core/apps/api/internal/api/grafana"
 	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/database"
