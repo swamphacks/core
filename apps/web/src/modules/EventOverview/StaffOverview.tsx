@@ -1,7 +1,7 @@
 import { Heading } from "react-aria-components";
 import { Card } from "@/components/ui/Card";
-import ApplicationOverview from "@/modules/Application/components/ApplicationOverview";
-import EventDetails from "@/modules/EventOverview/components/EventDetails";
+import ApplicationOverview from "@/modules/Application/ApplicationOverview";
+import EventDetails from "@/modules/EventOverview/EventDetails";
 import { useEventOverview } from "@/modules/EventOverview/hooks/useEventOverview";
 
 interface Props {

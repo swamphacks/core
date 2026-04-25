@@ -6,7 +6,7 @@ import type { ApplicationStatistics } from "@/modules/Application/hooks/useAppli
 import type { StaffUsers } from "@/modules/PlatformAdmin/EventManager/hooks/useEventStaffUsers";
 import ReviewerList from "./ReviewerList";
 import SummaryFooter from "./SummaryFooter";
-import { useAppReviewAdminActions } from "../../hooks/useAppReviewAdminActions";
+import { useAppReviewAdminActions } from "../hooks/useAppReviewAdminActions";
 import { toast } from "react-toastify";
 
 export interface AssignedReviewer {

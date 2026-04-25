@@ -7,7 +7,7 @@ import { Heading } from "react-aria-components";
 import { useApplicationStatistics } from "@/modules/Application/hooks/useApplicationStatistics";
 import { Card } from "@/components/ui/Card";
 import { useEventOverview } from "@/modules/EventOverview/hooks/useEventOverview";
-import ApplicationStats from "./components/ApplicationStats";
+import ApplicationStats from "./ApplicationStats";
 
 interface ApplicationStatisticsProps {
   eventId: string;

@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog/log"
+	"github.com/swamphacks/core/apps/api/internal/api/grafana"
 	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/database"
@@ -167,6 +168,10 @@ func Run() {
 			Body: "pong",
 		}, nil
 	})
+
+	// Grafana proxy (used for authentication)
+	grafanaHandler := grafana.NewHandler(logger, config)
+	grafana.RegisterRoutes(grafanaHandler, mw, r)
 
 	logger.Info().Msgf("API listening on port %s", config.Port)
 	if err := http.ListenAndServe(":"+config.Port, r); err != nil {

@@ -1,0 +1,67 @@
+discovery.docker "linux" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "logs_integrations_docker" {
+  targets = []
+
+  rule {
+      source_labels = ["__meta_docker_container_name"]
+      regex = "/(.*)"
+      target_label = "container_name"
+  }
+
+  rule {
+    target_label = "env"
+    replacement = "prod"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex = ".*-dev.*"
+    target_label = "env"
+    replacement = "dev"
+  }
+
+  rule {
+    target_label = "instance"
+    replacement  = constants.hostname
+  }
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.docker.linux.targets
+  relabel_rules = discovery.relabel.logs_integrations_docker.rules
+  forward_to = [loki.process.logs.receiver]
+}
+
+loki.process "logs" {
+  forward_to = [loki.write.default.receiver]
+
+  stage.match {
+    selector = "{container_name=~\".*-api.*\"}"
+
+    stage.json {
+      expressions = {
+        level      = "level",
+        message    = "message",
+        caller     = "caller",
+        go_version = "go_version",
+        pid        = "pid",
+      }
+    }
+
+    stage.labels {
+      values = {
+        level = "",
+      }
+    }
+  }
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

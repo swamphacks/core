@@ -1,0 +1,66 @@
+apiVersion: 1
+
+groups:
+  - name: api-dev-alerts
+    folder: Services
+    interval: 1m
+
+    rules:
+      - uid: api_dev_errors
+        title: API Dev errors detected
+        condition: B
+
+        data:
+          - refId: A
+            queryType: range
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki_uid
+            model:
+              expr: |
+                count_over_time(
+                  {container_name=~".*-api.*", env="dev", level="error"}[5m]
+                )
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                  - evaluator:
+                      params:
+                          - 0
+                          - 0
+                      type: gt
+                    operator:
+                      type: and
+                    query:
+                      params: []
+                    reducer:
+                      params: []
+                      type: avg
+                    type: query
+              datasource:
+                  name: Expression
+                  type: __expr__
+                  uid: __expr__
+              expression: A
+              hide: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+
+        noDataState: OK
+        execErrState: Error
+
+        for: 1m
+
+        labels:
+          severity: warning
+          scope: global
+          alertname: api_dev_errors
+
+        notification_settings:
+          receiver: discord
