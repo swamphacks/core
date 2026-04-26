@@ -151,12 +151,12 @@ type ApplicationSubmissionFields struct {
 	AgreeToMLHEmails        string `json:"agreeToMLHEmails"`
 }
 
-func (s *ApplicationService) SubmitApplication(ctx context.Context, data ApplicationSubmissionFields, resume []byte, userID uuid.UUID) error {
+func (s *ApplicationService) SubmitApplication(ctx context.Context, data ApplicationSubmissionFields, resume []byte, userID uuid.UUID) (*time.Time, error) {
 	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
 
 	if err != nil {
 		s.logger.Err(err).Msg("Submit application fail because can't retrieve hackathon")
-		return err
+		return nil, err
 	}
 
 	now := time.Now()
@@ -167,13 +167,13 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 	}
 
 	if !isEarly && (now.After(hackathon.ApplicationClose) || now.Before(hackathon.ApplicationOpen)) {
-		return ErrApplicationNotOpened
+		return nil, ErrApplicationNotOpened
 	}
 
 	dataJSON, err := json.Marshal(data)
 
 	if err != nil {
-		return errors.New("Failed to parse application data")
+		return nil, errors.New("Failed to parse application data")
 	}
 
 	// Submitting application is an atomic operation
@@ -226,7 +226,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		s.logger.Err(err).Msg(err.Error())
 	}
 
-	return nil
+	return &now, nil
 }
 
 func (s *ApplicationService) SaveApplication(ctx context.Context, data any, userID uuid.UUID) error {

@@ -36,6 +36,7 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>(undefined);
   const [savedText, setSavedText] = useState<string | undefined>("");
+  const [submittedAt, setSubmittedAt] = useState<string | undefined>(undefined);
 
   const application = useMyApplication();
 
@@ -80,12 +81,15 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
     }
 
     try {
-      await api.post(`application/submit`, {
+      const res = await api.post(`application/submit`, {
         body: formData,
       });
 
+      const submissionResult = await res.json<{ submittedAt: string }>();
+
       setIsSubmitted(true);
       setIsInvalid(false);
+      setSubmittedAt(submissionResult.submittedAt);
     } catch (err) {
       let message = "Something went wrong";
       if (err instanceof HTTPError) {
@@ -180,7 +184,9 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
           onChangeDelayMs={SAVE_DELAY_MS}
           onChange={onChange}
           SubmitSuccessComponent={() => (
-            <SubmitSuccess submittedAt={application.data.savedAt} />
+            <SubmitSuccess
+              submittedAt={submittedAt || application.data.submittedAt!}
+            />
           )}
           isInvalid={isInvalid}
           isSubmitted={isSubmitted || isApplicationSubmitted}
