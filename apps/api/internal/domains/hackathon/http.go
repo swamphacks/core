@@ -168,17 +168,20 @@ func NewHandler(hackathonService *HackathonService, config *config.Config, logge
 }
 
 type PublicHackathon struct {
-	ID               string     `json:"id"`
-	Name             string     `json:"name"`
-	Description      *string    `json:"description"`
-	Location         *string    `json:"location"`
-	LocationUrl      *string    `json:"locationUrl"`
-	ApplicationOpen  time.Time  `json:"applicationOpen"`
-	ApplicationClose time.Time  `json:"applicationClose"`
-	RsvpDeadline     *time.Time `json:"rsvpDeadline"`
-	StartTime        time.Time  `json:"startTime"`
-	EndTime          time.Time  `json:"endTime"`
-	Banner           *string    `json:"banner"`
+	ID                      string     `json:"id"`
+	Name                    string     `json:"name"`
+	Description             *string    `json:"description"`
+	Location                *string    `json:"location"`
+	LocationUrl             *string    `json:"locationUrl"`
+	ApplicationOpen         time.Time  `json:"applicationOpen"`
+	ApplicationClose        time.Time  `json:"applicationClose"`
+	AcceptEarlyApplications bool       `json:"acceptEarlyApplications"`
+	EarlyApplicationOpen    *time.Time `json:"earlyApplicationOpen"`
+	EarlyApplicationClose   *time.Time `json:"earlyApplicationClose"`
+	RsvpDeadline            *time.Time `json:"rsvpDeadline"`
+	StartTime               time.Time  `json:"startTime"`
+	EndTime                 time.Time  `json:"endTime"`
+	Banner                  *string    `json:"banner"`
 }
 
 type GetHackathonOutput struct {
@@ -197,17 +200,20 @@ func (h *handler) handleGetHackathon(ctx context.Context, input *struct{}) (*Get
 	}
 
 	return &GetHackathonOutput{Body: PublicHackathon{
-		ID:               hackathon.ID,
-		Name:             hackathon.Name,
-		Description:      hackathon.Description,
-		Location:         hackathon.Location,
-		LocationUrl:      hackathon.LocationUrl,
-		ApplicationOpen:  hackathon.ApplicationOpen,
-		ApplicationClose: hackathon.ApplicationClose,
-		RsvpDeadline:     hackathon.RsvpDeadline,
-		StartTime:        hackathon.StartTime,
-		EndTime:          hackathon.EndTime,
-		Banner:           hackathon.Banner,
+		ID:                      hackathon.ID,
+		Name:                    hackathon.Name,
+		Description:             hackathon.Description,
+		Location:                hackathon.Location,
+		LocationUrl:             hackathon.LocationUrl,
+		ApplicationOpen:         hackathon.ApplicationOpen,
+		ApplicationClose:        hackathon.ApplicationClose,
+		AcceptEarlyApplications: hackathon.AcceptEarlyApplications,
+		EarlyApplicationOpen:    hackathon.EarlyApplicationOpen,
+		EarlyApplicationClose:   hackathon.EarlyApplicationClose,
+		RsvpDeadline:            hackathon.RsvpDeadline,
+		StartTime:               hackathon.StartTime,
+		EndTime:                 hackathon.EndTime,
+		Banner:                  hackathon.Banner,
 	}}, nil
 }
 

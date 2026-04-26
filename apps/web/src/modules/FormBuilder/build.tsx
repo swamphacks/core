@@ -126,6 +126,7 @@ export interface FormProps {
   SubmitSuccessComponent?: React.ComponentType;
   renderFormHeader?: (metadata: {
     title: string;
+    earlyTitle: string;
     description?: string | undefined;
   }) => React.ReactNode;
 }
