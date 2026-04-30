@@ -1307,6 +1307,7 @@ export interface components {
       updated_at: string;
     };
     Hackathon: {
+      accept_early_applications: boolean;
       /** Format: date-time */
       application_close: string;
       /** Format: date-time */
@@ -1318,6 +1319,10 @@ export interface components {
       /** Format: date-time */
       decision_release: string | null;
       description: string | null;
+      /** Format: date-time */
+      early_application_close: string | null;
+      /** Format: date-time */
+      early_application_open: string | null;
       /** Format: date-time */
       end_time: string;
       id: string;
@@ -1378,12 +1383,17 @@ export interface components {
       preferredEmail: string;
     };
     PublicHackathon: {
+      acceptEarlyApplications: boolean;
       /** Format: date-time */
       applicationClose: string;
       /** Format: date-time */
       applicationOpen: string;
       banner: string | null;
       description: string | null;
+      /** Format: date-time */
+      earlyApplicationClose: string | null;
+      /** Format: date-time */
+      earlyApplicationOpen: string | null;
       /** Format: date-time */
       endTime: string;
       id: string;

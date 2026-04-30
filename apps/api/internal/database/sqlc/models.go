@@ -397,6 +397,7 @@ type Application struct {
 	AssignedReviewerID *uuid.UUID        `json:"assigned_reviewer_id"`
 	WaitlistJoinTime   *time.Time        `json:"waitlist_join_time"`
 	HackathonID        string            `json:"hackathon_id"`
+	IsEarly            bool              `json:"is_early"`
 }
 
 type BatRun struct {
@@ -446,6 +447,9 @@ type Hackathon struct {
 	UpdatedAt                time.Time  `json:"updated_at"`
 	Banner                   *string    `json:"banner"`
 	ApplicationReviewStarted bool       `json:"application_review_started"`
+	AcceptEarlyApplications  bool       `json:"accept_early_applications"`
+	EarlyApplicationOpen     *time.Time `json:"early_application_open"`
+	EarlyApplicationClose    *time.Time `json:"early_application_close"`
 }
 
 type InterestSubmission struct {

@@ -292,7 +292,7 @@ func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*G
 			newApplication, err := h.applicationService.CreateApplication(ctx, userCtx.UserID)
 
 			if err != nil || newApplication == nil {
-				return nil, huma.Error500InternalServerError("can't create application")
+				return nil, huma.Error500InternalServerError(err.Error())
 			}
 
 			return &GetApplicationOutput{Body: HackerApplication{
@@ -306,8 +306,9 @@ func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*G
 				HackathonID: newApplication.HackathonID,
 			}}, nil
 		}
+
 		if errors.Is(err, ErrApplicationNotOpened) {
-			return nil, huma.Error400BadRequest("application is unavailable")
+			return nil, huma.Error400BadRequest(err.Error())
 		}
 
 		return nil, huma.Error500InternalServerError("error retrieving application")
@@ -342,14 +343,18 @@ func (h *handler) handleSaveApplication(ctx context.Context, input *struct {
 	err := h.applicationService.SaveApplication(ctx, input.Body, userCtx.UserID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to save application")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &SaveApplicationOutput{Status: http.StatusOK}, nil
 }
 
+type SubmissionResult struct {
+	SubmittedAt *time.Time `json:"submittedAt"`
+}
+
 type SubmitApplicationOutput struct {
-	Status int
+	Body SubmissionResult
 }
 
 func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) (*SubmitApplicationOutput, error) {
@@ -440,7 +445,7 @@ func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) 
 		return nil, huma.Error400BadRequest("Unable to parse application submission")
 	}
 
-	err = h.applicationService.SubmitApplication(r.Context(), submission, resumeFileBuffer.Bytes(), userCtx.UserID)
+	submittedAt, err := h.applicationService.SubmitApplication(r.Context(), submission, resumeFileBuffer.Bytes(), userCtx.UserID)
 
 	if err != nil {
 		if errors.Is(err, ErrApplicationNotOpened) {
@@ -450,7 +455,11 @@ func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) 
 		return nil, huma.Error500InternalServerError("Fail to submit application")
 	}
 
-	return &SubmitApplicationOutput{Status: http.StatusOK}, nil
+	return &SubmitApplicationOutput{
+		Body: SubmissionResult{
+			SubmittedAt: submittedAt,
+		},
+	}, nil
 }
 
 type GetDownloadResumeOutput struct {

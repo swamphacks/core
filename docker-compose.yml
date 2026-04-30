@@ -108,7 +108,7 @@ services:
     image: grafana/grafana:12.4.2
     container_name: grafana
     env_file:
-      - ./apps/api/.env
+      - ./apps/api/.env.dev
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_AUTH_PROXY_ENABLED=true

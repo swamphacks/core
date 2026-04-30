@@ -1,5 +1,5 @@
 -- name: CreateApplication :one
-INSERT INTO applications (user_id, hackathon_id) VALUES ($1, $2) RETURNING *;
+INSERT INTO applications (user_id, hackathon_id, is_early) VALUES ($1, $2, $3) RETURNING *;
 
 -- name: GetApplicationByUserId :one
 SELECT * FROM applications WHERE user_id = $1;
@@ -13,7 +13,8 @@ SET
     saved_at = CASE WHEN @saved_at_do_update::boolean THEN @saved_at::timestamptz ELSE saved_at END,
     assigned_reviewer_id = CASE WHEN @assigned_reviewer_id_do_update::boolean THEN @assigned_reviewer_id::UUID ELSE assigned_reviewer_id END,
     experience_rating = CASE WHEN @experience_rating_do_update::boolean THEN @experience_rating::INT ELSE experience_rating END,
-    passion_rating = CASE WHEN @passion_rating_do_update::boolean THEN @passion_rating::INT ELSE passion_rating END
+    passion_rating = CASE WHEN @passion_rating_do_update::boolean THEN @passion_rating::INT ELSE passion_rating END,
+    is_early = CASE WHEN @is_early_do_update::boolean THEN @is_early::boolean ELSE is_early END
 WHERE
     user_id = @user_id;
 

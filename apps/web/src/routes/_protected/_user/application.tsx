@@ -62,7 +62,7 @@ function RouteComponent() {
 
   return (
     <ErrorBoundary FallbackComponent={Fallback}>
-      <ApplicationForm />
+      <ApplicationForm hackathon={hackathon.data} />
     </ErrorBoundary>
   );
 }
