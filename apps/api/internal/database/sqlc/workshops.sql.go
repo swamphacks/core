@@ -15,7 +15,7 @@ import (
 const createWorkshop = `-- name: CreateWorkshop :one
 INSERT INTO workshops (title, description, start_time, end_time, location, presenter)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, title, description, start_time, end_time, curr_attendees, location, presenter, created_at, updated_at
+RETURNING id, title, description, start_time, end_time, num_attendees, location, presenter, created_at, updated_at
 `
 
 type CreateWorkshopParams struct {
@@ -43,7 +43,7 @@ func (q *Queries) CreateWorkshop(ctx context.Context, arg CreateWorkshopParams) 
 		&i.Description,
 		&i.StartTime,
 		&i.EndTime,
-		&i.CurrAttendees,
+		&i.NumAttendees,
 		&i.Location,
 		&i.Presenter,
 		&i.CreatedAt,
@@ -54,7 +54,7 @@ func (q *Queries) CreateWorkshop(ctx context.Context, arg CreateWorkshopParams) 
 
 const decrementWorkshopAttendees = `-- name: DecrementWorkshopAttendees :exec
 UPDATE workshops
-SET curr_attendees = GREATEST(curr_attendees - 1, 0)
+SET num_attendees = GREATEST(num_attendees - 1, 0)
 WHERE id = $1
 `
 
@@ -84,7 +84,7 @@ func (q *Queries) DeleteWorkshopAll(ctx context.Context) error {
 }
 
 const getAllWorkshops = `-- name: GetAllWorkshops :many
-SELECT w.id, w.title, w.description, w.start_time, w.end_time, w.curr_attendees, w.location, w.presenter, w.created_at, w.updated_at FROM workshops w
+SELECT w.id, w.title, w.description, w.start_time, w.end_time, w.num_attendees, w.location, w.presenter, w.created_at, w.updated_at FROM workshops w
 WHERE w.start_time > CURRENT_TIMESTAMP
 ORDER BY w.start_time ASC
 `
@@ -104,7 +104,7 @@ func (q *Queries) GetAllWorkshops(ctx context.Context) ([]Workshop, error) {
 			&i.Description,
 			&i.StartTime,
 			&i.EndTime,
-			&i.CurrAttendees,
+			&i.NumAttendees,
 			&i.Location,
 			&i.Presenter,
 			&i.CreatedAt,
@@ -121,7 +121,7 @@ func (q *Queries) GetAllWorkshops(ctx context.Context) ([]Workshop, error) {
 }
 
 const getWorkshop = `-- name: GetWorkshop :one
-SELECT w.id, w.title, w.description, w.start_time, w.end_time, w.curr_attendees, w.location, w.presenter, w.created_at, w.updated_at FROM workshops w
+SELECT w.id, w.title, w.description, w.start_time, w.end_time, w.num_attendees, w.location, w.presenter, w.created_at, w.updated_at FROM workshops w
 WHERE w.id = $1
 `
 
@@ -134,7 +134,7 @@ func (q *Queries) GetWorkshop(ctx context.Context, workshopID uuid.UUID) (Worksh
 		&i.Description,
 		&i.StartTime,
 		&i.EndTime,
-		&i.CurrAttendees,
+		&i.NumAttendees,
 		&i.Location,
 		&i.Presenter,
 		&i.CreatedAt,
@@ -171,7 +171,7 @@ func (q *Queries) GetWorkshopRegistrations(ctx context.Context, workshopID uuid.
 
 const incrementWorkshopAttendees = `-- name: IncrementWorkshopAttendees :exec
 UPDATE workshops
-SET curr_attendees = curr_attendees + 1
+SET num_attendees = num_attendees + 1
 WHERE id = $1
 `
 
@@ -239,7 +239,7 @@ end_time = $4,
 location = $5,
 presenter = $6
 WHERE id = $7
-RETURNING id, title, description, start_time, end_time, curr_attendees, location, presenter, created_at, updated_at
+RETURNING id, title, description, start_time, end_time, num_attendees, location, presenter, created_at, updated_at
 `
 
 type UpdateWorkshopParams struct {
@@ -269,7 +269,7 @@ func (q *Queries) UpdateWorkshop(ctx context.Context, arg UpdateWorkshopParams) 
 		&i.Description,
 		&i.StartTime,
 		&i.EndTime,
-		&i.CurrAttendees,
+		&i.NumAttendees,
 		&i.Location,
 		&i.Presenter,
 		&i.CreatedAt,
@@ -279,7 +279,7 @@ func (q *Queries) UpdateWorkshop(ctx context.Context, arg UpdateWorkshopParams) 
 }
 
 const viewAllWorkshops = `-- name: ViewAllWorkshops :many
-SELECT w.id, w.title, w.description, w.start_time, w.end_time, w.curr_attendees, w.location, w.presenter, w.created_at, w.updated_at FROM workshops w
+SELECT w.id, w.title, w.description, w.start_time, w.end_time, w.num_attendees, w.location, w.presenter, w.created_at, w.updated_at FROM workshops w
 ORDER BY w.start_time ASC
 `
 
@@ -298,7 +298,7 @@ func (q *Queries) ViewAllWorkshops(ctx context.Context) ([]Workshop, error) {
 			&i.Description,
 			&i.StartTime,
 			&i.EndTime,
-			&i.CurrAttendees,
+			&i.NumAttendees,
 			&i.Location,
 			&i.Presenter,
 			&i.CreatedAt,

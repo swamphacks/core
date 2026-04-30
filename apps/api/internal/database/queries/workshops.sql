@@ -57,10 +57,10 @@ WHERE workshop_id = @workshop_id;
 
 -- name: IncrementWorkshopAttendees :exec
 UPDATE workshops
-SET curr_attendees = curr_attendees + 1
+SET num_attendees = num_attendees + 1
 WHERE id = $1;
 
 -- name: DecrementWorkshopAttendees :exec
 UPDATE workshops
-SET curr_attendees = GREATEST(curr_attendees - 1, 0)
+SET num_attendees = GREATEST(num_attendees - 1, 0)
 WHERE id = $1;

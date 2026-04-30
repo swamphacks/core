@@ -9,7 +9,7 @@ create table workshops
 	description text,
 	start_time timestamptz not null,
 	end_time timestamptz not null,
-	curr_attendees integer default 0 not null,
+	num_attendees integer default 0 not null,
 	location text,
 	presenter text,
 	created_at timestamptz default now() not null,
@@ -26,7 +26,10 @@ create table workshop_registrations
 
     foreign key (workshop_id)
         references workshops(id)
-        on delete cascade
+        on delete cascade,
+	foreign key (user_id)
+		references users(id)
+		on delete cascade
 );
 
 -- TRIGGERS

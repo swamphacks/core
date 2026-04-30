@@ -547,16 +547,16 @@ type UserRedemption struct {
 }
 
 type Workshop struct {
-	ID            uuid.UUID `json:"id"`
-	Title         string    `json:"title"`
-	Description   *string   `json:"description"`
-	StartTime     time.Time `json:"start_time"`
-	EndTime       time.Time `json:"end_time"`
-	CurrAttendees int32     `json:"curr_attendees"`
-	Location      *string   `json:"location"`
-	Presenter     *string   `json:"presenter"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID           uuid.UUID `json:"id"`
+	Title        string    `json:"title"`
+	Description  *string   `json:"description"`
+	StartTime    time.Time `json:"start_time"`
+	EndTime      time.Time `json:"end_time"`
+	NumAttendees int32     `json:"num_attendees"`
+	Location     *string   `json:"location"`
+	Presenter    *string   `json:"presenter"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type WorkshopRegistration struct {

@@ -62,7 +62,7 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 		Description: "Updates a workshop based on the provided id and body. Only the fields provided in the body will be updated.",
 		Tags: []string{"Workshops"},
 		Path: "/{workshopId}",
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
 		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
 
 		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError, http.StatusBadRequest},
@@ -76,7 +76,7 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 		Description: "Deletes a workshop based on the provided id.",
 		Tags: []string{"Workshops"},
 		Path: "/{workshopId}",
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
 		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
 
 		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError, http.StatusBadRequest},
@@ -90,7 +90,7 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 		Description: "Creates a workshop based on the provided body.",
 		Tags: []string{"Workshops"},
 		Path: "",
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
 		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
 
 		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError, http.StatusBadRequest},
@@ -117,7 +117,7 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 		Tags: []string{"Workshops"},
 		Path: "/view-all",
 		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
 
 		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError},
 		Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
@@ -131,7 +131,7 @@ func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Mid
 		Tags: []string{"Workshops"},
 		Path: "/delete-all",
 		// Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
 
 		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError},
 		Parameters: []*huma.Param{cookie.SessionCookieHumaParam},
@@ -254,7 +254,7 @@ func (h *handler) handleRegisterForWorkshop(ctx context.Context, input *struct {
 		Location: deref(workshop.Location),
 		Description: deref(workshop.Description),
 		Presenter: deref(workshop.Presenter),
-		Attendees: int(workshop.CurrAttendees),
+		Attendees: int(workshop.NumAttendees),
 	}}, nil
 }
 
@@ -298,7 +298,7 @@ func (h *handler) handleUnregisterForWorkshop(ctx context.Context, input *struct
 		Location: deref(workshop.Location),
 		Description: deref(workshop.Description),
 		Presenter: deref(workshop.Presenter),
-		Attendees: int(workshop.CurrAttendees),
+		Attendees: int(workshop.NumAttendees),
 	}}, nil
 }
 
@@ -328,13 +328,13 @@ func (h *handler) handleGetWorkshop(ctx context.Context, input *struct {
 		Location: deref(workshop.Location),
 		Description: deref(workshop.Description),
 		Presenter: deref(workshop.Presenter),
-		Attendees: int(workshop.CurrAttendees),
+		Attendees: int(workshop.NumAttendees),
 	}}, nil
 }
 
 func (h *handler) handleGetAllWorkshops(ctx context.Context, input *struct{}) (*GetAllWorkshopsOutput, error) {
 	workshops, err := h.workshopService.GetAllWorkshops(ctx)
-
+	h.logger.Info().Msgf("Retrieved all workshops:")
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to get workshops")
 	}
@@ -408,7 +408,7 @@ func (h *handler) handleUpdateWorkshop(ctx context.Context, input *struct{
 		Location: deref(workshop.Location),
 		Description: deref(workshop.Description),
 		Presenter: deref(workshop.Presenter),
-		Attendees: int(workshop.CurrAttendees),
+		Attendees: int(workshop.NumAttendees),
 	}}, nil
 }
 
@@ -472,7 +472,7 @@ func (h *handler) handleCreateWorkshop(ctx context.Context, input *struct{
 		Location: deref(workshop.Location),
 		Description: deref(workshop.Description),
 		Presenter: deref(workshop.Presenter),
-		Attendees: int(workshop.CurrAttendees),
+		Attendees: int(workshop.NumAttendees),
 	}}, nil
 }
 
