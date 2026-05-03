@@ -69,7 +69,7 @@ SET
         ELSE recipient_types END,
     scheduled_at = 
         CASE WHEN @scheduled_at_do_update::boolean
-        THEN @scheduled_at::timestamptz
+        THEN sqlc.narg(scheduled_at)
         ELSE scheduled_at END,
     updated_by_user_id = 
         CASE WHEN @updated_by_user_id_do_update::boolean
@@ -86,11 +86,11 @@ SET
     status = @status::email_campaign_status,
     scheduled_at =
         CASE WHEN @scheduled_at_do_update::boolean 
-        THEN @scheduled_at::timestamptz
+        THEN sqlc.narg(scheduled_at)
         ELSE scheduled_at END,
     sent_at = 
         CASE WHEN @sent_at_do_update::boolean
-        THEN @sent_at::timestamptz
+        THEN sqlc.narg(sent_at)
         ELSE sent_at END,
     last_error = 
         CASE WHEN @last_error_do_update::boolean

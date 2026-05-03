@@ -199,7 +199,7 @@ SET
         ELSE recipient_types END,
     scheduled_at = 
         CASE WHEN $13::boolean
-        THEN $14::timestamptz
+        THEN $14
         ELSE scheduled_at END,
     updated_by_user_id = 
         CASE WHEN $15::boolean
@@ -224,7 +224,7 @@ type UpdateEmailCampaignParams struct {
 	RecipientTypesDoUpdate  bool                 `json:"recipient_types_do_update"`
 	RecipientTypes          []EmailRecipientType `json:"recipient_types"`
 	ScheduledAtDoUpdate     bool                 `json:"scheduled_at_do_update"`
-	ScheduledAt             time.Time            `json:"scheduled_at"`
+	ScheduledAt             *time.Time           `json:"scheduled_at"`
 	UpdatedByUserIDDoUpdate bool                 `json:"updated_by_user_id_do_update"`
 	UpdatedByUserID         uuid.UUID            `json:"updated_by_user_id"`
 	ID                      uuid.UUID            `json:"id"`
@@ -281,11 +281,11 @@ SET
     status = $1::email_campaign_status,
     scheduled_at =
         CASE WHEN $2::boolean 
-        THEN $3::timestamptz
+        THEN $3
         ELSE scheduled_at END,
     sent_at = 
         CASE WHEN $4::boolean
-        THEN $5::timestamptz
+        THEN $5
         ELSE sent_at END,
     last_error = 
         CASE WHEN $6::boolean
@@ -303,9 +303,9 @@ RETURNING id, hackathon_id, title, description, subject, body, format, recipient
 type UpdateEmailCampaignStatusParams struct {
 	Status                  EmailCampaignStatus `json:"status"`
 	ScheduledAtDoUpdate     bool                `json:"scheduled_at_do_update"`
-	ScheduledAt             time.Time           `json:"scheduled_at"`
+	ScheduledAt             *time.Time          `json:"scheduled_at"`
 	SentAtDoUpdate          bool                `json:"sent_at_do_update"`
-	SentAt                  time.Time           `json:"sent_at"`
+	SentAt                  *time.Time          `json:"sent_at"`
 	LastErrorDoUpdate       bool                `json:"last_error_do_update"`
 	LastError               *string             `json:"last_error"`
 	UpdatedByUserIDDoUpdate bool                `json:"updated_by_user_id_do_update"`
