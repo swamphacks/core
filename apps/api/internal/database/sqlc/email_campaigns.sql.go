@@ -21,10 +21,7 @@ INSERT INTO email_campaigns (
     body,
     format,
     recipient_types,
-    status,
     scheduled_at,
-    sent_at,
-    last_error,
     created_by_user_id,
     updated_by_user_id
 ) VALUES (
@@ -33,14 +30,11 @@ INSERT INTO email_campaigns (
     $3,
     $4,
     $5,
-    COALESCE($6, 'text'::email_campaign_format),
+    $6::email_campaign_format,
     $7::email_recipient_type[],
-    COALESCE($8, 'draft'::email_campaign_status),
+    $8,
     $9,
-    $10,
-    $11,
-    $12,
-    $13
+    $10
 )
 RETURNING id, hackathon_id, title, description, subject, body, format, recipient_types, status, scheduled_at, sent_at, last_error, created_by_user_id, updated_by_user_id, created_at, updated_at
 `
@@ -51,16 +45,14 @@ type CreateEmailCampaignParams struct {
 	Description     *string              `json:"description"`
 	Subject         string               `json:"subject"`
 	Body            string               `json:"body"`
-	Format          interface{}          `json:"format"`
+	Format          EmailCampaignFormat  `json:"format"`
 	RecipientTypes  []EmailRecipientType `json:"recipient_types"`
-	Status          interface{}          `json:"status"`
 	ScheduledAt     *time.Time           `json:"scheduled_at"`
-	SentAt          *time.Time           `json:"sent_at"`
-	LastError       *string              `json:"last_error"`
 	CreatedByUserID *uuid.UUID           `json:"created_by_user_id"`
 	UpdatedByUserID *uuid.UUID           `json:"updated_by_user_id"`
 }
 
+// creates a draft campaign. It stores the title, subject, body, format, recipient groups, and optional schedule time.
 func (q *Queries) CreateEmailCampaign(ctx context.Context, arg CreateEmailCampaignParams) (EmailCampaign, error) {
 	row := q.db.QueryRow(ctx, createEmailCampaign,
 		arg.HackathonID,
@@ -70,10 +62,7 @@ func (q *Queries) CreateEmailCampaign(ctx context.Context, arg CreateEmailCampai
 		arg.Body,
 		arg.Format,
 		arg.RecipientTypes,
-		arg.Status,
 		arg.ScheduledAt,
-		arg.SentAt,
-		arg.LastError,
 		arg.CreatedByUserID,
 		arg.UpdatedByUserID,
 	)
@@ -99,27 +88,11 @@ func (q *Queries) CreateEmailCampaign(ctx context.Context, arg CreateEmailCampai
 	return i, err
 }
 
-const deleteEmailCampaign = `-- name: DeleteEmailCampaign :exec
-DELETE FROM email_campaigns
-WHERE id = $1::uuid
-  AND hackathon_id = $2
-`
-
-type DeleteEmailCampaignParams struct {
-	ID          uuid.UUID `json:"id"`
-	HackathonID string    `json:"hackathon_id"`
-}
-
-func (q *Queries) DeleteEmailCampaign(ctx context.Context, arg DeleteEmailCampaignParams) error {
-	_, err := q.db.Exec(ctx, deleteEmailCampaign, arg.ID, arg.HackathonID)
-	return err
-}
-
 const getEmailCampaignByID = `-- name: GetEmailCampaignByID :one
 SELECT id, hackathon_id, title, description, subject, body, format, recipient_types, status, scheduled_at, sent_at, last_error, created_by_user_id, updated_by_user_id, created_at, updated_at
 FROM email_campaigns
 WHERE id = $1::uuid
-  AND hackathon_id = $2
+    AND hackathon_id = $2
 `
 
 type GetEmailCampaignByIDParams struct {
@@ -127,6 +100,7 @@ type GetEmailCampaignByIDParams struct {
 	HackathonID string    `json:"hackathon_id"`
 }
 
+// fetches one campaign by ID, scoped to a hackathon so one event cannot accidentally read another event’s campaign.
 func (q *Queries) GetEmailCampaignByID(ctx context.Context, arg GetEmailCampaignByIDParams) (EmailCampaign, error) {
 	row := q.db.QueryRow(ctx, getEmailCampaignByID, arg.ID, arg.HackathonID)
 	var i EmailCampaign
@@ -151,62 +125,16 @@ func (q *Queries) GetEmailCampaignByID(ctx context.Context, arg GetEmailCampaign
 	return i, err
 }
 
-const listDueScheduledEmailCampaigns = `-- name: ListDueScheduledEmailCampaigns :many
-SELECT id, hackathon_id, title, description, subject, body, format, recipient_types, status, scheduled_at, sent_at, last_error, created_by_user_id, updated_by_user_id, created_at, updated_at
-FROM email_campaigns
-WHERE hackathon_id = $1
-  AND status = 'scheduled'::email_campaign_status
-  AND scheduled_at IS NOT NULL
-  AND scheduled_at <= NOW()
-ORDER BY scheduled_at ASC
-`
-
-func (q *Queries) ListDueScheduledEmailCampaigns(ctx context.Context, hackathonID string) ([]EmailCampaign, error) {
-	rows, err := q.db.Query(ctx, listDueScheduledEmailCampaigns, hackathonID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []EmailCampaign{}
-	for rows.Next() {
-		var i EmailCampaign
-		if err := rows.Scan(
-			&i.ID,
-			&i.HackathonID,
-			&i.Title,
-			&i.Description,
-			&i.Subject,
-			&i.Body,
-			&i.Format,
-			&i.RecipientTypes,
-			&i.Status,
-			&i.ScheduledAt,
-			&i.SentAt,
-			&i.LastError,
-			&i.CreatedByUserID,
-			&i.UpdatedByUserID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEmailCampaignsByHackathon = `-- name: ListEmailCampaignsByHackathon :many
+const listEmailCampaigns = `-- name: ListEmailCampaigns :many
 SELECT id, hackathon_id, title, description, subject, body, format, recipient_types, status, scheduled_at, sent_at, last_error, created_by_user_id, updated_by_user_id, created_at, updated_at
 FROM email_campaigns
 WHERE hackathon_id = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListEmailCampaignsByHackathon(ctx context.Context, hackathonID string) ([]EmailCampaign, error) {
-	rows, err := q.db.Query(ctx, listEmailCampaignsByHackathon, hackathonID)
+// returns all campaigns for one hackathon, newest first.
+func (q *Queries) ListEmailCampaigns(ctx context.Context, hackathonID string) ([]EmailCampaign, error) {
+	rows, err := q.db.Query(ctx, listEmailCampaigns, hackathonID)
 	if err != nil {
 		return nil, err
 	}
@@ -245,19 +173,40 @@ func (q *Queries) ListEmailCampaignsByHackathon(ctx context.Context, hackathonID
 const updateEmailCampaign = `-- name: UpdateEmailCampaign :one
 UPDATE email_campaigns
 SET
-    title = CASE WHEN $1::boolean THEN $2 ELSE title END,
-    description = CASE WHEN $3::boolean THEN $4 ELSE description END,
-    subject = CASE WHEN $5::boolean THEN $6 ELSE subject END,
-    body = CASE WHEN $7::boolean THEN $8 ELSE body END,
-    format = CASE WHEN $9::boolean THEN $10::email_campaign_format ELSE format END,
-    recipient_types = CASE WHEN $11::boolean THEN $12::email_recipient_type[] ELSE recipient_types END,
-    status = CASE WHEN $13::boolean THEN $14::email_campaign_status ELSE status END,
-    scheduled_at = CASE WHEN $15::boolean THEN $16::timestamptz ELSE scheduled_at END,
-    sent_at = CASE WHEN $17::boolean THEN $18::timestamptz ELSE sent_at END,
-    last_error = CASE WHEN $19::boolean THEN $20 ELSE last_error END,
-    updated_by_user_id = CASE WHEN $21::boolean THEN $22::uuid ELSE updated_by_user_id END
-WHERE id = $23::uuid
-  AND hackathon_id = $24
+    title = 
+        CASE WHEN $1::boolean 
+        THEN $2 
+        ELSE title END,
+    description = 
+        CASE WHEN $3::boolean
+        THEN $4  
+        ELSE description END,
+    subject = 
+        CASE WHEN $5::boolean 
+        THEN $6 
+        ELSE subject END,
+    body = 
+        CASE WHEN $7::boolean
+        THEN $8
+        ELSE body END,
+    format = 
+        CASE WHEN $9::boolean
+        THEN $10::email_campaign_format
+        ELSE format END,
+    recipient_types = 
+        CASE WHEN $11::boolean
+        THEN $12::email_recipient_type[]
+        ELSE recipient_types END,
+    scheduled_at = 
+        CASE WHEN $13::boolean
+        THEN $14::timestamptz
+        ELSE scheduled_at END,
+    updated_by_user_id = 
+        CASE WHEN $15::boolean
+        THEN $16::uuid
+        ELSE updated_by_user_id END
+WHERE id = $17::uuid
+    AND hackathon_id = $18
 RETURNING id, hackathon_id, title, description, subject, body, format, recipient_types, status, scheduled_at, sent_at, last_error, created_by_user_id, updated_by_user_id, created_at, updated_at
 `
 
@@ -274,20 +223,15 @@ type UpdateEmailCampaignParams struct {
 	Format                  EmailCampaignFormat  `json:"format"`
 	RecipientTypesDoUpdate  bool                 `json:"recipient_types_do_update"`
 	RecipientTypes          []EmailRecipientType `json:"recipient_types"`
-	StatusDoUpdate          bool                 `json:"status_do_update"`
-	Status                  EmailCampaignStatus  `json:"status"`
 	ScheduledAtDoUpdate     bool                 `json:"scheduled_at_do_update"`
 	ScheduledAt             time.Time            `json:"scheduled_at"`
-	SentAtDoUpdate          bool                 `json:"sent_at_do_update"`
-	SentAt                  time.Time            `json:"sent_at"`
-	LastErrorDoUpdate       bool                 `json:"last_error_do_update"`
-	LastError               *string              `json:"last_error"`
 	UpdatedByUserIDDoUpdate bool                 `json:"updated_by_user_id_do_update"`
 	UpdatedByUserID         uuid.UUID            `json:"updated_by_user_id"`
 	ID                      uuid.UUID            `json:"id"`
 	HackathonID             string               `json:"hackathon_id"`
 }
 
+// edits draft-like campaign fields: title, description, subject, body, format, recipients, and scheduled time.
 func (q *Queries) UpdateEmailCampaign(ctx context.Context, arg UpdateEmailCampaignParams) (EmailCampaign, error) {
 	row := q.db.QueryRow(ctx, updateEmailCampaign,
 		arg.TitleDoUpdate,
@@ -302,14 +246,8 @@ func (q *Queries) UpdateEmailCampaign(ctx context.Context, arg UpdateEmailCampai
 		arg.Format,
 		arg.RecipientTypesDoUpdate,
 		arg.RecipientTypes,
-		arg.StatusDoUpdate,
-		arg.Status,
 		arg.ScheduledAtDoUpdate,
 		arg.ScheduledAt,
-		arg.SentAtDoUpdate,
-		arg.SentAt,
-		arg.LastErrorDoUpdate,
-		arg.LastError,
 		arg.UpdatedByUserIDDoUpdate,
 		arg.UpdatedByUserID,
 		arg.ID,
@@ -341,12 +279,24 @@ const updateEmailCampaignStatus = `-- name: UpdateEmailCampaignStatus :one
 UPDATE email_campaigns
 SET
     status = $1::email_campaign_status,
-    scheduled_at = CASE WHEN $2::boolean THEN $3::timestamptz ELSE scheduled_at END,
-    sent_at = CASE WHEN $4::boolean THEN $5::timestamptz ELSE sent_at END,
-    last_error = CASE WHEN $6::boolean THEN $7 ELSE last_error END,
-    updated_by_user_id = CASE WHEN $8::boolean THEN $9::uuid ELSE updated_by_user_id END
+    scheduled_at =
+        CASE WHEN $2::boolean 
+        THEN $3::timestamptz
+        ELSE scheduled_at END,
+    sent_at = 
+        CASE WHEN $4::boolean
+        THEN $5::timestamptz
+        ELSE sent_at END,
+    last_error = 
+        CASE WHEN $6::boolean
+        THEN $7
+        ELSE last_error END,
+    updated_by_user_id = 
+        CASE WHEN $8::boolean
+        THEN $9::uuid
+        ELSE updated_by_user_id END
 WHERE id = $10::uuid
-  AND hackathon_id = $11
+    AND hackathon_id = $11
 RETURNING id, hackathon_id, title, description, subject, body, format, recipient_types, status, scheduled_at, sent_at, last_error, created_by_user_id, updated_by_user_id, created_at, updated_at
 `
 
@@ -364,6 +314,7 @@ type UpdateEmailCampaignStatusParams struct {
 	HackathonID             string              `json:"hackathon_id"`
 }
 
+// changes lifecycle fields like draft -> scheduled, scheduled -> sending, sending -> sent, or sending -> failed.
 func (q *Queries) UpdateEmailCampaignStatus(ctx context.Context, arg UpdateEmailCampaignStatusParams) (EmailCampaign, error) {
 	row := q.db.QueryRow(ctx, updateEmailCampaignStatus,
 		arg.Status,
