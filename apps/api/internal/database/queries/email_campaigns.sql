@@ -40,7 +40,7 @@ WHERE hackathon_id = @hackathon_id
 ORDER BY created_at DESC;
 
 -- name: UpdateEmailCampaign :one
---edits draft-like campaign fields: title, description, subject, body, format, recipients, and scheduled time.
+-- edits draft-like campaign fields: title, description, subject, body, format, recipients, and scheduled time.
 UPDATE email_campaigns
 SET
     title = 
