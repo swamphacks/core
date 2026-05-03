@@ -3,7 +3,6 @@ package logger
 import (
 	"os"
 	"runtime/debug"
-	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -12,10 +11,7 @@ import (
 func New() zerolog.Logger {
 	buildInfo, _ := debug.ReadBuildInfo()
 
-	logger := zerolog.New(zerolog.ConsoleWriter{
-		Out:        os.Stderr,
-		TimeFormat: time.RFC3339,
-	}).Level(zerolog.TraceLevel).
+	logger := zerolog.New(os.Stderr).Level(zerolog.TraceLevel).
 		With().
 		Timestamp().
 		Caller().

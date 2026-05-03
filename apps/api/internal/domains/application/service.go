@@ -21,7 +21,9 @@ import (
 )
 
 var (
-	ErrApplicationNotOpened = errors.New("Application not opened")
+	ErrApplicationNotOpened      = errors.New("Application not opened")
+	ErrFailedToCreateApplication = errors.New("Failed to create application")
+	ErrFailedToGetHackathon      = errors.New("Failed to get hackathon information")
 )
 
 type ApplicationService struct {
@@ -63,13 +65,17 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, userID uuid.
 
 	if err != nil {
 		s.logger.Err(err).Msg("Create application fail because can't retrieve hackathon")
-		return nil, err
+		return nil, ErrFailedToGetHackathon
 	}
 
+	isEarly := false
 	now := time.Now()
-	isApplicationOpen := now.After(hackathon.ApplicationOpen) && now.Before(hackathon.ApplicationClose)
 
-	if !isApplicationOpen {
+	if hackathon.AcceptEarlyApplications && (now.After(*hackathon.EarlyApplicationOpen) && now.Before(*hackathon.EarlyApplicationClose)) {
+		isEarly = true
+	}
+
+	if !isEarly && (now.After(hackathon.ApplicationClose) || now.Before(hackathon.ApplicationOpen)) {
 		return nil, ErrApplicationNotOpened
 	}
 
@@ -77,11 +83,12 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, userID uuid.
 	application, err := s.applicationRepo.CreateApplication(ctx, sqlc.CreateApplicationParams{
 		UserID:      userID,
 		HackathonID: "xii",
+		IsEarly:     isEarly,
 	})
 
 	if err != nil {
-		s.logger.Err(err).Msg(err.Error())
-		return nil, err
+		s.logger.Err(err).Msg("Failed to create application")
+		return nil, ErrFailedToCreateApplication
 	}
 
 	return application, nil
@@ -94,7 +101,7 @@ func (s *ApplicationService) GetApplicationByUserId(ctx context.Context, userID 
 		if errors.Is(err, database.ErrApplicationNotFound) {
 			return nil, database.ErrApplicationNotFound
 		} else {
-			s.logger.Err(err).Msg("")
+			s.logger.Err(err).Msg("Failed to get application by user id")
 			return nil, err
 		}
 	}
@@ -144,25 +151,29 @@ type ApplicationSubmissionFields struct {
 	AgreeToMLHEmails        string `json:"agreeToMLHEmails"`
 }
 
-func (s *ApplicationService) SubmitApplication(ctx context.Context, data ApplicationSubmissionFields, resume []byte, userID uuid.UUID) error {
+func (s *ApplicationService) SubmitApplication(ctx context.Context, data ApplicationSubmissionFields, resume []byte, userID uuid.UUID) (*time.Time, error) {
 	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
 
 	if err != nil {
 		s.logger.Err(err).Msg("Submit application fail because can't retrieve hackathon")
-		return err
+		return nil, err
 	}
 
 	now := time.Now()
-	isApplicationOpen := now.After(hackathon.ApplicationOpen) && now.Before(hackathon.ApplicationClose)
+	isEarly := false
 
-	if !isApplicationOpen {
-		return ErrApplicationNotOpened
+	if hackathon.AcceptEarlyApplications && (now.After(*hackathon.EarlyApplicationOpen) && now.Before(*hackathon.EarlyApplicationClose)) {
+		isEarly = true
+	}
+
+	if !isEarly && (now.After(hackathon.ApplicationClose) || now.Before(hackathon.ApplicationOpen)) {
+		return nil, ErrApplicationNotOpened
 	}
 
 	dataJSON, err := json.Marshal(data)
 
 	if err != nil {
-		return errors.New("Failed to parse application data")
+		return nil, errors.New("Failed to parse application data")
 	}
 
 	// Submitting application is an atomic operation
@@ -170,15 +181,17 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		txAppRepo := s.applicationRepo.NewTx(tx)
 
 		err := txAppRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+			UserID:              userID,
 			StatusDoUpdate:      true,
 			Status:              sqlc.ApplicationStatusSubmitted,
 			ApplicationDoUpdate: true,
 			Application:         dataJSON,
 			SubmittedAtDoUpdate: true,
-			SubmittedAt:         time.Now(),
+			SubmittedAt:         now,
 			SavedAtDoUpdate:     true,
-			SavedAt:             time.Now(),
-			UserID:              userID,
+			SavedAt:             now,
+			IsEarlyDoUpdate:     true,
+			IsEarly:             isEarly,
 		})
 
 		if err != nil {
@@ -213,7 +226,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		s.logger.Err(err).Msg(err.Error())
 	}
 
-	return nil
+	return &now, nil
 }
 
 func (s *ApplicationService) SaveApplication(ctx context.Context, data any, userID uuid.UUID) error {
@@ -733,9 +746,13 @@ func (s *ApplicationService) isApplicationOpen(ctx context.Context) error {
 	}
 
 	now := time.Now()
-	isApplicationOpen := now.After(hackathon.ApplicationOpen) && now.Before(hackathon.ApplicationClose)
+	isEarly := false
 
-	if !isApplicationOpen {
+	if hackathon.AcceptEarlyApplications && (now.After(*hackathon.EarlyApplicationOpen) && now.Before(*hackathon.EarlyApplicationClose)) {
+		isEarly = true
+	}
+
+	if !isEarly && (now.After(hackathon.ApplicationClose) || now.Before(hackathon.ApplicationOpen)) {
 		return ErrApplicationNotOpened
 	}
 

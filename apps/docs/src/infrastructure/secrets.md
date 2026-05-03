@@ -118,6 +118,7 @@ Key variables:
 
 | Variable | Default / Example | Notes |
 |----------|-------------------|-------|
+| `APP_ENV` | `local` | Set to `local` if running locally |
 | `DATABASE_URL` | `postgres://postgres:postgres@postgres:5432/coredb` | Used inside the container |
 | `DATABASE_URL_MIGRATION` | `postgres://postgres:postgres@localhost:5432/coredb` | Used from the host when running migrations directly |
 | `REDIS_URL` | `redis://redis:6379` | |
@@ -132,6 +133,8 @@ Key variables:
 | `MAX_ACCEPTED_APPLICATIONS` | `500` | Waitlist configuration |
 | `ACCEPT_FROM_WAITLIST_COUNT` | `50` | |
 | `ACCEPT_FROM_WAITLIST_PERIOD` | `@every 72h` | Cron-style period |
+| `GRAFANA_URL` | `http://grafana:3000` | |
+| `MONITORING_DISCORD_WEBHOOK` | _(empty)_ | Discord Webhook used to send Grafana alerts |
 
 ### Web (`apps/web`)
 

@@ -12,3 +12,6 @@ storage:
 
 backend:
 	docker compose up api email_worker bat_worker asynqmon
+
+monitoring:
+	docker compose up api alloy loki grafana

@@ -79,6 +79,8 @@ type Config struct {
 	AWS         AWSConfig        `envPrefix:"AWS_"`
 
 	MobileAuthKey string `env:"MOBILE_AUTH_KEY"`
+
+	GrafanaURL string `env:"GRAFANA_URL"`
 }
 
 func LoadConfig() *Config {

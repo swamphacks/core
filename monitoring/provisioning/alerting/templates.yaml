@@ -1,0 +1,26 @@
+apiVersion: 1
+
+templates:
+  - orgId: 1
+    name: discord_template
+    template: |
+      {{ define "discord_template" }}
+      {{ if eq .Status "firing" }}
+      🚨 **PROD API ERROR ALERT**
+      {{ else }}
+      ✅ **PROD API RECOVERED**
+      {{ end }}
+
+      {{ range .Alerts }}
+      **Severity:** {{ .Labels.severity }}
+
+      **Errors (last 5m):** {{ index .Values "B" }}
+
+      **Summary:** API prod errors detected
+
+      Starts: {{ .StartsAt }}
+
+      🔎 **View Logs:**
+      {{ $.ExternalURL }}explore?orgId=1&left={{ urlquery `["now-5m","now","Loki",{"expr":"{container_name=~\".*-api.*\",env=\"prod\",level=\"error\"}"}]` }}
+      {{ end }}
+      {{ end }}

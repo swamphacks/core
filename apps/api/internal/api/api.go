@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog/log"
+	"github.com/swamphacks/core/apps/api/internal/api/grafana"
 	mw "github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/database"
@@ -24,6 +25,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/domains/redeemables"
 	"github.com/swamphacks/core/apps/api/internal/domains/teams"
 	"github.com/swamphacks/core/apps/api/internal/domains/users"
+	"github.com/swamphacks/core/apps/api/internal/domains/workshops"
 	"github.com/swamphacks/core/apps/api/internal/emailutils"
 	"github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/storage"
@@ -116,6 +118,7 @@ func Run() {
 	redeemablesRepo := repository.NewRedeemablesRepository(db)
 	batRunsRepo := repository.NewBatRunsRepository(db)
 	eventInterestsRepo := repository.NewEventInterestsRepository(db)
+	workshopRepo := repository.NewWorkshopsRepository(db)
 
 	mw := mw.NewMiddleware(userRepo, db, logger, config)
 
@@ -149,6 +152,10 @@ func Run() {
 	redeemablesHandler := redeemables.NewHandler(redeemablesService, config, logger)
 	redeemables.RegisterRoutes(redeemablesHandler, huma.NewGroup(api, "/redeemables"), mw)
 
+	workshopService := workshops.NewService(workshopRepo, logger)
+	workshopHandler := workshops.NewHandler(workshopService, logger)
+	workshops.RegisterRoutes(workshopHandler, huma.NewGroup(api, "/workshops"), mw)
+
 	huma.Register(api, huma.Operation{
 		OperationID: "ping",
 		Method:      http.MethodGet,
@@ -161,6 +168,10 @@ func Run() {
 			Body: "pong",
 		}, nil
 	})
+
+	// Grafana proxy (used for authentication)
+	grafanaHandler := grafana.NewHandler(logger, config)
+	grafana.RegisterRoutes(grafanaHandler, mw, r)
 
 	logger.Info().Msgf("API listening on port %s", config.Port)
 	if err := http.ListenAndServe(":"+config.Port, r); err != nil {
