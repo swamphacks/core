@@ -1,1 +1,0 @@
-export { ComingSoonPage } from "./ComingSoonPage";
