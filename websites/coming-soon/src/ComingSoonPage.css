@@ -173,9 +173,18 @@
 }
 
 .subscribe-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   font-family: "Jersey 20", cursive;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  padding: 0 8px;
+  opacity: 75%;
 }
 
 .subscribe-input-container {

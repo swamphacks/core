@@ -76,10 +76,7 @@ export function ComingSoonPage() {
 
             <div>
               <a
-                href={
-                  "https://static.swamphacks.com/SHXII%20Sponsorship%20One%20Pager.pdf"
-                }
-                target="_blank"
+                href="mailto:sponsors@swamphacks.com"
                 className="sponsor-button coming-soon__button coming-soon__button--bottom"
                 aria-label={"Sponsor SwampHacks XII"}
               >
@@ -121,6 +118,12 @@ export function ComingSoonPage() {
         contentLabel="Example Modal"
       >
         <div className="subscribe-container">
+          <button
+            onClick={closeModal}
+            className="modal-close-btn nes-btn is-error"
+          >
+            X
+          </button>
           <p className="subscribe-title">Stay up to date!</p>
           <div className="subscribe-input-container">
             <input placeholder="Enter your email" className="nes-input" />
