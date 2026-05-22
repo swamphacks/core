@@ -18,7 +18,7 @@ jobs:
         with:
           host: ${{ secrets.API_HOST}}
           username: root
-          password: ${{ secrets.API_PASSWORD}}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /root/core/infra
             git fetch
