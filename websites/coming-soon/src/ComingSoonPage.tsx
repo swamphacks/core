@@ -84,11 +84,11 @@ export function ComingSoonPage() {
           <img src={swamphacksIcon} className="icon-image" />
         </div>
         <header className="coming-soon__hero">
-          <h1 className="coming-soon__title">SwampHacks XII</h1>
-
-          <div className="coming-soon__badge" aria-label="Coming soon">
-            <span>Coming Soon!</span>
-          </div>
+          <h1 className="coming-soon__title">
+            SwampHacks XII
+            <span className="coming-soon__badge">Coming Soon!</span>
+          </h1>
+          <h1 className="coming-soon__date">Oct 16 - 18, 2026</h1>
         </header>
 
         <div className="coming-soon__board-wrap">
