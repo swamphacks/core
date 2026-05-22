@@ -29,6 +29,8 @@ const customStyles = {
 Modal.setAppElement("#root");
 
 export function ComingSoonPage() {
+  const [email, setEmail] = useState("");
+  const [subscribeSuccessful, setSubscribeSuccessful] = useState(false);
   const [modalIsOpen, setIsOpen] = useState(false);
 
   function openModal() {
@@ -37,10 +39,38 @@ export function ComingSoonPage() {
 
   function closeModal() {
     setIsOpen(false);
+    setSubscribeSuccessful(false);
   }
 
   const handleSignupForUpdates = () => {
     openModal();
+  };
+
+  const handleSubscribe = async () => {
+    if (email.length === 0 || email.length > 200) return;
+
+    let API_URL_PREFIX: string;
+
+    if (import.meta.env.MODE === "development") {
+      API_URL_PREFIX = "http://localhost:8080";
+    } else {
+      API_URL_PREFIX = "https://api.swamphacks.com";
+    }
+
+    const res = await fetch(`${API_URL_PREFIX}/hackathon/interest`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        source: "coming-soon-page",
+      }),
+    });
+
+    if (res.ok) {
+      setSubscribeSuccessful(true);
+    }
   };
 
   return (
@@ -126,11 +156,19 @@ export function ComingSoonPage() {
           </button>
           <p className="subscribe-title">Stay up to date!</p>
           <div className="subscribe-input-container">
-            <input placeholder="Enter your email" className="nes-input" />
-            <button type="button" className="nes-btn">
+            <input
+              placeholder="Enter your email"
+              className="nes-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button onClick={handleSubscribe} type="button" className="nes-btn">
               Subscribe
             </button>
           </div>
+          {subscribeSuccessful && (
+            <p className="success-message">Subscribed successfully!</p>
+          )}
         </div>
       </Modal>
     </main>
