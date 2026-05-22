@@ -171,12 +171,11 @@ func (s *HackathonService) SubmitInterestEmail(ctx context.Context, email string
 		Source:      source,
 		HackathonID: "xii",
 	})
-	if err != nil {
-		s.logger.Err(err).Msg("Error submitting interest email")
-	}
+
 	if err != nil && errors.Is(err, database.ErrDuplicateEmails) {
 		return nil, errors.New("Duplicate email")
 	} else if err != nil {
+		s.logger.Err(err).Msg("Error submitting interest email")
 		return nil, errors.New("Failed to submit interest email")
 	}
 
