@@ -151,26 +151,14 @@
   image-rendering: pixelated;
 }
 
-/* .coming-soon__badge {
-  position: absolute;
-  top: 150%;
-  right: -30px;
-  width: min(25vw, 300px);
-  transform: rotate(-12deg);
-  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.35));
-  z-index: 3;
-  pointer-events: none;
-} */
-
 .coming-soon__gator {
   position: fixed;
   left: 0;
   bottom: -3vh;
-  /* width: min(24vw, 360px); */
   width: 250px;
   transform: scaleX(-1);
   image-rendering: pixelated;
-  z-index: 2;
+  z-index: -1;
 }
 
 .subscribe-container {
