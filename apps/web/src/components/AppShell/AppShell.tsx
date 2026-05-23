@@ -16,9 +16,6 @@ import IconX from "~icons/tabler/x";
 import { auth } from "@/lib/authClient";
 import { Profile } from "./Profile";
 import { MobileProfile } from "@/components/AppShell/MobileProfile";
-import { Link, useLocation } from "@tanstack/react-router";
-import TablerArrowRight from "~icons/tabler/arrow-right";
-import TablerArrowLeft from "~icons/tabler/arrow-left";
 
 interface AppShellComponent extends FC<PropsWithChildren> {
   Header: FC<PropsWithChildren>;
@@ -50,12 +47,7 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
     [children],
   );
   const { data } = auth.useUser();
-  const pathname = useLocation({ select: (loc) => loc.pathname });
-
-  const isAdminPortal = pathname.startsWith("/admin");
-
   const user = data?.user;
-  const role = user?.role === "user" ? "Hacker" : "Administrator";
 
   if (data?.error || !user) {
     return <p>Something went wrong while loading user information.</p>;
@@ -102,28 +94,7 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
                 <div className="flex flex-col justify-between h-full">
                   <div>{navbar}</div>
                   <div className="flex flex-col gap-5">
-                    {user.role === "superuser" && (
-                      <div>
-                        {isAdminPortal ? (
-                          <Link
-                            className="flex text-sm justify-center items-center rounded-sm px-3 py-2 gap-2 cursor-pointer select-none text-center w-full border border-orange-800 text-orange-600 hover:bg-navlink-bg-active"
-                            to="/portal"
-                          >
-                            <TablerArrowLeft />
-                            Go back to Portal
-                          </Link>
-                        ) : (
-                          <Link
-                            className="flex text-sm justify-center items-center rounded-sm px-3 py-2 gap-2 cursor-pointer select-none text-center w-full border border-input-border hover:bg-navlink-bg-active"
-                            to="/admin/overview"
-                          >
-                            Go to Admin Portal
-                            <TablerArrowRight />
-                          </Link>
-                        )}
-                      </div>
-                    )}
-                    <Profile name={user.name} role={role} />
+                    <Profile name={user.name} role={user.role} />
                   </div>
                 </div>
               </nav>

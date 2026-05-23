@@ -195,7 +195,7 @@ SELECT user_id FROM applications
 WHERE status = 'submitted'
     AND experience_rating IS NULL
     AND passion_rating IS NULL
-ORDER BY 
+ORDER BY
     user_id ASC
 `
 

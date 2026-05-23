@@ -233,7 +233,7 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
 function SubmitSuccess({ submittedAt }: { submittedAt: string }) {
   return (
     <div>
-      <div className="flex items-center gap-2 font-medium bg-badge-bg-accepted/50 text-badge-text-accepted rounded-md py-3 pl-3">
+      <div className="flex items-center gap-2">
         <TablerCircleCheck />
         <p>Thank you! Your application has been received.</p>
       </div>

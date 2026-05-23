@@ -29,7 +29,7 @@ SELECT user_id FROM applications
 WHERE status = 'submitted'
     AND experience_rating IS NULL
     AND passion_rating IS NULL
-ORDER BY 
+ORDER BY
     user_id ASC;
 
 -- name: ListAdmissionCandidates :many
@@ -105,4 +105,3 @@ WHERE user_id IN (
   LIMIT @acceptanceCount::int
 )
 RETURNING user_id;
-

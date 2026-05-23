@@ -5,6 +5,11 @@ import TablerAlertCircle from "~icons/tabler/alert-circle";
 import { useEffect } from "react";
 import { useHackathon } from "@/modules/Hackathon/hooks/useHackathon";
 import { Spinner } from "@/components/ui/Spinner";
+import { api } from "@/lib/ky";
+import { auth } from "@/lib/authClient";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUserQueryKey } from "@/lib/auth/hooks/useUser";
+import type { AuthUserResponse } from "@/lib/auth/types";
 
 export const Route = createFileRoute("/_protected/_user/application")({
   component: RouteComponent,
@@ -12,6 +17,9 @@ export const Route = createFileRoute("/_protected/_user/application")({
 
 function RouteComponent() {
   const hackathon = useHackathon();
+  const { data } = auth.useUser();
+  const { user } = data!;
+  const queryClient = useQueryClient();
 
   // Show a confirmation dialog when the user closes the tab
   useEffect(() => {
@@ -26,10 +34,26 @@ function RouteComponent() {
     };
   }, []);
 
-  // TODO:
-  // check early application and regular application
-  // - mark user application as early or regular. Do this in the backend
-  // if early application, show a message in the header to tell the user that they are submitting an early application
+  useEffect(() => {
+    if (
+      user?.hasSeenNewApplicationStatus === false &&
+      hackathon.data &&
+      !hackathon.isLoading
+    ) {
+      api.post(`users/me/acknowledge-new-application-status`);
+
+      queryClient.setQueryData(
+        useUserQueryKey,
+        (oldData: AuthUserResponse) => ({
+          ...oldData,
+          user: {
+            ...oldData.user,
+            hasSeenNewApplicationStatus: true,
+          },
+        }),
+      );
+    }
+  }, [user, hackathon]);
 
   if (hackathon.isLoading) {
     return (

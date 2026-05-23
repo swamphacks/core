@@ -151,6 +151,18 @@ func RegisterRoutes(userHandler *handler, group huma.API, mw *middleware.Middlew
 		Errors:      []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusInternalServerError},
 		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
 	}, userHandler.handleRevokeEventRole)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "update-has-seen-new-application-status",
+		Method:      http.MethodPost,
+		Summary:     "Acknowledge New Application Status",
+		Description: "Mark that the user has seen their new application status",
+		Tags:        []string{"Users"},
+		Path:        "/me/acknowledge-new-application-status",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Errors:      []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, userHandler.handleAcknowledgeNewApplicationStatus)
 }
 
 type handler struct {
@@ -257,7 +269,7 @@ type UpdateUserOutput struct {
 
 type UpdateUserRequest struct {
 	Name           string `json:"name"`
-	PreferredEmail string `json:"preferredEmail"`
+	PreferredEmail string `json:"preferred_email"`
 }
 
 func (h *handler) handleUpdateUser(ctx context.Context, input *struct {
@@ -286,7 +298,7 @@ func (h *handler) handleUpdateUser(ctx context.Context, input *struct {
 		PreferredEmail:         &input.Body.PreferredEmail,
 	}
 
-	err := h.userService.UpdateUser(ctx, userCtx.UserID, params)
+	err := h.userService.UpdateUser(ctx, params)
 	if err != nil {
 		h.logger.Err(err).Msg("failed to update user")
 		if errors.Is(err, ErrUserNotFound) {
@@ -321,11 +333,12 @@ func (h *handler) handleUpdateEmailConsent(ctx context.Context, input *struct {
 	}
 
 	params := sqlc.UpdateUserParams{
+		ID:                   userCtx.UserID,
 		EmailConsentDoUpdate: true,
 		EmailConsent:         input.Body.EmailConsent,
 	}
 
-	err := h.userService.UpdateUser(ctx, userCtx.UserID, params)
+	err := h.userService.UpdateUser(ctx, params)
 
 	if err != nil {
 		h.logger.Err(err).Msg("failed to update email consent")
@@ -494,6 +507,30 @@ func (h *handler) handleRevokeEventRole(ctx context.Context, input *struct {
 	}
 
 	return &RevokeEventRoleOutput{Status: http.StatusOK}, nil
+}
+
+type AcknowledgeNewApplicationStatusOutput struct {
+	Status int
+}
+
+func (h *handler) handleAcknowledgeNewApplicationStatus(ctx context.Context, input *struct{}) (*AcknowledgeNewApplicationStatusOutput, error) {
+	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
+	}
+
+	err := h.userService.UpdateUser(ctx, sqlc.UpdateUserParams{
+		ID:                                  userCtx.UserID,
+		HasSeenNewApplicationStatusDoUpdate: true,
+		HasSeenNewApplicationStatus:         new(true),
+	})
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to acknowledge new application status")
+	}
+
+	return &AcknowledgeNewApplicationStatusOutput{Status: http.StatusOK}, nil
 }
 
 func ParseUUIDOrNil(s *string) *uuid.UUID {

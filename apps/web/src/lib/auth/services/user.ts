@@ -24,8 +24,6 @@ export function _logout(config: AuthConfig) {
 }
 
 export async function _getUser(): Promise<AuthUserResponse> {
-  console.log("fetching user info...");
-
   try {
     const res = await fetch(authConfig.AUTH_ME_URL, {
       credentials: "include",
