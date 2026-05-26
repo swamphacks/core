@@ -14,18 +14,6 @@ p {
   margin: 0;
 }
 
-/* .container {
-  position: fixed;
-  inset: 0;
-  height: 100%;
-  overflow: hidden;
-  height: 100%;
-  background-color: #050902;
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: cover;
-} */
-
 .container {
   position: fixed;
   inset: 0;
@@ -80,7 +68,7 @@ p {
   margin: 0;
   font-family: "Jersey 20", cursive;
   color: #d8b286;
-  font-size: 99px;
+  font-size: 56px;
   line-height: 0.78;
   font-weight: 400;
   letter-spacing: 0.045em;
@@ -91,33 +79,43 @@ p {
 }
 
 .badge {
+  opacity: 85%;
   position: absolute;
-  bottom: -90%;
-  right: -17%;
-  font-size: 2.3rem;
+  bottom: -137%;
+  right: -26%;
   width: 120px;
   padding: 0;
   font-family: "Jersey 20", cursive;
   color: #fff4d8;
-  /* font-size: 1.5rem; */
+  font-size: 1.8rem;
   line-height: 0.78;
-  font-weight: 400;
   text-transform: uppercase;
   text-align: center;
   letter-spacing: 0.045em;
   -webkit-text-stroke: clamp(1px, 0.10vw, 3px) #6d2e1f;
-  text-shadow:
-    0 4px 0 rgba(67, 18, 6, 0.92),
-    0 10px 12px rgba(0, 0, 0, 0.3);
+  text-shadow: none;
   animation: badgeTextPulse 1.6s ease-in-out infinite;
 }
 
-.subtitle {
+.subheader {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subheader p {
+  margin: 0;
+  padding: 0;
+}
+
+.date, .location {
   margin: 25px 0 0 0;
   font-family: "Jersey 20", cursive;
   color: #d8b286;
-  font-size: 2.7rem;
-  -webkit-text-stroke: 0.2px #5a3f2b;
+  font-size: 2.4rem;
+  line-height: 0.78;
+  -webkit-text-stroke: 0.5px #7c573c;
 }
 
 .menu-container {
@@ -180,12 +178,35 @@ footer p {
 }
 
 .ReactModal__Content {
+  width: 95%;
   padding: 10px !important;
 }
 
 .tabs button {
   line-height: 0.5;
   font-size: 1.3rem;
+}
+
+.info-modal-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  font-family: "Jersey 20", cursive;
+  width: 100%;
+  min-height: 280px;
+  transition: min-height 200ms ease;
+}
+
+.tab-container {
+  display: flex;
+  max-height: 250px;
+  gap: 10px;
+  color: #ddc8af;
+  overflow-y: auto;
+}
+
+.modal-large {
+  min-height: 600px !important;
 }
 
 .modal-close-btn {
@@ -196,12 +217,11 @@ footer p {
   opacity: 75%;
 }
 
-.track-container {
-  max-height: 195px !important;
-  overflow: scroll;
+.faq-container {
+  flex-direction: column;
 }
 
-.track-header {
+.track-header, .faq-question {
   margin-left: 20px;
   position: relative;
   background: none;
@@ -209,13 +229,14 @@ footer p {
   outline: none;
   font-size: 1.3rem !important;
   color: #ddc8af;
+  text-align: left;
 }
 
-.track-header:focus {
+.track-header:focus, .faq-question:focus {
   outline: none;
 }
 
-.track-header::before {
+.track-header::before, .faq-question::before {
   position: absolute;
   top: 5px;
   left: -20px;
@@ -224,46 +245,99 @@ footer p {
   height: 2px;
   color: #ddc8af;
   box-shadow: 2px 2px, 4px 2px, 2px 4px, 4px 4px, 6px 4px, 8px 4px, 2px 6px, 4px 6px, 6px 6px, 8px 6px, 10px 6px, 2px 8px, 4px 8px, 6px 8px, 8px 8px, 10px 8px, 12px 8px, 2px 10px, 4px 10px, 6px 10px, 8px 10px, 10px 10px, 2px 12px, 4px 12px, 6px 12px, 8px 12px, 2px 14px, 4px 14px;
-  /* transition: transform 200ms ease; */
   display: block;
 }
 
-.track.open .track-header::before {
+.track.open .track-header::before, .faq.open .faq-question::before {
   transform: rotate(90deg);
   top: 5px;
   left: -5px;
-}
-
-.info-modal-container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  font-family: "Jersey 20", cursive;
-  width: 550px;
-  min-width: 200px;
-  min-height: 280px;
-}
-
-.tab-container {
-  display: flex;
-  max-height: 300px;
-  gap: 10px;
-  color: #ddc8af;
 }
 
 .track-container {
   flex-direction: column;
 }
 
-/* .tab-container p {
-  max-height: 300px;
-  overflow: scroll;
-} */
-
 .tab-title {
   color: #D8B286;
   font-size: 1.5rem;
   margin: 0;
+}
+
+.team-container {
+  width: 98%;
+  position: fixed;
+  flex-direction: column;
+  max-height: 520px !important;
+  overflow-y: scroll;
+}
+
+/* Team layout and profile picture style */
+.team-grid {
+  display: grid;
+  gap: 1rem;
+  padding: 2px 0 20px;
+}
+
+.team-group {
+  display: flex;
+  flex-direction: column;
+  /* gap: 0.75rem; */
+}
+
+.team-position {
+  color: #d8b286;
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.team-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.team-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 135px;
+  padding: 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  text-align: center;
+  position: relative;
+}
+
+.avatar {
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.profile-pic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.team-name {
+  margin: 0;
+  color: #ddc8af;
+  font-size: 1rem;
+  /* font-weight: 600; */
+}
+
+.profile-linkedin {
+  position: absolute;
+  right: -3px;
+  top: 0;
+  scale: 90%;
+  cursor: pointer;
 }
 
 .tab-container * {
@@ -275,6 +349,43 @@ footer p {
   background-color: #221909;
   color: white;
   outline: none;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 99px;
+  }
+  .badge {
+    bottom: -90%;
+    right: -17%;
+    font-size: 2.3rem;
+  }
+  .ReactModal__Content {
+    max-width: 550px;
+    padding: 10px !important;
+  }
+  .tab-container {
+    min-height: 235px;
+    max-height: 235px;
+  }
+}
+
+/* Targeted for Chrome, Edge, and Safari */
+::-webkit-scrollbar {
+  width: 8px; /* Adjust width as needed */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* Removes the white background */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888; /* The actual scroll handle */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 @keyframes badgeTextPulse {
