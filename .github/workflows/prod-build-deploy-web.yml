@@ -53,7 +53,7 @@ jobs:
         with:
           host: ${{ secrets.WEB_HOST }}
           username: root
-          password: ${{ secrets.WEB_PASSWORD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /root/core/infra
             git fetch

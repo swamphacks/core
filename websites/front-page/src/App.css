@@ -1,0 +1,189 @@
+@import url("https://fonts.googleapis.com/css2?family=Jersey+20&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+#root {
+  height: 100vh;
+}
+
+/* .container {
+  position: fixed;
+  inset: 0;
+  height: 100%;
+  overflow: hidden;
+  height: 100%;
+  background-color: #050902;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+} */
+
+.container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background-color: #050902;
+  display: flex;
+  flex-direction: column;
+}
+
+.container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image: url("./assets/background.png");
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  opacity: 0.7;
+  z-index: 0;
+}
+
+.container > * {
+  position: relative;
+  z-index: 1;
+}
+
+.container main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 100px;
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.hero {
+  display: block;
+  text-align: center;
+  position: relative;
+}
+
+.icon-image {
+  user-select: none;
+  width: 100px;
+}
+
+.title {
+  position: relative;
+  display: inline-block;
+  margin: 0;
+  font-family: "Jersey 20", cursive;
+  color: #d8b286;
+  font-size: 99px;
+  line-height: 0.78;
+  font-weight: 400;
+  letter-spacing: 0.045em;
+  -webkit-text-stroke: clamp(2px, 0.18vw, 5px) #7c573c;
+  text-shadow:
+    0 8px 0 #2f2116,
+    0 14px 20px rgba(0, 0, 0, 0.5);
+}
+
+.badge {
+  position: absolute;
+  bottom: -90%;
+  right: -17%;
+  font-size: 2.3rem;
+  width: 120px;
+  padding: 0;
+  font-family: "Jersey 20", cursive;
+  color: #fff4d8;
+  /* font-size: 1.5rem; */
+  line-height: 0.78;
+  font-weight: 400;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.045em;
+  -webkit-text-stroke: clamp(1px, 0.10vw, 3px) #6d2e1f;
+  text-shadow:
+    0 4px 0 rgba(67, 18, 6, 0.92),
+    0 10px 12px rgba(0, 0, 0, 0.3);
+  animation: badgeTextPulse 1.6s ease-in-out infinite;
+}
+
+.subtitle {
+  margin: 25px 0 0 0;
+  font-family: "Jersey 20", cursive;
+  color: #d8b286;
+  font-size: 2.7rem;
+  -webkit-text-stroke: 0.2px #5a3f2b;
+}
+
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  margin-top: 20px;
+  width: 330px;
+}
+
+.menu-container button {
+  width: 100%;
+  padding: 10px;
+  line-height: 0.8;
+  font-size: 1.7rem;
+  font-family: "Jersey 20", cursive;
+  /* font-family: "Press Start 2P", system-ui; */
+  background-image: url('./assets/nnnoise.svg');
+  color: #ddc8af !important;
+
+  text-shadow:
+  2px 0 #5b3119,
+  -2px 0 #5b3119,
+  0 2px #5b3119,
+  0 -2px #5b3119;
+}
+
+.community-buttons {
+  display: flex;
+  width: 100%;
+  gap: 5px;
+}
+
+.gator {
+  position: fixed;
+  left: 0;
+  bottom: -3vh;
+  width: 250px;
+  transform: scaleX(-1);
+  image-rendering: pixelated;
+  z-index: -1;
+}
+
+.icon-list {
+  display: flex;
+  gap: 7px;
+  margin-top: 20px;
+  opacity: 85%;
+}
+
+footer {
+  font-family: "Jersey 20", cursive;
+  text-align: center;
+}
+
+footer p {
+  color: rgb(161, 161, 161) !important;
+}
+
+@keyframes badgeTextPulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translateY(-0.15rem) rotate(-15deg)
+      scale(1);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) translateY(-0.15rem) rotate(-15deg)
+      scale(1.06);
+  }
+}
