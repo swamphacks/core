@@ -7,6 +7,8 @@ import Team from "./Team";
 import { Tracks } from "./Tracks";
 import FAQ from "./Faq";
 import About from "./About";
+import Sponsors from "./Sponsors";
+import Partners from "./Partners";
 
 const customModalStyles = {
   overlay: {
@@ -30,13 +32,13 @@ Modal.setAppElement("#root");
 
 function App() {
   const [modalIsOpen, setIsOpen] = useState(false);
-
-  function openModal() {
-    setIsOpen(true);
-  }
+  const [sponsorModalIsOpen, setSponsorModalIsOpen] = useState(false);
+  const [partnersModalIsOpen, setPartnersModalIsOpen] = useState(false);
 
   function closeModal() {
     setIsOpen(false);
+    setSponsorModalIsOpen(false);
+    setPartnersModalIsOpen(false);
   }
 
   return (
@@ -59,12 +61,36 @@ function App() {
 
         <div className="menu-container">
           <button className="nes-btn is-primary">Register</button>
-          <button className="nes-btn is-primary" onClick={openModal}>
+          <button
+            className="nes-btn is-primary"
+            onClick={() => setIsOpen(true)}
+          >
             About
           </button>
           <div className="community-buttons">
-            <button className="nes-btn is-primary">Sponsors</button>
-            <button className="nes-btn is-primary">Partners</button>
+            <button
+              className="nes-btn is-primary"
+              onClick={() => setSponsorModalIsOpen(true)}
+            >
+              Sponsors
+            </button>
+            <button
+              className="nes-btn is-primary"
+              onClick={() => setPartnersModalIsOpen(true)}
+            >
+              Partners
+            </button>
+          </div>
+        </div>
+
+        <div className="submenu-container">
+          <p className="submenu-container-title">Support SwampHacks</p>
+          <div className="submenu-links-container">
+            <a className="submenu-link">Judge</a>
+            <span>&#9679;</span>
+            <a className="submenu-link">Volunteer</a>
+            <span>&#9679;</span>
+            <a className="submenu-link">Mentor</a>
           </div>
         </div>
 
@@ -94,11 +120,17 @@ function App() {
       </footer>
 
       <Modal
-        isOpen={modalIsOpen}
+        isOpen={modalIsOpen || sponsorModalIsOpen || partnersModalIsOpen}
         onRequestClose={closeModal}
         style={customModalStyles}
       >
-        <InformationModal closeModal={closeModal} />
+        {sponsorModalIsOpen ? (
+          <Sponsors closeModal={closeModal} />
+        ) : partnersModalIsOpen ? (
+          <Partners closeModal={closeModal} />
+        ) : (
+          <InformationModal closeModal={closeModal} />
+        )}
       </Modal>
     </div>
   );
