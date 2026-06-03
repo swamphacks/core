@@ -202,6 +202,18 @@ func (h *emailCampaignHandler) handleUpdateCampaign(ctx context.Context, input *
 	if err != nil {
 		return nil, huma.Error400BadRequest("Invalid campaign id")
 	}
+	if input.Body.Title != nil && *input.Body.Title == "" {
+		return nil, huma.Error400BadRequest(ErrEmailCampaignTitleRequired.Error())
+	}
+	if input.Body.Subject != nil && *input.Body.Subject == "" {
+		return nil, huma.Error400BadRequest(ErrEmailCampaignSubjectRequired.Error())
+	}
+	if input.Body.Body != nil && *input.Body.Body == "" {
+		return nil, huma.Error400BadRequest(ErrEmailCampaignBodyRequired.Error())
+	}
+	if input.Body.RecipientTypes != nil && len(*input.Body.RecipientTypes) == 0 {
+		return nil, huma.Error400BadRequest(ErrEmailCampaignRecipientsRequired.Error())
+	}
 
 	params := sqlc.UpdateEmailCampaignParams{
 		TitleDoUpdate:           input.Body.Title != nil,
