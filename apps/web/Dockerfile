@@ -6,7 +6,7 @@ WORKDIR /app
 # Install pnpm globally
 RUN npm install -g pnpm
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 ENV HUSKY=0
 # Install dependencies
@@ -28,7 +28,7 @@ FROM base AS build
 RUN pnpm run build
 
 # ========== Production Stage (With Runtime Config Injection) ===========
-FROM node:22.16.0-slim AS prod
+FROM node:24.16-slim AS prod
 WORKDIR /app
 
 # Copy built React app (dist folder)
