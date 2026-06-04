@@ -1,10 +1,15 @@
-FROM golang:latest
+# Pin the Go version to match go.mod (avoids surprise toolchain re-resolution on `latest`)
+FROM golang:1.26
 
 WORKDIR /app
 
-COPY go.mod ./
+# Copy manifests first so dependency download is cached as its own layer and
+# only re-runs when go.mod / go.sum change (not on every source edit).
+COPY go.mod go.sum ./
 
-RUN go mod tidy
+# Use `go mod download` (not `go mod tidy`): deterministic, verifies against
+# go.sum, and doesn't mutate the manifests inside the image.
+RUN go mod download
 
 RUN go install github.com/air-verse/air@latest
 

@@ -6,6 +6,10 @@ services:
     env_file: "./apps/api/.env.dev"
     volumes:
       - ./apps/api:/app
+      # Persist Go's module + build caches so `air`'s rebuilds are incremental
+      # instead of a multi-minute cold compile on every `docker compose up`.
+      - go_mod_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
     ports:
       - 8080:8080
     depends_on:
@@ -143,3 +147,5 @@ services:
 volumes:
   postgres_data:
   grafana_data:
+  go_mod_cache:
+  go_build_cache:
