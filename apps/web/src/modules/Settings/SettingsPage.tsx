@@ -59,7 +59,7 @@ export function SettingsPage({ logout }: { logout: () => void }) {
     try {
       setEmailConsent(selected);
       await api.patch("users/me/email-consent", {
-        json: { email_consent: selected },
+        json: { emailConsent: selected },
       });
     } catch {
       showToast({
@@ -85,7 +85,7 @@ export function SettingsPage({ logout }: { logout: () => void }) {
                 />
               ) : (
                 <TablerHome
-                  onClick={() => router.navigate({ to: "/portal" })}
+                  onClick={() => router.navigate({ to: "/information" })}
                   className="size-7 hover:cursor-pointer text-text-secondary hover:text-text-main"
                 />
               )}

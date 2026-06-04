@@ -43,7 +43,7 @@ export function OnboardingModal({
       try {
         await api.patch("users/me/onboarding", {
           json: {
-            preferred_email: value.preferredEmail,
+            preferredEmail: value.preferredEmail,
             name: value.preferredName,
           },
         });

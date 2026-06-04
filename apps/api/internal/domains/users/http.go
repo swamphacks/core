@@ -269,7 +269,7 @@ type UpdateUserOutput struct {
 
 type UpdateUserRequest struct {
 	Name           string `json:"name"`
-	PreferredEmail string `json:"preferred_email"`
+	PreferredEmail string `json:"preferredEmail"`
 }
 
 func (h *handler) handleUpdateUser(ctx context.Context, input *struct {
