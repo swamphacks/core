@@ -76,6 +76,18 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 	}, applicationHandler.handleGetDownloadResumeURL)
 
 	huma.Register(group, huma.Operation{
+		OperationID: "replace-resume",
+		Method:      http.MethodPut,
+		Summary:     "Replace Resume",
+		Description: "Replaces the resume of an already-submitted application without modifying any question responses.",
+		Tags:        []string{"Application"},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Path:        "/resume",
+		Errors:      []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, applicationHandler.handleReplaceResume)
+
+	huma.Register(group, huma.Operation{
 		OperationID:   "get-application-statistics",
 		Method:        http.MethodGet,
 		Summary:       "Get Application Statistics",
@@ -480,6 +492,52 @@ func (h *handler) handleGetDownloadResumeURL(ctx context.Context, input *struct{
 	}
 
 	return &GetDownloadResumeOutput{Body: request.URL}, nil
+}
+
+type ReplaceResumeOutput struct {
+	Status int
+}
+
+func (h *handler) handleReplaceResume(ctx context.Context, input *struct {
+	RawBody huma.MultipartFormFiles[struct {
+		Resume huma.FormFile `form:"resume" contentType:"application/pdf" required:"true"`
+	}]
+}) (*ReplaceResumeOutput, error) {
+	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
+	}
+
+	fileHeaders := input.RawBody.Form.File["resume"]
+	if len(fileHeaders) == 0 {
+		return nil, huma.Error400BadRequest("Invalid resume file")
+	}
+	fileHeader := fileHeaders[0]
+
+	if fileHeader.Size > 10*1024*1024 { // 10 MiB
+		return nil, huma.Error400BadRequest("File too large")
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		return nil, huma.Error400BadRequest("Failed to parse uploaded resume")
+	}
+	defer file.Close()
+
+	resumeBuffer := bytes.NewBuffer(nil)
+	if _, err := io.Copy(resumeBuffer, file); err != nil {
+		return nil, huma.Error500InternalServerError("Error while parsing resume")
+	}
+
+	if err := h.applicationService.ReplaceResume(ctx, userCtx.UserID, resumeBuffer.Bytes()); err != nil {
+		if errors.Is(err, database.ErrApplicationNotFound) {
+			return nil, huma.Error400BadRequest("No application found to replace resume for")
+		}
+		return nil, huma.Error500InternalServerError("Unable to replace resume")
+	}
+
+	return &ReplaceResumeOutput{Status: http.StatusOK}, nil
 }
 
 type GetApplicationStatisticsOutput struct {

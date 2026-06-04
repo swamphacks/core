@@ -286,6 +286,36 @@ func (s *ApplicationService) SubmitApplicationReview(ctx context.Context) (*sqlc
 	return nil, nil
 }
 
+// ReplaceResume overwrites the resume of an already-submitted application without
+// touching any of the question responses. Hackers sometimes submit the wrong resume
+// and need to swap it out after the fact.
+func (s *ApplicationService) ReplaceResume(ctx context.Context, userID uuid.UUID, resume []byte) error {
+	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
+	if err != nil {
+		s.logger.Err(err).Msg("Replace resume fail because can't retrieve hackathon")
+		return ErrFailedToGetHackathon
+	}
+
+	application, err := s.GetApplicationByUserId(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	// Only allow replacing the resume once the application has actually been submitted.
+	// Before submission the resume is handled as part of the normal submit flow.
+	if application.Status == sqlc.ApplicationStatusStarted {
+		return errors.New("cannot replace resume before the application has been submitted")
+	}
+
+	contentType := "application/pdf"
+	if err := s.storage.Store(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+userID.String(), resume, &contentType); err != nil {
+		s.logger.Err(err).Msg("Replace resume fail while storing resume")
+		return err
+	}
+
+	return nil
+}
+
 func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userID uuid.UUID, lifetimeSecs int64) (*storage.PresignedRequest, error) {
 	presignableStorage, ok := s.storage.(storage.PresignableStorage)
 
@@ -300,7 +330,15 @@ func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userID uu
 		return nil, err
 	}
 
-	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, userID.String(), lifetimeSecs)
+	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
+	if err != nil {
+		s.logger.Err(err).Msg("download resume fail because can't retrieve hackathon")
+		return nil, ErrFailedToGetHackathon
+	}
+
+	// Resumes are stored under hackathonID/userID (see SubmitApplication and ReplaceResume),
+	// so the presigned download key must match that prefix.
+	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+userID.String(), lifetimeSecs)
 
 	if err != nil {
 		s.logger.Err(err).Msg("fail presign get object")
