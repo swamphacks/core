@@ -1,5 +1,5 @@
 # ========== Base Stage ===========
-FROM node:22.16.0-slim AS base
+FROM node:24.16-slim AS base
 
 WORKDIR /app
 
