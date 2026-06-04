@@ -8,10 +8,10 @@ RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml ./
 
-ENV CI=true
-
+ENV HUSKY=0
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts && \
+    pnpm rebuild @tailwindcss/oxide esbuild
 
 COPY . .
 
