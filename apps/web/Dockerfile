@@ -8,7 +8,7 @@ RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml ./
 
-RUN pnpm approve-builds --all
+ENV CI=true
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
