@@ -57,7 +57,10 @@ func (q *Queries) DeleteExpiredSession(ctx context.Context) error {
 }
 
 const getActiveSessionUserInfo = `-- name: GetActiveSessionUserInfo :one
-SELECT u.id AS user_id, u.name, u.email, u.preferred_email, u.onboarded, u.image, u.role, u.email_consent, u.checked_in_at, u.rfid, s.last_used_at
+SELECT u.id AS user_id, u.name, u.email, u.preferred_email,
+  u.onboarded, u.image, u.role, u.email_consent,
+  u.checked_in_at, u.rfid, u.has_seen_new_application_status,
+  s.last_used_at
 FROM sessions s
 JOIN users u ON s.user_id = u.id
 WHERE s.id = $1
@@ -66,17 +69,18 @@ LIMIT 1
 `
 
 type GetActiveSessionUserInfoRow struct {
-	UserID         uuid.UUID  `json:"user_id"`
-	Name           string     `json:"name"`
-	Email          *string    `json:"email"`
-	PreferredEmail *string    `json:"preferred_email"`
-	Onboarded      bool       `json:"onboarded"`
-	Image          *string    `json:"image"`
-	Role           UserRole   `json:"role"`
-	EmailConsent   bool       `json:"email_consent"`
-	CheckedInAt    *time.Time `json:"checked_in_at"`
-	Rfid           *string    `json:"rfid"`
-	LastUsedAt     time.Time  `json:"last_used_at"`
+	UserID                      uuid.UUID  `json:"user_id"`
+	Name                        string     `json:"name"`
+	Email                       *string    `json:"email"`
+	PreferredEmail              *string    `json:"preferred_email"`
+	Onboarded                   bool       `json:"onboarded"`
+	Image                       *string    `json:"image"`
+	Role                        UserRole   `json:"role"`
+	EmailConsent                bool       `json:"email_consent"`
+	CheckedInAt                 *time.Time `json:"checked_in_at"`
+	Rfid                        *string    `json:"rfid"`
+	HasSeenNewApplicationStatus *bool      `json:"has_seen_new_application_status"`
+	LastUsedAt                  time.Time  `json:"last_used_at"`
 }
 
 func (q *Queries) GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error) {
@@ -93,6 +97,7 @@ func (q *Queries) GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (G
 		&i.EmailConsent,
 		&i.CheckedInAt,
 		&i.Rfid,
+		&i.HasSeenNewApplicationStatus,
 		&i.LastUsedAt,
 	)
 	return i, err

@@ -99,9 +99,7 @@ func (s *UserService) GetUserByRFID(ctx context.Context, rfid string) (*sqlc.Use
 // 	return checkedIn, nil
 // }
 
-func (s *UserService) UpdateUser(ctx context.Context, userID uuid.UUID, params sqlc.UpdateUserParams) error {
-	params.ID = userID
-
+func (s *UserService) UpdateUser(ctx context.Context, params sqlc.UpdateUserParams) error {
 	err := s.userRepo.UpdateUser(ctx, params)
 	if err != nil {
 		if err == repository.ErrUserNotFound {
@@ -127,7 +125,7 @@ func (s *UserService) CompleteOnboarding(ctx context.Context, userID uuid.UUID, 
 		Onboarded:              true,
 	}
 
-	return s.UpdateUser(ctx, userID, params)
+	return s.UpdateUser(ctx, params)
 }
 
 func (s *UserService) GetAllUsers(ctx context.Context, search *string, limit, offset int32) ([]sqlc.User, error) {

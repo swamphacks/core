@@ -65,6 +65,8 @@ type UserContext struct {
 	Rfid *string `json:"rfid"`
 
 	CheckedInAt *time.Time `json:"checkedInAt"`
+
+	HasSeeNewApplicationStatus *bool `json:"hasSeenNewApplicationStatus"`
 }
 
 type SessionContext struct {
@@ -191,16 +193,17 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 
 		// TODO: I don't think we need UserContext here, just return sqlc.User directly
 		userContext := UserContext{
-			UserID:         user.UserID,
-			Name:           user.Name,
-			Email:          user.Email,
-			PreferredEmail: user.PreferredEmail,
-			Image:          user.Image,
-			Onboarded:      user.Onboarded,
-			Role:           user.Role,
-			EmailConsent:   user.EmailConsent,
-			Rfid:           user.Rfid,
-			CheckedInAt:    user.CheckedInAt,
+			UserID:                     user.UserID,
+			Name:                       user.Name,
+			Email:                      user.Email,
+			PreferredEmail:             user.PreferredEmail,
+			Image:                      user.Image,
+			Onboarded:                  user.Onboarded,
+			Role:                       user.Role,
+			EmailConsent:               user.EmailConsent,
+			Rfid:                       user.Rfid,
+			CheckedInAt:                user.CheckedInAt,
+			HasSeeNewApplicationStatus: user.HasSeenNewApplicationStatus,
 		}
 
 		sessionContext := SessionContext{

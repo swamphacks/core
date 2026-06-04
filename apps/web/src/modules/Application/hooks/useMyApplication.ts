@@ -8,10 +8,11 @@ export async function fetchMyApplication(): Promise<Application> {
   return await api.get<Application>(`application`).json();
 }
 
-export function useMyApplication() {
+export function useMyApplication(enabled: boolean = true) {
   return useQuery({
     queryKey: myApplicationQueryKey,
     queryFn: () => fetchMyApplication(),
     staleTime: Infinity,
+    enabled,
   });
 }

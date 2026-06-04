@@ -521,20 +521,21 @@ type TeamMember struct {
 }
 
 type User struct {
-	ID             uuid.UUID  `json:"id"`
-	Name           string     `json:"name"`
-	Email          *string    `json:"email"`
-	EmailVerified  bool       `json:"email_verified"`
-	Onboarded      bool       `json:"onboarded"`
-	Image          *string    `json:"image"`
-	CreatedAt      time.Time  `json:"created_at"`
-	UpdatedAt      time.Time  `json:"updated_at"`
-	PreferredEmail *string    `json:"preferred_email"`
-	EmailConsent   bool       `json:"email_consent"`
-	CheckedInAt    *time.Time `json:"checked_in_at"`
-	Rfid           *string    `json:"rfid"`
-	RoleAssignedAt *time.Time `json:"role_assigned_at"`
-	Role           UserRole   `json:"role"`
+	ID                          uuid.UUID  `json:"id"`
+	Name                        string     `json:"name"`
+	Email                       *string    `json:"email"`
+	EmailVerified               bool       `json:"email_verified"`
+	Onboarded                   bool       `json:"onboarded"`
+	Image                       *string    `json:"image"`
+	CreatedAt                   time.Time  `json:"created_at"`
+	UpdatedAt                   time.Time  `json:"updated_at"`
+	PreferredEmail              *string    `json:"preferred_email"`
+	EmailConsent                bool       `json:"email_consent"`
+	CheckedInAt                 *time.Time `json:"checked_in_at"`
+	Rfid                        *string    `json:"rfid"`
+	RoleAssignedAt              *time.Time `json:"role_assigned_at"`
+	Role                        UserRole   `json:"role"`
+	HasSeenNewApplicationStatus *bool      `json:"has_seen_new_application_status"`
 }
 
 type UserRedemption struct {

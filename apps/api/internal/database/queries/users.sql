@@ -40,8 +40,9 @@ SET
     email_consent = CASE WHEN @email_consent_do_update::boolean THEN @email_consent ELSE email_consent END,
     checked_in_at = CASE WHEN @checked_in_at_do_update::boolean THEN @checked_in_at ELSE checked_in_at END,
     rfid = CASE WHEN @rfid_do_update::boolean THEN @rfid ELSE rfid END,
-    role = CASE WHEN @role_do_update::boolean THEN @role ELSE role END,
-    role_assigned_at = CASE WHEN @role_do_update::boolean THEN NOW() ELSE role_assigned_at END,
+    -- role = CASE WHEN @role_do_update::boolean THEN @role ELSE role END,
+    -- role_assigned_at = CASE WHEN @role_do_update::boolean THEN NOW() ELSE role_assigned_at END,
+    has_seen_new_application_status = CASE WHEN @has_seen_new_application_status_do_update::boolean THEN @has_seen_new_application_status ELSE has_seen_new_application_status END,
     updated_at = NOW()
 WHERE
     id = @id::uuid;
