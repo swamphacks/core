@@ -22,6 +22,7 @@ const (
 	ApplicationStatusRejected    ApplicationStatus = "rejected"
 	ApplicationStatusWaitlisted  ApplicationStatus = "waitlisted"
 	ApplicationStatusWithdrawn   ApplicationStatus = "withdrawn"
+	ApplicationStatusConfirmed   ApplicationStatus = "confirmed"
 )
 
 func (e *ApplicationStatus) Scan(src interface{}) error {

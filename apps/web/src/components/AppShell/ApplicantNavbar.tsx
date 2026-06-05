@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/AppShell/NavLink";
-import TablerCode from "~icons/tabler/code";
+import TablerInfoCircle from "~icons/tabler/info-circle";
 import TablerClipboard from "~icons/tabler/clipboard";
 import TablerAlertCircleFilled from "~icons/tabler/alert-circle-filled";
 
@@ -17,7 +17,7 @@ export default function ApplicantNavbar({
       <NavLink
         label="Information"
         href="/information"
-        leftSection={<TablerCode className="w-5 aspect-square" />}
+        leftSection={<TablerInfoCircle className="w-5 aspect-square" />}
         active={pathname.startsWith("/information")}
       />
 

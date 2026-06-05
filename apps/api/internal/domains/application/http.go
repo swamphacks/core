@@ -180,30 +180,30 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 	}, applicationHandler.handleWithdrawAcceptance)
 
 	huma.Register(group, huma.Operation{
-		OperationID:   "withdraw-attendance",
+		OperationID:   "withdraw-application",
 		Method:        http.MethodPatch,
-		Summary:       "Withdraw Attendance",
-		Description:   "Withdraw attendance after accepting to go to the hackathon. Sets application status from accepted to withdrawn. Sets event role from attendee, back to applicant.",
+		Summary:       "Withdraw Application",
+		Description:   "Withdraw application after being accepted to the hackthon. Sets application status from accepted to withdrawn.",
 		Tags:          []string{"Application"},
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Path:          "/withdraw-attendance",
+		Path:          "/withdraw-application",
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleWithdrawAttendance)
+	}, applicationHandler.handleWithdrawApplication)
 
 	huma.Register(group, huma.Operation{
-		OperationID:   "accept-application-acceptance",
+		OperationID:   "confirm-attendance",
 		Method:        http.MethodPatch,
-		Summary:       "Accept Application Acceptance",
-		Description:   "Accept an acceptance after being accepted. Sets event role to attendee, from applicant.",
+		Summary:       "Confirm Attendance",
+		Description:   "Confirm attendance after being accepted. Sets event role to attendee from applicant.",
 		Tags:          []string{"Application"},
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Path:          "/accept-acceptance",
+		Path:          "/confirm-attendance",
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleAcceptApplicationAcceptance)
+	}, applicationHandler.handleConfirmAttendance)
 
 	huma.Register(group, huma.Operation{
 		OperationID:   "transition-waitlist",
@@ -652,44 +652,52 @@ func (h *handler) handleWithdrawAcceptance(ctx context.Context, input *struct{})
 	return &WithdrawAcceptanceOutput{Status: http.StatusOK}, nil
 }
 
-type WithdrawAttendanceOutput struct {
+type WithdrawApplicationOutput struct {
 	Status int
 }
 
-func (h *handler) handleWithdrawAttendance(ctx context.Context, input *struct{}) (*WithdrawAttendanceOutput, error) {
+func (h *handler) handleWithdrawApplication(ctx context.Context, input *struct{}) (*WithdrawApplicationOutput, error) {
 	userCtx := ctxutils.GetUserFromCtx(ctx)
 
 	if userCtx == nil {
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err := h.applicationService.WithdrawAttendance(ctx, userCtx.UserID)
+	if userCtx.Role != sqlc.UserRoleApplicant {
+		return nil, huma.Error400BadRequest("Not an applicant")
+	}
+
+	err := h.applicationService.WithdrawApplication(ctx, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to withdraw attendance")
 	}
 
-	return &WithdrawAttendanceOutput{Status: http.StatusOK}, nil
+	return &WithdrawApplicationOutput{Status: http.StatusOK}, nil
 }
 
-type AcceptApplicationAcceptanceOutput struct {
+type ConfirmAttendanceOutput struct {
 	Status int
 }
 
-func (h *handler) handleAcceptApplicationAcceptance(ctx context.Context, input *struct{}) (*AcceptApplicationAcceptanceOutput, error) {
+func (h *handler) handleConfirmAttendance(ctx context.Context, input *struct{}) (*ConfirmAttendanceOutput, error) {
 	userCtx := ctxutils.GetUserFromCtx(ctx)
 
 	if userCtx == nil {
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err := h.applicationService.AcceptApplicationAcceptance(ctx, userCtx.UserID)
+	if userCtx.Role != sqlc.UserRoleApplicant {
+		return nil, huma.Error400BadRequest("Not an applicant")
+	}
+
+	err := h.applicationService.ConfirmAttendance(ctx, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to withdraw attendance")
 	}
 
-	return &AcceptApplicationAcceptanceOutput{Status: http.StatusOK}, nil
+	return &ConfirmAttendanceOutput{Status: http.StatusOK}, nil
 }
 
 type TransitionWaitlistedApplicationsOutput struct {

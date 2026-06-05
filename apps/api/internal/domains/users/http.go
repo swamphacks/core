@@ -289,13 +289,19 @@ func (h *handler) handleUpdateUser(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Invalid email format")
 	}
 
+	var preferredEmail *string
+
+	if input.Body.PreferredEmail != "" {
+		preferredEmail = &input.Body.PreferredEmail
+	}
+
 	// TODO: Allow/add more fields here
 	params := sqlc.UpdateUserParams{
 		ID:                     userCtx.UserID,
 		NameDoUpdate:           true,
 		Name:                   input.Body.Name,
 		PreferredEmailDoUpdate: true,
-		PreferredEmail:         &input.Body.PreferredEmail,
+		PreferredEmail:         preferredEmail,
 	}
 
 	err := h.userService.UpdateUser(ctx, params)

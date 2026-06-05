@@ -1,12 +1,12 @@
 import { NavLink } from "@/components/AppShell/NavLink";
+import TablerLayoutDashboard from "~icons/tabler/layout-dashboard";
 import TablerInfoCircle from "~icons/tabler/info-circle";
-import TablerClipboard from "~icons/tabler/clipboard";
 
-interface VisitorNavbarProps {
+interface AttendeeNavbarProps {
   pathname: string;
 }
 
-export default function VisitorNavbar({ pathname }: VisitorNavbarProps) {
+export default function AttendeeNavbar({ pathname }: AttendeeNavbarProps) {
   const commonNavLinks = (
     <>
       <NavLink
@@ -15,15 +15,13 @@ export default function VisitorNavbar({ pathname }: VisitorNavbarProps) {
         leftSection={<TablerInfoCircle className="w-5 aspect-square" />}
         active={pathname.startsWith("/information")}
       />
-
       <NavLink
-        label="Application"
-        href="/application"
-        leftSection={<TablerClipboard className="w-5 aspect-square" />}
-        active={pathname.startsWith("/application")}
+        label="Hacker Portal"
+        href="/hacker-portal"
+        leftSection={<TablerLayoutDashboard className="w-5 aspect-square" />}
+        active={pathname.startsWith("/hacker-portal")}
       />
     </>
   );
-
-  return <>{commonNavLinks}</>;
+  return commonNavLinks;
 }

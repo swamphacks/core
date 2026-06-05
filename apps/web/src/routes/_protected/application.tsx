@@ -1,28 +1,41 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ErrorBoundary } from "react-error-boundary";
 import { ApplicationForm } from "@/modules/Application/ApplicationForm";
 import TablerAlertCircle from "~icons/tabler/alert-circle";
 import { useEffect } from "react";
-import { useHackathon } from "@/modules/Hackathon/hooks/useHackathon";
-import { Spinner } from "@/components/ui/Spinner";
+import { hackathonQueryOptions } from "@/modules/Hackathon/hooks/useHackathon";
 import { api } from "@/lib/ky";
-import { auth } from "@/lib/authClient";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useUserQueryKey } from "@/lib/auth/hooks/useUser";
 import type { AuthUserResponse } from "@/lib/auth/types";
-import { useMyApplication } from "@/modules/Application/hooks/useMyApplication";
+import { myApplicationQueryOptions } from "@/modules/Application/hooks/useMyApplication";
+import { useApplicationActions } from "@/modules/Application/hooks/useApplicationActions";
 import { Button } from "@/components/ui/Button";
+import { PageLoading } from "@/components/PageLoading";
 
-export const Route = createFileRoute("/_protected/_user/application")({
+export const Route = createFileRoute("/_protected/application")({
   component: RouteComponent,
+  beforeLoad: ({ context }) => {
+    if (context.user.role === "attendee") {
+      throw redirect({
+        to: "/hacker-portal",
+      });
+    }
+  },
+  pendingComponent: PageLoading,
+  loader: ({ context }) => {
+    return Promise.all([
+      context.queryClient.ensureQueryData(hackathonQueryOptions()),
+      context.queryClient.ensureQueryData(myApplicationQueryOptions()),
+    ]);
+  },
 });
 
 function RouteComponent() {
-  const hackathon = useHackathon();
-  const { data } = auth.useUser();
-  const { user } = data!;
+  const { user } = Route.useRouteContext();
   const queryClient = useQueryClient();
-  const application = useMyApplication();
+  const hackathon = useSuspenseQuery(hackathonQueryOptions());
+  const application = useSuspenseQuery(myApplicationQueryOptions());
 
   // Show a confirmation dialog when the user closes the tab
   // useEffect(() => {
@@ -38,11 +51,7 @@ function RouteComponent() {
   // }, []);
 
   useEffect(() => {
-    if (
-      user?.hasSeenNewApplicationStatus === false &&
-      hackathon.data &&
-      !hackathon.isLoading
-    ) {
+    if (user.hasSeenNewApplicationStatus === false) {
       api.post(`users/me/acknowledge-new-application-status`);
 
       queryClient.setQueryData(
@@ -56,25 +65,7 @@ function RouteComponent() {
         }),
       );
     }
-  }, [user, hackathon]);
-
-  if (hackathon.isLoading) {
-    return (
-      <div className="flex w-full justify-center pt-10 gap-2 text-text-secondary">
-        <Spinner />
-        <p>Loading hackathon...</p>
-      </div>
-    );
-  }
-
-  if (!hackathon.data) {
-    return (
-      <div className="h-full flex justify-center items-center gap-2 text-red-400">
-        <TablerAlertCircle />
-        <p>Something went wrong while loading hackathon information :(</p>
-      </div>
-    );
-  }
+  }, [user]);
 
   if (new Date() > new Date(hackathon.data.applicationClose)) {
     return (
@@ -87,31 +78,23 @@ function RouteComponent() {
     );
   }
 
-  if (application.isLoading) {
-    return (
-      <div className="flex w-full justify-center pt-10 gap-2 text-text-secondary">
-        <Spinner />
-        <p>Loading form...</p>
-      </div>
-    );
-  }
-
-  if (!application.data) {
-    throw new Error("Application data is empty.");
-  }
-
   const applicationResponses = JSON.parse(atob(application.data.application));
+  const name = applicationResponses["firstName"];
 
   if (application.data.status === "accepted") {
-    return <Accepted name={applicationResponses["firstName"]} />;
+    return <Accepted name={name} />;
   }
 
   if (application.data.status === "rejected") {
-    return <Rejected name={applicationResponses["firstName"]} />;
+    return <Rejected name={name} />;
   }
 
   if (application.data.status === "waitlisted") {
-    return <Waitlisted name={applicationResponses["firstName"]} />;
+    return <Waitlisted name={name} />;
+  }
+
+  if (application.data.status === "withdrawn") {
+    return <Withdrawn name={name} />;
   }
 
   return (
@@ -139,15 +122,20 @@ interface AcceptedProps {
 }
 
 function Accepted({ name }: AcceptedProps) {
-  const handleConfirmAttendance = () => {};
+  const { confirmAttendance, withdrawApplication } = useApplicationActions();
 
-  const handleWithdrawApplication = () => {
+  const handleConfirmAttendance = async () => {
+    await confirmAttendance.mutateAsync();
+    window.location.reload();
+  };
+
+  const handleWithdrawApplication = async () => {
     const isConfirmed = window.confirm(
       "Are you sure you want to withdraw your application?",
     );
 
     if (isConfirmed) {
-      console.log("Withdrawing");
+      await withdrawApplication.mutateAsync();
     }
   };
 
@@ -202,7 +190,7 @@ function Rejected({ name }: RejectedProps) {
           other ways:
         </p>
 
-        <ol>
+        <ol className="flex flex-col gap-2">
           <li>
             1. <strong>Join the Waitlist</strong>: We may have openings
             available closer to the event. You can join the waitlist in the{" "}
@@ -233,7 +221,7 @@ function Rejected({ name }: RejectedProps) {
           If you have any questions, reach out in our{" "}
           <a href="https://discord.com/invite/NfRPv9JtAG">Discord server</a> or
           email us at{" "}
-          <a href="mailto:contact@swamphacks.com">contact@swamphacks.com</a>.
+          <a href="mailto:contact@swamphacks.com">contact@swamphacks.com</a>
         </p>
       </div>
     </div>
@@ -268,6 +256,49 @@ function Waitlisted({ name }: WaitlistedProps) {
           <a href="https://discord.com/invite/NfRPv9JtAG">Discord server</a> or
           email us at{" "}
           <a href="mailto:contact@swamphacks.com">contact@swamphacks.com</a>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+interface WithdrawnProps {
+  name: string;
+}
+
+function Withdrawn({ name }: WithdrawnProps) {
+  return (
+    <div className="w-full sm:max-w-200 mx-auto font-figtree p-2 relative">
+      <h1 className="text-2xl">Hi, {name}!</h1>
+
+      <div className="my-3 flex flex-col gap-3">
+        <p>Your application for SwampHacks XII has been withdrawn.</p>
+
+        <p>
+          We appreciate your interest in SwampHacks and the time you took to
+          apply. While we're sorry you won't be able to join us this year, we
+          hope to see you at a future event.
+        </p>
+
+        <p>
+          If your plans change and registration is still open, please reach out
+          to our team and we'll do our best to help.
+        </p>
+
+        <p>
+          You can also stay connected with the SwampHacks community through our{" "}
+          <a className="underline" href="https://discord.com/invite/NfRPv9JtAG">
+            Discord server
+          </a>{" "}
+          and follow future announcements for upcoming events and opportunities.
+        </p>
+
+        <p>
+          If you have any questions, feel free to contact us at{" "}
+          <a className="underline" href="mailto:contact@swamphacks.com">
+            contact@swamphacks.com
+          </a>
+          .
         </p>
       </div>
     </div>

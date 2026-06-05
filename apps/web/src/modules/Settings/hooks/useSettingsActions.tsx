@@ -5,10 +5,11 @@ import { useUserQueryKey } from "@/lib/auth/hooks/useUser";
 
 export const settingsFieldsSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  preferredEmail: z.preprocess(
-    (val: string) => (val === "" ? undefined : val),
-    z.email("Email address is invalid").optional(),
-  ),
+  preferredEmail: z.preprocess((val: string) => {
+    if (typeof val !== "string") return undefined;
+    if (val.trim() === "") return undefined;
+    return val;
+  }, z.email("Email address is invalid").optional()),
 });
 
 export function useSettingsActions() {
@@ -25,10 +26,23 @@ export function useSettingsActions() {
         })
         .json();
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: useUserQueryKey });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: useUserQueryKey });
     },
   });
 
-  return { updateAccountInfo };
+  const updateEmailConsent = useMutation({
+    mutationFn: (selected: boolean) => {
+      return api
+        .patch("users/me/email-consent", {
+          json: { emailConsent: selected },
+        })
+        .json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: useUserQueryKey });
+    },
+  });
+
+  return { updateAccountInfo, updateEmailConsent };
 }
