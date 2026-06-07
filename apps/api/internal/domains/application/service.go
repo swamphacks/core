@@ -25,6 +25,7 @@ var (
 	ErrApplicationNotOpened      = errors.New("Application not opened")
 	ErrFailedToCreateApplication = errors.New("Failed to create application")
 	ErrFailedToGetHackathon      = errors.New("Failed to get hackathon information")
+	ErrCannotReplaceResume       = errors.New("cannot replace resume before the application has been submitted")
 )
 
 type ApplicationService struct {
@@ -305,7 +306,7 @@ func (s *ApplicationService) ReplaceResume(ctx context.Context, userID uuid.UUID
 	// Only allow replacing the resume once the application has actually been submitted.
 	// Before submission the resume is handled as part of the normal submit flow.
 	if application.Status == sqlc.ApplicationStatusStarted {
-		return errors.New("cannot replace resume before the application has been submitted")
+		return ErrCannotReplaceResume
 	}
 
 	contentType := "application/pdf"

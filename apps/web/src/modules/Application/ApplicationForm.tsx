@@ -271,10 +271,16 @@ function ReplaceResume() {
           type: "success",
         });
       },
-      onError: () => {
+      onError: async (err) => {
+        let message = "Something went wrong while replacing your resume.";
+        if (err instanceof HTTPError) {
+          const resBody = await err.response.json<{ detail?: string }>();
+          message = resBody.detail || message;
+        }
+
         showToast({
           title: "Upload failed",
-          message: "Something went wrong while replacing your resume.",
+          message,
           type: "error",
         });
       },

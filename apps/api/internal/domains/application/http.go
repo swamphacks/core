@@ -534,10 +534,13 @@ func (h *handler) handleReplaceResume(ctx context.Context, input *struct {
 		if errors.Is(err, database.ErrApplicationNotFound) {
 			return nil, huma.Error400BadRequest("No application found to replace resume for")
 		}
+		if errors.Is(err, ErrCannotReplaceResume) {
+			return nil, huma.Error400BadRequest(err.Error())
+		}
 		return nil, huma.Error500InternalServerError("Unable to replace resume")
 	}
 
-	return &ReplaceResumeOutput{Status: http.StatusOK}, nil
+	return &ReplaceResumeOutput{Status: http.StatusNoContent}, nil
 }
 
 type GetApplicationStatisticsOutput struct {
