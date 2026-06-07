@@ -3,7 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QuestionTypes } from "@/modules/FormBuilder/types";
 import { showToast } from "@/lib/toast/toast";
 import TablerCircleCheck from "~icons/tabler/circle-check";
+import TablerUpload from "~icons/tabler/upload";
 import { api } from "@/lib/ky";
+import { Spinner } from "@/components/ui/Spinner";
+import { Button } from "@/components/ui/Button";
+import { useReplaceResume } from "@/modules/Application/hooks/useReplaceResume";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
 
 import Cloud from "./assets/cloud.svg?react";
@@ -234,6 +238,78 @@ function SubmitSuccess({ submittedAt }: { submittedAt: string }) {
           minute: "2-digit",
         }).format(new Date(submittedAt))}
       </p>
+      <ReplaceResume />
+    </div>
+  );
+}
+
+function ReplaceResume() {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { mutate: replaceResume, isPending } = useReplaceResume();
+
+  const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Reset so selecting the same file again still fires onChange
+    e.target.value = "";
+
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      showToast({
+        title: "Invalid file",
+        message: "Please upload a PDF resume.",
+        type: "error",
+      });
+      return;
+    }
+
+    replaceResume(file, {
+      onSuccess: () => {
+        showToast({
+          title: "Resume updated",
+          message: "Your resume has been replaced successfully.",
+          type: "success",
+        });
+      },
+      onError: async (err) => {
+        let message = "Something went wrong while replacing your resume.";
+        if (err instanceof HTTPError) {
+          const resBody = await err.response.json<{ detail?: string }>();
+          message = resBody.detail || message;
+        }
+
+        showToast({
+          title: "Upload failed",
+          message,
+          type: "error",
+        });
+      },
+    });
+  };
+
+  return (
+    <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+      <p className="text-sm text-text-secondary mb-2">
+        Uploaded the wrong resume? You can replace it below. This does not
+        change any of your other application responses.
+      </p>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={onSelectFile}
+      />
+      <Button
+        variant="secondary"
+        size="sm"
+        isDisabled={isPending}
+        onPress={() => inputRef.current?.click()}
+        className="inline-flex items-center gap-2"
+      >
+        {isPending ? <Spinner /> : <TablerUpload />}
+        {isPending ? "Uploading..." : "Replace resume"}
+      </Button>
     </div>
   );
 }
