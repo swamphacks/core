@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -650,7 +651,7 @@ func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userID uuid
 	return nil
 }
 
-func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userID uuid.UUID) error {
+func (s *ApplicationService) WithdrawApplication(ctx context.Context, userID uuid.UUID) error {
 	// Make atomic
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.applicationRepo.NewTx(tx)
@@ -678,17 +679,43 @@ func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userID uuid
 	return nil
 }
 
-func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, userID uuid.UUID) error {
-	// is a check for a user being accepted necessary here? or is the frontend enough
+func (s *ApplicationService) ConfirmAttendance(ctx context.Context, userID uuid.UUID) error {
+	// Atomic
+	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.applicationRepo.NewTx(tx)
+		txUserRepo := s.userRepo.NewTx(tx)
 
-	err := s.userRepo.UpdateRole(ctx,
-		sqlc.UpdateRoleParams{
-			UserID: userID,
-			Role:   sqlc.UserRoleAttendee,
-		},
-	)
+		application, err := s.applicationRepo.GetApplicationByUserId(ctx, userID)
+
+		if err != nil {
+			s.logger.Err(err).Msg("ConfirmAttendance fail, unable to retrieve user application")
+			return err
+		}
+
+		if application.Status != sqlc.ApplicationStatusAccepted {
+			err = errors.New("User is not accepted to hack")
+			s.logger.Err(err).Msg(fmt.Sprintf("ConfirmAttendance fail, application is not accepted, status: %s", application.Status))
+			return err
+		}
+
+		if err := txAppRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+			UserID:         userID,
+			StatusDoUpdate: true,
+			Status:         sqlc.ApplicationStatusConfirmed,
+		}); err != nil {
+			return err
+		}
+
+		return txUserRepo.UpdateRole(ctx,
+			sqlc.UpdateRoleParams{
+				UserID: userID,
+				Role:   sqlc.UserRoleAttendee,
+			},
+		)
+	})
+
 	if err != nil {
-		s.logger.Err(err).Msg("AcceptApplicationAcceptance fail, unable to update role")
+		s.logger.Err(err).Msg("ConfirmAttendance fail")
 		return err
 	}
 	return nil

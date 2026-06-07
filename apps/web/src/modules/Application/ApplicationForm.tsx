@@ -7,7 +7,6 @@ import TablerUpload from "~icons/tabler/upload";
 import { api } from "@/lib/ky";
 import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
-import { useMyApplication } from "@/modules/Application/hooks/useMyApplication";
 import { useReplaceResume } from "@/modules/Application/hooks/useReplaceResume";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
 
@@ -20,16 +19,22 @@ import Bell from "./assets/bell.svg?react";
 
 // TODO: dynamically fetch application json data from somewhere (backend, cdn?) instead of hardcoding it in the frontend
 import data from "./application.json";
-import type { Hackathon } from "@/lib/openapi/types";
+import type { Application, Hackathon } from "@/lib/openapi/types";
 import { HTTPError } from "ky";
 
 const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
 interface ApplicationFormProps {
   hackathon: Hackathon;
+  application: Application;
+  applicationResponses: any;
 }
 
-export function ApplicationForm({ hackathon }: ApplicationFormProps) {
+export function ApplicationForm({
+  hackathon,
+  application,
+  applicationResponses,
+}: ApplicationFormProps) {
   // TODO: make the `build` api better so components that use this function doesn't have to call useMemo on it?
   const { Form, fieldsTypes } = useMemo(() => build(data), []);
   const fileFields = useRef(new Set<string>());
@@ -40,8 +45,6 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
   const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>(undefined);
   const [savedText, setSavedText] = useState<string | undefined>("");
   const [submittedAt, setSubmittedAt] = useState<string | undefined>(undefined);
-
-  const application = useMyApplication();
 
   // Update saved text every second. Restart interval when lastSavedAt changes.
   useEffect(() => {
@@ -58,15 +61,15 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
 
   // Update saved at status message, if any.
   useEffect(() => {
-    if (!application || application.isLoading) return;
+    if (!application) return;
 
-    if (application.data?.savedAt) {
-      const parsed = parseISO(application.data.savedAt);
+    if (application?.savedAt) {
+      const parsed = parseISO(application.savedAt);
       setLastSavedAt(parsed);
     } else {
       setLastSavedAt(undefined);
     }
-  }, [application?.data?.savedAt, application?.isLoading]);
+  }, [application?.savedAt]);
 
   const onSubmit = useCallback(async (data: Record<string, any>) => {
     setIsSubmitting(true);
@@ -143,20 +146,7 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
     [isSubmitted, isSubmitting],
   );
 
-  if (application.isLoading) {
-    return (
-      <div className="flex w-full justify-center pt-10 gap-2 text-text-secondary">
-        <Spinner />
-        <p>Loading form...</p>
-      </div>
-    );
-  }
-
-  if (!application.data) {
-    throw new Error("Application data is empty.");
-  }
-
-  const isApplicationSubmitted = application.data.status !== "started";
+  const isApplicationSubmitted = application.status !== "started";
 
   const saveStatus = (
     <>
@@ -178,9 +168,7 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
       <div className="flex-col">
         <Form
           defaultValues={
-            isApplicationSubmitted
-              ? undefined
-              : JSON.parse(atob(application.data.application))
+            isApplicationSubmitted ? undefined : applicationResponses
           }
           onSubmit={onSubmit}
           onNewAttachments={onNewAttachments}
@@ -188,7 +176,7 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
           onChange={onChange}
           SubmitSuccessComponent={() => (
             <SubmitSuccess
-              submittedAt={submittedAt || application.data.submittedAt!}
+              submittedAt={submittedAt || application.submittedAt!}
             />
           )}
           isInvalid={isInvalid}
@@ -236,7 +224,7 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
 function SubmitSuccess({ submittedAt }: { submittedAt: string }) {
   return (
     <div>
-      <div className="flex items-center gap-2 font-medium bg-badge-bg-accepted/50 text-badge-text-accepted rounded-md py-3 pl-3">
+      <div className="flex items-center gap-2">
         <TablerCircleCheck />
         <p>Thank you! Your application has been received.</p>
       </div>

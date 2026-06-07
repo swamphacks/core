@@ -217,7 +217,7 @@ func (q *Queries) GetHackathon(ctx context.Context) (Hackathon, error) {
 }
 
 const getStaff = `-- name: GetStaff :many
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role FROM users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status FROM users
 WHERE role IN ('admin', 'staff')
 `
 
@@ -245,6 +245,7 @@ func (q *Queries) GetStaff(ctx context.Context) ([]User, error) {
 			&i.Rfid,
 			&i.RoleAssignedAt,
 			&i.Role,
+			&i.HasSeenNewApplicationStatus,
 		); err != nil {
 			return nil, err
 		}

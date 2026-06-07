@@ -12,7 +12,7 @@ import { api } from "@/lib/ky";
 import { showToast } from "@/lib/toast/toast";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/Button";
-import { queryKey as authQueryKey } from "@/lib/auth/hooks/useUser";
+import { useUserQueryKey } from "@/lib/auth/hooks/useUser";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface OnboardingModalProps {
@@ -43,11 +43,11 @@ export function OnboardingModal({
       try {
         await api.patch("users/me/onboarding", {
           json: {
-            preferred_email: value.preferredEmail,
+            preferredEmail: value.preferredEmail,
             name: value.preferredName,
           },
         });
-        await queryClient.invalidateQueries({ queryKey: authQueryKey });
+        await queryClient.invalidateQueries({ queryKey: useUserQueryKey });
         showToast({
           title: "Profile Updated",
           message: "Your profile has been updated successfully.",

@@ -154,9 +154,6 @@ func (s *HackathonService) CheckInAttendee(ctx context.Context, userID uuid.UUID
 	return s.userRepo.UpdateUser(ctx, sqlc.UpdateUserParams{
 		ID: userID,
 
-		Role:         sqlc.UserRoleAttendee,
-		RoleDoUpdate: true,
-
 		CheckedInAt:         &now,
 		CheckedInAtDoUpdate: true,
 

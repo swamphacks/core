@@ -1,4 +1,8 @@
-import { useEffect, type PropsWithChildren, type ReactNode } from "react";
+import React, {
+  useEffect,
+  type PropsWithChildren,
+  type ReactNode,
+} from "react";
 import TablerChevronRight from "~icons/tabler/chevron-right";
 import { tv } from "tailwind-variants";
 import { useToggleState } from "react-stately";
@@ -19,7 +23,7 @@ const navLink = tv({
 
 interface NavLinkProps {
   href?: string;
-  label: string;
+  label: string | React.ReactNode;
   description?: string;
   leftSection?: ReactNode;
   rightSection?: ReactNode;
@@ -63,20 +67,21 @@ const NavLink = ({
     <div>
       {isExpandable ? (
         <RAC_Button className={navLink({ active })} onPress={toggle}>
-          <div className="flex flex-row gap-2 items-center">
-            {leftSection && (
-              <span className="flex items-center justify-center">
-                {leftSection}
-              </span>
-            )}
-            <div className="flex flex-col gap-0.5">
-              <span>{label}</span>
-              {description && (
-                <span className="text-xs text-navlink-secondary-text">
-                  {description}
+          <div>
+            <div className="flex flex-row gap-2 items-center">
+              {leftSection && (
+                <span className="flex items-center justify-center">
+                  {leftSection}
                 </span>
               )}
+              <span>{label}</span>
             </div>
+
+            {description && (
+              <span className="text-xs text-navlink-secondary-text">
+                {description}
+              </span>
+            )}
           </div>
 
           <span
@@ -94,20 +99,21 @@ const NavLink = ({
           to={href}
           onClick={() => (closeNavbarOnClick ? setMobileNavOpen(false) : null)}
         >
-          <div className="flex flex-row gap-2 items-center">
-            {leftSection && (
-              <span className="flex items-center justify-center">
-                {leftSection}
-              </span>
-            )}
-            <div className="flex flex-col gap-0.5">
-              <span>{label}</span>
-              {description && (
-                <span className="text-xs text-navlink-secondary-text">
-                  {description}
+          <div>
+            <div className="flex flex-row gap-2 items-center">
+              {leftSection && (
+                <span className="flex items-center justify-center">
+                  {leftSection}
                 </span>
               )}
+              <span>{label}</span>
             </div>
+
+            {description && (
+              <span className="text-xs text-navlink-secondary-text">
+                {description}
+              </span>
+            )}
           </div>
           {rightSection && (
             <span className="flex items-center justify-center">

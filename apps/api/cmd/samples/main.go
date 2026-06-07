@@ -16,7 +16,7 @@ func main() {
 
 	hackathonRepo := repository.NewHackathonRepository(db)
 
-	appOpenTime := time.Date(2026, 5, 26, 19, 13, 20, 0, time.UTC)
+	appOpenTime := time.Date(2026, 4, 26, 19, 13, 20, 0, time.UTC)
 	appCloseTime := time.Date(2026, 6, 26, 19, 13, 20, 0, time.UTC)
 	earlyAppOpenTime := time.Date(2026, 4, 20, 19, 13, 20, 0, time.UTC)
 	earlyAppCloseTime := time.Date(2026, 4, 26, 19, 13, 20, 0, time.UTC)

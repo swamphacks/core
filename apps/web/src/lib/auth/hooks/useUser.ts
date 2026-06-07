@@ -1,12 +1,22 @@
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { _getUser } from "../services/user";
 
-export const queryKey = ["auth", "me"] as const;
+export const useUserQueryKey = ["auth", "me"] as const;
+
+export const userQueryOptions = () =>
+  queryOptions({
+    queryKey: useUserQueryKey,
+    queryFn: async () => await _getUser(),
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    retry: false,
+  });
 
 export function _useUser() {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   return useQuery({
-    queryKey,
+    queryKey: useUserQueryKey,
     queryFn: async () => await _getUser(),
     refetchOnWindowFocus: false,
     refetchOnMount: true,

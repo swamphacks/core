@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
     if (user) {
       console.log("User is already authenticated, redirecting to portal.");
       throw redirect({
-        to: "/portal",
+        to: "/information",
       });
     }
   },

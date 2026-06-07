@@ -3,8 +3,15 @@ import { useAppShell } from "@/components/AppShell/AppShellContext";
 import { cn } from "@/utils/cn";
 import { useRouter } from "@tanstack/react-router";
 import { auth } from "@/lib/authClient";
+import type { UserContext } from "@/lib/auth/types";
 
-export function Profile({ name, role }: { name: string; role: string }) {
+export function Profile({
+  name,
+  role,
+}: {
+  name: string;
+  role: UserContext["role"];
+}) {
   const router = useRouter();
   const { setMobileNavOpen } = useAppShell();
   const { data } = auth.useUser();
@@ -22,7 +29,9 @@ export function Profile({ name, role }: { name: string; role: string }) {
       <div className="flex justify-between w-full items-center">
         <div className="w-full">
           <p className="text-sm truncate max-w-40">{name}</p>
-          <p className="text-sm text-text-secondary opacity-85">{role}</p>
+          <p className="text-sm text-text-secondary opacity-85">
+            {getRoleString(role)}
+          </p>
         </div>
         <div className="flex items-center gap-1">
           <ProfileIcon
@@ -55,4 +64,19 @@ function ProfileIcon({
       {children}
     </div>
   );
+}
+
+function getRoleString(role: UserContext["role"]) {
+  switch (role) {
+    case "admin":
+      return "Admin";
+    case "staff":
+      return "Staff";
+    case "applicant":
+      return "Applicant";
+    case "visitor":
+      return "Visitor";
+    default:
+      return "Hacker";
+  }
 }

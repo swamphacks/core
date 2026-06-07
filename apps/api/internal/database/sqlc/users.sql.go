@@ -15,7 +15,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (name, email, image)
 VALUES ($1, $2, $3)
-RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role
+RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status
 `
 
 type CreateUserParams struct {
@@ -42,6 +42,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Rfid,
 		&i.RoleAssignedAt,
 		&i.Role,
+		&i.HasSeenNewApplicationStatus,
 	)
 	return i, err
 }
@@ -57,7 +58,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role FROM users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status FROM users
 WHERE email = $1
 `
 
@@ -79,12 +80,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email *string) (User, erro
 		&i.Rfid,
 		&i.RoleAssignedAt,
 		&i.Role,
+		&i.HasSeenNewApplicationStatus,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role FROM users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status FROM users
 WHERE id = $1
 `
 
@@ -106,12 +108,13 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.Rfid,
 		&i.RoleAssignedAt,
 		&i.Role,
+		&i.HasSeenNewApplicationStatus,
 	)
 	return i, err
 }
 
 const getUserByRFID = `-- name: GetUserByRFID :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role FROM users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status FROM users
 WHERE rfid = $1
 `
 
@@ -133,6 +136,7 @@ func (q *Queries) GetUserByRFID(ctx context.Context, rfid *string) (User, error)
 		&i.Rfid,
 		&i.RoleAssignedAt,
 		&i.Role,
+		&i.HasSeenNewApplicationStatus,
 	)
 	return i, err
 }
@@ -170,7 +174,7 @@ func (q *Queries) GetUserEmailInfoById(ctx context.Context, id uuid.UUID) (GetUs
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status
 FROM users
 WHERE LOWER(name) LIKE LOWER('%' || COALESCE($1, '') || '%')
    OR LOWER(email) LIKE LOWER('%' || COALESCE($1, '') || '%')
@@ -208,6 +212,7 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]User, err
 			&i.Rfid,
 			&i.RoleAssignedAt,
 			&i.Role,
+			&i.HasSeenNewApplicationStatus,
 		); err != nil {
 			return nil, err
 		}
@@ -292,35 +297,36 @@ SET
     email_consent = CASE WHEN $13::boolean THEN $14 ELSE email_consent END,
     checked_in_at = CASE WHEN $15::boolean THEN $16 ELSE checked_in_at END,
     rfid = CASE WHEN $17::boolean THEN $18 ELSE rfid END,
-    role = CASE WHEN $19::boolean THEN $20 ELSE role END,
-    role_assigned_at = CASE WHEN $19::boolean THEN NOW() ELSE role_assigned_at END,
+    -- role = CASE WHEN @role_do_update::boolean THEN @role ELSE role END,
+    -- role_assigned_at = CASE WHEN @role_do_update::boolean THEN NOW() ELSE role_assigned_at END,
+    has_seen_new_application_status = CASE WHEN $19::boolean THEN $20 ELSE has_seen_new_application_status END,
     updated_at = NOW()
 WHERE
     id = $21::uuid
 `
 
 type UpdateUserParams struct {
-	NameDoUpdate           bool       `json:"name_do_update"`
-	Name                   string     `json:"name"`
-	EmailDoUpdate          bool       `json:"email_do_update"`
-	Email                  *string    `json:"email"`
-	EmailVerifiedDoUpdate  bool       `json:"email_verified_do_update"`
-	EmailVerified          bool       `json:"email_verified"`
-	PreferredEmailDoUpdate bool       `json:"preferred_email_do_update"`
-	PreferredEmail         *string    `json:"preferred_email"`
-	OnboardedDoUpdate      bool       `json:"onboarded_do_update"`
-	Onboarded              bool       `json:"onboarded"`
-	ImageDoUpdate          bool       `json:"image_do_update"`
-	Image                  *string    `json:"image"`
-	EmailConsentDoUpdate   bool       `json:"email_consent_do_update"`
-	EmailConsent           bool       `json:"email_consent"`
-	CheckedInAtDoUpdate    bool       `json:"checked_in_at_do_update"`
-	CheckedInAt            *time.Time `json:"checked_in_at"`
-	RfidDoUpdate           bool       `json:"rfid_do_update"`
-	Rfid                   *string    `json:"rfid"`
-	RoleDoUpdate           bool       `json:"role_do_update"`
-	Role                   UserRole   `json:"role"`
-	ID                     uuid.UUID  `json:"id"`
+	NameDoUpdate                        bool       `json:"name_do_update"`
+	Name                                string     `json:"name"`
+	EmailDoUpdate                       bool       `json:"email_do_update"`
+	Email                               *string    `json:"email"`
+	EmailVerifiedDoUpdate               bool       `json:"email_verified_do_update"`
+	EmailVerified                       bool       `json:"email_verified"`
+	PreferredEmailDoUpdate              bool       `json:"preferred_email_do_update"`
+	PreferredEmail                      *string    `json:"preferred_email"`
+	OnboardedDoUpdate                   bool       `json:"onboarded_do_update"`
+	Onboarded                           bool       `json:"onboarded"`
+	ImageDoUpdate                       bool       `json:"image_do_update"`
+	Image                               *string    `json:"image"`
+	EmailConsentDoUpdate                bool       `json:"email_consent_do_update"`
+	EmailConsent                        bool       `json:"email_consent"`
+	CheckedInAtDoUpdate                 bool       `json:"checked_in_at_do_update"`
+	CheckedInAt                         *time.Time `json:"checked_in_at"`
+	RfidDoUpdate                        bool       `json:"rfid_do_update"`
+	Rfid                                *string    `json:"rfid"`
+	HasSeenNewApplicationStatusDoUpdate bool       `json:"has_seen_new_application_status_do_update"`
+	HasSeenNewApplicationStatus         *bool      `json:"has_seen_new_application_status"`
+	ID                                  uuid.UUID  `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
@@ -343,8 +349,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.CheckedInAt,
 		arg.RfidDoUpdate,
 		arg.Rfid,
-		arg.RoleDoUpdate,
-		arg.Role,
+		arg.HasSeenNewApplicationStatusDoUpdate,
+		arg.HasSeenNewApplicationStatus,
 		arg.ID,
 	)
 	return err

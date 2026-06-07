@@ -3,7 +3,7 @@ import { useState } from "react";
 import { OnboardingModal } from "@/modules/Onboarding/OnboardingModal";
 import Cookies from "js-cookie";
 
-export const Route = createFileRoute("/_protected/_user/information")({
+export const Route = createFileRoute("/_protected/information")({
   beforeLoad: (context) => {
     const { user } = context.context;
     const hasSkippedCookie = Cookies.get("welcome-modal-skipped") === "true";
