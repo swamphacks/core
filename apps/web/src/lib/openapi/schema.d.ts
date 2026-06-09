@@ -12,7 +12,7 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Application
+     * Get My Application
      * @description Get the application of the current user
      */
     get: operations["get-application"];
@@ -22,26 +22,6 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
-    trace?: never;
-  };
-  "/application/accept-acceptance": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Accept Application Acceptance
-     * @description Accept an acceptance after being accepted. Sets event role to attendee, from applicant.
-     */
-    patch: operations["accept-application-acceptance"];
     trace?: never;
   };
   "/application/assigned": {
@@ -64,27 +44,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/application/calculate-admissions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Submit Admissions Calculation Request
-     * @description Queues an admission calculation task to the BAT worker
-     */
-    post: operations["calculate-admissions-request"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/join-waitlist": {
+  "/application/confirm-attendance": {
     parameters: {
       query?: never;
       header?: never;
@@ -98,30 +58,10 @@ export interface paths {
     options?: never;
     head?: never;
     /**
-     * Join Waitlist
-     * @description Adds a waitlist join time to application. Sets status to waitlisted
+     * Confirm Attendance
+     * @description Confirm attendance after being accepted. Sets event role to attendee from applicant.
      */
-    patch: operations["join-waitlist"];
-    trace?: never;
-  };
-  "/application/release-decisions/{runId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Release Decisions
-     * @description Releases decisions that were calculated by the worker from a specific run id
-     */
-    post: operations["release-decisions"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
+    patch: operations["confirm-attendance"];
     trace?: never;
   };
   "/application/resume": {
@@ -136,11 +76,7 @@ export interface paths {
      * @description Returns a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.
      */
     get: operations["get-download-resume-url"];
-    /**
-     * Replace Resume
-     * @description Replaces the resume of an already-submitted application without modifying any question responses.
-     */
-    put: operations["replace-resume"];
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -168,6 +104,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/application/review/auto-decision": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Auto Decision Requests
+     * @description Get all auto deicision requests created by staff
+     */
+    get: operations["get-auto-decision-requests"];
+    put?: never;
+    /**
+     * Request Auto Decision
+     * @description Create a request to auto accept or auto reject applications
+     */
+    post: operations["request-auto-decision"];
+    /**
+     * Delete Auto Decision
+     * @description Delete an existing auto decision made by current reviewer
+     */
+    delete: operations["delete-auto-decision"];
+    options?: never;
+    head?: never;
+    /**
+     * Update Auto Decision Request
+     * @description Update an auto decision request
+     */
+    patch: operations["update-auto-decision-request"];
+    trace?: never;
+  };
   "/application/review/reset": {
     parameters: {
       query?: never;
@@ -188,7 +156,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/application/review/{applicantId}": {
+  "/application/review/update-status": {
     parameters: {
       query?: never;
       header?: never;
@@ -196,6 +164,30 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
+    put?: never;
+    /**
+     * Update Application Review Status
+     * @description Update the application review status for the current hackathon
+     */
+    post: operations["update-application-review-status"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/application/review/{applicationId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Application For Review
+     * @description Get application details including ratings, application json, and resume for review
+     */
+    get: operations["get-application-for-review"];
     put?: never;
     /**
      * Submit Application Review
@@ -208,7 +200,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/application/review/{applicantId}/resume": {
+  "/application/review/{applicationId}/resume": {
     parameters: {
       query?: never;
       header?: never;
@@ -216,7 +208,7 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Resume URL (for review process)
+     * Get Resume URL By Application Id (for review process)
      * @description Returns a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.
      */
     get: operations["get-resume"];
@@ -288,7 +280,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/application/transition-waitlisted-applications": {
+  "/application/withdraw-application": {
     parameters: {
       query?: never;
       header?: never;
@@ -302,50 +294,30 @@ export interface paths {
     options?: never;
     head?: never;
     /**
-     * Transition Waitlisted Applications
-     * @description Transitions all accepted users to waitlist, and accepts 50 from the waitlist. Sets application status from accepted to rejected.
+     * Withdraw Application
+     * @description Withdraw application after being accepted to the hackthon. Sets application status from accepted to withdrawn.
      */
-    patch: operations["transition-waitlist"];
+    patch: operations["withdraw-application"];
     trace?: never;
   };
-  "/application/withdraw-acceptance": {
+  "/application/{userId}": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /**
+     * Get Application By User ID
+     * @description Get the application of the specified user
+     */
+    get: operations["get-application-by-user-id"];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /**
-     * Withdraw Acceptance
-     * @description Withdraw an acceptance after being accepted to an event. Sets application status from accepted to rejected.
-     */
-    patch: operations["withdraw-acceptance"];
-    trace?: never;
-  };
-  "/application/withdraw-attendance": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Withdraw Attendance
-     * @description Withdraw attendance after accepting to go to the hackathon. Sets application status from accepted to withdrawn. Sets event role from attendee, back to applicant.
-     */
-    patch: operations["withdraw-attendance"];
+    patch?: never;
     trace?: never;
   };
   "/auth/callback": {
@@ -1012,6 +984,26 @@ export interface paths {
     patch: operations["update-user"];
     trace?: never;
   };
+  "/users/me/acknowledge-new-application-status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Acknowledge New Application Status
+     * @description Mark that the user has seen their new application status
+     */
+    post: operations["update-has-seen-new-application-status"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/users/me/email-consent": {
     parameters: {
       query?: never;
@@ -1268,39 +1260,34 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/users/me/acknowledge-new-application-status": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Acknowledge New Application Status
-     * @description Mark that the user has seen their new application status
-     */
-    post: operations["update-has-seen-new-application-status"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    ApplicationReviewDetails: {
+      application: string;
+      autoDecision: string | null;
+      autoDecisionRequestId: string | null;
+      /** Format: int32 */
+      experienceRating: number | null;
+      notes: string | null;
+      /** Format: int32 */
+      passionRating: number | null;
+      resumeUrl: string;
+    };
     ApplicationStatistics: {
-      ageStats: components["schemas"]["GetApplicationAgeSplitRow"];
-      genderStats: components["schemas"]["GetApplicationGenderSplitRow"];
-      majorStats: components["schemas"]["GetApplicationMajorSplitRow"][] | null;
-      raceStats: components["schemas"]["GetApplicationRaceSplitRow"][] | null;
-      schoolStats:
-        | components["schemas"]["GetApplicationSchoolSplitRow"][]
+      ageStats: components["schemas"]["GetSubmittedApplicationAgesRow"];
+      genderStats: components["schemas"]["GetSubmittedApplicationGendersRow"];
+      majorStats:
+        | components["schemas"]["GetSubmittedApplicationMajorsRow"][]
         | null;
-      statusStats: components["schemas"]["GetApplicationStatusSplitRow"];
+      raceStats:
+        | components["schemas"]["GetSubmittedApplicationRacesRow"][]
+        | null;
+      schoolStats:
+        | components["schemas"]["GetSubmittedApplicationSchoolsRow"][]
+        | null;
+      statusStats: components["schemas"]["GetApplicationStatusesRow"];
     };
     AssignRoleBatchRequest: {
       assignments: components["schemas"]["AssignRoleRequest"][] | null;
@@ -1311,8 +1298,14 @@ export interface components {
       userID: string | null;
     };
     AssignedApplication: {
-      applicantId: string;
+      applicationId: string;
       status: string;
+    };
+    AutoDecisionRequest: {
+      applicationId: string;
+      /** @enum {string} */
+      decision: "auto_accept" | "auto_reject";
+      justification: string | null;
     };
     CheckInRequest: {
       rfid: string | null;
@@ -1340,6 +1333,9 @@ export interface components {
       /** Format: date-time */
       start_time: string;
       title: string;
+    };
+    DeleteAutoDecisionRequest: {
+      requestId: string;
     };
     ErrorDetail: {
       /** @description Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id' */
@@ -1389,48 +1385,7 @@ export interface components {
       /** Format: int64 */
       Size: number;
     };
-    GetApplicationAgeSplitRow: {
-      /** Format: int64 */
-      age_18: number;
-      /** Format: int64 */
-      age_19: number;
-      /** Format: int64 */
-      age_20: number;
-      /** Format: int64 */
-      age_21: number;
-      /** Format: int64 */
-      age_22: number;
-      /** Format: int64 */
-      age_23_plus: number;
-      /** Format: int64 */
-      underage: number;
-    };
-    GetApplicationGenderSplitRow: {
-      /** Format: int64 */
-      female: number;
-      /** Format: int64 */
-      male: number;
-      /** Format: int64 */
-      non_binary: number;
-      /** Format: int64 */
-      other: number;
-    };
-    GetApplicationMajorSplitRow: {
-      /** Format: int64 */
-      count: number;
-      major: string;
-    };
-    GetApplicationRaceSplitRow: {
-      /** Format: int64 */
-      count: number;
-      race_group: string;
-    };
-    GetApplicationSchoolSplitRow: {
-      /** Format: int64 */
-      count: number;
-      school: string;
-    };
-    GetApplicationStatusSplitRow: {
+    GetApplicationStatusesRow: {
       /** Format: int64 */
       accepted: number;
       /** Format: int64 */
@@ -1464,6 +1419,47 @@ export interface components {
       total_stock: number;
       /** Format: date-time */
       updated_at: string;
+    };
+    GetSubmittedApplicationAgesRow: {
+      /** Format: int64 */
+      age_18: number;
+      /** Format: int64 */
+      age_19: number;
+      /** Format: int64 */
+      age_20: number;
+      /** Format: int64 */
+      age_21: number;
+      /** Format: int64 */
+      age_22: number;
+      /** Format: int64 */
+      age_23_plus: number;
+      /** Format: int64 */
+      underage: number;
+    };
+    GetSubmittedApplicationGendersRow: {
+      /** Format: int64 */
+      female: number;
+      /** Format: int64 */
+      male: number;
+      /** Format: int64 */
+      non_binary: number;
+      /** Format: int64 */
+      other: number;
+    };
+    GetSubmittedApplicationMajorsRow: {
+      /** Format: int64 */
+      count: number;
+      major: string;
+    };
+    GetSubmittedApplicationRacesRow: {
+      /** Format: int64 */
+      count: number;
+      race_group: string;
+    };
+    GetSubmittedApplicationSchoolsRow: {
+      /** Format: int64 */
+      count: number;
+      school: string;
     };
     Hackathon: {
       accept_early_applications: boolean;
@@ -1511,6 +1507,23 @@ export interface components {
       /** Format: date-time */
       updatedAt: string;
       userId: string;
+    };
+    ListAutoDecisionRequestsRow: {
+      application_id: string;
+      approved: boolean;
+      approved_by: string;
+      approver_id: string;
+      approver_name: string | null;
+      /** Format: date-time */
+      created_at: string;
+      id: string;
+      justification: string | null;
+      requested_decision: string;
+      reviewer_id: string;
+      reviewer_name: string | null;
+      reviewer_user_id: string;
+      /** Format: date-time */
+      updated_at: string;
     };
     ListJoinRequestsByTeamAndStatusWithUserRow: {
       /** Format: date-time */
@@ -1610,10 +1623,13 @@ export interface components {
       /** Format: int64 */
       passionRating: number;
     };
+    ReviewStatus: {
+      started: boolean;
+    };
     ReviewerAssignment: {
       /** Format: int64 */
       amount: number | null;
-      userID: string;
+      userId: string;
     };
     SubmissionResult: {
       /** Format: date-time */
@@ -1652,6 +1668,10 @@ export interface components {
       members: components["schemas"]["MemberWithUserInfo"][] | null;
       name: string;
       ownerId: string;
+    };
+    UpdateAutoDecisionRequestBody: {
+      approved: boolean;
+      requestId: string;
     };
     UpdateEmailConsentRequest: {
       emailConsent: boolean;
@@ -1814,45 +1834,6 @@ export interface operations {
       };
     };
   };
-  "accept-application-acceptance": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
   "get-assigned-applications": {
     parameters: {
       query?: never;
@@ -1896,7 +1877,7 @@ export interface operations {
       };
     };
   };
-  "calculate-admissions-request": {
+  "confirm-attendance": {
     parameters: {
       query?: never;
       header?: never;
@@ -1917,95 +1898,6 @@ export interface operations {
       };
       /** @description Unauthorized */
       401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "join-waitlist": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "release-decisions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        runId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
         headers: {
           [name: string]: unknown;
         };
@@ -2065,7 +1957,7 @@ export interface operations {
       };
     };
   };
-  "replace-resume": {
+  "assign-application-reviewers": {
     parameters: {
       query?: never;
       header?: never;
@@ -2075,30 +1967,20 @@ export interface operations {
         sh_session_id: string;
       };
     };
-    requestBody?: {
+    requestBody: {
       content: {
-        "multipart/form-data": {
-          /** Format: binary */
-          resume: string;
-        };
+        "application/json":
+          | components["schemas"]["ReviewerAssignment"][]
+          | null;
       };
     };
     responses: {
-      /** @description No Content */
-      204: {
+      /** @description OK */
+      200: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
       };
       /** @description Unauthorized */
       401: {
@@ -2129,7 +2011,50 @@ export interface operations {
       };
     };
   };
-  "assign-application-reviewers": {
+  "get-auto-decision-requests": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie: {
+        /** @description Session cookie used to authenticate the user */
+        sh_session_id: string;
+      };
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["ListAutoDecisionRequestsRow"][]
+            | null;
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+    };
+  };
+  "request-auto-decision": {
     parameters: {
       query?: never;
       header?: never;
@@ -2141,9 +2066,111 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json":
-          | components["schemas"]["ReviewerAssignment"][]
-          | null;
+        "application/json": components["schemas"]["AutoDecisionRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+    };
+  };
+  "delete-auto-decision": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie: {
+        /** @description Session cookie used to authenticate the user */
+        sh_session_id: string;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DeleteAutoDecisionRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+    };
+  };
+  "update-auto-decision-request": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie: {
+        /** @description Session cookie used to authenticate the user */
+        sh_session_id: string;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateAutoDecisionRequestBody"];
       };
     };
     responses: {
@@ -2222,12 +2249,116 @@ export interface operations {
       };
     };
   };
+  "update-application-review-status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie: {
+        /** @description Session cookie used to authenticate the user */
+        sh_session_id: string;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReviewStatus"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+    };
+  };
+  "get-application-for-review": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        applicationId: string;
+      };
+      cookie: {
+        /** @description Session cookie used to authenticate the user */
+        sh_session_id: string;
+      };
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApplicationReviewDetails"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+    };
+  };
   "submit-application-review": {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        applicantId: string;
+        applicationId: string;
       };
       cookie: {
         /** @description Session cookie used to authenticate the user */
@@ -2281,7 +2412,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        applicantId: string;
+        applicationId: string;
       };
       cookie: {
         /** @description Session cookie used to authenticate the user */
@@ -2462,7 +2593,7 @@ export interface operations {
       };
     };
   };
-  "transition-waitlist": {
+  "withdraw-application": {
     parameters: {
       query?: never;
       header?: never;
@@ -2501,11 +2632,13 @@ export interface operations {
       };
     };
   };
-  "withdraw-acceptance": {
+  "get-application-by-user-id": {
     parameters: {
       query?: never;
       header?: never;
-      path?: never;
+      path: {
+        userId: string;
+      };
       cookie: {
         /** @description Session cookie used to authenticate the user */
         sh_session_id: string;
@@ -2518,7 +2651,9 @@ export interface operations {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": components["schemas"]["HackerApplication"];
+        };
       };
       /** @description Unauthorized */
       401: {
@@ -2529,38 +2664,8 @@ export interface operations {
           "application/problem+json": components["schemas"]["ErrorModel"];
         };
       };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "withdraw-attendance": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };
@@ -4674,6 +4779,54 @@ export interface operations {
       };
     };
   };
+  "update-has-seen-new-application-status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie: {
+        /** @description Session cookie used to authenticate the user */
+        sh_session_id: string;
+      };
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+    };
+  };
   "update-email-consent": {
     parameters: {
       query?: never;
@@ -5680,54 +5833,6 @@ export interface operations {
       };
       /** @description Unprocessable Entity */
       422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "update-has-seen-new-application-status": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
         headers: {
           [name: string]: unknown;
         };

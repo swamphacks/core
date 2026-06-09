@@ -39,7 +39,8 @@ SET
     start_time = CASE WHEN @start_time_do_update::boolean THEN @start_time ELSE start_time END,
     end_time = CASE WHEN @end_time_do_update::boolean THEN @end_time ELSE end_time END,
     banner = CASE WHEN @banner_do_update::boolean THEN @banner ELSE banner END,
-    application_review_started = CASE WHEN @application_review_started_do_update::boolean THEN @application_review_started ELSE application_review_started END
+    application_review_started = CASE WHEN @application_review_started_do_update::boolean THEN @application_review_started ELSE application_review_started END,
+    updated_at = NOW()
 WHERE is_active = true
 RETURNING *;
     

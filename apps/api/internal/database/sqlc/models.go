@@ -12,6 +12,48 @@ import (
 	"github.com/google/uuid"
 )
 
+type ApplicationAutoDecisionType string
+
+const (
+	ApplicationAutoDecisionTypeAutoAccept ApplicationAutoDecisionType = "auto_accept"
+	ApplicationAutoDecisionTypeAutoReject ApplicationAutoDecisionType = "auto_reject"
+)
+
+func (e *ApplicationAutoDecisionType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ApplicationAutoDecisionType(s)
+	case string:
+		*e = ApplicationAutoDecisionType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ApplicationAutoDecisionType: %T", src)
+	}
+	return nil
+}
+
+type NullApplicationAutoDecisionType struct {
+	ApplicationAutoDecisionType ApplicationAutoDecisionType `json:"application_auto_decision_type"`
+	Valid                       bool                        `json:"valid"` // Valid is true if ApplicationAutoDecisionType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullApplicationAutoDecisionType) Scan(value interface{}) error {
+	if value == nil {
+		ns.ApplicationAutoDecisionType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ApplicationAutoDecisionType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullApplicationAutoDecisionType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ApplicationAutoDecisionType), nil
+}
+
 type ApplicationStatus string
 
 const (
@@ -386,19 +428,38 @@ type Account struct {
 }
 
 type Application struct {
-	UserID             uuid.UUID         `json:"user_id"`
-	Status             ApplicationStatus `json:"status"`
-	Application        []byte            `json:"application"`
-	CreatedAt          time.Time         `json:"created_at"`
-	SavedAt            time.Time         `json:"saved_at"`
-	UpdatedAt          time.Time         `json:"updated_at"`
-	SubmittedAt        *time.Time        `json:"submitted_at"`
-	ExperienceRating   *int32            `json:"experience_rating"`
-	PassionRating      *int32            `json:"passion_rating"`
-	AssignedReviewerID *uuid.UUID        `json:"assigned_reviewer_id"`
-	WaitlistJoinTime   *time.Time        `json:"waitlist_join_time"`
-	HackathonID        string            `json:"hackathon_id"`
-	IsEarly            bool              `json:"is_early"`
+	UserID           uuid.UUID         `json:"user_id"`
+	Status           ApplicationStatus `json:"status"`
+	Application      []byte            `json:"application"`
+	CreatedAt        time.Time         `json:"created_at"`
+	SavedAt          time.Time         `json:"saved_at"`
+	UpdatedAt        time.Time         `json:"updated_at"`
+	SubmittedAt      *time.Time        `json:"submitted_at"`
+	WaitlistJoinTime *time.Time        `json:"waitlist_join_time"`
+	HackathonID      string            `json:"hackathon_id"`
+	IsEarly          bool              `json:"is_early"`
+}
+
+type ApplicationAutoDecisionRequest struct {
+	ID                uuid.UUID                   `json:"id"`
+	ApplicationID     uuid.UUID                   `json:"application_id"`
+	ReviewerUserID    *uuid.UUID                  `json:"reviewer_user_id"`
+	RequestedDecision ApplicationAutoDecisionType `json:"requested_decision"`
+	Justification     *string                     `json:"justification"`
+	Approved          bool                        `json:"approved"`
+	ApprovedBy        *uuid.UUID                  `json:"approved_by"`
+	UpdatedAt         time.Time                   `json:"updated_at"`
+	CreatedAt         time.Time                   `json:"created_at"`
+}
+
+type ApplicationReview struct {
+	ApplicationID    uuid.UUID `json:"application_id"`
+	ReviewerUserID   uuid.UUID `json:"reviewer_user_id"`
+	ExperienceRating *int32    `json:"experience_rating"`
+	PassionRating    *int32    `json:"passion_rating"`
+	Notes            *string   `json:"notes"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 type BatRun struct {

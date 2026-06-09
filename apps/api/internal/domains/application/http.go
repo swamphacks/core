@@ -19,14 +19,13 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
-	"github.com/swamphacks/core/apps/api/internal/domains/bat"
 )
 
 func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.Middleware) {
 	huma.Register(group, huma.Operation{
 		OperationID:   "get-application",
 		Method:        http.MethodGet,
-		Summary:       "Get Application",
+		Summary:       "Get My Application",
 		Description:   "Get the application of the current user",
 		Tags:          []string{"Application"},
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
@@ -34,7 +33,97 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleGetApplication)
+	}, applicationHandler.handleGetMyApplication)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "get-application-by-user-id",
+		Method:        http.MethodGet,
+		Summary:       "Get Application By User ID",
+		Description:   "Get the application of the specified user",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Path:          "/{userId}",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleGetApplicationByUserId)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "get-download-resume-url",
+		Method:        http.MethodGet,
+		Summary:       "Get Resume Download URL",
+		Description:   "Returns a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Path:          "/resume",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleGetApplicationResumeURL)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "replace-resume",
+		Method:      http.MethodPut,
+		Summary:     "Replace Resume",
+		Description: "Replaces the resume of an already-submitted application without modifying any question responses.",
+		Tags:        []string{"Application"},
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Path:        "/resume",
+		Errors:      []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
+	}, applicationHandler.handleReplaceResume)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "get-application-statistics",
+		Method:        http.MethodGet,
+		Summary:       "Get Application Statistics",
+		Description:   "Aggregates applications by race, gender, age, majors, and schools",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Path:          "/stats",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleGetApplicationStatistics)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "get-assigned-applications",
+		Method:        http.MethodGet,
+		Summary:       "Get Assigned Applications",
+		Description:   "Returns assigned applications and their review progress for the authenticated reviewer",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Path:          "/assigned",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleGetAssignedApplications)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "get-application-for-review",
+		Method:        http.MethodGet,
+		Summary:       "Get Application For Review",
+		Description:   "Get application details including ratings, application json, and resume for review",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Path:          "/review/{applicationId}",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleGetApplicationForReview)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "get-resume",
+		Method:        http.MethodGet,
+		Summary:       "Get Resume URL By Application Id (for review process)",
+		Description:   "Returns a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Path:          "/review/{applicationId}/resume",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleGetResumePresignedUrlByApplicationId)
 
 	huma.Register(group, huma.Operation{
 		OperationID:   "save-application",
@@ -63,68 +152,30 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 	}, applicationHandler.handleSubmitApplication)
 
 	huma.Register(group, huma.Operation{
-		OperationID:   "get-download-resume-url",
-		Method:        http.MethodGet,
-		Summary:       "Get Resume Download URL",
-		Description:   "Returns a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.",
-		Tags:          []string{"Application"},
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Path:          "/resume",
-		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
-		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
-		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleGetDownloadResumeURL)
-
-	huma.Register(group, huma.Operation{
-		OperationID: "replace-resume",
-		Method:      http.MethodPut,
-		Summary:     "Replace Resume",
-		Description: "Replaces the resume of an already-submitted application without modifying any question responses.",
-		Tags:        []string{"Application"},
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Path:        "/resume",
-		Errors:      []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusInternalServerError},
-		Parameters:  []*huma.Param{cookie.SessionCookieHumaParam},
-	}, applicationHandler.handleReplaceResume)
-
-	huma.Register(group, huma.Operation{
-		OperationID:   "get-application-statistics",
-		Method:        http.MethodGet,
-		Summary:       "Get Application Statistics",
-		Description:   "Aggregates applications by race, gender, age, majors, and schools",
-		Tags:          []string{"Application"},
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Path:          "/stats",
-		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
-		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
-		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleGetApplicationStatistics)
-
-	huma.Register(group, huma.Operation{
 		OperationID:   "submit-application-review",
 		Method:        http.MethodPost,
 		Summary:       "Submit Application Review",
 		Description:   "Handles ratings submissions from staff during the application review process",
 		Tags:          []string{"Application"},
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Path:          "/review/{applicantId}",
+		Path:          "/review/{applicationId}",
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
 	}, applicationHandler.handleSubmitApplicationReview)
 
 	huma.Register(group, huma.Operation{
-		OperationID:   "get-assigned-applications",
-		Method:        http.MethodGet,
-		Summary:       "Get Assigned Applications",
-		Description:   "Returns assigned applications and their review progress for the authenticated reviewer",
+		OperationID:   "update-application-review-status",
+		Method:        http.MethodPost,
+		Summary:       "Update Application Review Status",
+		Description:   "Update the application review status for the current hackathon",
 		Tags:          []string{"Application"},
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Path:          "/assigned",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/review/update-status",
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleGetAssignedApplications)
+	}, applicationHandler.handleUpdateApplicationReviewStatusForHackathon)
 
 	huma.Register(group, huma.Operation{
 		OperationID:   "assign-application-reviewers",
@@ -153,43 +204,56 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 	}, applicationHandler.handleResetApplicationReviews)
 
 	huma.Register(group, huma.Operation{
-		OperationID:   "get-resume",
+		OperationID:   "get-auto-decision-requests",
 		Method:        http.MethodGet,
-		Summary:       "Get Resume URL (for review process)",
-		Description:   "Returns a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.",
+		Summary:       "Get Auto Decision Requests",
+		Description:   "Get all auto deicision requests created by staff",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/review/auto-decision",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleGetAutoDecisionRequests)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "request-auto-decision",
+		Method:        http.MethodPost,
+		Summary:       "Request Auto Decision",
+		Description:   "Create a request to auto accept or auto reject applications",
 		Tags:          []string{"Application"},
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Path:          "/review/{applicantId}/resume",
+		Path:          "/review/auto-decision",
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleGetResumePresignedUrl)
+	}, applicationHandler.handleRequestAutoDecision)
 
 	huma.Register(group, huma.Operation{
-		OperationID:   "join-waitlist",
-		Method:        http.MethodPatch,
-		Summary:       "Join Waitlist",
-		Description:   "Adds a waitlist join time to application. Sets status to waitlisted",
+		OperationID:   "delete-auto-decision",
+		Method:        http.MethodDelete,
+		Summary:       "Delete Auto Decision",
+		Description:   "Delete an existing auto decision made by current reviewer",
 		Tags:          []string{"Application"},
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Path:          "/join-waitlist",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Path:          "/review/auto-decision",
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleJoinWaitlist)
+	}, applicationHandler.handleDeleteAutoDecision)
 
 	huma.Register(group, huma.Operation{
-		OperationID:   "withdraw-acceptance",
+		OperationID:   "update-auto-decision-request",
 		Method:        http.MethodPatch,
-		Summary:       "Withdraw Acceptance",
-		Description:   "Withdraw an acceptance after being accepted to an event. Sets application status from accepted to rejected.",
+		Summary:       "Update Auto Decision Request",
+		Description:   "Update an auto decision request",
 		Tags:          []string{"Application"},
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Path:          "/withdraw-acceptance",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/review/auto-decision",
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleWithdrawAcceptance)
+	}, applicationHandler.handleUpdateAutoDecision)
 
 	huma.Register(group, huma.Operation{
 		OperationID:   "withdraw-application",
@@ -217,60 +281,84 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 		DefaultStatus: http.StatusOK,
 	}, applicationHandler.handleConfirmAttendance)
 
-	huma.Register(group, huma.Operation{
-		OperationID:   "transition-waitlist",
-		Method:        http.MethodPatch,
-		Summary:       "Transition Waitlisted Applications",
-		Description:   "Transitions all accepted users to waitlist, and accepts 50 from the waitlist. Sets application status from accepted to rejected.",
-		Tags:          []string{"Application"},
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Path:          "/transition-waitlisted-applications",
-		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
-		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
-		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleTransitionWaitlistedApplications)
+	// huma.Register(group, huma.Operation{
+	// 	OperationID:   "join-waitlist",
+	// 	Method:        http.MethodPatch,
+	// 	Summary:       "Join Waitlist",
+	// 	Description:   "Adds a waitlist join time to application. Sets status to waitlisted",
+	// 	Tags:          []string{"Application"},
+	// 	Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
+	// 	Path:          "/join-waitlist",
+	// 	Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+	// 	Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+	// 	DefaultStatus: http.StatusOK,
+	// }, applicationHandler.handleJoinWaitlist)
 
-	huma.Register(group, huma.Operation{
-		OperationID:   "calculate-admissions-request",
-		Method:        http.MethodPost,
-		Summary:       "Submit Admissions Calculation Request",
-		Description:   "Queues an admission calculation task to the BAT worker",
-		Tags:          []string{"Application"},
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
-		Path:          "/calculate-admissions",
-		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
-		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
-		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleCalculateAdmissionsRequest)
+	// huma.Register(group, huma.Operation{
+	// 	OperationID:   "withdraw-acceptance",
+	// 	Method:        http.MethodPatch,
+	// 	Summary:       "Withdraw Acceptance",
+	// 	Description:   "Withdraw an acceptance after being accepted to an event. Sets application status from accepted to rejected.",
+	// 	Tags:          []string{"Application"},
+	// 	Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
+	// 	Path:          "/withdraw-acceptance",
+	// 	Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+	// 	Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+	// 	DefaultStatus: http.StatusOK,
+	// }, applicationHandler.handleWithdrawAcceptance)
 
-	huma.Register(group, huma.Operation{
-		OperationID:   "release-decisions",
-		Method:        http.MethodPost,
-		Summary:       "Release Decisions",
-		Description:   "Releases decisions that were calculated by the worker from a specific run id",
-		Tags:          []string{"Application"},
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
-		Path:          "/release-decisions/{runId}",
-		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
-		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
-		DefaultStatus: http.StatusOK,
-	}, applicationHandler.handleReleaseDecisions)
+	// huma.Register(group, huma.Operation{
+	// 	OperationID:   "transition-waitlist",
+	// 	Method:        http.MethodPatch,
+	// 	Summary:       "Transition Waitlisted Applications",
+	// 	Description:   "Transitions all accepted users to waitlist, and accepts 50 from the waitlist. Sets application status from accepted to rejected.",
+	// 	Tags:          []string{"Application"},
+	// 	Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
+	// 	Path:          "/transition-waitlisted-applications",
+	// 	Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+	// 	Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+	// 	DefaultStatus: http.StatusOK,
+	// }, applicationHandler.handleTransitionWaitlistedApplications)
+
+	// huma.Register(group, huma.Operation{
+	// 	OperationID:   "calculate-admissions-request",
+	// 	Method:        http.MethodPost,
+	// 	Summary:       "Submit Admissions Calculation Request",
+	// 	Description:   "Queues an admission calculation task to the BAT worker",
+	// 	Tags:          []string{"Application"},
+	// 	Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+	// 	Path:          "/calculate-admissions",
+	// 	Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+	// 	Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+	// 	DefaultStatus: http.StatusOK,
+	// }, applicationHandler.handleCalculateAdmissionsRequest)
+
+	// huma.Register(group, huma.Operation{
+	// 	OperationID:   "release-decisions",
+	// 	Method:        http.MethodPost,
+	// 	Summary:       "Release Decisions",
+	// 	Description:   "Releases decisions that were calculated by the worker from a specific run id",
+	// 	Tags:          []string{"Application"},
+	// 	Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+	// 	Path:          "/release-decisions/{runId}",
+	// 	Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+	// 	Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+	// 	DefaultStatus: http.StatusOK,
+	// }, applicationHandler.handleReleaseDecisions)
 }
 
 type handler struct {
 	applicationService *ApplicationService
-	batService         *bat.BatService
 	config             *config.Config
 	logger             zerolog.Logger
 }
 
 func NewHandler(
-	applicationService *ApplicationService, batService *bat.BatService,
+	applicationService *ApplicationService,
 	config *config.Config, logger zerolog.Logger,
 ) *handler {
 	return &handler{
 		applicationService: applicationService,
-		batService:         batService,
 		config:             config,
 		logger:             logger,
 	}
@@ -291,7 +379,7 @@ type GetApplicationOutput struct {
 	Body HackerApplication
 }
 
-func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*GetApplicationOutput, error) {
+func (h *handler) handleGetMyApplication(ctx context.Context, input *struct{}) (*GetApplicationOutput, error) {
 	userCtx := ctxutils.GetUserFromCtx(ctx)
 
 	if userCtx == nil {
@@ -333,6 +421,38 @@ func (h *handler) handleGetApplication(ctx context.Context, input *struct{}) (*G
 		CreatedAt:   application.CreatedAt,
 		SavedAt:     application.SavedAt,
 		UpdatedAt:   application.UpdatedAt,
+		SubmittedAt: application.SubmittedAt,
+		HackathonID: application.HackathonID,
+	}}, nil
+}
+
+type GetApplicationByUserIdOutput struct {
+	Body HackerApplication
+}
+
+func (h *handler) handleGetApplicationByUserId(ctx context.Context, input *struct {
+	UserID string `path:"userId"`
+}) (*GetApplicationByUserIdOutput, error) {
+	userID, err := uuid.Parse(input.UserID)
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid user id")
+	}
+
+	application, err := h.applicationService.GetApplicationByUserId(ctx, userID)
+
+	if err != nil {
+		if errors.Is(err, database.ErrApplicationNotFound) {
+			return nil, huma.Error404NotFound("Application not found for user")
+		}
+
+		return nil, huma.Error500InternalServerError("error retrieving application")
+	}
+
+	return &GetApplicationByUserIdOutput{Body: HackerApplication{
+		UserID:      application.UserID,
+		Status:      application.Status,
+		Application: application.Application,
 		SubmittedAt: application.SubmittedAt,
 		HackathonID: application.HackathonID,
 	}}, nil
@@ -478,14 +598,14 @@ type GetDownloadResumeOutput struct {
 	Body string
 }
 
-func (h *handler) handleGetDownloadResumeURL(ctx context.Context, input *struct{}) (*GetDownloadResumeOutput, error) {
+func (h *handler) handleGetApplicationResumeURL(ctx context.Context, input *struct{}) (*GetDownloadResumeOutput, error) {
 	userCtx := ctxutils.GetUserFromCtx(ctx)
 
 	if userCtx == nil {
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	request, err := h.applicationService.GetDownloadResumeURL(ctx, userCtx.UserID, 60)
+	request, err := h.applicationService.GetApplicationResumeURL(ctx, userCtx.UserID, 60)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to get url to download resume")
@@ -557,9 +677,51 @@ func (h *handler) handleGetApplicationStatistics(ctx context.Context, input *str
 	return &GetApplicationStatisticsOutput{Body: stats}, nil
 }
 
+type UpdateApplicationReviewStatusForHackathonOutput struct {
+	Status int
+}
+
+type ReviewStatus struct {
+	Started bool `json:"started"  required:"true"`
+}
+
+func (h *handler) handleUpdateApplicationReviewStatusForHackathon(ctx context.Context, input *struct {
+	Body ReviewStatus
+}) (*UpdateApplicationReviewStatusForHackathonOutput, error) {
+	err := h.applicationService.UpdateApplicationReviewStatusForHackathon(ctx, input.Body.Started)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to update review status for hackathon")
+	}
+
+	return &UpdateApplicationReviewStatusForHackathonOutput{Status: http.StatusOK}, nil
+}
+
+type GetApplicationForReviewOutput struct {
+	Body ApplicationReviewDetails
+}
+
+func (h *handler) handleGetApplicationForReview(ctx context.Context, input *struct {
+	ApplicationId string `path:"applicationId"`
+}) (*GetApplicationForReviewOutput, error) {
+	applicationId, err := uuid.Parse(input.ApplicationId)
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid applicant id")
+	}
+
+	applicationReviewDetails, err := h.applicationService.GetApplicationReviewDetails(ctx, applicationId)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to get application review details")
+	}
+
+	return &GetApplicationForReviewOutput{Body: *applicationReviewDetails}, nil
+}
+
 type ReviewRatings struct {
-	PassionRating    int `json:"passionRating" minLength:"1" maxLength:"5" required:"true"`
-	ExperienceRating int `json:"experienceRating" minLength:"1" maxLength:"5" required:"true"`
+	PassionRating    int `json:"passionRating" minLength:"1" maxLength:"100" required:"true"`
+	ExperienceRating int `json:"experienceRating" minLength:"1" maxLength:"100" required:"true"`
 }
 
 type SubmitApplicationReviewOutput struct {
@@ -567,10 +729,10 @@ type SubmitApplicationReviewOutput struct {
 }
 
 func (h *handler) handleSubmitApplicationReview(ctx context.Context, input *struct {
-	ApplicantId string `path:"applicantId"`
-	Body        ReviewRatings
+	ApplicationId string `path:"applicationId"`
+	Body          ReviewRatings
 }) (*SubmitApplicationReviewOutput, error) {
-	applicantId, err := uuid.Parse(input.ApplicantId)
+	applicationId, err := uuid.Parse(input.ApplicationId)
 
 	if err != nil {
 		return nil, huma.Error400BadRequest("Invalid applicant id")
@@ -582,7 +744,7 @@ func (h *handler) handleSubmitApplicationReview(ctx context.Context, input *stru
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err = h.applicationService.SaveApplicationReview(ctx, userCtx.UserID, applicantId, input.Body.ExperienceRating, input.Body.PassionRating)
+	err = h.applicationService.SaveApplicationReview(ctx, userCtx.UserID, applicationId, input.Body.ExperienceRating, input.Body.PassionRating)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to save review")
@@ -602,7 +764,7 @@ func (h *handler) handleGetAssignedApplications(ctx context.Context, input *stru
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	applications, err := h.applicationService.GetAssignedApplicationsAndProgress(ctx, userCtx.UserID)
+	applications, err := h.applicationService.GetAssignedApplicationsForReviewer(ctx, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to get assigned applications")
@@ -618,7 +780,7 @@ type AssignApplicationReviewersOutput struct {
 func (h *handler) handleAssignApplicationReviewers(ctx context.Context, input *struct {
 	Body []ReviewerAssignment
 }) (*AssignApplicationReviewersOutput, error) {
-	err := h.applicationService.AssignReviewers(ctx, input.Body)
+	err := h.applicationService.AssignReviewerToApplications(ctx, input.Body)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to assign reviewers")
@@ -627,12 +789,106 @@ func (h *handler) handleAssignApplicationReviewers(ctx context.Context, input *s
 	return &AssignApplicationReviewersOutput{Status: http.StatusOK}, nil
 }
 
+type GetAutoDecisionRequestsOutput struct {
+	Body []sqlc.ListAutoDecisionRequestsRow
+}
+
+func (h *handler) handleGetAutoDecisionRequests(ctx context.Context, input *struct{}) (*GetAutoDecisionRequestsOutput, error) {
+	requests, err := h.applicationService.GetAllAutoDecisionRequests(ctx)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to get auto decision requests")
+	}
+
+	return &GetAutoDecisionRequestsOutput{Body: requests}, nil
+}
+
+type RequestAutoDecisionOutput struct {
+	Status int
+}
+
+func (h *handler) handleRequestAutoDecision(ctx context.Context, input *struct {
+	Body AutoDecisionRequest
+}) (*RequestAutoDecisionOutput, error) {
+	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
+	}
+
+	err := h.applicationService.RequestAutoDecision(ctx, input.Body, userCtx.UserID)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to request decision")
+	}
+
+	return &RequestAutoDecisionOutput{Status: http.StatusOK}, nil
+}
+
+type DeleteAutoDecisionRequest struct {
+	RequestId uuid.UUID `json:"requestId"`
+}
+
+type DeleteAutoDecisionOutput struct {
+	Status int
+}
+
+func (h *handler) handleDeleteAutoDecision(ctx context.Context, input *struct {
+	Body DeleteAutoDecisionRequest
+}) (*DeleteAutoDecisionOutput, error) {
+	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
+	}
+
+	err := h.applicationService.DeleteAutoDecisionRequest(ctx, input.Body.RequestId, userCtx.UserID)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to delete auto decision request")
+	}
+
+	return &DeleteAutoDecisionOutput{Status: http.StatusOK}, nil
+}
+
+type UpdateAutoDecisionRequestBody struct {
+	RequestId uuid.UUID `json:"requestId"`
+	Approved  bool      `json:"approved"`
+}
+
+type UpdateAutoDecisionOutput struct {
+	Status int
+}
+
+func (h *handler) handleUpdateAutoDecision(ctx context.Context, input *struct {
+	Body UpdateAutoDecisionRequestBody
+}) (*UpdateAutoDecisionOutput, error) {
+	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
+	}
+
+	err := h.applicationService.UpdateAutoDecisionRequest(
+		ctx,
+		input.Body.RequestId,
+		userCtx.UserID,
+		input.Body.Approved,
+	)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to update auto decision request")
+	}
+
+	return &UpdateAutoDecisionOutput{Status: http.StatusOK}, nil
+}
+
 type ResetApplicationReviewsOutput struct {
 	Status int
 }
 
 func (h *handler) handleResetApplicationReviews(ctx context.Context, input *struct{}) (*ResetApplicationReviewsOutput, error) {
-	err := h.applicationService.ResetApplicationReviews(ctx)
+	err := h.applicationService.DeleteAllApplicationReviews(ctx)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to reset application reviews")
@@ -645,8 +901,8 @@ type GetResumePresignedUrlOutput struct {
 	Body string
 }
 
-func (h *handler) handleGetResumePresignedUrl(ctx context.Context, input *struct {
-	ApplicantId string `path:"applicantId"`
+func (h *handler) handleGetResumePresignedUrlByApplicationId(ctx context.Context, input *struct {
+	ApplicationId string `path:"applicationId"`
 }) (*GetResumePresignedUrlOutput, error) {
 	userCtx := ctxutils.GetUserFromCtx(ctx)
 
@@ -654,63 +910,23 @@ func (h *handler) handleGetResumePresignedUrl(ctx context.Context, input *struct
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	applicantId, err := uuid.Parse(input.ApplicantId)
+	applicationId, err := uuid.Parse(input.ApplicationId)
 
 	if err != nil {
-		return nil, huma.Error400BadRequest("Invalid applicant id")
+		return nil, huma.Error400BadRequest("Invalid applicationId")
 	}
 
-	if userCtx.Role != sqlc.UserRoleStaff && userCtx.Role != sqlc.UserRoleAdmin && userCtx.UserID != applicantId {
+	if userCtx.Role != sqlc.UserRoleStaff && userCtx.Role != sqlc.UserRoleAdmin && userCtx.UserID != applicationId {
 		return nil, huma.Error400BadRequest("You are not allowed to see other ppls resumes :(")
 	}
 
-	request, err := h.applicationService.GetDownloadResumeURL(ctx, applicantId, 600)
+	request, err := h.applicationService.GetApplicationResumeURL(ctx, applicationId, 600)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to retrieve download url")
 	}
 
 	return &GetResumePresignedUrlOutput{Body: request.URL}, nil
-}
-
-type JoinWaitlistOutput struct {
-	Status int
-}
-
-func (h *handler) handleJoinWaitlist(ctx context.Context, input *struct{}) (*JoinWaitlistOutput, error) {
-	userCtx := ctxutils.GetUserFromCtx(ctx)
-
-	if userCtx == nil {
-		return nil, huma.Error400BadRequest("Failed to get current user info")
-	}
-
-	err := h.applicationService.JoinWaitlist(ctx, userCtx.UserID)
-
-	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to join waitlist")
-	}
-
-	return &JoinWaitlistOutput{Status: http.StatusOK}, nil
-}
-
-type WithdrawAcceptanceOutput struct {
-	Status int
-}
-
-func (h *handler) handleWithdrawAcceptance(ctx context.Context, input *struct{}) (*WithdrawAcceptanceOutput, error) {
-	userCtx := ctxutils.GetUserFromCtx(ctx)
-
-	if userCtx == nil {
-		return nil, huma.Error400BadRequest("Failed to get current user info")
-	}
-
-	err := h.applicationService.WithdrawAcceptance(ctx, userCtx.UserID)
-
-	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to withdraw acceptance")
-	}
-
-	return &WithdrawAcceptanceOutput{Status: http.StatusOK}, nil
 }
 
 type WithdrawApplicationOutput struct {
@@ -761,56 +977,96 @@ func (h *handler) handleConfirmAttendance(ctx context.Context, input *struct{}) 
 	return &ConfirmAttendanceOutput{Status: http.StatusOK}, nil
 }
 
-type TransitionWaitlistedApplicationsOutput struct {
-	Status int
-}
+// type JoinWaitlistOutput struct {
+// 	Status int
+// }
 
-func (h *handler) handleTransitionWaitlistedApplications(ctx context.Context, input *struct{}) (*TransitionWaitlistedApplicationsOutput, error) {
-	// TODO: move these numbers elsewhere to a config file or something
-	var acceptanceCount uint32 = 50
-	var acceptanceQuota uint32 = 500
-	err := h.applicationService.TransitionWaitlistedApplications(ctx, acceptanceCount, acceptanceQuota)
+// func (h *handler) handleJoinWaitlist(ctx context.Context, input *struct{}) (*JoinWaitlistOutput, error) {
+// 	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-	if err != nil {
-		return nil, huma.Error500InternalServerError("Fail to transition waitlisted applications")
-	}
+// 	if userCtx == nil {
+// 		return nil, huma.Error400BadRequest("Failed to get current user info")
+// 	}
 
-	return &TransitionWaitlistedApplicationsOutput{Status: http.StatusOK}, nil
-}
+// 	err := h.applicationService.JoinWaitlist(ctx, userCtx.UserID)
 
-type CalculateAdmissionsRequestOutput struct {
-	Status int
-}
+// 	if err != nil {
+// 		return nil, huma.Error500InternalServerError("Unable to join waitlist")
+// 	}
 
-func (h *handler) handleCalculateAdmissionsRequest(ctx context.Context, input *struct{}) (*CalculateAdmissionsRequestOutput, error) {
-	_, err := h.batService.QueueCalculateAdmissionsTask(ctx)
+// 	return &JoinWaitlistOutput{Status: http.StatusOK}, nil
+// }
 
-	if err != nil {
-		return nil, huma.Error500InternalServerError("Failed to handle admissions calculation request")
-	}
+// type WithdrawAcceptanceOutput struct {
+// 	Status int
+// }
 
-	return &CalculateAdmissionsRequestOutput{Status: http.StatusOK}, nil
-}
+// func (h *handler) handleWithdrawAcceptance(ctx context.Context, input *struct{}) (*WithdrawAcceptanceOutput, error) {
+// 	userCtx := ctxutils.GetUserFromCtx(ctx)
 
-type ReleaseDecisionsOutput struct {
-	Status int
-}
+// 	if userCtx == nil {
+// 		return nil, huma.Error400BadRequest("Failed to get current user info")
+// 	}
 
-func (h *handler) handleReleaseDecisions(ctx context.Context, input *struct {
-	RunId string `path:"runId"`
-}) (*ReleaseDecisionsOutput, error) {
-	runId, err := uuid.Parse(input.RunId)
+// 	err := h.applicationService.WithdrawAcceptance(ctx, userCtx.UserID)
 
-	if err != nil {
-		return nil, huma.Error400BadRequest("Invalid Run Id")
-	}
+// 	if err != nil {
+// 		return nil, huma.Error500InternalServerError("Unable to withdraw acceptance")
+// 	}
 
-	err = h.applicationService.ReleaseDecisions(ctx, runId)
+// 	return &WithdrawAcceptanceOutput{Status: http.StatusOK}, nil
+// }
 
-	if err != nil {
-		return nil, err
-	}
+// type TransitionWaitlistedApplicationsOutput struct {
+// 	Status int
+// }
 
-	return &ReleaseDecisionsOutput{Status: http.StatusOK}, nil
+// func (h *handler) handleTransitionWaitlistedApplications(ctx context.Context, input *struct{}) (*TransitionWaitlistedApplicationsOutput, error) {
+// 	// TODO: move these numbers elsewhere to a config file or something
+// 	var acceptanceCount uint32 = 50
+// 	var acceptanceQuota uint32 = 500
+// 	err := h.applicationService.TransitionWaitlistedApplications(ctx, acceptanceCount, acceptanceQuota)
 
-}
+// 	if err != nil {
+// 		return nil, huma.Error500InternalServerError("Fail to transition waitlisted applications")
+// 	}
+
+// 	return &TransitionWaitlistedApplicationsOutput{Status: http.StatusOK}, nil
+// }
+
+// type CalculateAdmissionsRequestOutput struct {
+// 	Status int
+// }
+
+// func (h *handler) handleCalculateAdmissionsRequest(ctx context.Context, input *struct{}) (*CalculateAdmissionsRequestOutput, error) {
+// 	_, err := h.batService.QueueCalculateAdmissionsTask(ctx)
+
+// 	if err != nil {
+// 		return nil, huma.Error500InternalServerError("Failed to handle admissions calculation request")
+// 	}
+
+// 	return &CalculateAdmissionsRequestOutput{Status: http.StatusOK}, nil
+// }
+
+// type ReleaseDecisionsOutput struct {
+// 	Status int
+// }
+
+// func (h *handler) handleReleaseDecisions(ctx context.Context, input *struct {
+// 	RunId string `path:"runId"`
+// }) (*ReleaseDecisionsOutput, error) {
+// 	runId, err := uuid.Parse(input.RunId)
+
+// 	if err != nil {
+// 		return nil, huma.Error400BadRequest("Invalid Run Id")
+// 	}
+
+// 	err = h.applicationService.ReleaseDecisions(ctx, runId)
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &ReleaseDecisionsOutput{Status: http.StatusOK}, nil
+
+// }

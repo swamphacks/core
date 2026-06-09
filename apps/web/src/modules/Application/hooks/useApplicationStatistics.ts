@@ -1,22 +1,17 @@
 import { api } from "@/lib/ky";
-import type { paths } from "@/lib/openapi/schema";
+import type { ApplicationStats } from "@/lib/openapi/types";
 import { useQuery } from "@tanstack/react-query";
 
-export type ApplicationStatistics =
-  paths["/events/{eventId}/application/stats"]["get"]["responses"]["200"]["content"]["application/json"];
-
-const fetchApplicationStatistics = async (eventId: string) => {
-  const response = await api
-    .get<ApplicationStatistics>(`events/${eventId}/application/stats`)
-    .json();
+const fetchApplicationStatistics = async () => {
+  const response = await api.get<ApplicationStats>(`application/stats`).json();
 
   return response;
 };
 
-export const useApplicationStatistics = (eventId: string) => {
+export const useApplicationStatistics = () => {
   return useQuery({
-    queryKey: ["applicationStatistics", eventId],
-    queryFn: () => fetchApplicationStatistics(eventId),
+    queryKey: ["applicationStatistics"],
+    queryFn: () => fetchApplicationStatistics(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

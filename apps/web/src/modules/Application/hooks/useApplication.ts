@@ -1,5 +1,5 @@
 import { api } from "@/lib/ky";
-import type { paths } from "@/lib/openapi/schema";
+import type { Application as ApplicationResponse } from "@/lib/openapi/types";
 import { useQuery } from "@tanstack/react-query";
 
 import { z } from "zod";
@@ -46,20 +46,12 @@ export const ApplicationFieldsSchema = z.object({
 
 export type ApplicationFields = z.infer<typeof ApplicationFieldsSchema>;
 
-export type ApplicationResponse =
-  paths["/events/{eventId}/application/{applicationId}"]["get"]["responses"]["200"]["content"]["application/json"];
-
 export type Application = Omit<ApplicationResponse, "application"> & {
   application: ApplicationFields;
 };
 
-export async function fetchApplication(
-  eventId: string,
-  userId: string,
-): Promise<Application> {
-  const result = await api
-    .get<Application>(`events/${eventId}/application/${userId}`)
-    .json();
+export async function fetchApplication(userId: string): Promise<Application> {
+  const result = await api.get<Application>(`application/${userId}`).json();
 
   const parsedApplication = ApplicationFieldsSchema.safeParse(
     JSON.parse(atob(result.application as unknown as string)),
@@ -75,14 +67,10 @@ export async function fetchApplication(
   };
 }
 
-export function useApplication(eventId: string, userId: string) {
+export function useApplication(userId: string) {
   return useQuery({
-    queryKey: getApplicationQueryKey(eventId, userId),
-    queryFn: () => fetchApplication(eventId, userId),
+    queryKey: ["application", userId],
+    queryFn: () => fetchApplication(userId),
     staleTime: 1000 * 60 * 15, // 15 minutes,
   });
-}
-
-export function getApplicationQueryKey(eventId: string, userId: string) {
-  return ["events", eventId, "application", userId] as const;
 }

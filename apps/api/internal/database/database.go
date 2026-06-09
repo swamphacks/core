@@ -41,6 +41,15 @@ func NewDB(connStr string) *DB {
 	return &db
 }
 
+func (d *DB) NewTX(tx pgx.Tx) *DB {
+	txDB := DB{
+		Pool:  d.Pool,
+		Query: sqlc.New(tx),
+	}
+
+	return &txDB
+}
+
 func (d *DB) Close() {
 	d.Pool.Close()
 }

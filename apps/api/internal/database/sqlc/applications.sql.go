@@ -12,25 +12,41 @@ import (
 	"github.com/google/uuid"
 )
 
-const assignApplicationsToReviewer = `-- name: AssignApplicationsToReviewer :exec
+const acceptWaitlistedApplications = `-- name: AcceptWaitlistedApplications :many
 UPDATE applications
-SET assigned_reviewer_id = $1::uuid,
-    status = 'under_review'
-WHERE user_id = ANY($2::uuid[])
+SET waitlist_join_time = NULL,
+    status = 'accepted'
+WHERE user_id IN (
+  SELECT user_id FROM applications
+  WHERE status = 'waitlisted'
+  ORDER BY waitlist_join_time ASC
+  LIMIT $1::int
+)
+RETURNING user_id
 `
 
-type AssignApplicationsToReviewerParams struct {
-	ReviewerID     uuid.UUID   `json:"reviewer_id"`
-	ApplicationIds []uuid.UUID `json:"application_ids"`
-}
-
-func (q *Queries) AssignApplicationsToReviewer(ctx context.Context, arg AssignApplicationsToReviewerParams) error {
-	_, err := q.db.Exec(ctx, assignApplicationsToReviewer, arg.ReviewerID, arg.ApplicationIds)
-	return err
+func (q *Queries) AcceptWaitlistedApplications(ctx context.Context, acceptancecount int32) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, acceptWaitlistedApplications, acceptancecount)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const createApplication = `-- name: CreateApplication :one
-INSERT INTO applications (user_id, hackathon_id, is_early) VALUES ($1, $2, $3) RETURNING user_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time, hackathon_id, is_early
+INSERT INTO applications (user_id, hackathon_id, is_early) VALUES ($1, $2, $3) RETURNING user_id, status, application, created_at, saved_at, updated_at, submitted_at, waitlist_join_time, hackathon_id, is_early
 `
 
 type CreateApplicationParams struct {
@@ -50,9 +66,6 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.SavedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
-		&i.ExperienceRating,
-		&i.PassionRating,
-		&i.AssignedReviewerID,
 		&i.WaitlistJoinTime,
 		&i.HackathonID,
 		&i.IsEarly,
@@ -60,17 +73,17 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 	return i, err
 }
 
-const deleteApplication = `-- name: DeleteApplication :exec
+const deleteApplicationByUserId = `-- name: DeleteApplicationByUserId :exec
 DELETE FROM applications WHERE user_id = $1
 `
 
-func (q *Queries) DeleteApplication(ctx context.Context, userID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteApplication, userID)
+func (q *Queries) DeleteApplicationByUserId(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteApplicationByUserId, userID)
 	return err
 }
 
 const getApplicationByUserId = `-- name: GetApplicationByUserId :one
-SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, experience_rating, passion_rating, assigned_reviewer_id, waitlist_join_time, hackathon_id, is_early FROM applications WHERE user_id = $1
+SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, waitlist_join_time, hackathon_id, is_early FROM applications WHERE user_id = $1
 `
 
 func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) (Application, error) {
@@ -84,9 +97,6 @@ func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) 
 		&i.SavedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
-		&i.ExperienceRating,
-		&i.PassionRating,
-		&i.AssignedReviewerID,
 		&i.WaitlistJoinTime,
 		&i.HackathonID,
 		&i.IsEarly,
@@ -94,22 +104,8 @@ func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) 
 	return i, err
 }
 
-const joinWaitlist = `-- name: JoinWaitlist :exec
-UPDATE applications
-SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
-    status = 'waitlisted'
-WHERE user_id = $1
-`
-
-func (q *Queries) JoinWaitlist(ctx context.Context, userID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, joinWaitlist, userID)
-	return err
-}
-
-const listAdmissionCandidates = `-- name: ListAdmissionCandidates :many
+const listApplicationsUnderReviewWithTeamIds = `-- name: ListApplicationsUnderReviewWithTeamIds :many
 SELECT a.user_id,
-    a.passion_rating,
-    a.experience_rating,
     a.application,
     t.id as team_id
 FROM applications a
@@ -118,34 +114,24 @@ LEFT JOIN team_members tm
 LEFT JOIN teams t
     ON t.id = tm.team_id
 WHERE a.status = 'under_review'
-    AND a.passion_rating IS NOT NULL
-    AND a.experience_rating IS NOT NULL
 `
 
-type ListAdmissionCandidatesRow struct {
-	UserID           uuid.UUID  `json:"user_id"`
-	PassionRating    *int32     `json:"passion_rating"`
-	ExperienceRating *int32     `json:"experience_rating"`
-	Application      []byte     `json:"application"`
-	TeamID           *uuid.UUID `json:"team_id"`
+type ListApplicationsUnderReviewWithTeamIdsRow struct {
+	UserID      uuid.UUID  `json:"user_id"`
+	Application []byte     `json:"application"`
+	TeamID      *uuid.UUID `json:"team_id"`
 }
 
-func (q *Queries) ListAdmissionCandidates(ctx context.Context) ([]ListAdmissionCandidatesRow, error) {
-	rows, err := q.db.Query(ctx, listAdmissionCandidates)
+func (q *Queries) ListApplicationsUnderReviewWithTeamIds(ctx context.Context) ([]ListApplicationsUnderReviewWithTeamIdsRow, error) {
+	rows, err := q.db.Query(ctx, listApplicationsUnderReviewWithTeamIds)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListAdmissionCandidatesRow{}
+	items := []ListApplicationsUnderReviewWithTeamIdsRow{}
 	for rows.Next() {
-		var i ListAdmissionCandidatesRow
-		if err := rows.Scan(
-			&i.UserID,
-			&i.PassionRating,
-			&i.ExperienceRating,
-			&i.Application,
-			&i.TeamID,
-		); err != nil {
+		var i ListApplicationsUnderReviewWithTeamIdsRow
+		if err := rows.Scan(&i.UserID, &i.Application, &i.TeamID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -156,113 +142,66 @@ func (q *Queries) ListAdmissionCandidates(ctx context.Context) ([]ListAdmissionC
 	return items, nil
 }
 
-const listApplicationByReviewer = `-- name: ListApplicationByReviewer :many
-SELECT user_id, passion_rating, experience_rating FROM applications
-WHERE assigned_reviewer_id = $1
-    AND status IN ('under_review')
-ORDER BY user_id ASC
-`
-
-type ListApplicationByReviewerRow struct {
-	UserID           uuid.UUID `json:"user_id"`
-	PassionRating    *int32    `json:"passion_rating"`
-	ExperienceRating *int32    `json:"experience_rating"`
-}
-
-func (q *Queries) ListApplicationByReviewer(ctx context.Context, assignedReviewerID *uuid.UUID) ([]ListApplicationByReviewerRow, error) {
-	rows, err := q.db.Query(ctx, listApplicationByReviewer, assignedReviewerID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListApplicationByReviewerRow{}
-	for rows.Next() {
-		var i ListApplicationByReviewerRow
-		if err := rows.Scan(&i.UserID, &i.PassionRating, &i.ExperienceRating); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listAvailableApplications = `-- name: ListAvailableApplications :many
-
-SELECT user_id FROM applications
-WHERE status = 'submitted'
-    AND experience_rating IS NULL
-    AND passion_rating IS NULL
-ORDER BY
-    user_id ASC
-`
-
-// An application is considered "available" if the application has a status of submitted and has not been reviewed yet.
-// For optimization purposes, we only select the application IDs.
-func (q *Queries) ListAvailableApplications(ctx context.Context) ([]uuid.UUID, error) {
-	rows, err := q.db.Query(ctx, listAvailableApplications)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []uuid.UUID{}
-	for rows.Next() {
-		var user_id uuid.UUID
-		if err := rows.Scan(&user_id); err != nil {
-			return nil, err
-		}
-		items = append(items, user_id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listNonReviewedApplications = `-- name: ListNonReviewedApplications :many
-SELECT user_id
-FROM applications
-WHERE status = 'under_review'
-  AND (passion_rating IS NULL OR experience_rating IS NULL)
-`
-
-func (q *Queries) ListNonReviewedApplications(ctx context.Context) ([]uuid.UUID, error) {
-	rows, err := q.db.Query(ctx, listNonReviewedApplications)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []uuid.UUID{}
-	for rows.Next() {
-		var user_id uuid.UUID
-		if err := rows.Scan(&user_id); err != nil {
-			return nil, err
-		}
-		items = append(items, user_id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const resetApplicationReviews = `-- name: ResetApplicationReviews :exec
+const updateApplicationByUserId = `-- name: UpdateApplicationByUserId :exec
 UPDATE applications
-SET assigned_reviewer_id = NULL,
-    status = 'submitted',
-    experience_rating = NULL,
-    passion_rating = NULL
-WHERE status NOT IN ('submitted', 'started')
+SET
+    status = CASE WHEN $1::boolean THEN $2::application_status ELSE status END,
+    application = CASE WHEN $3::boolean THEN $4::JSONB ELSE application END,
+    submitted_at = CASE WHEN $5::boolean THEN $6::timestamptz ELSE submitted_at END,
+    saved_at = CASE WHEN $7::boolean THEN $8::timestamptz ELSE saved_at END,
+    is_early = CASE WHEN $9::boolean THEN $10::boolean ELSE is_early END
+WHERE
+    user_id = $11
 `
 
-func (q *Queries) ResetApplicationReviews(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, resetApplicationReviews)
+type UpdateApplicationByUserIdParams struct {
+	StatusDoUpdate      bool              `json:"status_do_update"`
+	Status              ApplicationStatus `json:"status"`
+	ApplicationDoUpdate bool              `json:"application_do_update"`
+	Application         []byte            `json:"application"`
+	SubmittedAtDoUpdate bool              `json:"submitted_at_do_update"`
+	SubmittedAt         time.Time         `json:"submitted_at"`
+	SavedAtDoUpdate     bool              `json:"saved_at_do_update"`
+	SavedAt             time.Time         `json:"saved_at"`
+	IsEarlyDoUpdate     bool              `json:"is_early_do_update"`
+	IsEarly             bool              `json:"is_early"`
+	UserID              uuid.UUID         `json:"user_id"`
+}
+
+func (q *Queries) UpdateApplicationByUserId(ctx context.Context, arg UpdateApplicationByUserIdParams) error {
+	_, err := q.db.Exec(ctx, updateApplicationByUserId,
+		arg.StatusDoUpdate,
+		arg.Status,
+		arg.ApplicationDoUpdate,
+		arg.Application,
+		arg.SubmittedAtDoUpdate,
+		arg.SubmittedAt,
+		arg.SavedAtDoUpdate,
+		arg.SavedAt,
+		arg.IsEarlyDoUpdate,
+		arg.IsEarly,
+		arg.UserID,
+	)
 	return err
 }
 
-const transitionAcceptedApplicationsToWaitlist = `-- name: TransitionAcceptedApplicationsToWaitlist :exec
+const updateApplicationsStatusByUserIds = `-- name: UpdateApplicationsStatusByUserIds :exec
+UPDATE applications
+SET status = $1::application_status
+WHERE user_id = ANY($2::uuid[])
+`
+
+type UpdateApplicationsStatusByUserIdsParams struct {
+	Status  ApplicationStatus `json:"status"`
+	UserIds []uuid.UUID       `json:"user_ids"`
+}
+
+func (q *Queries) UpdateApplicationsStatusByUserIds(ctx context.Context, arg UpdateApplicationsStatusByUserIdsParams) error {
+	_, err := q.db.Exec(ctx, updateApplicationsStatusByUserIds, arg.Status, arg.UserIds)
+	return err
+}
+
+const waitlistAcceptedApplications = `-- name: WaitlistAcceptedApplications :exec
 UPDATE applications
 SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
     status = 'waitlisted'
@@ -273,114 +212,19 @@ WHERE status = 'accepted'
 )
 `
 
-func (q *Queries) TransitionAcceptedApplicationsToWaitlist(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, transitionAcceptedApplicationsToWaitlist)
+func (q *Queries) WaitlistAcceptedApplications(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, waitlistAcceptedApplications)
 	return err
 }
 
-const transitionWaitlistedApplicationsToAccepted = `-- name: TransitionWaitlistedApplicationsToAccepted :many
+const waitlistApplicationByUserId = `-- name: WaitlistApplicationByUserId :exec
 UPDATE applications
-SET waitlist_join_time = NULL,
-    status = 'accepted'
-WHERE user_id IN (
-  SELECT user_id FROM applications
-  WHERE status = 'waitlisted'
-  ORDER BY waitlist_join_time ASC
-  LIMIT $1::int
-)
-RETURNING user_id
+SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
+    status = 'waitlisted'
+WHERE user_id = $1
 `
 
-func (q *Queries) TransitionWaitlistedApplicationsToAccepted(ctx context.Context, acceptancecount int32) ([]uuid.UUID, error) {
-	rows, err := q.db.Query(ctx, transitionWaitlistedApplicationsToAccepted, acceptancecount)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []uuid.UUID{}
-	for rows.Next() {
-		var user_id uuid.UUID
-		if err := rows.Scan(&user_id); err != nil {
-			return nil, err
-		}
-		items = append(items, user_id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const updateApplication = `-- name: UpdateApplication :exec
-UPDATE applications
-SET
-    status = CASE WHEN $1::boolean THEN $2::application_status ELSE status END,
-    application = CASE WHEN $3::boolean THEN $4::JSONB ELSE application END,
-    submitted_at = CASE WHEN $5::boolean THEN $6::timestamptz ELSE submitted_at END,
-    saved_at = CASE WHEN $7::boolean THEN $8::timestamptz ELSE saved_at END,
-    assigned_reviewer_id = CASE WHEN $9::boolean THEN $10::UUID ELSE assigned_reviewer_id END,
-    experience_rating = CASE WHEN $11::boolean THEN $12::INT ELSE experience_rating END,
-    passion_rating = CASE WHEN $13::boolean THEN $14::INT ELSE passion_rating END,
-    is_early = CASE WHEN $15::boolean THEN $16::boolean ELSE is_early END
-WHERE
-    user_id = $17
-`
-
-type UpdateApplicationParams struct {
-	StatusDoUpdate             bool              `json:"status_do_update"`
-	Status                     ApplicationStatus `json:"status"`
-	ApplicationDoUpdate        bool              `json:"application_do_update"`
-	Application                []byte            `json:"application"`
-	SubmittedAtDoUpdate        bool              `json:"submitted_at_do_update"`
-	SubmittedAt                time.Time         `json:"submitted_at"`
-	SavedAtDoUpdate            bool              `json:"saved_at_do_update"`
-	SavedAt                    time.Time         `json:"saved_at"`
-	AssignedReviewerIDDoUpdate bool              `json:"assigned_reviewer_id_do_update"`
-	AssignedReviewerID         uuid.UUID         `json:"assigned_reviewer_id"`
-	ExperienceRatingDoUpdate   bool              `json:"experience_rating_do_update"`
-	ExperienceRating           int32             `json:"experience_rating"`
-	PassionRatingDoUpdate      bool              `json:"passion_rating_do_update"`
-	PassionRating              int32             `json:"passion_rating"`
-	IsEarlyDoUpdate            bool              `json:"is_early_do_update"`
-	IsEarly                    bool              `json:"is_early"`
-	UserID                     uuid.UUID         `json:"user_id"`
-}
-
-func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationParams) error {
-	_, err := q.db.Exec(ctx, updateApplication,
-		arg.StatusDoUpdate,
-		arg.Status,
-		arg.ApplicationDoUpdate,
-		arg.Application,
-		arg.SubmittedAtDoUpdate,
-		arg.SubmittedAt,
-		arg.SavedAtDoUpdate,
-		arg.SavedAt,
-		arg.AssignedReviewerIDDoUpdate,
-		arg.AssignedReviewerID,
-		arg.ExperienceRatingDoUpdate,
-		arg.ExperienceRating,
-		arg.PassionRatingDoUpdate,
-		arg.PassionRating,
-		arg.IsEarlyDoUpdate,
-		arg.IsEarly,
-		arg.UserID,
-	)
-	return err
-}
-
-const updateApplicationStatus = `-- name: UpdateApplicationStatus :exec
-UPDATE applications
-SET status = $1::application_status
-WHERE user_id = ANY($2::uuid[])
-`
-
-type UpdateApplicationStatusParams struct {
-	Status  ApplicationStatus `json:"status"`
-	UserIds []uuid.UUID       `json:"user_ids"`
-}
-
-func (q *Queries) UpdateApplicationStatus(ctx context.Context, arg UpdateApplicationStatusParams) error {
-	_, err := q.db.Exec(ctx, updateApplicationStatus, arg.Status, arg.UserIds)
+func (q *Queries) WaitlistApplicationByUserId(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, waitlistApplicationByUserId, userID)
 	return err
 }
