@@ -44,13 +44,16 @@ export type PaginationState = {
 interface TableProps<TData> {
   data: TData[];
   columns: ColumnDef<TData>[];
-  columnFilters: ColumnFiltersState;
-  onColumnFiltersChange: OnChangeFn<ColumnFiltersState>;
-  sorting: SortingState;
-  onSortingChange: OnChangeFn<SortingState>;
-  pagination: PaginationState;
-  onPaginationChange: OnChangeFn<PaginationState>;
+  columnFilters?: ColumnFiltersState;
+  onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
+  sorting?: SortingState;
+  onSortingChange?: OnChangeFn<SortingState>;
+  pagination?: PaginationState;
+  onPaginationChange?: OnChangeFn<PaginationState>;
   fallbackData?: TData[];
+  showPagination?: boolean;
+  headerClassName?: string;
+  className?: string;
 }
 
 export function Table<TData>({
@@ -60,9 +63,15 @@ export function Table<TData>({
   onColumnFiltersChange,
   sorting,
   onSortingChange,
-  pagination,
   onPaginationChange,
+  headerClassName,
+  className,
+  pagination = {
+    pageSize: 10,
+    pageIndex: 0,
+  },
   fallbackData = [],
+  showPagination = true,
 }: TableProps<TData>) {
   const table = useReactTable({
     columns,
@@ -78,9 +87,9 @@ export function Table<TData>({
   });
 
   return (
-    <div>
+    <div className={className}>
       <table className="w-full table-fixed">
-        <thead>
+        <thead className={headerClassName ? headerClassName : ""}>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -90,7 +99,7 @@ export function Table<TData>({
                 return (
                   <th
                     key={header.id}
-                    className={`text-left px-4 py-2 ${responsiveClass}`}
+                    className={`text-left py-2 ${responsiveClass}`}
                     style={{
                       width: header.getSize(),
                       minWidth: header.column.columnDef.minSize,
@@ -201,7 +210,7 @@ export function Table<TData>({
                   <td
                     key={cell.id}
                     className={`
-                    p-4 ${responsiveClass}
+                    px-0 py-2 ${responsiveClass}
                   `}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -212,76 +221,63 @@ export function Table<TData>({
           ))}
         </tbody>
       </table>
-      <div className="h-2" />
-      <div className="flex items-center gap-2">
-        <Button
-          className="rounded p-1"
-          variant="secondary"
-          onClick={() => table.firstPage()}
-          isDisabled={!table.getCanPreviousPage()}
-        >
-          <TablerChevronsLeft></TablerChevronsLeft>
-        </Button>
-        <Button
-          className="rounded p-1"
-          variant="secondary"
-          onClick={() => table.previousPage()}
-          isDisabled={!table.getCanPreviousPage()}
-        >
-          <TablerChevronLeft></TablerChevronLeft>
-        </Button>
-        <Button
-          className="rounded p-1"
-          variant="secondary"
-          onClick={() => table.nextPage()}
-          isDisabled={!table.getCanNextPage()}
-        >
-          <TablerChevronRight></TablerChevronRight>
-        </Button>
-        <Button
-          className="rounded p-1"
-          variant="secondary"
-          onClick={() => table.lastPage()}
-          isDisabled={!table.getCanNextPage()}
-        >
-          <TablerChevronsRight></TablerChevronsRight>
-        </Button>
-        <span className="flex items-center gap-1">
-          <div>Page</div>
-          <strong>
-            {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount().toLocaleString()}
-          </strong>
-        </span>
-        {/* <span className="flex items-center gap-1">
-          | Go to page:
-          <input
-            type="number"
-            min="1"
-            max={table.getPageCount()}
-            defaultValue={table.getState().pagination.pageIndex + 1}
-            onChange={(e) => {
-              const page = e.target.value ? Number(e.target.value) - 1 : 0;
-              table.setPageIndex(page);
+      {showPagination && (
+        <div className="flex items-center gap-2">
+          <Button
+            className="rounded p-1"
+            variant="secondary"
+            onClick={() => table.firstPage()}
+            isDisabled={!table.getCanPreviousPage()}
+          >
+            <TablerChevronsLeft></TablerChevronsLeft>
+          </Button>
+          <Button
+            className="rounded p-1"
+            variant="secondary"
+            onClick={() => table.previousPage()}
+            isDisabled={!table.getCanPreviousPage()}
+          >
+            <TablerChevronLeft></TablerChevronLeft>
+          </Button>
+          <Button
+            className="rounded p-1"
+            variant="secondary"
+            onClick={() => table.nextPage()}
+            isDisabled={!table.getCanNextPage()}
+          >
+            <TablerChevronRight></TablerChevronRight>
+          </Button>
+          <Button
+            className="rounded p-1"
+            variant="secondary"
+            onClick={() => table.lastPage()}
+            isDisabled={!table.getCanNextPage()}
+          >
+            <TablerChevronsRight></TablerChevronsRight>
+          </Button>
+          <span className="flex items-center gap-1">
+            <div>Page</div>
+            <strong>
+              {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount().toLocaleString()}
+            </strong>
+          </span>
+          <Select
+            aria-label="Select Page Size"
+            selectedKey={String(table.getState().pagination.pageSize)}
+            items={[5, 10, 20, 50, 100, 1000].map((size) => ({
+              id: String(size),
+              name: `Row Size: ${size}`,
+            }))}
+            onSelectionChange={(key) => {
+              if (key) {
+                table.setPageSize(Number(key));
+              }
             }}
-            className="border p-1 rounded w-16"
-          />
-        </span> */}
-        <Select
-          aria-label="Select Page Size"
-          selectedKey={String(table.getState().pagination.pageSize)}
-          items={[5, 10, 20, 50, 100, 1000].map((size) => ({
-            id: String(size),
-            name: `Row Size: ${size}`,
-          }))}
-          onSelectionChange={(key) => {
-            if (key) {
-              table.setPageSize(Number(key));
-            }
-          }}
-          children={null}
-        ></Select>
-      </div>
+            children={null}
+          ></Select>
+        </div>
+      )}
     </div>
   );
 }

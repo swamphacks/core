@@ -1,6 +1,7 @@
 import { api } from "@/lib/ky";
 import { staffHackthonQueryKey } from "@/modules/Hackathon/hooks/useHackathon";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { applicationStatisticsQueryKey } from "./useApplicationStatistics";
 
 export interface AssignedReviewer {
   userId: string;
@@ -33,6 +34,9 @@ export const useApplicationReviewAdminActions = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: staffHackthonQueryKey,
+      });
+      queryClient.invalidateQueries({
+        queryKey: applicationStatisticsQueryKey,
       });
     },
   });

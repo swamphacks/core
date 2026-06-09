@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Modal } from "@/components/ui/Modal";
 import ReviewerList from "./ReviewerList";
 import SummaryFooter from "./SummaryFooter";
 import {
@@ -68,32 +67,30 @@ export default function ReviewerAssignmentModal({ onClose }: Props) {
   };
 
   return (
-    <Modal>
-      <div className="flex flex-col h-full">
-        <h2>Select Reviewers</h2>
-        <div className="flex-3 overflow-y-auto mt-2 max-h-[500px] px-1">
-          <ReviewerList
-            staff={staff.data}
-            assigned={assigned}
-            setAssigned={setAssigned}
-          />
-        </div>
-        <div className="mt-4 flex gap-2 flex-col flex-1">
-          <SummaryFooter
-            numAssigned={numAssigned}
-            total={stats.data.statusStats.under_review}
-          />
+    <div className="flex flex-col h-full">
+      <h2>Select Reviewers</h2>
+      <div className="flex-3 overflow-y-auto mt-2 max-h-[500px] px-1">
+        <ReviewerList
+          staff={staff.data}
+          assigned={assigned}
+          setAssigned={setAssigned}
+        />
+      </div>
+      <div className="mt-4 flex gap-2 flex-col flex-1">
+        <SummaryFooter
+          numAssigned={numAssigned}
+          total={stats.data.statusStats.under_review}
+        />
 
-          <div className="flex flex-row w-full justify-end gap-2">
-            <Button className="w-fit" slot="close" variant="secondary">
-              Cancel
-            </Button>
-            <Button className="w-fit" variant="primary" onClick={handleSubmit}>
-              Assign Reviewers
-            </Button>
-          </div>
+        <div className="flex flex-row w-full justify-end gap-2">
+          <Button className="w-fit" slot="close" variant="secondary">
+            Cancel
+          </Button>
+          <Button className="w-fit" variant="primary" onClick={handleSubmit}>
+            Assign Reviewers
+          </Button>
         </div>
       </div>
-    </Modal>
+    </div>
   );
 }

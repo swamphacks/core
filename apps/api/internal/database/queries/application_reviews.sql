@@ -61,6 +61,7 @@ SELECT
   aadr.*,
   reviewer.id AS reviewer_id,
   reviewer.name AS reviewer_name,
+  reviewer.image AS reviewer_image,
   approver.id AS approver_id,
   approver.name AS approver_name
 FROM application_auto_decision_requests AS aadr

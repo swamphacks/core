@@ -93,7 +93,7 @@ func (s *ApplicationService) GetApplicationByUserId(ctx context.Context, userID 
 	application, err := s.db.Query.GetApplicationByUserId(ctx, userID)
 
 	if err != nil {
-		if errors.Is(err, database.ErrApplicationNotFound) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, database.ErrApplicationNotFound
 		} else {
 			s.logger.Err(err).Msg("Failed to get application by user id")

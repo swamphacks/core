@@ -94,6 +94,7 @@ SELECT
   aadr.id, aadr.application_id, aadr.reviewer_user_id, aadr.requested_decision, aadr.justification, aadr.approved, aadr.approved_by, aadr.updated_at, aadr.created_at,
   reviewer.id AS reviewer_id,
   reviewer.name AS reviewer_name,
+  reviewer.image AS reviewer_image,
   approver.id AS approver_id,
   approver.name AS approver_name
 FROM application_auto_decision_requests AS aadr
@@ -115,6 +116,7 @@ type ListAutoDecisionRequestsRow struct {
 	CreatedAt         time.Time                   `json:"created_at"`
 	ReviewerID        *uuid.UUID                  `json:"reviewer_id"`
 	ReviewerName      *string                     `json:"reviewer_name"`
+	ReviewerImage     *string                     `json:"reviewer_image"`
 	ApproverID        *uuid.UUID                  `json:"approver_id"`
 	ApproverName      *string                     `json:"approver_name"`
 }
@@ -140,6 +142,7 @@ func (q *Queries) ListAutoDecisionRequests(ctx context.Context) ([]ListAutoDecis
 			&i.CreatedAt,
 			&i.ReviewerID,
 			&i.ReviewerName,
+			&i.ReviewerImage,
 			&i.ApproverID,
 			&i.ApproverName,
 		); err != nil {

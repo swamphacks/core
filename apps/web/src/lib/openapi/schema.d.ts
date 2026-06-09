@@ -76,7 +76,11 @@ export interface paths {
      * @description Returns a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.
      */
     get: operations["get-download-resume-url"];
-    put?: never;
+    /**
+     * Replace Resume
+     * @description Replaces the resume of an already-submitted application without modifying any question responses.
+     */
+    put: operations["replace-resume"];
     post?: never;
     delete?: never;
     options?: never;
@@ -1520,6 +1524,7 @@ export interface components {
       justification: string | null;
       requested_decision: string;
       reviewer_id: string;
+      reviewer_image: string | null;
       reviewer_name: string | null;
       reviewer_user_id: string;
       /** Format: date-time */
@@ -1939,6 +1944,70 @@ export interface operations {
       };
       /** @description Unauthorized */
       401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+    };
+  };
+  "replace-resume": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie: {
+        /** @description Session cookie used to authenticate the user */
+        sh_session_id: string;
+      };
+    };
+    requestBody?: {
+      content: {
+        "multipart/form-data": {
+          /** Format: binary */
+          resume: string;
+        };
+      };
+    };
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };

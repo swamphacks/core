@@ -14,6 +14,10 @@ import { toast } from "react-toastify";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import TablerX from "~icons/tabler/x";
 import TablerCheck from "~icons/tabler/check";
+import { useState } from "react";
+import { DialogTrigger } from "react-aria-components";
+import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Field";
 
 interface ApplicationReviewWorkspaceProps {
   user: UserContext;
@@ -199,19 +203,19 @@ function ApplicationViewer({
     );
   };
 
-  const handleRequestAutoAccept = async () => {
+  const handleRequestAutoAccept = async (justification: string) => {
     await requestAutoDecision.mutateAsync({
       applicationId: assignedApplication.applicationId,
       accept: true,
-      justification: "",
+      justification,
     });
   };
 
-  const handleRequestAutoReject = async () => {
+  const handleRequestAutoReject = async (justification: string) => {
     await requestAutoDecision.mutateAsync({
       applicationId: assignedApplication.applicationId,
       accept: false,
-      justification: "",
+      justification,
     });
   };
 
@@ -321,7 +325,7 @@ function ApplicationViewer({
 
   function ReviewerPanel() {
     return (
-      <div className="relative p-2 rounded-md border border-input-border bg-card sticky top-6">
+      <div className="relative p-2 rounded-md border border-input-border bg-card top-6">
         <h3 className="font-medium text-text-secondary mb-3">
           Rubric and Controls
         </h3>
@@ -370,24 +374,27 @@ function ApplicationViewer({
             </div>
           ) : (
             <>
-              <div className="flex gap-2 mt-2 ml-2">
-                <Button
-                  className="px-1 h-8"
-                  size="sm"
-                  onClick={handleRequestAutoAccept}
-                >
-                  <TablerCheck />
-                  Auto Accept
-                </Button>
-                <Button
-                  className="px-1 h-8"
-                  size="sm"
-                  variant="danger"
-                  onClick={handleRequestAutoReject}
-                >
-                  <TablerX />
-                  Auto Reject
-                </Button>
+              <div className="flex gap-2 mt-2 ml-2 mr-2">
+                <DialogTrigger>
+                  <Button className="px-1 h-8" size="sm">
+                    <TablerCheck />
+                    Auto Accept
+                  </Button>
+
+                  <Modal>
+                    <JustificationModal accept={true} />
+                  </Modal>
+                </DialogTrigger>
+                <DialogTrigger>
+                  <Button className="px-1 h-8" size="sm" variant="danger">
+                    <TablerX />
+                    Auto Reject
+                  </Button>
+
+                  <Modal>
+                    <JustificationModal accept={false} />
+                  </Modal>
+                </DialogTrigger>
               </div>
               {user.role === "staff" && (
                 <span className="text-xs text-text-secondary">
@@ -397,6 +404,43 @@ function ApplicationViewer({
             </>
           )}
         </div>
+      </div>
+    );
+  }
+
+  function JustificationModal({ accept }: { accept: boolean }) {
+    const [justification, setJustification] = useState("");
+
+    return (
+      <div className="flex flex-col gap-3">
+        <label>Justification</label>
+        <Input
+          placeholder="Type a reason"
+          value={justification}
+          onChange={(e) => setJustification(e.target.value)}
+        />
+        <Button
+          onClick={() => {
+            if (accept) {
+              handleRequestAutoAccept(justification);
+            } else {
+              handleRequestAutoReject(justification);
+            }
+          }}
+          className="px-1 h-8 w-fit"
+          size="sm"
+        >
+          {accept ? (
+            <>
+              <TablerCheck /> Auto Accept
+            </>
+          ) : (
+            <>
+              <TablerX />
+              Auto Reject
+            </>
+          )}
+        </Button>
       </div>
     );
   }
