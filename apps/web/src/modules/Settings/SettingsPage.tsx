@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/utils/cn";
 import z from "zod";
 import { useFormErrors } from "@/components/Form";
-import { api } from "@/lib/ky";
-import { auth } from "@/lib/authClient";
 import { showToast } from "@/lib/toast/toast";
 import { useState } from "react";
 import TablerPlaystationX from "~icons/tabler/playstation-x";
@@ -21,16 +19,17 @@ import TablerLogout from "~icons/tabler/logout";
 import { useRouter, useCanGoBack } from "@tanstack/react-router";
 import TablerHome from "~icons/tabler/home";
 import { ThemeSwitch } from "@/components/ThemeProvider";
+import type { UserContext } from "@/lib/auth/types";
 
-export function SettingsPage({ logout }: { logout: () => void }) {
+interface SettingsPageProps {
+  logout: () => void;
+  user: UserContext | null;
+}
+
+export function SettingsPage({ logout, user }: SettingsPageProps) {
   const router = useRouter();
   const canGoBack = useCanGoBack();
-
-  const { data } = auth.useUser();
-  const { user } = data!;
-
-  const { updateAccountInfo } = useSettingsActions();
-
+  const { updateAccountInfo, updateEmailConsent } = useSettingsActions();
   const [emailConsent, setEmailConsent] = useState(user?.emailConsent);
 
   const form = useForm({
@@ -42,6 +41,10 @@ export function SettingsPage({ logout }: { logout: () => void }) {
       onChange: settingsFieldsSchema,
     },
     onSubmit: async ({ value }) => {
+      if (value.preferredEmail === null || value.preferredEmail === undefined) {
+        value.preferredEmail = "";
+      }
+
       await updateAccountInfo.mutateAsync(
         value as z.infer<typeof settingsFieldsSchema>,
         {
@@ -58,9 +61,7 @@ export function SettingsPage({ logout }: { logout: () => void }) {
   const handleEmailConsentToggle = async (selected: boolean) => {
     try {
       setEmailConsent(selected);
-      await api.patch("users/me/email-consent", {
-        json: { email_consent: selected },
-      });
+      await updateEmailConsent.mutateAsync(selected);
     } catch {
       showToast({
         title: "Something went wrong :(",
@@ -70,6 +71,14 @@ export function SettingsPage({ logout }: { logout: () => void }) {
       setEmailConsent(!selected);
     }
   };
+
+  if (!user) {
+    return (
+      <div>
+        <p>Unable to load user settings...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("absolute inset-0 z-40 bg-background p-6")}>
@@ -85,7 +94,7 @@ export function SettingsPage({ logout }: { logout: () => void }) {
                 />
               ) : (
                 <TablerHome
-                  onClick={() => router.navigate({ to: "/portal" })}
+                  onClick={() => router.navigate({ to: "/information" })}
                   className="size-7 hover:cursor-pointer text-text-secondary hover:text-text-main"
                 />
               )}

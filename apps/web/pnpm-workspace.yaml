@@ -1,0 +1,4 @@
+ignoreScripts: false
+allowBuilds:
+  '@tailwindcss/oxide': true
+  esbuild: true

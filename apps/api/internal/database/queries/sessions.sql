@@ -21,7 +21,10 @@ DELETE FROM sessions
 WHERE expires_at < NOW();
 
 -- name: GetActiveSessionUserInfo :one
-SELECT u.id AS user_id, u.name, u.email, u.preferred_email, u.onboarded, u.image, u.role, u.email_consent, u.checked_in_at, u.rfid, s.last_used_at
+SELECT u.id AS user_id, u.name, u.email, u.preferred_email,
+  u.onboarded, u.image, u.role, u.email_consent,
+  u.checked_in_at, u.rfid, u.has_seen_new_application_status,
+  s.last_used_at
 FROM sessions s
 JOIN users u ON s.user_id = u.id
 WHERE s.id = $1

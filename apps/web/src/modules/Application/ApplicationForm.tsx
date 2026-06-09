@@ -3,9 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QuestionTypes } from "@/modules/FormBuilder/types";
 import { showToast } from "@/lib/toast/toast";
 import TablerCircleCheck from "~icons/tabler/circle-check";
+import TablerUpload from "~icons/tabler/upload";
 import { api } from "@/lib/ky";
 import { Spinner } from "@/components/ui/Spinner";
-import { useMyApplication } from "@/modules/Application/hooks/useMyApplication";
+import { Button } from "@/components/ui/Button";
+import { useReplaceResume } from "@/modules/Application/hooks/useReplaceResume";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
 
 import Cloud from "./assets/cloud.svg?react";
@@ -17,16 +19,22 @@ import Bell from "./assets/bell.svg?react";
 
 // TODO: dynamically fetch application json data from somewhere (backend, cdn?) instead of hardcoding it in the frontend
 import data from "./application.json";
-import type { Hackathon } from "@/lib/openapi/types";
+import type { Application, Hackathon } from "@/lib/openapi/types";
 import { HTTPError } from "ky";
 
 const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
 interface ApplicationFormProps {
   hackathon: Hackathon;
+  application: Application;
+  applicationResponses: any;
 }
 
-export function ApplicationForm({ hackathon }: ApplicationFormProps) {
+export function ApplicationForm({
+  hackathon,
+  application,
+  applicationResponses,
+}: ApplicationFormProps) {
   // TODO: make the `build` api better so components that use this function doesn't have to call useMemo on it?
   const { Form, fieldsTypes } = useMemo(() => build(data), []);
   const fileFields = useRef(new Set<string>());
@@ -37,8 +45,6 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
   const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>(undefined);
   const [savedText, setSavedText] = useState<string | undefined>("");
   const [submittedAt, setSubmittedAt] = useState<string | undefined>(undefined);
-
-  const application = useMyApplication();
 
   // Update saved text every second. Restart interval when lastSavedAt changes.
   useEffect(() => {
@@ -55,15 +61,15 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
 
   // Update saved at status message, if any.
   useEffect(() => {
-    if (!application || application.isLoading) return;
+    if (!application) return;
 
-    if (application.data?.savedAt) {
-      const parsed = parseISO(application.data.savedAt);
+    if (application?.savedAt) {
+      const parsed = parseISO(application.savedAt);
       setLastSavedAt(parsed);
     } else {
       setLastSavedAt(undefined);
     }
-  }, [application?.data?.savedAt, application?.isLoading]);
+  }, [application?.savedAt]);
 
   const onSubmit = useCallback(async (data: Record<string, any>) => {
     setIsSubmitting(true);
@@ -140,20 +146,7 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
     [isSubmitted, isSubmitting],
   );
 
-  if (application.isLoading) {
-    return (
-      <div className="flex w-full justify-center pt-10 gap-2 text-text-secondary">
-        <Spinner />
-        <p>Loading form...</p>
-      </div>
-    );
-  }
-
-  if (!application.data) {
-    throw new Error("Application data is empty.");
-  }
-
-  const isApplicationSubmitted = application.data.status !== "started";
+  const isApplicationSubmitted = application.status !== "started";
 
   const saveStatus = (
     <>
@@ -175,9 +168,7 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
       <div className="flex-col">
         <Form
           defaultValues={
-            isApplicationSubmitted
-              ? undefined
-              : JSON.parse(atob(application.data.application))
+            isApplicationSubmitted ? undefined : applicationResponses
           }
           onSubmit={onSubmit}
           onNewAttachments={onNewAttachments}
@@ -185,7 +176,7 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
           onChange={onChange}
           SubmitSuccessComponent={() => (
             <SubmitSuccess
-              submittedAt={submittedAt || application.data.submittedAt!}
+              submittedAt={submittedAt || application.submittedAt!}
             />
           )}
           isInvalid={isInvalid}
@@ -233,7 +224,7 @@ export function ApplicationForm({ hackathon }: ApplicationFormProps) {
 function SubmitSuccess({ submittedAt }: { submittedAt: string }) {
   return (
     <div>
-      <div className="flex items-center gap-2 font-medium bg-badge-bg-accepted/50 text-badge-text-accepted rounded-md py-3 pl-3">
+      <div className="flex items-center gap-2">
         <TablerCircleCheck />
         <p>Thank you! Your application has been received.</p>
       </div>
@@ -247,6 +238,78 @@ function SubmitSuccess({ submittedAt }: { submittedAt: string }) {
           minute: "2-digit",
         }).format(new Date(submittedAt))}
       </p>
+      <ReplaceResume />
+    </div>
+  );
+}
+
+function ReplaceResume() {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { mutate: replaceResume, isPending } = useReplaceResume();
+
+  const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Reset so selecting the same file again still fires onChange
+    e.target.value = "";
+
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      showToast({
+        title: "Invalid file",
+        message: "Please upload a PDF resume.",
+        type: "error",
+      });
+      return;
+    }
+
+    replaceResume(file, {
+      onSuccess: () => {
+        showToast({
+          title: "Resume updated",
+          message: "Your resume has been replaced successfully.",
+          type: "success",
+        });
+      },
+      onError: async (err) => {
+        let message = "Something went wrong while replacing your resume.";
+        if (err instanceof HTTPError) {
+          const resBody = await err.response.json<{ detail?: string }>();
+          message = resBody.detail || message;
+        }
+
+        showToast({
+          title: "Upload failed",
+          message,
+          type: "error",
+        });
+      },
+    });
+  };
+
+  return (
+    <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+      <p className="text-sm text-text-secondary mb-2">
+        Uploaded the wrong resume? You can replace it below. This does not
+        change any of your other application responses.
+      </p>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={onSelectFile}
+      />
+      <Button
+        variant="secondary"
+        size="sm"
+        isDisabled={isPending}
+        onPress={() => inputRef.current?.click()}
+        className="inline-flex items-center gap-2"
+      >
+        {isPending ? <Spinner /> : <TablerUpload />}
+        {isPending ? "Uploading..." : "Replace resume"}
+      </Button>
     </div>
   );
 }

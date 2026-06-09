@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,6 +25,7 @@ var (
 	ErrApplicationNotOpened      = errors.New("Application not opened")
 	ErrFailedToCreateApplication = errors.New("Failed to create application")
 	ErrFailedToGetHackathon      = errors.New("Failed to get hackathon information")
+	ErrCannotReplaceResume       = errors.New("cannot replace resume before the application has been submitted")
 )
 
 type ApplicationService struct {
@@ -286,6 +288,36 @@ func (s *ApplicationService) SubmitApplicationReview(ctx context.Context) (*sqlc
 	return nil, nil
 }
 
+// ReplaceResume overwrites the resume of an already-submitted application without
+// touching any of the question responses. Hackers sometimes submit the wrong resume
+// and need to swap it out after the fact.
+func (s *ApplicationService) ReplaceResume(ctx context.Context, userID uuid.UUID, resume []byte) error {
+	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
+	if err != nil {
+		s.logger.Err(err).Msg("Replace resume fail because can't retrieve hackathon")
+		return ErrFailedToGetHackathon
+	}
+
+	application, err := s.GetApplicationByUserId(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	// Only allow replacing the resume once the application has actually been submitted.
+	// Before submission the resume is handled as part of the normal submit flow.
+	if application.Status == sqlc.ApplicationStatusStarted {
+		return ErrCannotReplaceResume
+	}
+
+	contentType := "application/pdf"
+	if err := s.storage.Store(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+userID.String(), resume, &contentType); err != nil {
+		s.logger.Err(err).Msg("Replace resume fail while storing resume")
+		return err
+	}
+
+	return nil
+}
+
 func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userID uuid.UUID, lifetimeSecs int64) (*storage.PresignedRequest, error) {
 	presignableStorage, ok := s.storage.(storage.PresignableStorage)
 
@@ -300,7 +332,15 @@ func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userID uu
 		return nil, err
 	}
 
-	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, userID.String(), lifetimeSecs)
+	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
+	if err != nil {
+		s.logger.Err(err).Msg("download resume fail because can't retrieve hackathon")
+		return nil, ErrFailedToGetHackathon
+	}
+
+	// Resumes are stored under hackathonID/userID (see SubmitApplication and ReplaceResume),
+	// so the presigned download key must match that prefix.
+	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+userID.String(), lifetimeSecs)
 
 	if err != nil {
 		s.logger.Err(err).Msg("fail presign get object")
@@ -612,7 +652,7 @@ func (s *ApplicationService) WithdrawAcceptance(ctx context.Context, userID uuid
 	return nil
 }
 
-func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userID uuid.UUID) error {
+func (s *ApplicationService) WithdrawApplication(ctx context.Context, userID uuid.UUID) error {
 	// Make atomic
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txAppRepo := s.applicationRepo.NewTx(tx)
@@ -640,17 +680,43 @@ func (s *ApplicationService) WithdrawAttendance(ctx context.Context, userID uuid
 	return nil
 }
 
-func (s *ApplicationService) AcceptApplicationAcceptance(ctx context.Context, userID uuid.UUID) error {
-	// is a check for a user being accepted necessary here? or is the frontend enough
+func (s *ApplicationService) ConfirmAttendance(ctx context.Context, userID uuid.UUID) error {
+	// Atomic
+	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		txAppRepo := s.applicationRepo.NewTx(tx)
+		txUserRepo := s.userRepo.NewTx(tx)
 
-	err := s.userRepo.UpdateRole(ctx,
-		sqlc.UpdateRoleParams{
-			UserID: userID,
-			Role:   sqlc.UserRoleAttendee,
-		},
-	)
+		application, err := s.applicationRepo.GetApplicationByUserId(ctx, userID)
+
+		if err != nil {
+			s.logger.Err(err).Msg("ConfirmAttendance fail, unable to retrieve user application")
+			return err
+		}
+
+		if application.Status != sqlc.ApplicationStatusAccepted {
+			err = errors.New("User is not accepted to hack")
+			s.logger.Err(err).Msg(fmt.Sprintf("ConfirmAttendance fail, application is not accepted, status: %s", application.Status))
+			return err
+		}
+
+		if err := txAppRepo.UpdateApplication(ctx, sqlc.UpdateApplicationParams{
+			UserID:         userID,
+			StatusDoUpdate: true,
+			Status:         sqlc.ApplicationStatusConfirmed,
+		}); err != nil {
+			return err
+		}
+
+		return txUserRepo.UpdateRole(ctx,
+			sqlc.UpdateRoleParams{
+				UserID: userID,
+				Role:   sqlc.UserRoleAttendee,
+			},
+		)
+	})
+
 	if err != nil {
-		s.logger.Err(err).Msg("AcceptApplicationAcceptance fail, unable to update role")
+		s.logger.Err(err).Msg("ConfirmAttendance fail")
 		return err
 	}
 	return nil

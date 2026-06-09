@@ -1,5 +1,5 @@
 import AttendeeAppShell from "@/modules/Dashboard/AttendeeAppShell";
-import ApplicantAppShell from "@/modules/Dashboard/ApplicantAppShell";
+import ApplicantNavbar from "@/modules/Dashboard/ApplicantAppShell";
 import StaffAppShell from "@/modules/Dashboard/StaffAppShell";
 import { getUserEventRole } from "@/modules/Event/api/getUserEventRole";
 import NotFoundPage from "@/modules/NotFound/NotFoundPage";
@@ -67,9 +67,9 @@ function RouteComponent() {
       );
     case "applicant":
       return (
-        <ApplicantAppShell eventId={eventId} eventName={name}>
+        <ApplicantNavbar eventId={eventId} eventName={name}>
           <Outlet />
-        </ApplicantAppShell>
+        </ApplicantNavbar>
       );
     default:
       return <div>Unknown role: {eventRole}</div>;
