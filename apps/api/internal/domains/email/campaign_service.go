@@ -30,7 +30,7 @@ var (
 // EmailCampaignService owns business rules for saved email campaigns.
 type EmailCampaignService struct {
 	emailCampaignRepo *repository.EmailCampaignRepository
-	logger zerolog.Logger
+	logger            zerolog.Logger
 }
 
 // NewEmailCampaignService creates the service and stores its dependencies.
@@ -57,7 +57,6 @@ func (s *EmailCampaignService) CreateCampaign(
 
 	return s.emailCampaignRepo.CreateEmailCampaign(ctx, params)
 }
-
 
 // GetCampaignByID fetches one campaign scoped to a hackathon.
 // The hackathon scope prevents one event from reading another event's campaign.
@@ -121,7 +120,7 @@ func validateCampaignContent(
 	title string,
 	subject string,
 	body string,
-	recipientTypes []sqlc.EmailRecipientType,
+	recipientTypes []string,
 ) error {
 	if strings.TrimSpace(title) == "" {
 		return ErrEmailCampaignTitleRequired

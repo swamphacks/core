@@ -119,6 +119,7 @@ func Run() {
 	batRunsRepo := repository.NewBatRunsRepository(db)
 	eventInterestsRepo := repository.NewEventInterestsRepository(db)
 	workshopRepo := repository.NewWorkshopsRepository(db)
+	emailCampaignRepo := repository.NewEmailCampaignRepository(db)
 
 	mw := mw.NewMiddleware(userRepo, db, logger, config)
 
@@ -138,6 +139,10 @@ func Run() {
 	emailService := email.NewEmailService(hackathonRepo, userRepo, taskQueueClient, sesClient, r2Client, logger, config)
 	emailHandler := email.NewHandler(emailService, logger)
 	email.RegisterRoutes(emailHandler, huma.NewGroup(api, "/email"), mw)
+
+	emailCampaignService := email.NewEmailCampaignService(emailCampaignRepo, logger)
+	emailCampaignHandler := email.NewCampaignHandler(emailCampaignService, logger)
+	email.RegisterCampaignRoutes(emailCampaignHandler, huma.NewGroup(api, "/email"), mw)
 
 	batService := bat.NewBatService(applicationRepo, hackathonRepo, userRepo, batRunsRepo, emailService, txm, taskQueueClient, nil, config, logger)
 	applicationService := application.NewService(applicationRepo, userRepo, hackathonRepo, txm, r2Client, &config.CoreBuckets, nil, emailService, batService, config, logger)

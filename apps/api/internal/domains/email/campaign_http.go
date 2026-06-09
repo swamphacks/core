@@ -95,24 +95,24 @@ func NewCampaignHandler(emailCampaignService *EmailCampaignService, logger zerol
 }
 
 type CreateEmailCampaignRequest struct {
-	HackathonID    string                    `json:"hackathonId" required:"true"`
-	Title          string                    `json:"title" minLength:"1"`
-	Description    *string                   `json:"description,omitempty"`
-	Subject        string                    `json:"subject" minLength:"1"`
-	Body           string                    `json:"body" minLength:"1"`
-	Format         sqlc.EmailCampaignFormat  `json:"format" required:"true"`
-	RecipientTypes []sqlc.EmailRecipientType `json:"recipientTypes" minItems:"1"`
-	ScheduledAt    *time.Time                `json:"scheduledAt,omitempty"`
+	HackathonID    string                   `json:"hackathonId" required:"true"`
+	Title          string                   `json:"title" minLength:"1"`
+	Description    *string                  `json:"description,omitempty"`
+	Subject        string                   `json:"subject" minLength:"1"`
+	Body           string                   `json:"body" minLength:"1"`
+	Format         sqlc.EmailCampaignFormat `json:"format" required:"true"`
+	RecipientTypes []string                 `json:"recipientTypes" minItems:"1"`
+	ScheduledAt    *time.Time               `json:"scheduledAt,omitempty"`
 }
 
 type UpdateEmailCampaignRequest struct {
-	Title          *string                    `json:"title,omitempty"`
-	Description    *string                    `json:"description,omitempty"`
-	Subject        *string                    `json:"subject,omitempty"`
-	Body           *string                    `json:"body,omitempty"`
-	Format         *sqlc.EmailCampaignFormat  `json:"format,omitempty"`
-	RecipientTypes *[]sqlc.EmailRecipientType `json:"recipientTypes,omitempty"`
-	ScheduledAt    *time.Time                 `json:"scheduledAt,omitempty"`
+	Title          *string                   `json:"title,omitempty"`
+	Description    *string                   `json:"description,omitempty"`
+	Subject        *string                   `json:"subject,omitempty"`
+	Body           *string                   `json:"body,omitempty"`
+	Format         *sqlc.EmailCampaignFormat `json:"format,omitempty"`
+	RecipientTypes *[]string                 `json:"recipientTypes,omitempty"`
+	ScheduledAt    *time.Time                `json:"scheduledAt,omitempty"`
 }
 
 type UpdateEmailCampaignStatusRequest struct {
@@ -151,6 +151,7 @@ func (h *emailCampaignHandler) handleCreateCampaign(ctx context.Context, input *
 		UpdatedByUserID: &userCtx.UserID,
 	})
 	if err != nil {
+		h.logger.Err(err).Msg("Failed to create email campaign")
 		return nil, campaignHTTPError(err, "Failed to create email campaign")
 	}
 
@@ -242,7 +243,10 @@ func (h *emailCampaignHandler) handleUpdateCampaign(ctx context.Context, input *
 		params.Body = *input.Body.Body
 	}
 	if input.Body.Format != nil {
-		params.Format = *input.Body.Format
+		params.Format = sqlc.NullEmailCampaignFormat{
+			EmailCampaignFormat: *input.Body.Format,
+			Valid:               true,
+		}
 	}
 	if input.Body.RecipientTypes != nil {
 		params.RecipientTypes = *input.Body.RecipientTypes
@@ -253,6 +257,7 @@ func (h *emailCampaignHandler) handleUpdateCampaign(ctx context.Context, input *
 
 	campaign, err := h.emailCampaignService.UpdateCampaign(ctx, params)
 	if err != nil {
+		h.logger.Err(err).Msg("Failed to update email campaign")
 		return nil, campaignHTTPError(err, "Failed to update email campaign")
 	}
 
