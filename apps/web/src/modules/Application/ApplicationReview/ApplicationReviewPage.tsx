@@ -7,7 +7,7 @@ import type {
   ApplicationAutoDecisionRequest,
   StaffHackathon,
 } from "@/lib/openapi/types";
-import ReviewerAssignmentModal from "@/modules/Application/ApplicationReview/ReviewerAssignmentModal";
+import ReviewerAssignmentModal from "@/modules/Application/ApplicationReview/ReviewersAssignmentModal";
 import ReviewNotStartedAdmin from "@/modules/Application/ApplicationReview/ReviewNotStartedAdmin";
 import { useApplicationReviewAdminActions } from "@/modules/Application/hooks/useApplicationReviewAdminActions";
 import {
@@ -21,7 +21,11 @@ import TablerBrowserShare from "~icons/tabler/browser-share";
 import TablerUserEdit from "~icons/tabler/user-edit";
 import { useApplicationForReview } from "../hooks/useApplicationForReview";
 import { Popover } from "@/components/ui/Popover";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, ColumnFiltersState } from "@tanstack/react-table";
+import { useReviewersProgress } from "@/modules/Application/hooks/useReviewersProgress";
+import { Input } from "@/components/ui/Field";
+import { Select } from "@/components/ui/Select";
+import TablerSearch from "~icons/tabler/search";
 
 interface ApplicationReviewPageProps {
   hackathon: StaffHackathon;
@@ -71,47 +75,23 @@ export default function ApplicationReviewPage({
           </Button>
         </Link>
         {user.role === "admin" && (
-          <AppReviewAdminActions
-            endApplicationReview={handleEndApplicationReview}
-          />
+          <Button
+            onClick={handleEndApplicationReview}
+            variant="danger"
+            className="w-full"
+          >
+            End Application Review
+          </Button>
         )}
       </div>
 
-      <div>{user.role === "admin" && <AutoDecisionRequestsTable />}</div>
+      {user.role === "admin" && (
+        <div className="flex flex-col lg:flex-row gap-3 lg:items-start">
+          <Reviewers />
+          <AutoDecisionRequestsTable />
+        </div>
+      )}
     </div>
-  );
-}
-
-interface AppReviewAdminActionsProps {
-  endApplicationReview: () => void;
-}
-
-function AppReviewAdminActions({
-  endApplicationReview,
-}: AppReviewAdminActionsProps) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <DialogTrigger onOpenChange={setOpen}>
-        <Button variant="secondary" className="w-full">
-          <TablerUserEdit />
-          Assign Reviewers
-        </Button>
-        {open && (
-          <Modal>
-            <ReviewerAssignmentModal onClose={() => setOpen(false)} />
-          </Modal>
-        )}
-      </DialogTrigger>
-      <Button
-        onClick={endApplicationReview}
-        variant="danger"
-        className="w-full"
-      >
-        End Application Review
-      </Button>
-    </>
   );
 }
 
@@ -119,12 +99,16 @@ function AutoDecisionRequestsTable() {
   const { data, isLoading, isError } = useAutoDecisionRequests();
   const updateRequest = useUpdateAutoDecisionRequest();
 
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
   const requests: ApplicationAutoDecisionRequest = data ?? [];
   type RequestRow = ApplicationAutoDecisionRequest[number];
 
   const columns: ColumnDef<RequestRow>[] = [
     {
+      id: "reviewer_name",
       header: "Reviewer",
+      accessorKey: "reviewer_name",
       maxSize: 120,
       cell: ({ row }) => {
         const avatarUrl = row.original.reviewer_image;
@@ -166,6 +150,7 @@ function AutoDecisionRequestsTable() {
     },
     {
       header: "Decision",
+      accessorKey: "requested_decision",
       maxSize: 100,
       cell: ({ row }) =>
         row.original.requested_decision === "auto_accept"
@@ -197,9 +182,15 @@ function AutoDecisionRequestsTable() {
       header: "Actions",
       id: "actions",
       maxSize: 100,
+      accessorFn: (row) =>
+        row.approved_or_denied_by
+          ? row.approved
+            ? "approved"
+            : "denied"
+          : "pending",
       cell: (info) => {
         const row = info.row.original as RequestRow;
-        const isResolved = row.approved_by !== null;
+        const isResolved = row.approved_or_denied_by !== null;
 
         return isResolved ? (
           <span className="text-sm text-text-secondary">
@@ -250,12 +241,89 @@ function AutoDecisionRequestsTable() {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-surface p-4 max-w-230">
+    <div className="overflow-x-auto rounded-lg bg-surface p-4 min-w-100 max-w-230">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Auto Decision Requests</h2>
         <span className="text-sm text-text-secondary">
           {requests.length} request{requests.length === 1 ? "" : "s"}
         </span>
+      </div>
+
+      <div className="grid lg:grid-cols-[2.5fr_3fr_3fr_1fr] gap-2 mb-4 items-stretch">
+        <div className="">
+          <Input
+            type="text"
+            className="max-w-50 rounded-md"
+            placeholder="Filter reviewers..."
+            value={
+              (columnFilters.find((f) => f.id === "reviewer_name")?.value as
+                | string
+                | undefined) ?? ""
+            }
+            onChange={(e) => {
+              const val = e.target.value;
+              setColumnFilters((prev) => {
+                const next = prev.filter((p) => p.id !== "reviewer_name");
+                return val === ""
+                  ? next
+                  : [...next, { id: "reviewer_name", value: val }];
+              });
+            }}
+            icon={TablerSearch}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm">Decision Filter:</span>
+          <Select
+            className="text-sm max-w-40"
+            selectedKey={String(
+              (columnFilters.find((f) => f.id === "requested_decision")
+                ?.value as string) ?? "",
+            )}
+            items={[
+              { id: "", name: "All" },
+              { id: "auto_accept", name: "Auto Accept" },
+              { id: "auto_reject", name: "Auto Reject" },
+            ]}
+            onSelectionChange={(key) => {
+              const val = key === "" ? undefined : key;
+              setColumnFilters((prev) => {
+                const next = prev.filter((p) => p.id !== "requested_decision");
+                return val === undefined
+                  ? next
+                  : [...next, { id: "requested_decision", value: val }];
+              });
+            }}
+            children={null}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm">Approval Filter:</span>
+          <Select
+            className="text-sm max-w-40"
+            selectedKey={String(
+              (columnFilters.find((f) => f.id === "actions")
+                ?.value as string) ?? "",
+            )}
+            items={[
+              { id: "", name: "All" },
+              { id: "approved", name: "Approved" },
+              { id: "denied", name: "Denied" },
+              { id: "pending", name: "Pending" },
+            ]}
+            onSelectionChange={(key) => {
+              const val = key === "" ? undefined : key;
+              setColumnFilters((prev) => {
+                const next = prev.filter((p) => p.id !== "actions");
+                return val === undefined
+                  ? next
+                  : [...next, { id: "actions", value: val }];
+              });
+            }}
+            children={null}
+          />
+        </div>
+        {/* <div className="flex items-center gap-4 text-text-secondary"></div> */}
       </div>
 
       {requests.length === 0 ? (
@@ -264,10 +332,12 @@ function AutoDecisionRequestsTable() {
         </p>
       ) : (
         <Table
-          className="max-h-100 overflow-y-scroll"
+          className="max-h-100 overflow-y-auto"
           headerClassName="text-text-secondary text-sm"
           data={requests}
           columns={columns}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={setColumnFilters}
           showPagination={false}
         />
       )}
@@ -428,5 +498,129 @@ function UserApplicationSideDrawer({
         </div>
       </div>
     </div>
+  );
+}
+
+function Reviewers() {
+  const { data, isLoading, isError } = useReviewersProgress();
+
+  if (isLoading) {
+    return <p>Loading reviewers progress...</p>;
+  }
+
+  if (isError) {
+    return <p>Unable to load reviewers progress data.</p>;
+  }
+
+  const reviewers = data ?? [];
+  const columns: ColumnDef<(typeof reviewers)[number]>[] = [
+    {
+      header: "Reviewer",
+      maxSize: 50,
+      cell: ({ row }) => {
+        const avatarUrl = row.original.image;
+        return (
+          <div className="flex items-center gap-2">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={"user avatar"}
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
+                <span className="text-gray-600 dark:text-neutral-400">N/A</span>
+              </div>
+            )}
+            <div className="text-sm">
+              <div className="font-medium">{row.original.name}</div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      header: "Assigned",
+      maxSize: 20,
+      cell: ({ row }) => row.original.total_assigned,
+    },
+    {
+      header: "Completed",
+      maxSize: 20,
+      cell: ({ row }) => row.original.completed_count,
+    },
+  ];
+
+  const totalApps = reviewers.reduce((prev, curr) => {
+    return curr.total_assigned + prev;
+  }, 0);
+
+  const completed = reviewers.reduce((prev, curr) => {
+    return curr.completed_count + prev;
+  }, 0);
+
+  return (
+    <div className="overflow-x-auto rounded-lg bg-surface p-4 min-w-80 max-w-110">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Reviewers</h2>
+        <span className="text-sm text-text-secondary">
+          {reviewers.length} reviewer{reviewers.length === 1 ? "" : "s"}
+        </span>
+      </div>
+
+      {reviewers.length === 0 ? (
+        <p className="text-sm text-text-secondary">
+          No reviewers were assigned.
+        </p>
+      ) : (
+        <Table
+          className="max-h-100 overflow-y-auto"
+          headerClassName="text-text-secondary text-sm"
+          data={reviewers}
+          columns={columns}
+          showPagination={false}
+        />
+      )}
+
+      <div className="mt-3">
+        <div className="text-text-secondary text-sm my-1">
+          <p>Applications under review: {totalApps}</p>
+          <p>Reviews completed: {completed}</p>
+        </div>
+        <AssignReviewers
+          text={
+            reviewers.length === 0 ? "Assign Reviewers" : "Re-assign Reviewers"
+          }
+          alreadyAssigned={reviewers.length > 0}
+        />
+      </div>
+    </div>
+  );
+}
+
+function AssignReviewers({
+  alreadyAssigned,
+  text = "Assign Reviewers",
+}: {
+  text?: string;
+  alreadyAssigned: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <DialogTrigger onOpenChange={setOpen}>
+      <Button variant="secondary" className="w-full">
+        <TablerUserEdit />
+        {text}
+      </Button>
+      {open && (
+        <Modal>
+          <ReviewerAssignmentModal
+            alreadyAssigned={alreadyAssigned}
+            onClose={() => setOpen(false)}
+          />
+        </Modal>
+      )}
+    </DialogTrigger>
   );
 }

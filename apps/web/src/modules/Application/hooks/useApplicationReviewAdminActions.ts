@@ -2,6 +2,7 @@ import { api } from "@/lib/ky";
 import { staffHackthonQueryKey } from "@/modules/Hackathon/hooks/useHackathon";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { applicationStatisticsQueryKey } from "./useApplicationStatistics";
+import { reviewersProgressQueryKey } from "@/modules/Application/hooks/useReviewersProgress";
 
 export interface AssignedReviewer {
   userId: string;
@@ -44,9 +45,9 @@ export const useApplicationReviewAdminActions = () => {
   const assign = useMutation({
     mutationFn: assignReviewers,
     onSuccess: () => {
-      // queryClient.invalidateQueries({
-      //   queryKey: getAssignedApplicationsQueryKey(eventId),
-      // });
+      queryClient.invalidateQueries({
+        queryKey: reviewersProgressQueryKey,
+      });
     },
   });
 

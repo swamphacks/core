@@ -554,7 +554,7 @@ type ReviewerAllocation struct {
 	AssignedApplicationIDs []uuid.UUID `json:"assignedApplicationIds"`
 }
 
-func (s *ApplicationService) AssignReviewerToApplications(ctx context.Context, assignments []ReviewerAssignment) error {
+func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, assignments []ReviewerAssignment) error {
 	// TODO: Must check if applications are closed, if we havent released decisions, and more.
 	hackathon, err := s.db.Query.GetHackathon(ctx)
 
@@ -685,6 +685,20 @@ func (s *ApplicationService) AssignReviewerToApplications(ctx context.Context, a
 	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txDB := s.db.NewTX(tx)
 
+		err = txDB.Query.DeleteAllApplicationReviews(ctx)
+
+		if err != nil {
+			s.logger.Err(err).Msg("unable to reset all application reviews before assigning")
+			return err
+		}
+
+		err = txDB.Query.DeleteAllAutoDecisionRequests(ctx)
+
+		if err != nil {
+			s.logger.Err(err).Msg("unable to delete all decision requests before assigning")
+			return err
+		}
+
 		for _, allocation := range finalAllocations {
 			if len(allocation.AssignedApplicationIDs) == 0 {
 				continue
@@ -752,6 +766,17 @@ func (s *ApplicationService) GetAssignedApplicationsForReviewer(ctx context.Cont
 	}
 
 	return assignedApps, nil
+}
+
+func (s *ApplicationService) GetAllReviewersAndProgress(ctx context.Context) ([]sqlc.ListReviewersAndProgressRow, error) {
+	results, err := s.db.Query.ListReviewersAndProgress(ctx)
+
+	if err != nil {
+		s.logger.Err(err).Msg("GetAllReviewersAndProgress fail")
+		return nil, err
+	}
+
+	return results, nil
 }
 
 type ApplicationReviewDetails struct {
@@ -861,13 +886,12 @@ func (s *ApplicationService) GetAllAutoDecisionRequests(ctx context.Context) ([]
 }
 
 type AutoDecisionRequest struct {
-	ApplicationID uuid.UUID `json:"applicationId"`
-	// ReviewerUserID    *uuid.UUID                       `json:"reviewerId"`
+	ApplicationID     uuid.UUID                        `json:"applicationId"`
 	RequestedDecision sqlc.ApplicationAutoDecisionType `json:"decision" enum:"auto_accept,auto_reject"`
 	Justification     *string                          `json:"justification"`
 }
 
-func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request AutoDecisionRequest, reviewerId uuid.UUID) error {
+func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request AutoDecisionRequest, reviewerId uuid.UUID, reviewerRole sqlc.UserRole) error {
 	hackathon, err := s.db.Query.GetHackathon(ctx)
 
 	if err != nil {
@@ -879,12 +903,20 @@ func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request Au
 		return errors.New("Application Review has not started")
 	}
 
-	err = s.db.Query.RequestAutoDecision(ctx, sqlc.RequestAutoDecisionParams{
+	params := sqlc.RequestAutoDecisionParams{
 		ApplicationID:     request.ApplicationID,
 		ReviewerUserID:    &reviewerId,
 		RequestedDecision: request.RequestedDecision,
 		Justification:     request.Justification,
-	})
+	}
+
+	if reviewerRole == sqlc.UserRoleAdmin {
+		approved := true
+		params.Approved = &approved
+		params.ApprovedOrDeniedBy = &reviewerId
+	}
+
+	err = s.db.Query.RequestAutoDecision(ctx, params)
 
 	if err != nil {
 		s.logger.Err(err).Msg("RequestAutoDecision fail")
@@ -912,9 +944,9 @@ func (s *ApplicationService) UpdateAutoDecisionRequest(ctx context.Context, requ
 	err := s.db.Query.UpdateAutoDecisionRequest(ctx, sqlc.UpdateAutoDecisionRequestParams{
 		RequestID:          requestId,
 		ApprovedDoUpdate:   true,
-		Approved:           approved,
+		Approved:           &approved,
 		ApprovedByDoUpdate: true,
-		ApprovedBy:         &approverId,
+		ApprovedOrDeniedBy: &approverId,
 	})
 
 	if err != nil {

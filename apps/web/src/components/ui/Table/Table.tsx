@@ -54,18 +54,22 @@ interface TableProps<TData> {
   showPagination?: boolean;
   headerClassName?: string;
   className?: string;
+  onGlobalFilterChange?: OnChangeFn<any>;
+  globalFilter?: string;
 }
 
 export function Table<TData>({
   data,
   columns,
   columnFilters,
+  onGlobalFilterChange,
   onColumnFiltersChange,
   sorting,
   onSortingChange,
   onPaginationChange,
   headerClassName,
   className,
+  globalFilter,
   pagination = {
     pageSize: 10,
     pageIndex: 0,
@@ -74,13 +78,15 @@ export function Table<TData>({
   showPagination = true,
 }: TableProps<TData>) {
   const table = useReactTable({
+    globalFilterFn: "includesString",
     columns,
     data: data ?? fallbackData,
+    state: { columnFilters, sorting, pagination, globalFilter },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { columnFilters, sorting, pagination },
+    onGlobalFilterChange: onGlobalFilterChange,
     onColumnFiltersChange: onColumnFiltersChange,
     onSortingChange: onSortingChange,
     onPaginationChange: onPaginationChange,
@@ -168,7 +174,7 @@ export function Table<TData>({
                               );
                             })()}
                         </div>
-                        {header.column.getCanSort() && (
+                        {/* {header.column.getCanSort() && (
                           <div className="mt-3">
                             <Button
                               variant="secondary"
@@ -191,7 +197,7 @@ export function Table<TData>({
                               )}
                             </Button>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </th>

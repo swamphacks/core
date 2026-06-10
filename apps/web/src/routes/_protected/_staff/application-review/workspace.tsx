@@ -1,11 +1,14 @@
 import { PageLoading } from "@/components/PageLoading";
 import ApplicationReviewWorkspace from "@/modules/Application/ApplicationReview/Workspace";
 import { staffHackathonQueryOptions } from "@/modules/Hackathon/hooks/useHackathon";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, HeadContent, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute(
   "/_protected/_staff/application-review/workspace",
 )({
+  head: () => ({
+    meta: [{ title: "SwampHacks Application Review" }],
+  }),
   component: RouteComponent,
   pendingComponent: PageLoading,
   beforeLoad: async ({ context }) => {
@@ -23,5 +26,10 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { user } = Route.useRouteContext();
 
-  return <ApplicationReviewWorkspace user={user} />;
+  return (
+    <>
+      <HeadContent />
+      <ApplicationReviewWorkspace user={user} />
+    </>
+  );
 }

@@ -42,6 +42,15 @@ func (q *Queries) DeleteAllApplicationReviews(ctx context.Context) error {
 	return err
 }
 
+const deleteAllAutoDecisionRequests = `-- name: DeleteAllAutoDecisionRequests :exec
+DELETE FROM application_auto_decision_requests
+`
+
+func (q *Queries) DeleteAllAutoDecisionRequests(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, deleteAllAutoDecisionRequests)
+	return err
+}
+
 const deleteAutoDecisionRequest = `-- name: DeleteAutoDecisionRequest :exec
 DELETE FROM application_auto_decision_requests 
 WHERE id = $1::uuid AND reviewer_user_id = $2::uuid
@@ -91,7 +100,7 @@ func (q *Queries) GetApplicationReviewDetails(ctx context.Context, applicationID
 
 const listAutoDecisionRequests = `-- name: ListAutoDecisionRequests :many
 SELECT
-  aadr.id, aadr.application_id, aadr.reviewer_user_id, aadr.requested_decision, aadr.justification, aadr.approved, aadr.approved_by, aadr.updated_at, aadr.created_at,
+  aadr.id, aadr.application_id, aadr.reviewer_user_id, aadr.requested_decision, aadr.justification, aadr.approved, aadr.approved_or_denied_by, aadr.updated_at, aadr.created_at,
   reviewer.id AS reviewer_id,
   reviewer.name AS reviewer_name,
   reviewer.image AS reviewer_image,
@@ -101,24 +110,25 @@ FROM application_auto_decision_requests AS aadr
 LEFT JOIN users AS reviewer
   ON reviewer.id = aadr.reviewer_user_id
 LEFT JOIN users AS approver
-  ON approver.id = aadr.approved_by
+  ON approver.id = aadr.approved_or_denied_by
+ORDER BY aadr.created_at
 `
 
 type ListAutoDecisionRequestsRow struct {
-	ID                uuid.UUID                   `json:"id"`
-	ApplicationID     uuid.UUID                   `json:"application_id"`
-	ReviewerUserID    *uuid.UUID                  `json:"reviewer_user_id"`
-	RequestedDecision ApplicationAutoDecisionType `json:"requested_decision"`
-	Justification     *string                     `json:"justification"`
-	Approved          bool                        `json:"approved"`
-	ApprovedBy        *uuid.UUID                  `json:"approved_by"`
-	UpdatedAt         time.Time                   `json:"updated_at"`
-	CreatedAt         time.Time                   `json:"created_at"`
-	ReviewerID        *uuid.UUID                  `json:"reviewer_id"`
-	ReviewerName      *string                     `json:"reviewer_name"`
-	ReviewerImage     *string                     `json:"reviewer_image"`
-	ApproverID        *uuid.UUID                  `json:"approver_id"`
-	ApproverName      *string                     `json:"approver_name"`
+	ID                 uuid.UUID                   `json:"id"`
+	ApplicationID      uuid.UUID                   `json:"application_id"`
+	ReviewerUserID     *uuid.UUID                  `json:"reviewer_user_id"`
+	RequestedDecision  ApplicationAutoDecisionType `json:"requested_decision"`
+	Justification      *string                     `json:"justification"`
+	Approved           *bool                       `json:"approved"`
+	ApprovedOrDeniedBy *uuid.UUID                  `json:"approved_or_denied_by"`
+	UpdatedAt          time.Time                   `json:"updated_at"`
+	CreatedAt          time.Time                   `json:"created_at"`
+	ReviewerID         *uuid.UUID                  `json:"reviewer_id"`
+	ReviewerName       *string                     `json:"reviewer_name"`
+	ReviewerImage      *string                     `json:"reviewer_image"`
+	ApproverID         *uuid.UUID                  `json:"approver_id"`
+	ApproverName       *string                     `json:"approver_name"`
 }
 
 func (q *Queries) ListAutoDecisionRequests(ctx context.Context) ([]ListAutoDecisionRequestsRow, error) {
@@ -137,7 +147,7 @@ func (q *Queries) ListAutoDecisionRequests(ctx context.Context) ([]ListAutoDecis
 			&i.RequestedDecision,
 			&i.Justification,
 			&i.Approved,
-			&i.ApprovedBy,
+			&i.ApprovedOrDeniedBy,
 			&i.UpdatedAt,
 			&i.CreatedAt,
 			&i.ReviewerID,
@@ -156,8 +166,58 @@ func (q *Queries) ListAutoDecisionRequests(ctx context.Context) ([]ListAutoDecis
 	return items, nil
 }
 
+const listReviewersAndProgress = `-- name: ListReviewersAndProgress :many
+SELECT
+  reviewer.id,
+  reviewer.name,
+  reviewer.image,
+  COUNT(*) AS total_assigned,
+  COUNT(*) FILTER (
+    WHERE ar.experience_rating IS NOT NULL AND ar.passion_rating IS NOT NULL
+  ) AS completed_count
+FROM application_reviews AS ar
+LEFT JOIN users AS reviewer
+  ON reviewer.id = ar.reviewer_user_id
+GROUP BY
+  reviewer.id
+`
+
+type ListReviewersAndProgressRow struct {
+	ID             *uuid.UUID `json:"id"`
+	Name           *string    `json:"name"`
+	Image          *string    `json:"image"`
+	TotalAssigned  int64      `json:"total_assigned"`
+	CompletedCount int64      `json:"completed_count"`
+}
+
+func (q *Queries) ListReviewersAndProgress(ctx context.Context) ([]ListReviewersAndProgressRow, error) {
+	rows, err := q.db.Query(ctx, listReviewersAndProgress)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListReviewersAndProgressRow{}
+	for rows.Next() {
+		var i ListReviewersAndProgressRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Image,
+			&i.TotalAssigned,
+			&i.CompletedCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listReviewersByApplicationId = `-- name: ListReviewersByApplicationId :many
-SELECT reviewer_user_id FROM application_reviews 
+SELECT reviewer_user_id FROM application_reviews
 WHERE application_id = $1::uuid
 `
 
@@ -252,14 +312,16 @@ func (q *Queries) MarkSubmittedApplicationAsUnderReview(ctx context.Context) err
 
 const requestAutoDecision = `-- name: RequestAutoDecision :exec
 INSERT INTO application_auto_decision_requests 
-(application_id, reviewer_user_id, requested_decision, justification) VALUES ($1, $2, $3, $4) RETURNING id, application_id, reviewer_user_id, requested_decision, justification, approved, approved_by, updated_at, created_at
+(application_id, reviewer_user_id, requested_decision, justification, approved, approved_or_denied_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, application_id, reviewer_user_id, requested_decision, justification, approved, approved_or_denied_by, updated_at, created_at
 `
 
 type RequestAutoDecisionParams struct {
-	ApplicationID     uuid.UUID                   `json:"application_id"`
-	ReviewerUserID    *uuid.UUID                  `json:"reviewer_user_id"`
-	RequestedDecision ApplicationAutoDecisionType `json:"requested_decision"`
-	Justification     *string                     `json:"justification"`
+	ApplicationID      uuid.UUID                   `json:"application_id"`
+	ReviewerUserID     *uuid.UUID                  `json:"reviewer_user_id"`
+	RequestedDecision  ApplicationAutoDecisionType `json:"requested_decision"`
+	Justification      *string                     `json:"justification"`
+	Approved           *bool                       `json:"approved"`
+	ApprovedOrDeniedBy *uuid.UUID                  `json:"approved_or_denied_by"`
 }
 
 func (q *Queries) RequestAutoDecision(ctx context.Context, arg RequestAutoDecisionParams) error {
@@ -268,6 +330,8 @@ func (q *Queries) RequestAutoDecision(ctx context.Context, arg RequestAutoDecisi
 		arg.ReviewerUserID,
 		arg.RequestedDecision,
 		arg.Justification,
+		arg.Approved,
+		arg.ApprovedOrDeniedBy,
 	)
 	return err
 }
@@ -326,7 +390,7 @@ SET
     requested_decision = CASE WHEN $1::boolean AND $2 <> '' THEN $2::application_auto_decision_type ELSE requested_decision END,
     justification = CASE WHEN $3::boolean THEN $4 ELSE justification END,
     approved = CASE WHEN $5::boolean THEN $6 ELSE approved END,
-    approved_by = CASE WHEN $7::boolean THEN $8 ELSE approved_by END
+    approved_or_denied_by = CASE WHEN $7::boolean THEN $8 ELSE approved_or_denied_by END
 WHERE
     id = $9::uuid
 `
@@ -337,9 +401,9 @@ type UpdateAutoDecisionRequestParams struct {
 	JustificationDoUpdate     bool        `json:"justification_do_update"`
 	Justification             *string     `json:"justification"`
 	ApprovedDoUpdate          bool        `json:"approved_do_update"`
-	Approved                  bool        `json:"approved"`
+	Approved                  *bool       `json:"approved"`
 	ApprovedByDoUpdate        bool        `json:"approved_by_do_update"`
-	ApprovedBy                *uuid.UUID  `json:"approved_by"`
+	ApprovedOrDeniedBy        *uuid.UUID  `json:"approved_or_denied_by"`
 	RequestID                 uuid.UUID   `json:"request_id"`
 }
 
@@ -352,7 +416,7 @@ func (q *Queries) UpdateAutoDecisionRequest(ctx context.Context, arg UpdateAutoD
 		arg.ApprovedDoUpdate,
 		arg.Approved,
 		arg.ApprovedByDoUpdate,
-		arg.ApprovedBy,
+		arg.ApprovedOrDeniedBy,
 		arg.RequestID,
 	)
 	return err

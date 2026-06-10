@@ -113,6 +113,19 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 	}, applicationHandler.handleGetApplicationForReview)
 
 	huma.Register(group, huma.Operation{
+		OperationID:   "get-reviewers-and-progress",
+		Method:        http.MethodGet,
+		Summary:       "Get All Reviewers and Progress",
+		Description:   "Get all reviewers and their progress",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/review/progress",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleGetAllReviewersAndProgress)
+
+	huma.Register(group, huma.Operation{
 		OperationID:   "get-resume",
 		Method:        http.MethodGet,
 		Summary:       "Get Resume URL By Application Id (for review process)",
@@ -220,7 +233,7 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 		OperationID:   "request-auto-decision",
 		Method:        http.MethodPost,
 		Summary:       "Request Auto Decision",
-		Description:   "Create a request to auto accept or auto reject applications",
+		Description:   "Create a request to auto accept or auto reject applications.",
 		Tags:          []string{"Application"},
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
 		Path:          "/review/auto-decision",
@@ -780,13 +793,29 @@ type AssignApplicationReviewersOutput struct {
 func (h *handler) handleAssignApplicationReviewers(ctx context.Context, input *struct {
 	Body []ReviewerAssignment
 }) (*AssignApplicationReviewersOutput, error) {
-	err := h.applicationService.AssignReviewerToApplications(ctx, input.Body)
+	err := h.applicationService.AssignReviewersToApplications(ctx, input.Body)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to assign reviewers")
 	}
 
 	return &AssignApplicationReviewersOutput{Status: http.StatusOK}, nil
+}
+
+type GetAllReviewersAndProgressOutput struct {
+	Body []sqlc.ListReviewersAndProgressRow
+}
+
+func (h *handler) handleGetAllReviewersAndProgress(ctx context.Context, input *struct{}) (*GetAllReviewersAndProgressOutput, error) {
+	results, err := h.applicationService.GetAllReviewersAndProgress(ctx)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to get all reviewers and their progress")
+	}
+
+	return &GetAllReviewersAndProgressOutput{
+		Body: results,
+	}, nil
 }
 
 type GetAutoDecisionRequestsOutput struct {
@@ -816,7 +845,7 @@ func (h *handler) handleRequestAutoDecision(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err := h.applicationService.RequestAutoDecision(ctx, input.Body, userCtx.UserID)
+	err := h.applicationService.RequestAutoDecision(ctx, input.Body, userCtx.UserID, userCtx.Role)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to request decision")

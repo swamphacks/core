@@ -133,7 +133,6 @@ export const Input = forwardRef(
         />
       );
     }
-    // console.log(iconPlacement);
 
     return (
       <div className="flex items-center gap-1 bg-surface relative">

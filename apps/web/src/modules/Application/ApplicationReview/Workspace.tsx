@@ -1,23 +1,24 @@
-import { Button } from "@/components/ui/Button";
 import type { UserContext } from "@/lib/auth/types";
-import TablerArrowLeft from "~icons/tabler/arrow-left";
 import { Link } from "@tanstack/react-router";
-import { RatingFields } from "@/modules/Application/ApplicationReview/RatingFields";
 import { useRatings } from "@/modules/Application/hooks/useRatings";
 import { useAssignedApplications } from "@/modules/Application/hooks/useAssignedApplications";
 import { useAppReviewProgress } from "@/modules/Application/hooks/useAppReviewProgress";
 import type { AssignedApplications } from "@/lib/openapi/types";
 import { useApplicationForReview } from "@/modules/Application/hooks/useApplicationForReview";
-import { ReviewNavigation } from "@/modules/Application/ApplicationReview/ReviewNavigation";
 import { useApplicationReviewActions } from "@/modules/Application/hooks/useApplicationReviewActions";
 import { toast } from "react-toastify";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import TablerX from "~icons/tabler/x";
-import TablerCheck from "~icons/tabler/check";
 import { useState } from "react";
 import { DialogTrigger } from "react-aria-components";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Field";
+import { Rating } from "@smastrom/react-rating";
+import TablerCheck from "~icons/tabler/check";
+import TablerArrowLeft from "~icons/tabler/arrow-left";
+import TablerArrowRight from "~icons/tabler/arrow-right";
+import TablerRefresh from "~icons/tabler/refresh";
+import { Button } from "@/components/ui/Button";
 
 interface ApplicationReviewWorkspaceProps {
   user: UserContext;
@@ -325,7 +326,7 @@ function ApplicationViewer({
 
   function ReviewerPanel() {
     return (
-      <div className="relative p-2 rounded-md border border-input-border bg-card top-6">
+      <div className="relative p-2 rounded-md border border-input-border bg-card">
         <h3 className="font-medium text-text-secondary mb-3">
           Rubric and Controls
         </h3>
@@ -429,6 +430,7 @@ function ApplicationViewer({
           }}
           className="px-1 h-8 w-fit"
           size="sm"
+          variant={accept ? "primary" : "danger"}
         >
           {accept ? (
             <>
@@ -446,14 +448,14 @@ function ApplicationViewer({
   }
 
   return (
-    <div className="grid lg:grid-cols-2 gap-6 mb-8 min-h-[85vh]">
+    <div className="grid lg:grid-cols-2 gap-6 mb-8">
       <div className="space-y-4 mt-4">
         <ApplicantInfo />
         <Essays />
       </div>
 
       <div className="space-y-4 mt-4">
-        <div className="p-2 rounded-md border border-input-border h-[65vh]">
+        <div className="p-2 rounded-md border border-input-border h-[64vh]">
           {resume === "" ? (
             <p>No resume provided.</p>
           ) : (
@@ -472,6 +474,136 @@ function ApplicationViewer({
 
         <ReviewerPanel />
       </div>
+    </div>
+  );
+}
+
+interface RatingFieldsProps {
+  experience: number;
+  passion: number;
+  onExperience: (value: number) => void;
+  onPassion: (value: number) => void;
+}
+
+const RatingFields = ({
+  experience,
+  passion,
+  onExperience,
+  onPassion,
+}: RatingFieldsProps) => {
+  return (
+    <div className="w-1/3">
+      <div className="flex flex-row gap-4 justify-between items-center">
+        <p className="text-lg">Experience:</p>
+        <Rating
+          style={{ maxWidth: 150, minWidth: 100 }}
+          value={experience}
+          onChange={onExperience}
+        />
+      </div>
+
+      <div className="flex flex-row gap-4 items-center justify-between mt-4">
+        <p className="text-lg">Passion:</p>
+        <Rating
+          style={{ maxWidth: 150, minWidth: 100 }}
+          value={passion}
+          onChange={onPassion}
+        />
+      </div>
+    </div>
+  );
+};
+
+type ButtonMode = "submit" | "completed-dirty" | "completed-clean";
+
+interface ReviewNavigationProps {
+  isLast: boolean;
+  mode: ButtonMode;
+  allowSubmit: boolean;
+  currentIndex: number;
+  back: () => void;
+  onSubmit: () => void;
+  next: () => void;
+  reset: () => void;
+}
+
+export function ReviewNavigation({
+  isLast,
+  mode,
+  allowSubmit,
+  currentIndex,
+  back,
+  onSubmit,
+  next,
+  reset,
+}: ReviewNavigationProps) {
+  const backButton =
+    currentIndex > 0 ? (
+      <Button
+        variant="secondary"
+        className="flex gap-1 items-center text-lg rounded-md py-2 px-3"
+        onClick={back}
+      >
+        <TablerArrowLeft />
+        Back
+      </Button>
+    ) : null;
+
+  const buttons = (() => {
+    switch (mode) {
+      case "submit":
+        return (
+          <Button
+            isDisabled={!allowSubmit}
+            className={`flex gap-1 items-center text-lg rounded-md py-2 px-3 ${
+              !allowSubmit ? "opacity-30" : ""
+            }`}
+            variant={isLast ? "success" : "primary"}
+            onClick={onSubmit}
+          >
+            {isLast ? "Finish" : "Submit and Proceed"}
+            {isLast ? <TablerCheck /> : <TablerArrowRight />}
+          </Button>
+        );
+      case "completed-clean":
+        return (
+          <Button
+            variant={isLast ? "success" : "secondary"}
+            className="flex gap-1 items-center text-lg rounded-md py-2 px-3"
+            onClick={next}
+          >
+            {isLast ? "Finish" : "Next"}
+            {isLast ? <TablerCheck /> : <TablerArrowRight />}
+          </Button>
+        );
+      case "completed-dirty":
+        return (
+          <div className="flex flex-row gap-4">
+            <Button
+              variant="icon"
+              className="flex gap-1 items-center text-lg rounded-md py-2 px-3"
+              onClick={reset}
+            >
+              <TablerRefresh />
+            </Button>
+            <Button
+              variant={isLast ? "success" : "primary"}
+              isDisabled={!allowSubmit}
+              className="flex gap-1 items-center text-lg rounded-md py-2 px-3"
+              onClick={onSubmit}
+            >
+              {isLast ? "Save and Finish" : "Save and Proceed"}
+              {isLast ? <TablerCheck /> : <TablerArrowRight />}
+            </Button>
+          </div>
+        );
+    }
+  })();
+
+  return (
+    <div className="w-full flex flex-row mt-4 gap-3">
+      {backButton}
+      {buttons}
     </div>
   );
 }

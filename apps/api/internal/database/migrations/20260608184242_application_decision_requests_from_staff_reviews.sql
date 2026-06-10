@@ -10,8 +10,8 @@ create table application_auto_decision_requests (
     reviewer_user_id uuid references users(id) on delete set null,
     requested_decision application_auto_decision_type not null,
     justification text,
-    approved boolean default false not null,
-    approved_by uuid references users(id) on delete set null,
+    approved boolean,
+    approved_or_denied_by uuid references users(id) on delete set null,
     updated_at timestamptz not null default now(),
     created_at timestamptz not null default now()
 );

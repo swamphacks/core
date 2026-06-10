@@ -441,15 +441,15 @@ type Application struct {
 }
 
 type ApplicationAutoDecisionRequest struct {
-	ID                uuid.UUID                   `json:"id"`
-	ApplicationID     uuid.UUID                   `json:"application_id"`
-	ReviewerUserID    *uuid.UUID                  `json:"reviewer_user_id"`
-	RequestedDecision ApplicationAutoDecisionType `json:"requested_decision"`
-	Justification     *string                     `json:"justification"`
-	Approved          bool                        `json:"approved"`
-	ApprovedBy        *uuid.UUID                  `json:"approved_by"`
-	UpdatedAt         time.Time                   `json:"updated_at"`
-	CreatedAt         time.Time                   `json:"created_at"`
+	ID                 uuid.UUID                   `json:"id"`
+	ApplicationID      uuid.UUID                   `json:"application_id"`
+	ReviewerUserID     *uuid.UUID                  `json:"reviewer_user_id"`
+	RequestedDecision  ApplicationAutoDecisionType `json:"requested_decision"`
+	Justification      *string                     `json:"justification"`
+	Approved           *bool                       `json:"approved"`
+	ApprovedOrDeniedBy *uuid.UUID                  `json:"approved_or_denied_by"`
+	UpdatedAt          time.Time                   `json:"updated_at"`
+	CreatedAt          time.Time                   `json:"created_at"`
 }
 
 type ApplicationReview struct {

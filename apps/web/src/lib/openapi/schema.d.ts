@@ -123,7 +123,7 @@ export interface paths {
     put?: never;
     /**
      * Request Auto Decision
-     * @description Create a request to auto accept or auto reject applications
+     * @description Create a request to auto accept or auto reject applications.
      */
     post: operations["request-auto-decision"];
     /**
@@ -138,6 +138,26 @@ export interface paths {
      * @description Update an auto decision request
      */
     patch: operations["update-auto-decision-request"];
+    trace?: never;
+  };
+  "/application/review/progress": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get All Reviewers and Progress
+     * @description Get all reviewers and their progress
+     */
+    get: operations["get-reviewers-and-progress"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/application/review/reset": {
@@ -1514,8 +1534,8 @@ export interface components {
     };
     ListAutoDecisionRequestsRow: {
       application_id: string;
-      approved: boolean;
-      approved_by: string;
+      approved: boolean | null;
+      approved_or_denied_by: string;
       approver_id: string;
       approver_name: string | null;
       /** Format: date-time */
@@ -1546,6 +1566,15 @@ export interface components {
       user_id: string;
       user_image: string | null;
       user_name: string;
+    };
+    ListReviewersAndProgressRow: {
+      /** Format: int64 */
+      completed_count: number;
+      id: string;
+      image: string | null;
+      name: string | null;
+      /** Format: int64 */
+      total_assigned: number;
     };
     MemberWithUserInfo: {
       email: string | null;
@@ -2261,6 +2290,49 @@ export interface operations {
       };
       /** @description Unprocessable Entity */
       422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+    };
+  };
+  "get-reviewers-and-progress": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie: {
+        /** @description Session cookie used to authenticate the user */
+        sh_session_id: string;
+      };
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["ListReviewersAndProgressRow"][]
+            | null;
+        };
+      };
+      /** @description Unauthorized */
+      401: {
         headers: {
           [name: string]: unknown;
         };
