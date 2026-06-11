@@ -837,7 +837,7 @@ func (s *ApplicationService) GetApplicationReviewDetails(ctx context.Context, ap
 	}, nil
 }
 
-func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewerId, applicationId uuid.UUID, experienceRating, passionRating int) error {
+func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewerId, applicationId uuid.UUID, experienceRating, passionRating int, notes string) error {
 	// Log everything for debug
 	s.logger.Debug().Str("ReviewerId", reviewerId.String()).Str("ApplicantId", applicationId.String()).Int32("Passion Rating", int32(passionRating)).Int32("Experiene Rating", int32(experienceRating)).Msg("Saving app review.")
 
@@ -867,6 +867,8 @@ func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewer
 		ExperienceRating:         &newExperienceRating,
 		PassionRatingDoUpdate:    true,
 		PassionRating:            &newPassionRating,
+		NotesDoUpdate:            true,
+		Notes:                    &notes,
 	}); err != nil {
 		s.logger.Err(err).Msg("Something went wrong updating the application review")
 	}

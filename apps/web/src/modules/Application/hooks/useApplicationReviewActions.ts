@@ -33,17 +33,20 @@ const submitReview = async (
   applicationId: string,
   experienceRating: number,
   passionRating: number,
+  notes: string,
 ) => {
   await api.post(`application/review/${applicationId}`, {
     json: {
       experienceRating,
       passionRating,
+      notes,
     },
   });
 
   return {
     experienceRating,
     passionRating,
+    notes,
   };
 };
 
@@ -54,11 +57,13 @@ export const useApplicationReviewActions = (applicationId: string) => {
     mutationFn: ({
       experienceRating,
       passionRating,
+      notes,
     }: {
       experienceRating: number;
       passionRating: number;
-    }) => submitReview(applicationId, experienceRating, passionRating),
-    onSuccess: ({ experienceRating, passionRating }) => {
+      notes: string;
+    }) => submitReview(applicationId, experienceRating, passionRating, notes),
+    onSuccess: ({ experienceRating, passionRating, notes }) => {
       queryClient.setQueryData<AssignedApplications>(
         assignedApplicationsQueryKey,
         (oldData) =>
@@ -78,6 +83,7 @@ export const useApplicationReviewActions = (applicationId: string) => {
             ...oldData,
             experienceRating,
             passionRating,
+            notes,
           };
         },
       );

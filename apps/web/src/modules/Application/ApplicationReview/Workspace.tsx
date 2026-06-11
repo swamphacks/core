@@ -4,21 +4,24 @@ import { useRatings } from "@/modules/Application/hooks/useRatings";
 import { useAssignedApplications } from "@/modules/Application/hooks/useAssignedApplications";
 import { useAppReviewProgress } from "@/modules/Application/hooks/useAppReviewProgress";
 import type { AssignedApplications } from "@/lib/openapi/types";
-import { useApplicationForReview } from "@/modules/Application/hooks/useApplicationForReview";
+import {
+  useApplicationForReview,
+  type ParsedApplicationReviewDetails,
+} from "@/modules/Application/hooks/useApplicationForReview";
 import { useApplicationReviewActions } from "@/modules/Application/hooks/useApplicationReviewActions";
 import { toast } from "react-toastify";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import TablerX from "~icons/tabler/x";
 import { useState } from "react";
-import { DialogTrigger } from "react-aria-components";
+import { DialogTrigger, TextArea } from "react-aria-components";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Field";
-import { Rating } from "@smastrom/react-rating";
 import TablerCheck from "~icons/tabler/check";
 import TablerArrowLeft from "~icons/tabler/arrow-left";
 import TablerArrowRight from "~icons/tabler/arrow-right";
 import TablerRefresh from "~icons/tabler/refresh";
 import { Button } from "@/components/ui/Button";
+import type { ApplicationFields } from "@/modules/Application/hooks/useApplication";
 
 interface ApplicationReviewWorkspaceProps {
   user: UserContext;
@@ -55,7 +58,6 @@ export default function ApplicationReviewWorkspace({
     return (
       <div className="p-3 flex justify-center">
         <div className="flex flex-col items-start bg-surface w-full max-w-md px-6 py-6 border border-border rounded-lg shadow-sm">
-          {/* Image */}
           <div className="mb-6 w-full flex flex-row justify-center">
             <img
               src="https://dejpknyizje2n.cloudfront.net/media/carstickers/versions/happy-go-lucky-alligator-art-sticker-uf6a4-438d-x450.png"
@@ -142,17 +144,58 @@ function ApplicationViewer({
   const applicationReviewDetails = useApplicationForReview(
     assignedApplication.applicationId,
   );
-  const { review, requestAutoDecision, deleteAutoDecisionRequest } =
-    useApplicationReviewActions(assignedApplication.applicationId);
-  const { experience, passion, isDirty, setExperience, setPassion, reset } =
-    useRatings(
-      applicationReviewDetails.data?.experienceRating || 0,
-      applicationReviewDetails.data?.passionRating || 0,
-    );
 
   if (!applicationReviewDetails.data || applicationReviewDetails.isLoading) {
     return <p>Loading...</p>;
   }
+
+  const appFields = applicationReviewDetails.data.application;
+  const resume = applicationReviewDetails.data.resumeUrl;
+
+  return (
+    <div className="grid lg:grid-cols-2 gap-6 mb-8">
+      <div className="space-y-4 mt-4">
+        <ApplicantInfo appFields={appFields} />
+        <Essays appFields={appFields} />
+      </div>
+
+      <div className="space-y-4 mt-4">
+        <div className="p-2 rounded-md border border-input-border h-[64vh]">
+          {resume === "" ? (
+            <p>No resume provided.</p>
+          ) : (
+            <object
+              className="w-full h-full"
+              type="application/pdf"
+              data={resume}
+            >
+              <p>
+                Your browser does not support PDFs.{" "}
+                <a href={resume}>Download the PDF</a>.
+              </p>
+            </object>
+          )}
+        </div>
+
+        <ReviewerPanel
+          user={user}
+          currentIndex={currentIndex}
+          totalApplications={totalApplications}
+          applicationReviewDetails={applicationReviewDetails.data}
+          assignedApplication={assignedApplication}
+          next={next}
+          back={back}
+        />
+      </div>
+    </div>
+  );
+}
+
+interface ApplicantInfoProps {
+  appFields: ApplicationFields;
+}
+
+function ApplicantInfo({ appFields }: ApplicantInfoProps) {
   const getHackathonExperienceText = (experience: string) => {
     switch (experience) {
       case "first_time":
@@ -183,6 +226,133 @@ function ApplicationViewer({
     }
   };
 
+  return (
+    <div className="p-4 rounded-md border border-input-border bg-card">
+      <h2 className="block mb-3 text-lg font-medium">Applicant Information</h2>
+      <div className="flex gap-15 items-start">
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <div className="text-text-secondary">Name</div>
+            <div className="font-medium">
+              {appFields.firstName + " " + appFields.lastName}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-text-secondary">Major(s)</div>
+            <div className="font-medium">{appFields.majors}</div>
+          </div>
+
+          <div>
+            <div className="text-text-secondary">School</div>
+            <div className="truncate max-w-60">{appFields.school}</div>
+          </div>
+
+          <div>
+            <div className="text-text-secondary">Graduation Year</div>
+            <div className="font-medium">{appFields.graduationYear}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <div className="text-text-secondary"># of Hackathons Attended</div>
+            <div className="font-medium">
+              {getHackathonExperienceText(appFields.experience)}
+            </div>
+          </div>
+          <div>
+            <div className="text-text-secondary">Project Experience</div>
+            <div className="font-medium">
+              {getProjectExperienceText(appFields.projectExperience)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface EssaysProps {
+  appFields: ApplicationFields;
+}
+
+function Essays({ appFields }: EssaysProps) {
+  return (
+    <div className="space-y-4">
+      <div className="p-4 rounded-md border border-input-border bg-card">
+        <h2 className="block mb-3 text-lg font-medium">Essay Responses</h2>
+        <div className="space-y-6">
+          <div>
+            <div className="text-text-secondary mb-2">
+              What is your most memorable experience working in a group? What
+              did you learn and accomplish?
+            </div>
+            <div className="whitespace-pre-wrap bg-surface p-3 rounded-md">
+              {appFields.essay1}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-text-secondary mb-2">
+              Tell us about a project you are most proud of.
+            </div>
+            <div className="whitespace-pre-wrap bg-surface p-3 rounded-md">
+              {appFields.essay2}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ReviewerPanelProps {
+  user: UserContext;
+  assignedApplication: AssignedApplications[number];
+  applicationReviewDetails: ParsedApplicationReviewDetails;
+  totalApplications: number;
+  currentIndex: number;
+  next: () => void;
+  back: () => void;
+}
+
+function ReviewerPanel({
+  user,
+  applicationReviewDetails,
+  assignedApplication,
+  totalApplications,
+  currentIndex,
+  next,
+  back,
+}: ReviewerPanelProps) {
+  const { review, requestAutoDecision, deleteAutoDecisionRequest } =
+    useApplicationReviewActions(assignedApplication.applicationId);
+  const {
+    experience,
+    passion,
+    isDirty,
+    setExperience,
+    setPassion,
+    reset: resetRatings,
+  } = useRatings(
+    applicationReviewDetails.experienceRating || 0,
+    applicationReviewDetails.passionRating || 0,
+  );
+  const [notes, setNotes] = useState(applicationReviewDetails.notes || "");
+
+  const autoDecision = applicationReviewDetails.autoDecision;
+  const isCompleted = assignedApplication.status === "completed";
+  const isLast = currentIndex === totalApplications - 1;
+  const isFilled = experience > 0 && passion > 0;
+  const allowSubmit = isFilled && isDirty;
+
+  const mode = (() => {
+    if (!isCompleted) return "submit"; // Not last, not submitted yet
+    if (isCompleted && isDirty) return "completed-dirty";
+    return "completed-clean"; // Not last, already submitted and clean
+  })();
+
   const handleSubmitReview = async () => {
     if (!allowSubmit) return;
 
@@ -190,15 +360,16 @@ function ApplicationViewer({
       {
         experienceRating: experience,
         passionRating: passion,
+        notes,
       },
       {
         onSuccess: () => {
-          reset();
+          resetRatings();
           next();
         },
         onError: () => {
           toast.error("Failed to submit review. Please try again.");
-          reset();
+          resetRatings();
         },
       },
     );
@@ -221,259 +392,159 @@ function ApplicationViewer({
   };
 
   const handleUndoAutoDecision = async () => {
-    if (applicationReviewDetails.data.autoDecisionRequestId === null) return;
+    if (applicationReviewDetails.autoDecisionRequestId === null) return;
 
     await deleteAutoDecisionRequest.mutateAsync({
-      requestId: applicationReviewDetails.data.autoDecisionRequestId,
+      requestId: applicationReviewDetails.autoDecisionRequestId,
     });
   };
 
-  const appFields = applicationReviewDetails.data.application;
-  const resume = applicationReviewDetails.data.resumeUrl;
-  const autoDecision = applicationReviewDetails.data.autoDecision;
-  const isCompleted = assignedApplication.status === "completed";
-  const isLast = currentIndex === totalApplications - 1;
-  const isFilled = experience > 0 && passion > 0;
-  const allowSubmit = isFilled && isDirty;
-
-  const mode = (() => {
-    if (!isCompleted) return "submit"; // Not last, not submitted yet
-    if (isCompleted && isDirty) return "completed-dirty";
-    return "completed-clean"; // Not last, already submitted and clean
-  })();
-
-  function ApplicantInfo() {
-    return (
-      <div className="p-4 rounded-md border border-input-border bg-card">
-        <h2 className="block mb-3 text-lg font-medium">
-          Applicant Information
-        </h2>
-        <div className="flex gap-15 items-start">
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <div className="text-text-secondary">Name</div>
-              <div className="font-medium">
-                {appFields.firstName + " " + appFields.lastName}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-text-secondary">Major(s)</div>
-              <div className="font-medium">{appFields.majors}</div>
-            </div>
-
-            <div>
-              <div className="text-text-secondary">School</div>
-              <div className="truncate max-w-60">{appFields.school}</div>
-            </div>
-
-            <div>
-              <div className="text-text-secondary">Graduation Year</div>
-              <div className="font-medium">{appFields.graduationYear}</div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <div className="text-text-secondary">
-                # of Hackathons Attended
-              </div>
-              <div className="font-medium">
-                {getHackathonExperienceText(appFields.experience)}
-              </div>
-            </div>
-            <div>
-              <div className="text-text-secondary">Project Experience</div>
-              <div className="font-medium">
-                {getProjectExperienceText(appFields.projectExperience)}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  function Essays() {
-    return (
-      <div className="space-y-4">
-        <div className="p-4 rounded-md border border-input-border bg-card">
-          <h2 className="block mb-3 text-lg font-medium">Essay Responses</h2>
-          <div className="space-y-6">
-            <div>
-              <div className="text-text-secondary mb-2">
-                What is your most memorable experience working in a group? What
-                did you learn and accomplish?
-              </div>
-              <div className="whitespace-pre-wrap bg-surface p-3 rounded-md">
-                {appFields.essay1}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-text-secondary mb-2">
-                Tell us about a project you are most proud of.
-              </div>
-              <div className="whitespace-pre-wrap bg-surface p-3 rounded-md">
-                {appFields.essay2}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  function ReviewerPanel() {
-    return (
-      <div className="relative p-2 rounded-md border border-input-border bg-card">
-        <h3 className="font-medium text-text-secondary mb-3">
-          Rubric and Controls
-        </h3>
+  return (
+    <div className="relative p-2 rounded-md border border-input-border bg-card">
+      <h3 className="font-medium text-text-secondary mb-3">
+        Rubric and Controls
+      </h3>
+      <div className="lg:flex gap-10">
         <RatingFields
           experience={experience}
           passion={passion}
-          onExperience={(v) => setExperience(v)}
-          onPassion={(v) => setPassion(v)}
+          onExperienceChange={setExperience}
+          onPassionChange={setPassion}
         />
-        <div className="flex gap-2 mt-4">
-          <ReviewNavigation
-            mode={mode}
-            currentIndex={currentIndex}
-            isLast={isLast}
-            allowSubmit={allowSubmit}
-            onSubmit={handleSubmitReview}
-            next={next}
-            back={back}
-            reset={reset}
+        <div className="bg-input-bg rounded-md p-2 h-fit w-fit mt-3 lg:mt-0">
+          <TextArea
+            className="focus-none outline-none h-18 w-50"
+            placeholder="Additional notes..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
           />
         </div>
-        <div className="absolute top-0 right-0">
-          {autoDecision ? (
-            <div className="flex items-center gap-2 p-2">
-              <div
-                className={`flex items-center gap-2 px-3 py-1 rounded-md border text-sm font-medium ${
-                  autoDecision === "auto_accept"
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                    : "bg-rose-50 border-rose-200 text-rose-800"
-                }`}
-              >
-                {autoDecision === "auto_accept" ? <TablerCheck /> : <TablerX />}
-                <span>
-                  {autoDecision === "auto_accept"
-                    ? "Auto Accept Requested"
-                    : "Auto Reject Requested"}
-                </span>
-              </div>
-              <Button
-                variant="secondary"
-                className="h-9"
-                onClick={handleUndoAutoDecision}
-              >
-                Undo
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="flex gap-2 mt-2 ml-2 mr-2">
-                <DialogTrigger>
-                  <Button className="px-1 h-8" size="sm">
-                    <TablerCheck />
-                    Auto Accept
-                  </Button>
-
-                  <Modal>
-                    <JustificationModal accept={true} />
-                  </Modal>
-                </DialogTrigger>
-                <DialogTrigger>
-                  <Button className="px-1 h-8" size="sm" variant="danger">
-                    <TablerX />
-                    Auto Reject
-                  </Button>
-
-                  <Modal>
-                    <JustificationModal accept={false} />
-                  </Modal>
-                </DialogTrigger>
-              </div>
-              {user.role === "staff" && (
-                <span className="text-xs text-text-secondary">
-                  Requests will be sent to organizers for review
-                </span>
-              )}
-            </>
-          )}
-        </div>
       </div>
-    );
-  }
-
-  function JustificationModal({ accept }: { accept: boolean }) {
-    const [justification, setJustification] = useState("");
-
-    return (
-      <div className="flex flex-col gap-3">
-        <label>Justification</label>
-        <Input
-          placeholder="Type a reason"
-          value={justification}
-          onChange={(e) => setJustification(e.target.value)}
+      <div className="flex gap-2 mt-4">
+        <ReviewNavigation
+          mode={mode}
+          currentIndex={currentIndex}
+          isLast={isLast}
+          allowSubmit={allowSubmit}
+          onSubmit={handleSubmitReview}
+          next={next}
+          back={back}
+          reset={resetRatings}
         />
-        <Button
-          onClick={() => {
-            if (accept) {
-              handleRequestAutoAccept(justification);
-            } else {
-              handleRequestAutoReject(justification);
-            }
-          }}
-          className="px-1 h-8 w-fit"
-          size="sm"
-          variant={accept ? "primary" : "danger"}
-        >
-          {accept ? (
-            <>
-              <TablerCheck /> Auto Accept
-            </>
-          ) : (
-            <>
-              <TablerX />
-              Auto Reject
-            </>
-          )}
-        </Button>
       </div>
-    );
-  }
+      <div className="absolute top-0 right-0">
+        {autoDecision ? (
+          <div className="flex items-center gap-2 p-2">
+            <div
+              className={`flex items-center gap-2 px-3 py-1 rounded-md border text-sm font-medium ${
+                autoDecision === "auto_accept"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                  : "bg-rose-50 border-rose-200 text-rose-800"
+              }`}
+            >
+              {autoDecision === "auto_accept" ? <TablerCheck /> : <TablerX />}
+              <span>
+                {autoDecision === "auto_accept"
+                  ? "Auto Accept Requested"
+                  : "Auto Reject Requested"}
+              </span>
+            </div>
+            <Button
+              variant="secondary"
+              className="h-9"
+              onClick={handleUndoAutoDecision}
+            >
+              Undo
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-2 mt-2 ml-2 mr-2">
+              <DialogTrigger>
+                <Button className="px-1 h-8" size="sm">
+                  <TablerCheck />
+                  Auto Accept
+                </Button>
+
+                <Modal>
+                  <JustificationModal
+                    accept={true}
+                    handleRequestAutoAccept={handleRequestAutoAccept}
+                    handleRequestAutoReject={handleRequestAutoReject}
+                  />
+                </Modal>
+              </DialogTrigger>
+              <DialogTrigger>
+                <Button className="px-1 h-8" size="sm" variant="danger">
+                  <TablerX />
+                  Auto Reject
+                </Button>
+
+                <Modal>
+                  <JustificationModal
+                    accept={false}
+                    handleRequestAutoAccept={handleRequestAutoAccept}
+                    handleRequestAutoReject={handleRequestAutoReject}
+                  />
+                </Modal>
+              </DialogTrigger>
+            </div>
+            {user.role === "staff" && (
+              <span className="text-xs text-text-secondary">
+                Requests will be sent to organizers for review
+              </span>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface JustificationModalProps {
+  accept: boolean;
+  handleRequestAutoAccept: (text: string) => void;
+  handleRequestAutoReject: (text: string) => void;
+}
+
+function JustificationModal({
+  accept,
+  handleRequestAutoAccept,
+  handleRequestAutoReject,
+}: JustificationModalProps) {
+  const [justification, setJustification] = useState("");
 
   return (
-    <div className="grid lg:grid-cols-2 gap-6 mb-8">
-      <div className="space-y-4 mt-4">
-        <ApplicantInfo />
-        <Essays />
-      </div>
-
-      <div className="space-y-4 mt-4">
-        <div className="p-2 rounded-md border border-input-border h-[64vh]">
-          {resume === "" ? (
-            <p>No resume provided.</p>
-          ) : (
-            <object
-              className="w-full h-full"
-              type="application/pdf"
-              data={resume}
-            >
-              <p>
-                Your browser does not support PDFs.{" "}
-                <a href={resume}>Download the PDF</a>.
-              </p>
-            </object>
-          )}
-        </div>
-
-        <ReviewerPanel />
-      </div>
+    <div className="flex flex-col gap-3">
+      <label>Justification</label>
+      <Input
+        placeholder="Type a reason"
+        value={justification}
+        onChange={(e) => setJustification(e.target.value)}
+      />
+      <Button
+        onClick={() => {
+          if (accept) {
+            handleRequestAutoAccept(justification);
+          } else {
+            handleRequestAutoReject(justification);
+          }
+        }}
+        className="px-1 h-8 w-fit"
+        size="sm"
+        variant={accept ? "primary" : "danger"}
+      >
+        {accept ? (
+          <>
+            <TablerCheck /> Auto Accept
+          </>
+        ) : (
+          <>
+            <TablerX />
+            Auto Reject
+          </>
+        )}
+      </Button>
     </div>
   );
 }
@@ -481,34 +552,52 @@ function ApplicationViewer({
 interface RatingFieldsProps {
   experience: number;
   passion: number;
-  onExperience: (value: number) => void;
-  onPassion: (value: number) => void;
+  onExperienceChange: (value: number) => void;
+  onPassionChange: (value: number) => void;
 }
 
 const RatingFields = ({
   experience,
   passion,
-  onExperience,
-  onPassion,
+  onExperienceChange,
+  onPassionChange,
 }: RatingFieldsProps) => {
   return (
-    <div className="w-1/3">
+    <div className="w-55">
       <div className="flex flex-row gap-4 justify-between items-center">
         <p className="text-lg">Experience:</p>
-        <Rating
-          style={{ maxWidth: 150, minWidth: 100 }}
-          value={experience}
-          onChange={onExperience}
-        />
+        <div className="flex items-center gap-2 justify-end">
+          <Input
+            min={0}
+            max={100}
+            value={experience}
+            onChange={(e) =>
+              onExperienceChange(
+                Math.max(0, Math.min(100, Number(e.target.value))),
+              )
+            }
+            className="w-14 text-right rounded-md px-1"
+          />
+          <span className="text-sm text-text-secondary">/ 100</span>
+        </div>
       </div>
 
-      <div className="flex flex-row gap-4 items-center justify-between mt-4">
+      <div className="flex flex-row gap-4 justify-between items-center mt-4">
         <p className="text-lg">Passion:</p>
-        <Rating
-          style={{ maxWidth: 150, minWidth: 100 }}
-          value={passion}
-          onChange={onPassion}
-        />
+        <div className="flex items-center gap-2 justify-end">
+          <Input
+            min={0}
+            max={100}
+            value={passion}
+            onChange={(e) =>
+              onPassionChange(
+                Math.max(0, Math.min(100, Number(e.target.value))),
+              )
+            }
+            className="w-14 text-right rounded-md px-1"
+          />
+          <span className="text-sm text-text-secondary">/ 100</span>
+        </div>
       </div>
     </div>
   );

@@ -732,9 +732,10 @@ func (h *handler) handleGetApplicationForReview(ctx context.Context, input *stru
 	return &GetApplicationForReviewOutput{Body: *applicationReviewDetails}, nil
 }
 
-type ReviewRatings struct {
-	PassionRating    int `json:"passionRating" minLength:"1" maxLength:"100" required:"true"`
-	ExperienceRating int `json:"experienceRating" minLength:"1" maxLength:"100" required:"true"`
+type Review struct {
+	PassionRating    int    `json:"passionRating" minLength:"0" maxLength:"100" required:"true"`
+	ExperienceRating int    `json:"experienceRating" minLength:"0" maxLength:"100" required:"true"`
+	Notes            string `json:"notes"`
 }
 
 type SubmitApplicationReviewOutput struct {
@@ -743,7 +744,7 @@ type SubmitApplicationReviewOutput struct {
 
 func (h *handler) handleSubmitApplicationReview(ctx context.Context, input *struct {
 	ApplicationId string `path:"applicationId"`
-	Body          ReviewRatings
+	Body          Review
 }) (*SubmitApplicationReviewOutput, error) {
 	applicationId, err := uuid.Parse(input.ApplicationId)
 
@@ -757,7 +758,7 @@ func (h *handler) handleSubmitApplicationReview(ctx context.Context, input *stru
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err = h.applicationService.SaveApplicationReview(ctx, userCtx.UserID, applicationId, input.Body.ExperienceRating, input.Body.PassionRating)
+	err = h.applicationService.SaveApplicationReview(ctx, userCtx.UserID, applicationId, input.Body.ExperienceRating, input.Body.PassionRating, input.Body.Notes)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to save review")

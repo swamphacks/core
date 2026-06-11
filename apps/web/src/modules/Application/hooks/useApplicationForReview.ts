@@ -11,7 +11,7 @@ export const applicationReviewDetailsQueryKey = (applicationId: string) => [
   applicationId,
 ];
 
-type ParsedApplicationReviewDetails = Omit<
+export type ParsedApplicationReviewDetails = Omit<
   ApplicationReviewDetails,
   "application"
 > & {
