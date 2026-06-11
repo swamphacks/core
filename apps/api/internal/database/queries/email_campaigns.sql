@@ -18,7 +18,7 @@ INSERT INTO email_campaigns (
     @subject,
     @body,
     @format::email_campaign_format,
-    @recipient_types::email_recipient_type[],
+    sqlc.arg(recipient_types)::text[]::email_recipient_type[],
     sqlc.narg(scheduled_at),
     sqlc.narg(created_by_user_id),
     sqlc.narg(updated_by_user_id)
@@ -61,11 +61,11 @@ SET
         ELSE body END,
     format = 
         CASE WHEN @format_do_update::boolean
-        THEN @format::email_campaign_format
+        THEN sqlc.narg(format)::email_campaign_format
         ELSE format END,
     recipient_types = 
         CASE WHEN @recipient_types_do_update::boolean
-        THEN @recipient_types::email_recipient_type[]
+        THEN sqlc.arg(recipient_types)::text[]::email_recipient_type[]
         ELSE recipient_types END,
     scheduled_at = 
         CASE WHEN @scheduled_at_do_update::boolean

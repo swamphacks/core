@@ -31,7 +31,7 @@ INSERT INTO email_campaigns (
     $4,
     $5,
     $6::email_campaign_format,
-    $7::email_recipient_type[],
+    $7::text[]::email_recipient_type[],
     $8,
     $9,
     $10
@@ -40,16 +40,16 @@ RETURNING id, hackathon_id, title, description, subject, body, format, recipient
 `
 
 type CreateEmailCampaignParams struct {
-	HackathonID     string               `json:"hackathon_id"`
-	Title           string               `json:"title"`
-	Description     *string              `json:"description"`
-	Subject         string               `json:"subject"`
-	Body            string               `json:"body"`
-	Format          EmailCampaignFormat  `json:"format"`
-	RecipientTypes  []EmailRecipientType `json:"recipient_types"`
-	ScheduledAt     *time.Time           `json:"scheduled_at"`
-	CreatedByUserID *uuid.UUID           `json:"created_by_user_id"`
-	UpdatedByUserID *uuid.UUID           `json:"updated_by_user_id"`
+	HackathonID     string              `json:"hackathon_id"`
+	Title           string              `json:"title"`
+	Description     *string             `json:"description"`
+	Subject         string              `json:"subject"`
+	Body            string              `json:"body"`
+	Format          EmailCampaignFormat `json:"format"`
+	RecipientTypes  []string            `json:"recipient_types"`
+	ScheduledAt     *time.Time          `json:"scheduled_at"`
+	CreatedByUserID *uuid.UUID          `json:"created_by_user_id"`
+	UpdatedByUserID *uuid.UUID          `json:"updated_by_user_id"`
 }
 
 // creates a draft campaign. It stores the title, subject, body, format, recipient groups, and optional schedule time.
@@ -195,7 +195,7 @@ SET
         ELSE format END,
     recipient_types = 
         CASE WHEN $11::boolean
-        THEN $12::email_recipient_type[]
+        THEN $12::text[]::email_recipient_type[]
         ELSE recipient_types END,
     scheduled_at = 
         CASE WHEN $13::boolean
@@ -211,24 +211,24 @@ RETURNING id, hackathon_id, title, description, subject, body, format, recipient
 `
 
 type UpdateEmailCampaignParams struct {
-	TitleDoUpdate           bool                 `json:"title_do_update"`
-	Title                   string               `json:"title"`
-	DescriptionDoUpdate     bool                 `json:"description_do_update"`
-	Description             *string              `json:"description"`
-	SubjectDoUpdate         bool                 `json:"subject_do_update"`
-	Subject                 string               `json:"subject"`
-	BodyDoUpdate            bool                 `json:"body_do_update"`
-	Body                    string               `json:"body"`
-	FormatDoUpdate          bool                 `json:"format_do_update"`
-	Format                  EmailCampaignFormat  `json:"format"`
-	RecipientTypesDoUpdate  bool                 `json:"recipient_types_do_update"`
-	RecipientTypes          []EmailRecipientType `json:"recipient_types"`
-	ScheduledAtDoUpdate     bool                 `json:"scheduled_at_do_update"`
-	ScheduledAt             *time.Time           `json:"scheduled_at"`
-	UpdatedByUserIDDoUpdate bool                 `json:"updated_by_user_id_do_update"`
-	UpdatedByUserID         uuid.UUID            `json:"updated_by_user_id"`
-	ID                      uuid.UUID            `json:"id"`
-	HackathonID             string               `json:"hackathon_id"`
+	TitleDoUpdate           bool                    `json:"title_do_update"`
+	Title                   string                  `json:"title"`
+	DescriptionDoUpdate     bool                    `json:"description_do_update"`
+	Description             *string                 `json:"description"`
+	SubjectDoUpdate         bool                    `json:"subject_do_update"`
+	Subject                 string                  `json:"subject"`
+	BodyDoUpdate            bool                    `json:"body_do_update"`
+	Body                    string                  `json:"body"`
+	FormatDoUpdate          bool                    `json:"format_do_update"`
+	Format                  NullEmailCampaignFormat `json:"format"`
+	RecipientTypesDoUpdate  bool                    `json:"recipient_types_do_update"`
+	RecipientTypes          []string                `json:"recipient_types"`
+	ScheduledAtDoUpdate     bool                    `json:"scheduled_at_do_update"`
+	ScheduledAt             *time.Time              `json:"scheduled_at"`
+	UpdatedByUserIDDoUpdate bool                    `json:"updated_by_user_id_do_update"`
+	UpdatedByUserID         uuid.UUID               `json:"updated_by_user_id"`
+	ID                      uuid.UUID               `json:"id"`
+	HackathonID             string                  `json:"hackathon_id"`
 }
 
 // edits draft-like campaign fields: title, description, subject, body, format, recipients, and scheduled time.
