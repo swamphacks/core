@@ -24,6 +24,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/application/all": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get All Applications
+     * @description Get all applications for the current hackthaton
+     */
+    get: operations["get-all-applications"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/application/assigned": {
     parameters: {
       query?: never;
@@ -1288,6 +1308,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    AllApplications: {
+      applications: components["schemas"]["ListAllApplicationsRow"][] | null;
+      /** Format: int64 */
+      count: number;
+    };
     ApplicationReviewDetails: {
       application: string;
       autoDecision: string | null;
@@ -1532,6 +1557,19 @@ export interface components {
       updatedAt: string;
       userId: string;
     };
+    ListAllApplicationsRow: {
+      application: string;
+      /** Format: date-time */
+      created_at: string;
+      email: string | null;
+      image: string | null;
+      is_early: boolean;
+      name: string | null;
+      status: string;
+      /** Format: date-time */
+      submitted_at: string | null;
+      user_id: string;
+    };
     ListAutoDecisionRequestsRow: {
       application_id: string;
       approved: boolean | null;
@@ -1651,9 +1689,10 @@ export interface components {
       /** Format: date-time */
       updated_at: string;
     };
-    ReviewRatings: {
+    Review: {
       /** Format: int64 */
       experienceRating: number;
+      notes: string;
       /** Format: int64 */
       passionRating: number;
     };
@@ -1850,6 +1889,60 @@ export interface operations {
       };
       /** @description Unauthorized */
       401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+    };
+  };
+  "get-all-applications": {
+    parameters: {
+      query?: {
+        limit?: number;
+        offset?: number;
+        search?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie: {
+        /** @description Session cookie used to authenticate the user */
+        sh_session_id: string;
+      };
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllApplications"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["ErrorModel"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };
@@ -2508,7 +2601,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["ReviewRatings"];
+        "application/json": components["schemas"]["Review"];
       };
     };
     responses: {

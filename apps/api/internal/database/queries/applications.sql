@@ -18,6 +18,18 @@ WHERE
 -- name: DeleteApplicationByUserId :exec
 DELETE FROM applications WHERE user_id = $1;
 
+-- name: ListAllApplications :many
+SELECT a.user_id, a.status, a.created_at, a.submitted_at, a.application, a.is_early, u.name, u.image, u.email FROM applications a
+LEFT JOIN users u ON u.id = a.user_id
+WHERE a.hackathon_id = @hackathon_id AND 
+    LOWER(u.name) LIKE LOWER('%' || COALESCE(sqlc.arg('search'), '') || '%')
+    OR LOWER(u.email) LIKE LOWER('%' || COALESCE(sqlc.arg('search'), '') || '%')
+ORDER BY a.created_at DESC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: GetApplicationsCount :one
+SELECT COUNT(*) FROM applications;
+
 -- name: ListApplicationsUnderReviewWithTeamIds :many
 SELECT a.user_id,
     a.application,

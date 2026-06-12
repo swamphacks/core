@@ -49,6 +49,19 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 	}, applicationHandler.handleGetApplicationByUserId)
 
 	huma.Register(group, huma.Operation{
+		OperationID:   "get-all-applications",
+		Method:        http.MethodGet,
+		Summary:       "Get All Applications",
+		Description:   "Get all applications for the current hackthaton",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/all",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleGetAllApplications)
+
+	huma.Register(group, huma.Operation{
 		OperationID:   "get-download-resume-url",
 		Method:        http.MethodGet,
 		Summary:       "Get Resume Download URL",
@@ -469,6 +482,24 @@ func (h *handler) handleGetApplicationByUserId(ctx context.Context, input *struc
 		SubmittedAt: application.SubmittedAt,
 		HackathonID: application.HackathonID,
 	}}, nil
+}
+
+type GetAllApplicationsOutput struct {
+	Body AllApplications
+}
+
+func (h *handler) handleGetAllApplications(ctx context.Context, input *struct {
+	Limit  int32  `query:"limit"`
+	Offset int32  `query:"offset"`
+	Search string `query:"search"`
+}) (*GetAllApplicationsOutput, error) {
+	allApplications, err := h.applicationService.GetAllApplications(ctx, input.Limit, input.Offset, input.Search)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("error retrieving applications")
+	}
+
+	return &GetAllApplicationsOutput{Body: *allApplications}, nil
 }
 
 type SaveApplicationOutput struct {

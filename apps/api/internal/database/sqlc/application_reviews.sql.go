@@ -67,14 +67,15 @@ func (q *Queries) DeleteAutoDecisionRequest(ctx context.Context, arg DeleteAutoD
 }
 
 const getApplicationReviewDetails = `-- name: GetApplicationReviewDetails :one
-SELECT ar.application_id, ar.passion_rating, ar.experience_rating, ar.notes, a.application, aadr.requested_decision, aadr.id as auto_decision_request_id FROM application_reviews as ar
-LEFT JOIN applications as a ON ar.application_id = a.user_id
-LEFT JOIN application_auto_decision_requests as aadr ON ar.application_id = aadr.application_id
-WHERE ar.application_id = $1::uuid
+SELECT ar.application_id, ar.passion_rating, ar.experience_rating, 
+ar.notes, a.application, aadr.requested_decision, aadr.id as auto_decision_request_id FROM applications as a
+LEFT JOIN application_reviews as ar ON ar.application_id = a.user_id
+LEFT JOIN application_auto_decision_requests as aadr ON aadr.application_id = a.user_id
+WHERE a.user_id = $1::uuid
 `
 
 type GetApplicationReviewDetailsRow struct {
-	ApplicationID         uuid.UUID                       `json:"application_id"`
+	ApplicationID         *uuid.UUID                      `json:"application_id"`
 	PassionRating         *int32                          `json:"passion_rating"`
 	ExperienceRating      *int32                          `json:"experience_rating"`
 	Notes                 *string                         `json:"notes"`
@@ -83,6 +84,11 @@ type GetApplicationReviewDetailsRow struct {
 	AutoDecisionRequestID *uuid.UUID                      `json:"auto_decision_request_id"`
 }
 
+// SELECT ar.application_id, ar.passion_rating, ar.experience_rating,
+// ar.notes, a.application, aadr.requested_decision, aadr.id as auto_decision_request_id FROM application_reviews as ar
+// LEFT JOIN applications as a ON ar.application_id = a.user_id
+// LEFT JOIN application_auto_decision_requests as aadr ON ar.application_id = aadr.application_id
+// WHERE ar.application_id = @application_id::uuid;
 func (q *Queries) GetApplicationReviewDetails(ctx context.Context, applicationID uuid.UUID) (GetApplicationReviewDetailsRow, error) {
 	row := q.db.QueryRow(ctx, getApplicationReviewDetails, applicationID)
 	var i GetApplicationReviewDetailsRow

@@ -168,6 +168,10 @@
   --navlink-text: var(--text-main);
   --navlink-secondary-text: var(--color-neutral-500);
 
+  /* TABLE */
+  --table-bg-row: #222222;
+  --table-bg-oddrow: #292929;
+
   /* BUTTONS */
   --button-primary: var(--color-blue-500);
   --button-primary-hover: var(--color-blue-700);
@@ -340,6 +344,9 @@
   --color-navlink-bg-active: var(--navlink-bg-active);
   --color-navlink-text: var(--navlink-text);
   --color-navlink-secondary-text: var(--navlink-secondary-text);
+
+  --color-table-bg-row: var(--table-bg-row);
+  --color-table-bg-oddrow: var(--table-bg-oddrow);
 
   --color-button-primary: var(--button-primary);
   --color-button-primary-hover: var(--button-primary-hover);

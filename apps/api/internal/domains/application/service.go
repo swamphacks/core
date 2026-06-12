@@ -104,6 +104,52 @@ func (s *ApplicationService) GetApplicationByUserId(ctx context.Context, userID 
 	return &application, nil
 }
 
+type AllApplications struct {
+	Applications []sqlc.ListAllApplicationsRow `json:"applications"`
+	Count        int64                         `json:"count"`
+}
+
+func (s *ApplicationService) GetAllApplications(ctx context.Context, limit, offset int32, search string) (*AllApplications, error) {
+	hackathon, err := s.db.Query.GetHackathon(ctx)
+
+	if err != nil {
+		s.logger.Err(err).Msg("GetAllApplications fail because can't retrieve hackathon")
+		return nil, ErrFailedToGetHackathon
+	}
+
+	g, ctx := errgroup.WithContext(ctx)
+
+	var applicationsCount int64
+	var applications []sqlc.ListAllApplicationsRow
+
+	g.Go(func() error {
+		var err error
+		applicationsCount, err = s.db.Query.GetApplicationsCount(ctx)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		applications, err = s.db.Query.ListAllApplications(ctx, sqlc.ListAllApplicationsParams{
+			HackathonID: hackathon.ID,
+			Offset:      int32(offset * limit),
+			Limit:       int32(limit),
+			Search:      &search,
+		})
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
+		s.logger.Err(err).Msg("GetAllApplications fail")
+		return nil, err
+	}
+
+	return &AllApplications{
+		Applications: applications,
+		Count:        applicationsCount,
+	}, nil
+}
+
 // TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
 // these fields are only applicable to swamphacks xi, not other events
 type ApplicationSubmissionFields struct {

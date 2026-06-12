@@ -38,10 +38,16 @@ GROUP BY
   reviewer.id;
 
 -- name: GetApplicationReviewDetails :one
-SELECT ar.application_id, ar.passion_rating, ar.experience_rating, ar.notes, a.application, aadr.requested_decision, aadr.id as auto_decision_request_id FROM application_reviews as ar
-LEFT JOIN applications as a ON ar.application_id = a.user_id
-LEFT JOIN application_auto_decision_requests as aadr ON ar.application_id = aadr.application_id
-WHERE ar.application_id = @application_id::uuid;
+-- SELECT ar.application_id, ar.passion_rating, ar.experience_rating, 
+-- ar.notes, a.application, aadr.requested_decision, aadr.id as auto_decision_request_id FROM application_reviews as ar
+-- LEFT JOIN applications as a ON ar.application_id = a.user_id
+-- LEFT JOIN application_auto_decision_requests as aadr ON ar.application_id = aadr.application_id
+-- WHERE ar.application_id = @application_id::uuid;
+SELECT ar.application_id, ar.passion_rating, ar.experience_rating, 
+ar.notes, a.application, aadr.requested_decision, aadr.id as auto_decision_request_id FROM applications as a
+LEFT JOIN application_reviews as ar ON ar.application_id = a.user_id
+LEFT JOIN application_auto_decision_requests as aadr ON aadr.application_id = a.user_id
+WHERE a.user_id = @application_id::uuid;
 
 -- name: UpdateApplicationReview :exec
 UPDATE application_reviews

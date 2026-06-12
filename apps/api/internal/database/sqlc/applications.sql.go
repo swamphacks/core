@@ -104,6 +104,81 @@ func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) 
 	return i, err
 }
 
+const getApplicationsCount = `-- name: GetApplicationsCount :one
+SELECT COUNT(*) FROM applications
+`
+
+func (q *Queries) GetApplicationsCount(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getApplicationsCount)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const listAllApplications = `-- name: ListAllApplications :many
+SELECT a.user_id, a.status, a.created_at, a.submitted_at, a.application, a.is_early, u.name, u.image, u.email FROM applications a
+LEFT JOIN users u ON u.id = a.user_id
+WHERE a.hackathon_id = $1 AND 
+    LOWER(u.name) LIKE LOWER('%' || COALESCE($2, '') || '%')
+    OR LOWER(u.email) LIKE LOWER('%' || COALESCE($2, '') || '%')
+ORDER BY a.created_at DESC
+LIMIT $4 OFFSET $3
+`
+
+type ListAllApplicationsParams struct {
+	HackathonID string  `json:"hackathon_id"`
+	Search      *string `json:"search"`
+	Offset      int32   `json:"offset"`
+	Limit       int32   `json:"limit"`
+}
+
+type ListAllApplicationsRow struct {
+	UserID      uuid.UUID         `json:"user_id"`
+	Status      ApplicationStatus `json:"status"`
+	CreatedAt   time.Time         `json:"created_at"`
+	SubmittedAt *time.Time        `json:"submitted_at"`
+	Application []byte            `json:"application"`
+	IsEarly     bool              `json:"is_early"`
+	Name        *string           `json:"name"`
+	Image       *string           `json:"image"`
+	Email       *string           `json:"email"`
+}
+
+func (q *Queries) ListAllApplications(ctx context.Context, arg ListAllApplicationsParams) ([]ListAllApplicationsRow, error) {
+	rows, err := q.db.Query(ctx, listAllApplications,
+		arg.HackathonID,
+		arg.Search,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAllApplicationsRow{}
+	for rows.Next() {
+		var i ListAllApplicationsRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Status,
+			&i.CreatedAt,
+			&i.SubmittedAt,
+			&i.Application,
+			&i.IsEarly,
+			&i.Name,
+			&i.Image,
+			&i.Email,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listApplicationsUnderReviewWithTeamIds = `-- name: ListApplicationsUnderReviewWithTeamIds :many
 SELECT a.user_id,
     a.application,

@@ -15,17 +15,25 @@ import {
   useUpdateAutoDecisionRequest,
 } from "@/modules/Application/hooks/useAutoDecisionRequests";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DialogTrigger } from "react-aria-components";
 import TablerBrowserShare from "~icons/tabler/browser-share";
 import TablerUserEdit from "~icons/tabler/user-edit";
 import { useApplicationForReview } from "../hooks/useApplicationForReview";
 import { Popover } from "@/components/ui/Popover";
-import type { ColumnDef, ColumnFiltersState } from "@tanstack/react-table";
+import {
+  getCoreRowModel,
+  getFilteredRowModel,
+  useReactTable,
+  type ColumnDef,
+  type ColumnFiltersState,
+} from "@tanstack/react-table";
 import { useReviewersProgress } from "@/modules/Application/hooks/useReviewersProgress";
 import { Input } from "@/components/ui/Field";
 import { Select } from "@/components/ui/Select";
 import TablerSearch from "~icons/tabler/search";
+import useParsedForm from "@/modules/Application/hooks/useParsedForm";
+import ApplicationResponsesViewer from "@/modules/Application/ApplicationResponsesViewer";
 
 interface ApplicationReviewPageProps {
   hackathon: StaffHackathon;
@@ -98,135 +106,160 @@ export default function ApplicationReviewPage({
 function AutoDecisionRequestsTable() {
   const { data, isLoading, isError } = useAutoDecisionRequests();
   const updateRequest = useUpdateAutoDecisionRequest();
+  const parsedForm = useParsedForm();
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const requests: ApplicationAutoDecisionRequest = data ?? [];
   type RequestRow = ApplicationAutoDecisionRequest[number];
 
-  const columns: ColumnDef<RequestRow>[] = [
-    {
-      id: "reviewer_name",
-      header: "Reviewer",
-      accessorKey: "reviewer_name",
-      maxSize: 120,
-      cell: ({ row }) => {
-        const avatarUrl = row.original.reviewer_image;
-        return (
-          <div className="flex items-center gap-2">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={"user avatar"}
-                className="h-8 w-8 rounded-full object-cover"
-              />
-            ) : (
-              <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
-                <span className="text-gray-600 dark:text-neutral-400">N/A</span>
+  const columns: ColumnDef<RequestRow>[] = useMemo(
+    () => [
+      {
+        id: "reviewer_name",
+        header: "Reviewer",
+        accessorKey: "reviewer_name",
+        size: 200,
+        cell: ({ row }) => {
+          const avatarUrl = row.original.reviewer_image;
+          return (
+            <div className="flex items-center gap-2">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={"user avatar"}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
+                  <span className="text-gray-600 dark:text-neutral-400">
+                    N/A
+                  </span>
+                </div>
+              )}
+              <div className="text-sm">
+                <div className="font-medium">{row.original.reviewer_name}</div>
               </div>
-            )}
-            <div className="text-sm">
-              <div className="font-medium">{row.original.reviewer_name}</div>
             </div>
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      header: "Application",
-      maxSize: 90,
-      cell: ({ row }) => (
-        <DialogTrigger>
-          <Button variant="secondary" size="sm" className="h-8">
-            Open
-          </Button>
-          <Sheet sheetClassName="w-150">
-            <UserApplicationSideDrawer
-              applicationId={row.original.application_id}
-            />
-          </Sheet>
-        </DialogTrigger>
-      ),
-    },
-    {
-      header: "Decision",
-      accessorKey: "requested_decision",
-      maxSize: 100,
-      cell: ({ row }) =>
-        row.original.requested_decision === "auto_accept"
-          ? "Auto Accept"
-          : "Auto Reject",
-    },
-    {
-      header: "Justification",
-      maxSize: 90,
-      cell: ({ row }) => (
-        <DialogTrigger>
-          <Button variant="secondary" size="sm" className="h-8">
-            View
-          </Button>
-          <Popover>
-            <div className="p-2">
-              <p className="max-w-60 text-wrap">{row.original.justification}</p>
-            </div>
-          </Popover>
-        </DialogTrigger>
-      ),
-    },
-    {
-      header: "Created",
-      maxSize: 150,
-      cell: ({ row }) => new Date(row.original.created_at).toLocaleString(),
-    },
-    {
-      header: "Actions",
-      id: "actions",
-      maxSize: 100,
-      accessorFn: (row) =>
-        row.approved_or_denied_by
-          ? row.approved
-            ? "approved"
-            : "denied"
-          : "pending",
-      cell: (info) => {
-        const row = info.row.original as RequestRow;
-        const isResolved = row.approved_or_denied_by !== null;
+      {
+        header: "Application",
+        size: 90,
+        cell: ({ row }) => (
+          <DialogTrigger>
+            <Button variant="secondary" size="sm" className="h-8">
+              Open
+            </Button>
+            <Sheet sheetClassName="w-full sm:w-160 lg:w-200">
+              <ApplicationResponsesViewer
+                parsedForm={parsedForm!}
+                applicationId={row.original.application_id}
+              />
+              {/* <UserApplicationSideDrawer
+                applicationId={row.original.application_id}
+              /> */}
+            </Sheet>
+          </DialogTrigger>
+        ),
+      },
+      {
+        header: "Decision",
+        accessorKey: "requested_decision",
+        size: 130,
+        cell: ({ row }) =>
+          row.original.requested_decision === "auto_accept"
+            ? "Auto Accept"
+            : "Auto Reject",
+      },
+      {
+        header: "Justification",
+        size: 110,
+        cell: ({ row }) => (
+          <DialogTrigger>
+            <Button variant="secondary" size="sm" className="h-8">
+              View
+            </Button>
+            <Popover>
+              <div className="p-2">
+                <p className="max-w-60 text-wrap">
+                  {row.original.justification}
+                </p>
+              </div>
+            </Popover>
+          </DialogTrigger>
+        ),
+      },
+      {
+        header: "Created At",
+        size: 200,
+        cell: ({ row }) => new Date(row.original.created_at).toLocaleString(),
+      },
+      {
+        header: "Actions",
+        id: "actions",
+        size: 150,
+        accessorFn: (row) =>
+          row.approved_or_denied_by
+            ? row.approved
+              ? "approved"
+              : "denied"
+            : "pending",
+        cell: (info) => {
+          const row = info.row.original as RequestRow;
+          const isResolved = row.approved_or_denied_by !== null;
 
-        return isResolved ? (
-          <span className="text-sm text-text-secondary">
-            {row.approved ? "Approved" : "Denied"}
-          </span>
-        ) : (
-          <div className="flex gap-2">
-            <Button
-              className="h-8 px-2"
-              size="sm"
-              onClick={() =>
-                updateRequest.mutateAsync({ requestId: row.id, approved: true })
-              }
-              isDisabled={updateRequest.isPending}
-            >
-              Approve
-            </Button>
-            <Button
-              className="h-8 px-2"
-              size="sm"
-              variant="danger"
-              onClick={() =>
-                updateRequest.mutateAsync({
-                  requestId: row.id,
-                  approved: false,
-                })
-              }
-              isDisabled={updateRequest.isPending}
-            >
-              Deny
-            </Button>
-          </div>
-        );
+          return isResolved ? (
+            <span className="text-sm text-text-secondary">
+              {row.approved ? "Approved" : "Denied"}
+            </span>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                className="h-8 px-2"
+                size="sm"
+                onClick={() =>
+                  updateRequest.mutateAsync({
+                    requestId: row.id,
+                    approved: true,
+                  })
+                }
+                isDisabled={updateRequest.isPending}
+              >
+                Approve
+              </Button>
+              <Button
+                className="h-8 px-2"
+                size="sm"
+                variant="danger"
+                onClick={() =>
+                  updateRequest.mutateAsync({
+                    requestId: row.id,
+                    approved: false,
+                  })
+                }
+                isDisabled={updateRequest.isPending}
+              >
+                Deny
+              </Button>
+            </div>
+          );
+        },
       },
-    },
-  ];
+    ],
+    [parsedForm],
+  );
+
+  const table = useReactTable({
+    globalFilterFn: "includesString",
+    columns,
+    data: data ?? [],
+    state: { columnFilters },
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+  });
 
   if (isLoading) {
     return <p>Loading auto decision requests...</p>;
@@ -241,7 +274,7 @@ function AutoDecisionRequestsTable() {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg bg-surface p-4 min-w-100 max-w-230">
+    <div className="overflow-x-auto rounded-lg bg-surface p-4 min-w-100 max-w-fit">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Auto Decision Requests</h2>
         <span className="text-sm text-text-secondary">
@@ -334,10 +367,7 @@ function AutoDecisionRequestsTable() {
         <Table
           className="max-h-100 overflow-y-auto"
           headerClassName="text-text-secondary text-sm"
-          data={requests}
-          columns={columns}
-          columnFilters={columnFilters}
-          onColumnFiltersChange={setColumnFilters}
+          table={table}
           showPagination={false}
         />
       )}
@@ -349,7 +379,7 @@ interface UserApplicationSideDrawerProps {
   applicationId: string;
 }
 
-function UserApplicationSideDrawer({
+export function UserApplicationSideDrawer({
   applicationId,
 }: UserApplicationSideDrawerProps) {
   const applicationReviewDetails = useApplicationForReview(applicationId);
@@ -357,6 +387,7 @@ function UserApplicationSideDrawer({
   if (!applicationReviewDetails.data || applicationReviewDetails.isLoading) {
     return <p>Loading...</p>;
   }
+
   const getHackathonExperienceText = (experience: string) => {
     switch (experience) {
       case "first_time":
@@ -504,6 +535,56 @@ function UserApplicationSideDrawer({
 function Reviewers() {
   const { data, isLoading, isError } = useReviewersProgress();
 
+  const reviewers = data ?? [];
+  const columns: ColumnDef<(typeof reviewers)[number]>[] = useMemo(
+    () => [
+      {
+        header: "Reviewer",
+        size: 190,
+        cell: ({ row }) => {
+          const avatarUrl = row.original.image;
+          return (
+            <div className="flex items-center gap-2">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={"user avatar"}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
+                  <span className="text-gray-600 dark:text-neutral-400">
+                    N/A
+                  </span>
+                </div>
+              )}
+              <div className="text-sm">
+                <div className="font-medium">{row.original.name}</div>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        header: "Assigned",
+        size: 80,
+        cell: ({ row }) => row.original.total_assigned,
+      },
+      {
+        header: "Completed",
+        size: 60,
+        cell: ({ row }) => row.original.completed_count,
+      },
+    ],
+    [],
+  );
+
+  const table = useReactTable({
+    columns,
+    data: reviewers,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
   if (isLoading) {
     return <p>Loading reviewers progress...</p>;
   }
@@ -511,45 +592,6 @@ function Reviewers() {
   if (isError) {
     return <p>Unable to load reviewers progress data.</p>;
   }
-
-  const reviewers = data ?? [];
-  const columns: ColumnDef<(typeof reviewers)[number]>[] = [
-    {
-      header: "Reviewer",
-      maxSize: 50,
-      cell: ({ row }) => {
-        const avatarUrl = row.original.image;
-        return (
-          <div className="flex items-center gap-2">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={"user avatar"}
-                className="h-8 w-8 rounded-full object-cover"
-              />
-            ) : (
-              <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
-                <span className="text-gray-600 dark:text-neutral-400">N/A</span>
-              </div>
-            )}
-            <div className="text-sm">
-              <div className="font-medium">{row.original.name}</div>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      header: "Assigned",
-      maxSize: 20,
-      cell: ({ row }) => row.original.total_assigned,
-    },
-    {
-      header: "Completed",
-      maxSize: 20,
-      cell: ({ row }) => row.original.completed_count,
-    },
-  ];
 
   const totalApps = reviewers.reduce((prev, curr) => {
     return curr.total_assigned + prev;
@@ -560,7 +602,7 @@ function Reviewers() {
   }, 0);
 
   return (
-    <div className="overflow-x-auto rounded-lg bg-surface p-4 min-w-80 max-w-110">
+    <div className="rounded-lg bg-surface p-4 min-w-100 max-w-200">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Reviewers</h2>
         <span className="text-sm text-text-secondary">
@@ -576,8 +618,7 @@ function Reviewers() {
         <Table
           className="max-h-100 overflow-y-auto"
           headerClassName="text-text-secondary text-sm"
-          data={reviewers}
-          columns={columns}
+          table={table}
           showPagination={false}
         />
       )}
