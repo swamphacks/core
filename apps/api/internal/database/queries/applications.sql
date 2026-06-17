@@ -30,6 +30,27 @@ LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 -- name: GetApplicationsCount :one
 SELECT COUNT(*) FROM applications;
 
+-- name: GetApplicationFullDetailsByUserId :one
+SELECT a.*, 
+ar.experience_rating, ar.passion_rating, ar.notes, ar.updated_at AS review_updated_at,
+reviewer.id AS reviewer_id,
+reviewer.name AS reviewer_name, 
+reviewer.image AS reviewer_image,
+applicant.name AS applicant_name,
+applicant.image AS applicant_image,
+aadr.requested_decision,
+aadr.id as auto_decision_request_id,
+aadr.justification AS decision_justification,
+aadr.approved AS decision_approved,
+aadr.approved_or_denied_by,
+aadr.created_at AS decision_request_created_at
+FROM applications a
+LEFT JOIN application_reviews ar ON ar.application_id = a.user_id
+LEFT JOIN users AS reviewer ON ar.reviewer_user_id = reviewer.id
+LEFT JOIN users AS applicant ON a.user_id = applicant.id
+LEFT JOIN application_auto_decision_requests as aadr ON a.user_id = aadr.application_id
+WHERE a.user_id = @user_id;
+
 -- name: ListApplicationsUnderReviewWithTeamIds :many
 SELECT a.user_id,
     a.application,

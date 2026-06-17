@@ -558,9 +558,9 @@ function Reviewers() {
                   </span>
                 </div>
               )}
-              <div className="text-sm">
-                <div className="font-medium">{row.original.name}</div>
-              </div>
+              <span className="text-sm inline-block max-w-40 font-medium truncate">
+                {row.original.name}
+              </span>
             </div>
           );
         },

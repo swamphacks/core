@@ -1,8 +1,66 @@
 import { Button } from "@/components/ui/Button";
-import type { ApplicationFields } from "@/modules/Application/hooks/useApplication";
-import { useApplicationForReview } from "@/modules/Application/hooks/useApplicationForReview";
+import { Select } from "@/components/ui/Select";
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
+import { api } from "@/lib/ky";
+import type { components } from "@/lib/openapi/schema";
+import { RatingFields } from "@/modules/Application/ApplicationReview/Workspace";
+import {
+  ApplicationFieldsSchema,
+  type ApplicationFields,
+} from "@/modules/Application/hooks/useApplication";
 import type { ParsedForm } from "@/modules/Application/hooks/useParsedForm";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { TextArea } from "react-aria-components";
 import TablerX from "~icons/tabler/x";
+import TablerCheck from "~icons/tabler/check";
+import { useApplicationReviewActions } from "@/modules/Application/hooks/useApplicationReviewActions";
+
+type ApplicationFullDetails = components["schemas"]["ApplicationFullDetails"];
+
+export type ParsedApplicationFullDetails = Omit<
+  ApplicationFullDetails,
+  "application"
+> & {
+  application: ApplicationFields;
+};
+
+async function fetchApplicationFullDetails(
+  application_id: string,
+): Promise<ParsedApplicationFullDetails> {
+  const result = await api
+    .get<ParsedApplicationFullDetails>(
+      `application/full-details/${application_id}`,
+    )
+    .json();
+
+  const parsedApplication = ApplicationFieldsSchema.safeParse(
+    JSON.parse(atob(result.application as unknown as string)),
+  );
+
+  if (!parsedApplication.success) {
+    console.error("Failed to parse application data:", parsedApplication.error);
+    throw new Error("Invalid application data format");
+  }
+
+  return {
+    ...result,
+    application: parsedApplication.data,
+  };
+}
+
+export function useApplicationFullDetails(application_id: string) {
+  return useQuery({
+    queryKey: ["application-full-details", application_id],
+    queryFn: () => fetchApplicationFullDetails(application_id),
+    staleTime: 1000 * 60 * 5, // 5 minutes,
+  });
+}
+
+const applicationFullDetailsQueryKey = (application_id: string) => [
+  "application-full-details",
+  application_id,
+];
 
 interface ApplicationResponsesProps {
   parsedForm: ParsedForm;
@@ -13,14 +71,14 @@ export default function ApplicationResponsesViewer({
   parsedForm,
   applicationId,
 }: ApplicationResponsesProps) {
-  const applicationReviewDetails = useApplicationForReview(applicationId);
+  const applicationFullDetails = useApplicationFullDetails(applicationId);
 
-  if (!applicationReviewDetails.data || applicationReviewDetails.isLoading) {
+  if (!applicationFullDetails.data || applicationFullDetails.isLoading) {
     return <p>Loading...</p>;
   }
 
-  const appFields = applicationReviewDetails.data.application;
-  const resume = applicationReviewDetails.data.resumeUrl;
+  const appFields = applicationFullDetails.data.application;
+  const resume = applicationFullDetails.data.resumeUrl;
 
   const renderAnswer = (value: unknown): string => {
     if (value === null || value === undefined) return "—";
@@ -57,41 +115,449 @@ export default function ApplicationResponsesViewer({
   };
 
   return (
-    <div className="overflow-y-auto max-h-250 p-4">
-      <div className="fixed right-5">
+    <div className="overflow-y-auto max-h-[100vh] p-4">
+      <div className="fixed right-5 z-10">
         <Button variant="secondary" slot="close">
           <TablerX />
           Close
         </Button>
       </div>
 
-      <div className="mt-2 space-y-6">
-        {Object.entries(parsedForm).map(([sectionLabel, fields]) => (
-          <div key={sectionLabel}>
-            <h3 className="text-lg font-semibold text-text-main mb-4 pb-2 border-b border-input-border">
-              {sectionLabel}
-            </h3>
-            <div className="space-y-3">{fields.map(renderFieldResponse)}</div>
-          </div>
-        ))}
+      <Tabs>
+        <TabList aria-label="Tabs" className="text-base">
+          <Tab id="responses">Responses</Tab>
+          <Tab id="status-and-reviews">Status and Reviews</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel id="responses">
+            <div className="mt-2 space-y-6 w-full">
+              {Object.entries(parsedForm).map(([sectionLabel, fields]) => (
+                <div key={sectionLabel}>
+                  <h3 className="text-lg font-semibold text-text-main mb-4 pb-2 border-b border-input-border">
+                    {sectionLabel}
+                  </h3>
+                  <div className="flex flex-col gap-3">
+                    {fields.map(renderFieldResponse)}
+                  </div>
+                </div>
+              ))}
 
-        <div className="space-y-4 pt-4 border-t border-input-border">
-          <h3 className="text-lg font-semibold text-text-main">Resume</h3>
-          <div className="p-2 rounded-md border border-input-border h-200 bg-input-bg">
-            {resume === "" ? (
-              <p>No resume provided.</p>
-            ) : (
-              <object
-                className="w-full h-full"
-                type="application/pdf"
-                data={resume}
-              >
-                <p>Unable to load resume.</p>
-              </object>
+              <div className="space-y-4 pt-4 border-t border-input-border">
+                <h3 className="text-lg font-semibold text-text-main">Resume</h3>
+                <div className="p-2 rounded-md border border-input-border h-200 bg-input-bg">
+                  {resume === "" ? (
+                    <p>No resume provided.</p>
+                  ) : (
+                    <object
+                      className="w-full h-full"
+                      type="application/pdf"
+                      data={resume}
+                    >
+                      <p>Unable to load resume.</p>
+                    </object>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabPanel>
+          <TabPanel id="status-and-reviews">
+            <StatusAndReviews
+              applicationFullDetails={applicationFullDetails.data}
+            />
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+    </div>
+  );
+}
+
+interface StatusAndReviewsProps {
+  applicationFullDetails: ParsedApplicationFullDetails;
+}
+
+function StatusAndReviews({ applicationFullDetails }: StatusAndReviewsProps) {
+  const {
+    experience,
+    passion,
+    notes,
+    isDirty: isReviewsDirty,
+    setExperience,
+    setPassion,
+    setNotes,
+    reset: resetRatings,
+  } = useReview(
+    applicationFullDetails.experienceRating || 0,
+    applicationFullDetails.passionRating || 0,
+    applicationFullDetails.notes || "",
+  );
+  const {
+    status,
+    isDirty: isStatusDirty,
+    setStatus,
+  } = useStatus(applicationFullDetails.status);
+  const { updateApplication, updateReview } = useApplicationActionsAdmin();
+  const { requestAutoDecision, deleteAutoDecisionRequest } =
+    useApplicationReviewActions(applicationFullDetails.userId);
+
+  const handleUpdateStatus = async () => {
+    if (!isStatusDirty) return;
+
+    await updateApplication.mutateAsync({
+      status,
+      userId: applicationFullDetails.userId,
+    });
+  };
+
+  const handleUpdateReview = async () => {
+    if (!isReviewsDirty) return;
+
+    await updateReview.mutateAsync({
+      applicationId: applicationFullDetails.userId,
+      reviewerId: applicationFullDetails.reviewerId,
+      experienceRating: experience,
+      passionRating: passion,
+      notes,
+    });
+  };
+
+  const handleRequestAutoAccept = async () => {
+    await requestAutoDecision.mutateAsync({
+      applicationId: applicationFullDetails.userId,
+      accept: true,
+      justification: "",
+    });
+  };
+
+  const handleRequestAutoReject = async () => {
+    await requestAutoDecision.mutateAsync({
+      applicationId: applicationFullDetails.userId,
+      accept: false,
+      justification: "",
+    });
+  };
+
+  const handleUndoAutoDecision = async () => {
+    if (applicationFullDetails.autoDecisionRequestId === null) return;
+
+    await deleteAutoDecisionRequest.mutateAsync({
+      requestId: applicationFullDetails.autoDecisionRequestId,
+    });
+  };
+
+  return (
+    <div className="text-lg space-y-5">
+      <div>
+        <div className="flex gap-2">
+          <span className="mr-2">Status:</span>
+          <Select
+            value={status}
+            onChange={(v) => {
+              if (v != null) {
+                setStatus(v.toString());
+              }
+            }}
+            items={[
+              {
+                id: "started",
+                name: "Started",
+              },
+              {
+                id: "submitted",
+                name: "Submitted",
+              },
+              {
+                id: "under_review",
+                name: "Under Review",
+              },
+              {
+                id: "accepted",
+                name: "Accepted",
+              },
+              {
+                id: "rejected",
+                name: "Rejected",
+              },
+              {
+                id: "waitlisted",
+                name: "Waitlisted",
+              },
+              {
+                id: "withdrawn",
+                name: "Withdrawn",
+              },
+              {
+                id: "confirmed",
+                name: "Confirmed",
+              },
+            ]}
+            children={null}
+          />
+        </div>
+        <Button
+          onClick={handleUpdateStatus}
+          size="sm"
+          isDisabled={!isStatusDirty}
+          className="mt-3"
+        >
+          Update Status
+        </Button>
+      </div>
+      <div>
+        <div className="flex items-center gap-3">
+          <p>Reviewer:</p>
+          <div className="flex items-center gap-2">
+            {applicationFullDetails.reviewerImage && (
+              <img
+                src={applicationFullDetails.reviewerImage}
+                alt={"user avatar"}
+                className="h-8 w-8 rounded-full object-cover"
+              />
             )}
+            <span className="inline-block max-w-40 truncate">
+              {applicationFullDetails.reviewerName
+                ? applicationFullDetails.reviewerName
+                : "None"}
+            </span>
           </div>
+        </div>
+        <div className="mt-3">
+          <RatingFields
+            experience={experience}
+            passion={passion}
+            onExperienceChange={setExperience}
+            onPassionChange={setPassion}
+          />
+          <div className="w-85 flex flex-row gap-4 justify-between items-center mt-3">
+            <p className="text-lg items-start self-start">Notes:</p>
+            <div className="flex items-center gap-2 justify-end">
+              <div className="bg-input-bg rounded-md p-2 h-fit w-fit mt-3 text-base">
+                <TextArea
+                  className="focus-none outline-none h-18 w-50"
+                  placeholder="Additional notes..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2 mt-3">
+          <Button
+            onClick={resetRatings}
+            variant="secondary"
+            size="sm"
+            isDisabled={!isReviewsDirty}
+          >
+            Reset Ratings
+          </Button>
+          <Button
+            size="sm"
+            isDisabled={!isReviewsDirty}
+            onClick={handleUpdateReview}
+          >
+            Update Reviews
+          </Button>
+        </div>
+
+        <div className="mt-3">
+          {applicationFullDetails.autoDecision ? (
+            <div className="flex items-center gap-2">
+              <div
+                className={`flex items-center gap-2 px-3 py-1 rounded-md border text-sm font-medium ${
+                  applicationFullDetails.autoDecision === "auto_accept"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                    : "bg-rose-50 border-rose-200 text-rose-800"
+                }`}
+              >
+                {applicationFullDetails.autoDecision === "auto_accept" ? (
+                  <TablerCheck />
+                ) : (
+                  <TablerX />
+                )}
+                <span>
+                  {applicationFullDetails.autoDecision === "auto_accept"
+                    ? "Auto Accept Requested"
+                    : "Auto Reject Requested"}
+                </span>
+              </div>
+              <Button
+                variant="secondary"
+                className="h-9"
+                onClick={handleUndoAutoDecision}
+              >
+                Undo
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2 mt-2 mr-2">
+              <Button onClick={handleRequestAutoAccept} size="sm">
+                <TablerCheck />
+                Auto Accept
+              </Button>
+              <Button
+                onClick={handleRequestAutoReject}
+                size="sm"
+                variant="danger"
+              >
+                <TablerX />
+                Auto Reject
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+async function updateApplicationFn(userId: string, status: string) {
+  try {
+    await api.patch(`application/${userId}`, {
+      json: { userId, status },
+    });
+
+    return { userId, status };
+  } catch (err) {
+    throw err;
+  }
+}
+
+async function updateReviewFn({
+  applicationId,
+  reviewerId,
+  passionRating,
+  experienceRating,
+  notes,
+}: {
+  applicationId: string;
+  reviewerId: string;
+  passionRating: number;
+  experienceRating: number;
+  notes: string;
+}) {
+  try {
+    await api.patch(`application/review`, {
+      json: {
+        applicationId,
+        reviewerId,
+        passionRating,
+        experienceRating,
+        notes,
+      },
+    });
+
+    return {
+      applicationId,
+      reviewerId,
+      passionRating,
+      experienceRating,
+      notes,
+    };
+  } catch (err) {
+    throw err;
+  }
+}
+
+export function useApplicationActionsAdmin() {
+  const queryClient = useQueryClient();
+
+  const updateReview = useMutation({
+    mutationFn: (args: {
+      applicationId: string;
+      reviewerId: string;
+      passionRating: number;
+      experienceRating: number;
+      notes: string;
+    }) => updateReviewFn(args),
+    onSuccess: ({ applicationId }) => {
+      queryClient.invalidateQueries({
+        queryKey: applicationFullDetailsQueryKey(applicationId),
+      });
+    },
+  });
+
+  const updateApplication = useMutation({
+    mutationFn: ({ userId, status }: { userId: string; status: string }) =>
+      updateApplicationFn(userId, status),
+    onSuccess: ({ userId }) => {
+      queryClient.invalidateQueries({
+        queryKey: applicationFullDetailsQueryKey(userId),
+      });
+    },
+  });
+
+  return { updateApplication, updateReview };
+}
+
+function useStatus(initialStatus: string) {
+  const [status, setStatus] = useState(initialStatus);
+  const [isDirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    setDirty(status !== initialStatus);
+  }, [status, initialStatus]);
+
+  useEffect(() => {
+    setStatus(initialStatus);
+  }, [initialStatus]);
+
+  const reset = () => {
+    setStatus(initialStatus);
+  };
+
+  return {
+    status,
+    setStatus,
+    isDirty,
+    reset,
+  };
+}
+
+function useReview(
+  initialExperience: number,
+  initialPassion: number,
+  initialNotes: string,
+) {
+  const [experience, setExperience] = useState(initialExperience);
+  const [passion, setPassion] = useState(initialPassion);
+  const [notes, setNotes] = useState(initialNotes);
+  const [isDirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    setDirty(
+      experience !== initialExperience ||
+        passion !== initialPassion ||
+        notes !== initialNotes,
+    );
+  }, [
+    experience,
+    passion,
+    notes,
+    initialNotes,
+    initialExperience,
+    initialPassion,
+  ]);
+
+  useEffect(() => {
+    setExperience(initialExperience);
+    setPassion(initialPassion);
+    setNotes(initialNotes);
+  }, [initialExperience, initialPassion, initialNotes]);
+
+  const reset = () => {
+    setExperience(initialExperience);
+    setPassion(initialPassion);
+    setNotes(initialNotes);
+  };
+
+  return {
+    experience,
+    passion,
+    notes,
+    isDirty,
+    setExperience,
+    setPassion,
+    setNotes,
+    reset,
+  };
 }

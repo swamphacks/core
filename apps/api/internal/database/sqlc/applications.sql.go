@@ -104,6 +104,89 @@ func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) 
 	return i, err
 }
 
+const getApplicationFullDetailsByUserId = `-- name: GetApplicationFullDetailsByUserId :one
+SELECT a.user_id, a.status, a.application, a.created_at, a.saved_at, a.updated_at, a.submitted_at, a.waitlist_join_time, a.hackathon_id, a.is_early, 
+ar.experience_rating, ar.passion_rating, ar.notes, ar.updated_at AS review_updated_at,
+reviewer.id AS reviewer_id,
+reviewer.name AS reviewer_name, 
+reviewer.image AS reviewer_image,
+applicant.name AS applicant_name,
+applicant.image AS applicant_image,
+aadr.requested_decision,
+aadr.id as auto_decision_request_id,
+aadr.justification AS decision_justification,
+aadr.approved AS decision_approved,
+aadr.approved_or_denied_by,
+aadr.created_at AS decision_request_created_at
+FROM applications a
+LEFT JOIN application_reviews ar ON ar.application_id = a.user_id
+LEFT JOIN users AS reviewer ON ar.reviewer_user_id = reviewer.id
+LEFT JOIN users AS applicant ON a.user_id = applicant.id
+LEFT JOIN application_auto_decision_requests as aadr ON a.user_id = aadr.application_id
+WHERE a.user_id = $1
+`
+
+type GetApplicationFullDetailsByUserIdRow struct {
+	UserID                   uuid.UUID                       `json:"user_id"`
+	Status                   ApplicationStatus               `json:"status"`
+	Application              []byte                          `json:"application"`
+	CreatedAt                time.Time                       `json:"created_at"`
+	SavedAt                  time.Time                       `json:"saved_at"`
+	UpdatedAt                time.Time                       `json:"updated_at"`
+	SubmittedAt              *time.Time                      `json:"submitted_at"`
+	WaitlistJoinTime         *time.Time                      `json:"waitlist_join_time"`
+	HackathonID              string                          `json:"hackathon_id"`
+	IsEarly                  bool                            `json:"is_early"`
+	ExperienceRating         *int32                          `json:"experience_rating"`
+	PassionRating            *int32                          `json:"passion_rating"`
+	Notes                    *string                         `json:"notes"`
+	ReviewUpdatedAt          *time.Time                      `json:"review_updated_at"`
+	ReviewerID               *uuid.UUID                      `json:"reviewer_id"`
+	ReviewerName             *string                         `json:"reviewer_name"`
+	ReviewerImage            *string                         `json:"reviewer_image"`
+	ApplicantName            *string                         `json:"applicant_name"`
+	ApplicantImage           *string                         `json:"applicant_image"`
+	RequestedDecision        NullApplicationAutoDecisionType `json:"requested_decision"`
+	AutoDecisionRequestID    *uuid.UUID                      `json:"auto_decision_request_id"`
+	DecisionJustification    *string                         `json:"decision_justification"`
+	DecisionApproved         *bool                           `json:"decision_approved"`
+	ApprovedOrDeniedBy       *uuid.UUID                      `json:"approved_or_denied_by"`
+	DecisionRequestCreatedAt *time.Time                      `json:"decision_request_created_at"`
+}
+
+func (q *Queries) GetApplicationFullDetailsByUserId(ctx context.Context, userID uuid.UUID) (GetApplicationFullDetailsByUserIdRow, error) {
+	row := q.db.QueryRow(ctx, getApplicationFullDetailsByUserId, userID)
+	var i GetApplicationFullDetailsByUserIdRow
+	err := row.Scan(
+		&i.UserID,
+		&i.Status,
+		&i.Application,
+		&i.CreatedAt,
+		&i.SavedAt,
+		&i.UpdatedAt,
+		&i.SubmittedAt,
+		&i.WaitlistJoinTime,
+		&i.HackathonID,
+		&i.IsEarly,
+		&i.ExperienceRating,
+		&i.PassionRating,
+		&i.Notes,
+		&i.ReviewUpdatedAt,
+		&i.ReviewerID,
+		&i.ReviewerName,
+		&i.ReviewerImage,
+		&i.ApplicantName,
+		&i.ApplicantImage,
+		&i.RequestedDecision,
+		&i.AutoDecisionRequestID,
+		&i.DecisionJustification,
+		&i.DecisionApproved,
+		&i.ApprovedOrDeniedBy,
+		&i.DecisionRequestCreatedAt,
+	)
+	return i, err
+}
+
 const getApplicationsCount = `-- name: GetApplicationsCount :one
 SELECT COUNT(*) FROM applications
 `

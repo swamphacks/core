@@ -70,7 +70,7 @@ export default function ReviewerAssignmentModal({
       );
     }
 
-    if (confirmed) {
+    if (confirmed || !alreadyAssigned) {
       await assign.mutateAsync(assigned, {
         onSuccess: () => {
           toast.success("Reviewers assigned successfully.");

@@ -556,7 +556,7 @@ interface RatingFieldsProps {
   onPassionChange: (value: number) => void;
 }
 
-const RatingFields = ({
+export const RatingFields = ({
   experience,
   passion,
   onExperienceChange,

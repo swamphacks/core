@@ -49,6 +49,32 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 	}, applicationHandler.handleGetApplicationByUserId)
 
 	huma.Register(group, huma.Operation{
+		OperationID:   "update-application-by-user-id",
+		Method:        http.MethodPatch,
+		Summary:       "Update Application By User ID",
+		Description:   "Update a user's application",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/{userId}",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleUpdateApplicationByUserId)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "get-application-full-details-by-user-id",
+		Method:        http.MethodGet,
+		Summary:       "Get Application Full Details By User ID",
+		Description:   "Get the full details of the application of a user, including reviews, applicant and other information",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/full-details/{userId}",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleGetApplicationFullDetailsByUserId)
+
+	huma.Register(group, huma.Operation{
 		OperationID:   "get-all-applications",
 		Method:        http.MethodGet,
 		Summary:       "Get All Applications",
@@ -189,6 +215,19 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
 	}, applicationHandler.handleSubmitApplicationReview)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "update-application-review",
+		Method:        http.MethodPatch,
+		Summary:       "Update Application Review",
+		Description:   "Update application review",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/review",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleUpdateApplicationReview)
 
 	huma.Register(group, huma.Operation{
 		OperationID:   "update-application-review-status",
@@ -452,6 +491,27 @@ func (h *handler) handleGetMyApplication(ctx context.Context, input *struct{}) (
 	}}, nil
 }
 
+type UpdateApplicationByUserIdOutput struct {
+	Status int
+}
+
+type UpdateApplicationRequest struct {
+	UserID uuid.UUID               `json:"userId"`
+	Status *sqlc.ApplicationStatus `json:"status"`
+}
+
+func (h *handler) handleUpdateApplicationByUserId(ctx context.Context, input *struct {
+	Body UpdateApplicationRequest
+}) (*UpdateApplicationByUserIdOutput, error) {
+	err := h.applicationService.UpdateApplicationByUserId(ctx, input.Body.UserID, input.Body.Status, nil)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("error updating application")
+	}
+
+	return &UpdateApplicationByUserIdOutput{Status: http.StatusNoContent}, nil
+}
+
 type GetApplicationByUserIdOutput struct {
 	Body HackerApplication
 }
@@ -482,6 +542,28 @@ func (h *handler) handleGetApplicationByUserId(ctx context.Context, input *struc
 		SubmittedAt: application.SubmittedAt,
 		HackathonID: application.HackathonID,
 	}}, nil
+}
+
+type GetApplicationFullDetailsByUserIdOutput struct {
+	Body ApplicationFullDetails
+}
+
+func (h *handler) handleGetApplicationFullDetailsByUserId(ctx context.Context, input *struct {
+	UserID string `path:"userId"`
+}) (*GetApplicationFullDetailsByUserIdOutput, error) {
+	userID, err := uuid.Parse(input.UserID)
+
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid user id")
+	}
+
+	application, err := h.applicationService.GetApplicationFullDetailsByUserId(ctx, userID)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("error retrieving application")
+	}
+
+	return &GetApplicationFullDetailsByUserIdOutput{Body: *application}, nil
 }
 
 type GetAllApplicationsOutput struct {
@@ -789,13 +871,46 @@ func (h *handler) handleSubmitApplicationReview(ctx context.Context, input *stru
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err = h.applicationService.SaveApplicationReview(ctx, userCtx.UserID, applicationId, input.Body.ExperienceRating, input.Body.PassionRating, input.Body.Notes)
+	err = h.applicationService.SaveApplicationReview(ctx, userCtx.Role, userCtx.UserID, applicationId, input.Body.ExperienceRating, input.Body.PassionRating, input.Body.Notes)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to save review")
 	}
 
 	return &SubmitApplicationReviewOutput{Status: http.StatusCreated}, nil
+}
+
+type UpdateReviewRequest struct {
+	ApplicationId    uuid.UUID `json:"applicationId"`
+	ReviewerId       uuid.UUID `json:"reviewerId"`
+	PassionRating    *int      `json:"passionRating"`
+	ExperienceRating *int      `json:"experienceRating"`
+	Notes            *string   `json:"notes"`
+}
+
+type UpdateApplicationReviewOutput struct {
+	Status int
+}
+
+func (h *handler) handleUpdateApplicationReview(ctx context.Context, input *struct {
+	Body UpdateReviewRequest
+}) (*UpdateApplicationReviewOutput, error) {
+	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
+	}
+
+	err := h.applicationService.UpdateApplicationReview(
+		ctx, input.Body.ReviewerId, input.Body.ApplicationId,
+		input.Body.ExperienceRating, input.Body.PassionRating, input.Body.Notes,
+	)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to update review")
+	}
+
+	return &UpdateApplicationReviewOutput{Status: http.StatusOK}, nil
 }
 
 type GetAssignedApplicationsOutput struct {

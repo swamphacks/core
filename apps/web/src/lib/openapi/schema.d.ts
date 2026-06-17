@@ -1395,35 +1395,26 @@ export interface components {
       value?: unknown;
     };
     ErrorModel: {
-      /**
-       * @description A human-readable explanation specific to this occurrence of the problem.
-       * @example Property foo is required but is missing.
-       */
+      /** @description A human-readable explanation specific to this occurrence of the problem. */
       detail?: string;
       /** @description Optional list of individual error details */
       errors?: components["schemas"]["ErrorDetail"][] | null;
       /**
        * Format: uri
        * @description A URI reference that identifies the specific occurrence of the problem.
-       * @example https://example.com/error-log/abc123
        */
       instance?: string;
       /**
        * Format: int64
        * @description HTTP status code
-       * @example 400
        */
       status?: number;
-      /**
-       * @description A short, human-readable summary of the problem type. This value should not change between occurrences of the error.
-       * @example Bad Request
-       */
+      /** @description A short, human-readable summary of the problem type. This value should not change between occurrences of the error. */
       title?: string;
       /**
        * Format: uri
        * @description A URI reference to human-readable documentation for the error.
        * @default about:blank
-       * @example https://example.com/errors/example
        */
       type: string;
     };
@@ -1802,6 +1793,7 @@ export interface components {
       email: string | null;
       email_consent: boolean;
       email_verified: boolean;
+      has_seen_new_application_status: boolean | null;
       id: string;
       image: string | null;
       name: string;
@@ -1813,32 +1805,22 @@ export interface components {
       role_assigned_at: string | null;
       /** Format: date-time */
       updated_at: string;
-      has_seen_new_application_status: boolean | null;
     };
     UserContext: {
       /** Format: date-time */
       checkedInAt: string | null;
-      /** @example user@example.com */
       email: string | null;
-      /** @example false */
       emailConsent: boolean;
-      /** @example https://cdn.example.com/avatar.png */
+      hasSeenNewApplicationStatus: boolean | null;
       image: string | null;
-      /** @example Jane Doe */
       name: string;
-      /** @example true */
       onboarded: boolean;
-      /** @example user.alt@example.com */
       preferredEmail: string | null;
       rfid: string | null;
       /** @enum {string} */
       role: "admin" | "staff" | "attendee" | "applicant" | "visitor";
-      /**
-       * Format: uuid
-       * @example 550e8400-e29b-41d4-a716-446655440000
-       */
+      /** Format: uuid */
       userId: string;
-      hasSeenNewApplicationStatus: boolean | null;
     };
     Workshop: {
       /** Format: date-time */
