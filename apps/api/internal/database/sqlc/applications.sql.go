@@ -46,7 +46,7 @@ func (q *Queries) AcceptWaitlistedApplications(ctx context.Context, acceptanceco
 }
 
 const createApplication = `-- name: CreateApplication :one
-INSERT INTO applications (user_id, hackathon_id, is_early) VALUES ($1, $2, $3) RETURNING user_id, status, application, created_at, saved_at, updated_at, submitted_at, waitlist_join_time, hackathon_id, is_early
+INSERT INTO applications (user_id, hackathon_id, is_early) VALUES ($1, $2, $3) RETURNING user_id, status, application, created_at, saved_at, updated_at, submitted_at, hackathon_id, is_early, id
 `
 
 type CreateApplicationParams struct {
@@ -66,24 +66,46 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.SavedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
-		&i.WaitlistJoinTime,
 		&i.HackathonID,
 		&i.IsEarly,
+		&i.ID,
 	)
 	return i, err
 }
 
-const deleteApplicationByUserId = `-- name: DeleteApplicationByUserId :exec
-DELETE FROM applications WHERE user_id = $1
+const deleteApplicationById = `-- name: DeleteApplicationById :exec
+DELETE FROM applications WHERE id = $1
 `
 
-func (q *Queries) DeleteApplicationByUserId(ctx context.Context, userID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteApplicationByUserId, userID)
+func (q *Queries) DeleteApplicationById(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteApplicationById, id)
 	return err
 }
 
+const getApplicationById = `-- name: GetApplicationById :one
+SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, hackathon_id, is_early, id FROM applications WHERE id = $1
+`
+
+func (q *Queries) GetApplicationById(ctx context.Context, id uuid.UUID) (Application, error) {
+	row := q.db.QueryRow(ctx, getApplicationById, id)
+	var i Application
+	err := row.Scan(
+		&i.UserID,
+		&i.Status,
+		&i.Application,
+		&i.CreatedAt,
+		&i.SavedAt,
+		&i.UpdatedAt,
+		&i.SubmittedAt,
+		&i.HackathonID,
+		&i.IsEarly,
+		&i.ID,
+	)
+	return i, err
+}
+
 const getApplicationByUserId = `-- name: GetApplicationByUserId :one
-SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, waitlist_join_time, hackathon_id, is_early FROM applications WHERE user_id = $1
+SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, hackathon_id, is_early, id FROM applications WHERE user_id = $1
 `
 
 func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) (Application, error) {
@@ -97,36 +119,53 @@ func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) 
 		&i.SavedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
-		&i.WaitlistJoinTime,
 		&i.HackathonID,
 		&i.IsEarly,
+		&i.ID,
 	)
 	return i, err
 }
 
-const getApplicationFullDetailsByUserId = `-- name: GetApplicationFullDetailsByUserId :one
-SELECT a.user_id, a.status, a.application, a.created_at, a.saved_at, a.updated_at, a.submitted_at, a.waitlist_join_time, a.hackathon_id, a.is_early, 
-ar.experience_rating, ar.passion_rating, ar.notes, ar.updated_at AS review_updated_at,
-reviewer.id AS reviewer_id,
-reviewer.name AS reviewer_name, 
-reviewer.image AS reviewer_image,
-applicant.name AS applicant_name,
-applicant.image AS applicant_image,
-aadr.requested_decision,
-aadr.id as auto_decision_request_id,
-aadr.justification AS decision_justification,
-aadr.approved AS decision_approved,
-aadr.approved_or_denied_by,
-aadr.created_at AS decision_request_created_at
-FROM applications a
-LEFT JOIN application_reviews ar ON ar.application_id = a.user_id
-LEFT JOIN users AS reviewer ON ar.reviewer_user_id = reviewer.id
-LEFT JOIN users AS applicant ON a.user_id = applicant.id
-LEFT JOIN application_auto_decision_requests as aadr ON a.user_id = aadr.application_id
-WHERE a.user_id = $1
+const getApplicationsCount = `-- name: GetApplicationsCount :one
+SELECT COUNT(*) FROM applications WHERE hackathon_id = $1
 `
 
-type GetApplicationFullDetailsByUserIdRow struct {
+func (q *Queries) GetApplicationsCount(ctx context.Context, hackathonID string) (int64, error) {
+	row := q.db.QueryRow(ctx, getApplicationsCount, hackathonID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getExtendedApplicationById = `-- name: GetExtendedApplicationById :one
+SELECT 
+    a.user_id, a.status, a.application, a.created_at, a.saved_at, a.updated_at, a.submitted_at, a.hackathon_id, a.is_early, a.id,
+    ar.id AS review_id,
+    ar.experience_rating, 
+    ar.passion_rating, 
+    ar.notes, 
+    ar.updated_at AS review_updated_at,
+    ar.updated_by AS review_updated_by,
+    reviewer.id AS reviewer_id,
+    reviewer.name AS reviewer_name, 
+    reviewer.image AS reviewer_image,
+    applicant.name AS user_name,
+    applicant.image AS user_image,
+    aadr.requested_decision,
+    aadr.id AS auto_decision_request_id,
+    aadr.justification AS decision_justification,
+    aadr.approved AS decision_approved,
+    aadr.approved_or_denied_by,
+    aadr.created_at AS decision_request_created_at
+FROM applications a
+JOIN users AS applicant ON applicant.id = a.user_id
+LEFT JOIN application_reviews AS ar ON ar.application_id = a.id
+LEFT JOIN users AS reviewer ON reviewer.id = ar.reviewer_id
+LEFT JOIN application_auto_decision_requests as aadr ON aadr.application_id = a.id
+WHERE a.id = $1
+`
+
+type GetExtendedApplicationByIdRow struct {
 	UserID                   uuid.UUID                       `json:"user_id"`
 	Status                   ApplicationStatus               `json:"status"`
 	Application              []byte                          `json:"application"`
@@ -134,18 +173,20 @@ type GetApplicationFullDetailsByUserIdRow struct {
 	SavedAt                  time.Time                       `json:"saved_at"`
 	UpdatedAt                time.Time                       `json:"updated_at"`
 	SubmittedAt              *time.Time                      `json:"submitted_at"`
-	WaitlistJoinTime         *time.Time                      `json:"waitlist_join_time"`
 	HackathonID              string                          `json:"hackathon_id"`
 	IsEarly                  bool                            `json:"is_early"`
+	ID                       uuid.UUID                       `json:"id"`
+	ReviewID                 *uuid.UUID                      `json:"review_id"`
 	ExperienceRating         *int32                          `json:"experience_rating"`
 	PassionRating            *int32                          `json:"passion_rating"`
 	Notes                    *string                         `json:"notes"`
 	ReviewUpdatedAt          *time.Time                      `json:"review_updated_at"`
+	ReviewUpdatedBy          *uuid.UUID                      `json:"review_updated_by"`
 	ReviewerID               *uuid.UUID                      `json:"reviewer_id"`
 	ReviewerName             *string                         `json:"reviewer_name"`
 	ReviewerImage            *string                         `json:"reviewer_image"`
-	ApplicantName            *string                         `json:"applicant_name"`
-	ApplicantImage           *string                         `json:"applicant_image"`
+	UserName                 string                          `json:"user_name"`
+	UserImage                *string                         `json:"user_image"`
 	RequestedDecision        NullApplicationAutoDecisionType `json:"requested_decision"`
 	AutoDecisionRequestID    *uuid.UUID                      `json:"auto_decision_request_id"`
 	DecisionJustification    *string                         `json:"decision_justification"`
@@ -154,9 +195,9 @@ type GetApplicationFullDetailsByUserIdRow struct {
 	DecisionRequestCreatedAt *time.Time                      `json:"decision_request_created_at"`
 }
 
-func (q *Queries) GetApplicationFullDetailsByUserId(ctx context.Context, userID uuid.UUID) (GetApplicationFullDetailsByUserIdRow, error) {
-	row := q.db.QueryRow(ctx, getApplicationFullDetailsByUserId, userID)
-	var i GetApplicationFullDetailsByUserIdRow
+func (q *Queries) GetExtendedApplicationById(ctx context.Context, id uuid.UUID) (GetExtendedApplicationByIdRow, error) {
+	row := q.db.QueryRow(ctx, getExtendedApplicationById, id)
+	var i GetExtendedApplicationByIdRow
 	err := row.Scan(
 		&i.UserID,
 		&i.Status,
@@ -165,18 +206,20 @@ func (q *Queries) GetApplicationFullDetailsByUserId(ctx context.Context, userID 
 		&i.SavedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
-		&i.WaitlistJoinTime,
 		&i.HackathonID,
 		&i.IsEarly,
+		&i.ID,
+		&i.ReviewID,
 		&i.ExperienceRating,
 		&i.PassionRating,
 		&i.Notes,
 		&i.ReviewUpdatedAt,
+		&i.ReviewUpdatedBy,
 		&i.ReviewerID,
 		&i.ReviewerName,
 		&i.ReviewerImage,
-		&i.ApplicantName,
-		&i.ApplicantImage,
+		&i.UserName,
+		&i.UserImage,
 		&i.RequestedDecision,
 		&i.AutoDecisionRequestID,
 		&i.DecisionJustification,
@@ -187,83 +230,9 @@ func (q *Queries) GetApplicationFullDetailsByUserId(ctx context.Context, userID 
 	return i, err
 }
 
-const getApplicationsCount = `-- name: GetApplicationsCount :one
-SELECT COUNT(*) FROM applications
-`
-
-func (q *Queries) GetApplicationsCount(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, getApplicationsCount)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const listAllApplications = `-- name: ListAllApplications :many
-SELECT a.user_id, a.status, a.created_at, a.submitted_at, a.application, a.is_early, u.name, u.image, u.email FROM applications a
-LEFT JOIN users u ON u.id = a.user_id
-WHERE a.hackathon_id = $1 AND 
-    LOWER(u.name) LIKE LOWER('%' || COALESCE($2, '') || '%')
-    OR LOWER(u.email) LIKE LOWER('%' || COALESCE($2, '') || '%')
-ORDER BY a.created_at DESC
-LIMIT $4 OFFSET $3
-`
-
-type ListAllApplicationsParams struct {
-	HackathonID string  `json:"hackathon_id"`
-	Search      *string `json:"search"`
-	Offset      int32   `json:"offset"`
-	Limit       int32   `json:"limit"`
-}
-
-type ListAllApplicationsRow struct {
-	UserID      uuid.UUID         `json:"user_id"`
-	Status      ApplicationStatus `json:"status"`
-	CreatedAt   time.Time         `json:"created_at"`
-	SubmittedAt *time.Time        `json:"submitted_at"`
-	Application []byte            `json:"application"`
-	IsEarly     bool              `json:"is_early"`
-	Name        *string           `json:"name"`
-	Image       *string           `json:"image"`
-	Email       *string           `json:"email"`
-}
-
-func (q *Queries) ListAllApplications(ctx context.Context, arg ListAllApplicationsParams) ([]ListAllApplicationsRow, error) {
-	rows, err := q.db.Query(ctx, listAllApplications,
-		arg.HackathonID,
-		arg.Search,
-		arg.Offset,
-		arg.Limit,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListAllApplicationsRow{}
-	for rows.Next() {
-		var i ListAllApplicationsRow
-		if err := rows.Scan(
-			&i.UserID,
-			&i.Status,
-			&i.CreatedAt,
-			&i.SubmittedAt,
-			&i.Application,
-			&i.IsEarly,
-			&i.Name,
-			&i.Image,
-			&i.Email,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listApplicationsUnderReviewWithTeamIds = `-- name: ListApplicationsUnderReviewWithTeamIds :many
-SELECT a.user_id,
+SELECT 
+    a.user_id,
     a.application,
     t.id as team_id
 FROM applications a
@@ -298,6 +267,174 @@ func (q *Queries) ListApplicationsUnderReviewWithTeamIds(ctx context.Context) ([
 		return nil, err
 	}
 	return items, nil
+}
+
+const listUnderReviewApplicationIds = `-- name: ListUnderReviewApplicationIds :many
+SELECT id FROM applications
+WHERE status = 'under_review' AND hackathon_id = $1
+ORDER BY id ASC
+`
+
+func (q *Queries) ListUnderReviewApplicationIds(ctx context.Context, hackathonID string) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listUnderReviewApplicationIds, hackathonID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const markSubmittedApplicationsAsUnderReview = `-- name: MarkSubmittedApplicationsAsUnderReview :exec
+UPDATE applications 
+SET status = 'under_review'
+WHERE status = 'submitted'
+`
+
+func (q *Queries) MarkSubmittedApplicationsAsUnderReview(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, markSubmittedApplicationsAsUnderReview)
+	return err
+}
+
+const resetApplicationsToSubmitted = `-- name: ResetApplicationsToSubmitted :exec
+UPDATE applications 
+SET status = 'submitted'
+WHERE status = 'under_review'
+`
+
+func (q *Queries) ResetApplicationsToSubmitted(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, resetApplicationsToSubmitted)
+	return err
+}
+
+const searchApplicationsWithUserInfo = `-- name: SearchApplicationsWithUserInfo :many
+SELECT 
+    a.id, 
+    a.user_id, 
+    a.status, 
+    a.created_at, 
+    a.submitted_at, 
+    a.application, 
+    a.is_early, 
+    u.name, 
+    u.image, 
+    u.email 
+FROM applications a
+JOIN users u ON u.id = a.user_id
+WHERE (LOWER(u.name) LIKE LOWER('%' || COALESCE($1, '') || '%')
+    OR LOWER(u.email) LIKE LOWER('%' || COALESCE($1, '') || '%'))
+    AND a.hackathon_id = $2
+ORDER BY a.created_at DESC
+LIMIT $4 OFFSET $3
+`
+
+type SearchApplicationsWithUserInfoParams struct {
+	Search      *string `json:"search"`
+	HackathonID string  `json:"hackathon_id"`
+	Offset      int32   `json:"offset"`
+	Limit       int32   `json:"limit"`
+}
+
+type SearchApplicationsWithUserInfoRow struct {
+	ID          uuid.UUID         `json:"id"`
+	UserID      uuid.UUID         `json:"user_id"`
+	Status      ApplicationStatus `json:"status"`
+	CreatedAt   time.Time         `json:"created_at"`
+	SubmittedAt *time.Time        `json:"submitted_at"`
+	Application []byte            `json:"application"`
+	IsEarly     bool              `json:"is_early"`
+	Name        string            `json:"name"`
+	Image       *string           `json:"image"`
+	Email       *string           `json:"email"`
+}
+
+func (q *Queries) SearchApplicationsWithUserInfo(ctx context.Context, arg SearchApplicationsWithUserInfoParams) ([]SearchApplicationsWithUserInfoRow, error) {
+	rows, err := q.db.Query(ctx, searchApplicationsWithUserInfo,
+		arg.Search,
+		arg.HackathonID,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchApplicationsWithUserInfoRow{}
+	for rows.Next() {
+		var i SearchApplicationsWithUserInfoRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Status,
+			&i.CreatedAt,
+			&i.SubmittedAt,
+			&i.Application,
+			&i.IsEarly,
+			&i.Name,
+			&i.Image,
+			&i.Email,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateApplicationById = `-- name: UpdateApplicationById :exec
+UPDATE applications
+SET
+    status = CASE WHEN $1::boolean THEN $2::application_status ELSE status END,
+    application = CASE WHEN $3::boolean THEN $4::JSONB ELSE application END,
+    submitted_at = CASE WHEN $5::boolean THEN $6::timestamptz ELSE submitted_at END,
+    saved_at = CASE WHEN $7::boolean THEN $8::timestamptz ELSE saved_at END,
+    is_early = CASE WHEN $9::boolean THEN $10::boolean ELSE is_early END
+WHERE
+    id = $11
+`
+
+type UpdateApplicationByIdParams struct {
+	StatusDoUpdate      bool              `json:"status_do_update"`
+	Status              ApplicationStatus `json:"status"`
+	ApplicationDoUpdate bool              `json:"application_do_update"`
+	Application         []byte            `json:"application"`
+	SubmittedAtDoUpdate bool              `json:"submitted_at_do_update"`
+	SubmittedAt         time.Time         `json:"submitted_at"`
+	SavedAtDoUpdate     bool              `json:"saved_at_do_update"`
+	SavedAt             time.Time         `json:"saved_at"`
+	IsEarlyDoUpdate     bool              `json:"is_early_do_update"`
+	IsEarly             bool              `json:"is_early"`
+	ID                  uuid.UUID         `json:"id"`
+}
+
+func (q *Queries) UpdateApplicationById(ctx context.Context, arg UpdateApplicationByIdParams) error {
+	_, err := q.db.Exec(ctx, updateApplicationById,
+		arg.StatusDoUpdate,
+		arg.Status,
+		arg.ApplicationDoUpdate,
+		arg.Application,
+		arg.SubmittedAtDoUpdate,
+		arg.SubmittedAt,
+		arg.SavedAtDoUpdate,
+		arg.SavedAt,
+		arg.IsEarlyDoUpdate,
+		arg.IsEarly,
+		arg.ID,
+	)
+	return err
 }
 
 const updateApplicationByUserId = `-- name: UpdateApplicationByUserId :exec
@@ -343,19 +480,19 @@ func (q *Queries) UpdateApplicationByUserId(ctx context.Context, arg UpdateAppli
 	return err
 }
 
-const updateApplicationsStatusByUserIds = `-- name: UpdateApplicationsStatusByUserIds :exec
+const updateApplicationsStatusByIds = `-- name: UpdateApplicationsStatusByIds :exec
 UPDATE applications
 SET status = $1::application_status
-WHERE user_id = ANY($2::uuid[])
+WHERE id = ANY($2::uuid[])
 `
 
-type UpdateApplicationsStatusByUserIdsParams struct {
-	Status  ApplicationStatus `json:"status"`
-	UserIds []uuid.UUID       `json:"user_ids"`
+type UpdateApplicationsStatusByIdsParams struct {
+	Status ApplicationStatus `json:"status"`
+	Ids    []uuid.UUID       `json:"ids"`
 }
 
-func (q *Queries) UpdateApplicationsStatusByUserIds(ctx context.Context, arg UpdateApplicationsStatusByUserIdsParams) error {
-	_, err := q.db.Exec(ctx, updateApplicationsStatusByUserIds, arg.Status, arg.UserIds)
+func (q *Queries) UpdateApplicationsStatusByIds(ctx context.Context, arg UpdateApplicationsStatusByIdsParams) error {
+	_, err := q.db.Exec(ctx, updateApplicationsStatusByIds, arg.Status, arg.Ids)
 	return err
 }
 
@@ -375,14 +512,14 @@ func (q *Queries) WaitlistAcceptedApplications(ctx context.Context) error {
 	return err
 }
 
-const waitlistApplicationByUserId = `-- name: WaitlistApplicationByUserId :exec
+const waitlistApplicationById = `-- name: WaitlistApplicationById :exec
 UPDATE applications
 SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),
     status = 'waitlisted'
-WHERE user_id = $1
+WHERE id = $1
 `
 
-func (q *Queries) WaitlistApplicationByUserId(ctx context.Context, userID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, waitlistApplicationByUserId, userID)
+func (q *Queries) WaitlistApplicationById(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, waitlistApplicationById, id)
 	return err
 }

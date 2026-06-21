@@ -15,11 +15,10 @@ import (
 const assignReviewerToApplications = `-- name: AssignReviewerToApplications :exec
 INSERT INTO application_reviews (
     application_id,
-    reviewer_user_id
+    reviewer_id
 )
-SELECT applications.user_id, $1::uuid
-FROM applications
-WHERE applications.user_id = ANY($2::uuid[])
+SELECT applications.id, $1::uuid FROM applications
+WHERE applications.id = ANY($2::uuid[])
 ON CONFLICT DO NOTHING
 `
 
@@ -52,89 +51,142 @@ func (q *Queries) DeleteAllAutoDecisionRequests(ctx context.Context) error {
 }
 
 const deleteAutoDecisionRequest = `-- name: DeleteAutoDecisionRequest :exec
-DELETE FROM application_auto_decision_requests 
-WHERE id = $1::uuid AND reviewer_user_id = $2::uuid
+DELETE FROM application_auto_decision_requests
+WHERE id = $1 AND reviewer_id = $2
 `
 
 type DeleteAutoDecisionRequestParams struct {
-	RequestID  uuid.UUID `json:"request_id"`
+	ID         uuid.UUID `json:"id"`
 	ReviewerID uuid.UUID `json:"reviewer_id"`
 }
 
 func (q *Queries) DeleteAutoDecisionRequest(ctx context.Context, arg DeleteAutoDecisionRequestParams) error {
-	_, err := q.db.Exec(ctx, deleteAutoDecisionRequest, arg.RequestID, arg.ReviewerID)
+	_, err := q.db.Exec(ctx, deleteAutoDecisionRequest, arg.ID, arg.ReviewerID)
 	return err
 }
 
-const getApplicationReviewDetails = `-- name: GetApplicationReviewDetails :one
-SELECT ar.application_id, ar.passion_rating, ar.experience_rating, 
-ar.notes, a.application, aadr.requested_decision, aadr.id as auto_decision_request_id FROM applications as a
-LEFT JOIN application_reviews as ar ON ar.application_id = a.user_id
-LEFT JOIN application_auto_decision_requests as aadr ON aadr.application_id = a.user_id
-WHERE a.user_id = $1::uuid
+const getReviewById = `-- name: GetReviewById :one
+SELECT
+    ar.id, ar.application_id, ar.reviewer_id, ar.experience_rating, ar.passion_rating, ar.notes, ar.updated_by, ar.created_at, ar.updated_at,
+    aadr.requested_decision,
+    aadr.id AS decision_request_id,
+    aadr.justification AS decision_justification,
+    aadr.approved AS decision_approved,
+    aadr.approved_or_denied_by AS decision_approved_or_denied_by,
+    aadr.created_at AS decision_request_created_at,
+    applications.user_id,
+    applications.application
+FROM application_reviews AS ar
+JOIN applications ON applications.id = ar.application_id
+LEFT JOIN application_auto_decision_requests AS aadr ON aadr.application_id = ar.application_id
+WHERE ar.id = $1
 `
 
-type GetApplicationReviewDetailsRow struct {
-	ApplicationID         *uuid.UUID                      `json:"application_id"`
-	PassionRating         *int32                          `json:"passion_rating"`
-	ExperienceRating      *int32                          `json:"experience_rating"`
-	Notes                 *string                         `json:"notes"`
-	Application           []byte                          `json:"application"`
-	RequestedDecision     NullApplicationAutoDecisionType `json:"requested_decision"`
-	AutoDecisionRequestID *uuid.UUID                      `json:"auto_decision_request_id"`
+type GetReviewByIdRow struct {
+	ID                         uuid.UUID                       `json:"id"`
+	ApplicationID              uuid.UUID                       `json:"application_id"`
+	ReviewerID                 uuid.UUID                       `json:"reviewer_id"`
+	ExperienceRating           *int32                          `json:"experience_rating"`
+	PassionRating              *int32                          `json:"passion_rating"`
+	Notes                      *string                         `json:"notes"`
+	UpdatedBy                  *uuid.UUID                      `json:"updated_by"`
+	CreatedAt                  time.Time                       `json:"created_at"`
+	UpdatedAt                  time.Time                       `json:"updated_at"`
+	RequestedDecision          NullApplicationAutoDecisionType `json:"requested_decision"`
+	DecisionRequestID          *uuid.UUID                      `json:"decision_request_id"`
+	DecisionJustification      *string                         `json:"decision_justification"`
+	DecisionApproved           *bool                           `json:"decision_approved"`
+	DecisionApprovedOrDeniedBy *uuid.UUID                      `json:"decision_approved_or_denied_by"`
+	DecisionRequestCreatedAt   *time.Time                      `json:"decision_request_created_at"`
+	UserID                     uuid.UUID                       `json:"user_id"`
+	Application                []byte                          `json:"application"`
 }
 
-// SELECT ar.application_id, ar.passion_rating, ar.experience_rating,
-// ar.notes, a.application, aadr.requested_decision, aadr.id as auto_decision_request_id FROM application_reviews as ar
-// LEFT JOIN applications as a ON ar.application_id = a.user_id
-// LEFT JOIN application_auto_decision_requests as aadr ON ar.application_id = aadr.application_id
-// WHERE ar.application_id = @application_id::uuid;
-func (q *Queries) GetApplicationReviewDetails(ctx context.Context, applicationID uuid.UUID) (GetApplicationReviewDetailsRow, error) {
-	row := q.db.QueryRow(ctx, getApplicationReviewDetails, applicationID)
-	var i GetApplicationReviewDetailsRow
+func (q *Queries) GetReviewById(ctx context.Context, reviewID uuid.UUID) (GetReviewByIdRow, error) {
+	row := q.db.QueryRow(ctx, getReviewById, reviewID)
+	var i GetReviewByIdRow
 	err := row.Scan(
+		&i.ID,
 		&i.ApplicationID,
-		&i.PassionRating,
+		&i.ReviewerID,
 		&i.ExperienceRating,
+		&i.PassionRating,
 		&i.Notes,
-		&i.Application,
+		&i.UpdatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.RequestedDecision,
-		&i.AutoDecisionRequestID,
+		&i.DecisionRequestID,
+		&i.DecisionJustification,
+		&i.DecisionApproved,
+		&i.DecisionApprovedOrDeniedBy,
+		&i.DecisionRequestCreatedAt,
+		&i.UserID,
+		&i.Application,
 	)
 	return i, err
 }
 
+const listApplicationReviewersById = `-- name: ListApplicationReviewersById :many
+SELECT reviewer_id FROM application_reviews
+WHERE application_id = $1
+`
+
+func (q *Queries) ListApplicationReviewersById(ctx context.Context, applicationID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listApplicationReviewersById, applicationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var reviewer_id uuid.UUID
+		if err := rows.Scan(&reviewer_id); err != nil {
+			return nil, err
+		}
+		items = append(items, reviewer_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listAutoDecisionRequests = `-- name: ListAutoDecisionRequests :many
 SELECT
-  aadr.id, aadr.application_id, aadr.reviewer_user_id, aadr.requested_decision, aadr.justification, aadr.approved, aadr.approved_or_denied_by, aadr.updated_at, aadr.created_at,
-  reviewer.id AS reviewer_id,
-  reviewer.name AS reviewer_name,
-  reviewer.image AS reviewer_image,
-  approver.id AS approver_id,
-  approver.name AS approver_name
+    aadr.id, aadr.application_id, aadr.reviewer_id, aadr.requested_decision, aadr.justification, aadr.approved, aadr.approved_or_denied_by, aadr.updated_at, aadr.created_at,
+    reviewer.name AS reviewer_name,
+    reviewer.image AS reviewer_image,
+    approver.id AS approver_id,
+    approver.name AS approver_name,
+    approver.image AS approver_image,
+    applications.user_id
 FROM application_auto_decision_requests AS aadr
-LEFT JOIN users AS reviewer
-  ON reviewer.id = aadr.reviewer_user_id
+JOIN users AS reviewer
+    ON reviewer.id = reviewer_id
+JOIN applications
+    ON applications.id = aadr.application_id
 LEFT JOIN users AS approver
-  ON approver.id = aadr.approved_or_denied_by
-ORDER BY aadr.created_at
+    ON approver.id = aadr.approved_or_denied_by
+ORDER BY aadr.created_at DESC
 `
 
 type ListAutoDecisionRequestsRow struct {
 	ID                 uuid.UUID                   `json:"id"`
 	ApplicationID      uuid.UUID                   `json:"application_id"`
-	ReviewerUserID     *uuid.UUID                  `json:"reviewer_user_id"`
+	ReviewerID         uuid.UUID                   `json:"reviewer_id"`
 	RequestedDecision  ApplicationAutoDecisionType `json:"requested_decision"`
 	Justification      *string                     `json:"justification"`
 	Approved           *bool                       `json:"approved"`
 	ApprovedOrDeniedBy *uuid.UUID                  `json:"approved_or_denied_by"`
 	UpdatedAt          time.Time                   `json:"updated_at"`
 	CreatedAt          time.Time                   `json:"created_at"`
-	ReviewerID         *uuid.UUID                  `json:"reviewer_id"`
-	ReviewerName       *string                     `json:"reviewer_name"`
+	ReviewerName       string                      `json:"reviewer_name"`
 	ReviewerImage      *string                     `json:"reviewer_image"`
 	ApproverID         *uuid.UUID                  `json:"approver_id"`
 	ApproverName       *string                     `json:"approver_name"`
+	ApproverImage      *string                     `json:"approver_image"`
+	UserID             uuid.UUID                   `json:"user_id"`
 }
 
 func (q *Queries) ListAutoDecisionRequests(ctx context.Context) ([]ListAutoDecisionRequestsRow, error) {
@@ -149,18 +201,19 @@ func (q *Queries) ListAutoDecisionRequests(ctx context.Context) ([]ListAutoDecis
 		if err := rows.Scan(
 			&i.ID,
 			&i.ApplicationID,
-			&i.ReviewerUserID,
+			&i.ReviewerID,
 			&i.RequestedDecision,
 			&i.Justification,
 			&i.Approved,
 			&i.ApprovedOrDeniedBy,
 			&i.UpdatedAt,
 			&i.CreatedAt,
-			&i.ReviewerID,
 			&i.ReviewerName,
 			&i.ReviewerImage,
 			&i.ApproverID,
 			&i.ApproverName,
+			&i.ApproverImage,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -174,16 +227,16 @@ func (q *Queries) ListAutoDecisionRequests(ctx context.Context) ([]ListAutoDecis
 
 const listReviewersAndProgress = `-- name: ListReviewersAndProgress :many
 SELECT
-  reviewer.id,
-  reviewer.name,
-  reviewer.image,
-  COUNT(*) AS total_assigned,
-  COUNT(*) FILTER (
+    reviewer.id,
+    reviewer.name,
+    reviewer.image,
+    COUNT(*) AS total_assigned,
+    COUNT(*) FILTER (
     WHERE ar.experience_rating IS NOT NULL AND ar.passion_rating IS NOT NULL
-  ) AS completed_count
+    ) AS completed_count
 FROM application_reviews AS ar
 LEFT JOIN users AS reviewer
-  ON reviewer.id = ar.reviewer_user_id
+  ON reviewer.id = ar.reviewer_id
 GROUP BY
   reviewer.id
 `
@@ -222,41 +275,27 @@ func (q *Queries) ListReviewersAndProgress(ctx context.Context) ([]ListReviewers
 	return items, nil
 }
 
-const listReviewersByApplicationId = `-- name: ListReviewersByApplicationId :many
-SELECT reviewer_user_id FROM application_reviews
-WHERE application_id = $1::uuid
-`
-
-func (q *Queries) ListReviewersByApplicationId(ctx context.Context, applicationID uuid.UUID) ([]uuid.UUID, error) {
-	rows, err := q.db.Query(ctx, listReviewersByApplicationId, applicationID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []uuid.UUID{}
-	for rows.Next() {
-		var reviewer_user_id uuid.UUID
-		if err := rows.Scan(&reviewer_user_id); err != nil {
-			return nil, err
-		}
-		items = append(items, reviewer_user_id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listReviewsByReviewerId = `-- name: ListReviewsByReviewerId :many
-SELECT application_id, experience_rating, passion_rating FROM application_reviews
-WHERE reviewer_user_id = $1::uuid
+SELECT 
+    ar.id, ar.application_id, ar.reviewer_id, ar.experience_rating, ar.passion_rating, ar.notes, ar.updated_by, ar.created_at, ar.updated_at,
+    applications.user_id
+FROM application_reviews ar
+JOIN applications ON applications.id = ar.application_id
+WHERE reviewer_id = $1
 ORDER BY application_id ASC
 `
 
 type ListReviewsByReviewerIdRow struct {
-	ApplicationID    uuid.UUID `json:"application_id"`
-	ExperienceRating *int32    `json:"experience_rating"`
-	PassionRating    *int32    `json:"passion_rating"`
+	ID               uuid.UUID  `json:"id"`
+	ApplicationID    uuid.UUID  `json:"application_id"`
+	ReviewerID       uuid.UUID  `json:"reviewer_id"`
+	ExperienceRating *int32     `json:"experience_rating"`
+	PassionRating    *int32     `json:"passion_rating"`
+	Notes            *string    `json:"notes"`
+	UpdatedBy        *uuid.UUID `json:"updated_by"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
+	UserID           uuid.UUID  `json:"user_id"`
 }
 
 func (q *Queries) ListReviewsByReviewerId(ctx context.Context, reviewerID uuid.UUID) ([]ListReviewsByReviewerIdRow, error) {
@@ -268,7 +307,18 @@ func (q *Queries) ListReviewsByReviewerId(ctx context.Context, reviewerID uuid.U
 	items := []ListReviewsByReviewerIdRow{}
 	for rows.Next() {
 		var i ListReviewsByReviewerIdRow
-		if err := rows.Scan(&i.ApplicationID, &i.ExperienceRating, &i.PassionRating); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.ApplicationID,
+			&i.ReviewerID,
+			&i.ExperienceRating,
+			&i.PassionRating,
+			&i.Notes,
+			&i.UpdatedBy,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserID,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -279,78 +329,32 @@ func (q *Queries) ListReviewsByReviewerId(ctx context.Context, reviewerID uuid.U
 	return items, nil
 }
 
-const listUnderReviewApplicationIds = `-- name: ListUnderReviewApplicationIds :many
-SELECT user_id FROM applications
-WHERE status = 'under_review'
-ORDER BY user_id ASC
-`
-
-func (q *Queries) ListUnderReviewApplicationIds(ctx context.Context) ([]uuid.UUID, error) {
-	rows, err := q.db.Query(ctx, listUnderReviewApplicationIds)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []uuid.UUID{}
-	for rows.Next() {
-		var user_id uuid.UUID
-		if err := rows.Scan(&user_id); err != nil {
-			return nil, err
-		}
-		items = append(items, user_id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const markSubmittedApplicationAsUnderReview = `-- name: MarkSubmittedApplicationAsUnderReview :exec
-UPDATE applications 
-SET status = 'under_review'
-WHERE status = 'submitted'
-`
-
-func (q *Queries) MarkSubmittedApplicationAsUnderReview(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, markSubmittedApplicationAsUnderReview)
-	return err
-}
-
-const requestAutoDecision = `-- name: RequestAutoDecision :exec
-INSERT INTO application_auto_decision_requests 
-(application_id, reviewer_user_id, requested_decision, justification, approved, approved_or_denied_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, application_id, reviewer_user_id, requested_decision, justification, approved, approved_or_denied_by, updated_at, created_at
+const requestAutoDecision = `-- name: RequestAutoDecision :one
+INSERT INTO application_auto_decision_requests (application_id, reviewer_id, requested_decision, justification, approved, approved_or_denied_by) 
+VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
 `
 
 type RequestAutoDecisionParams struct {
 	ApplicationID      uuid.UUID                   `json:"application_id"`
-	ReviewerUserID     *uuid.UUID                  `json:"reviewer_user_id"`
+	ReviewerID         uuid.UUID                   `json:"reviewer_id"`
 	RequestedDecision  ApplicationAutoDecisionType `json:"requested_decision"`
 	Justification      *string                     `json:"justification"`
 	Approved           *bool                       `json:"approved"`
 	ApprovedOrDeniedBy *uuid.UUID                  `json:"approved_or_denied_by"`
 }
 
-func (q *Queries) RequestAutoDecision(ctx context.Context, arg RequestAutoDecisionParams) error {
-	_, err := q.db.Exec(ctx, requestAutoDecision,
+func (q *Queries) RequestAutoDecision(ctx context.Context, arg RequestAutoDecisionParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, requestAutoDecision,
 		arg.ApplicationID,
-		arg.ReviewerUserID,
+		arg.ReviewerID,
 		arg.RequestedDecision,
 		arg.Justification,
 		arg.Approved,
 		arg.ApprovedOrDeniedBy,
 	)
-	return err
-}
-
-const resetApplicationsToSubmitted = `-- name: ResetApplicationsToSubmitted :exec
-UPDATE applications 
-SET status = 'submitted'
-WHERE status = 'under_review'
-`
-
-func (q *Queries) ResetApplicationsToSubmitted(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, resetApplicationsToSubmitted)
-	return err
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateApplicationReview = `-- name: UpdateApplicationReview :exec
@@ -359,21 +363,24 @@ SET
     experience_rating = CASE WHEN $1::boolean THEN $2 ELSE experience_rating END,
     passion_rating = CASE WHEN $3::boolean THEN $4 ELSE passion_rating END,
     notes = CASE WHEN $5::boolean THEN $6 ELSE notes END,
+    updated_by = CASE WHEN $7::boolean THEN $8 ELSE updated_by END,
     updated_at = NOW()
 WHERE
-    reviewer_user_id = $7::uuid AND 
-    application_id = $8::uuid
+    id = $9 AND
+    reviewer_id = $10
 `
 
 type UpdateApplicationReviewParams struct {
-	ExperienceRatingDoUpdate bool      `json:"experience_rating_do_update"`
-	ExperienceRating         *int32    `json:"experience_rating"`
-	PassionRatingDoUpdate    bool      `json:"passion_rating_do_update"`
-	PassionRating            *int32    `json:"passion_rating"`
-	NotesDoUpdate            bool      `json:"notes_do_update"`
-	Notes                    *string   `json:"notes"`
-	ReviewerID               uuid.UUID `json:"reviewer_id"`
-	ApplicationID            uuid.UUID `json:"application_id"`
+	ExperienceRatingDoUpdate bool       `json:"experience_rating_do_update"`
+	ExperienceRating         *int32     `json:"experience_rating"`
+	PassionRatingDoUpdate    bool       `json:"passion_rating_do_update"`
+	PassionRating            *int32     `json:"passion_rating"`
+	NotesDoUpdate            bool       `json:"notes_do_update"`
+	Notes                    *string    `json:"notes"`
+	UpdatedByDoUpdate        bool       `json:"updated_by_do_update"`
+	UpdatedBy                *uuid.UUID `json:"updated_by"`
+	ID                       uuid.UUID  `json:"id"`
+	ReviewerID               uuid.UUID  `json:"reviewer_id"`
 }
 
 func (q *Queries) UpdateApplicationReview(ctx context.Context, arg UpdateApplicationReviewParams) error {
@@ -384,8 +391,10 @@ func (q *Queries) UpdateApplicationReview(ctx context.Context, arg UpdateApplica
 		arg.PassionRating,
 		arg.NotesDoUpdate,
 		arg.Notes,
+		arg.UpdatedByDoUpdate,
+		arg.UpdatedBy,
+		arg.ID,
 		arg.ReviewerID,
-		arg.ApplicationID,
 	)
 	return err
 }
@@ -397,8 +406,7 @@ SET
     justification = CASE WHEN $3::boolean THEN $4 ELSE justification END,
     approved = CASE WHEN $5::boolean THEN $6 ELSE approved END,
     approved_or_denied_by = CASE WHEN $7::boolean THEN $8 ELSE approved_or_denied_by END
-WHERE
-    id = $9::uuid
+WHERE id = $9 AND reviewer_id = $10
 `
 
 type UpdateAutoDecisionRequestParams struct {
@@ -410,7 +418,8 @@ type UpdateAutoDecisionRequestParams struct {
 	Approved                  *bool       `json:"approved"`
 	ApprovedByDoUpdate        bool        `json:"approved_by_do_update"`
 	ApprovedOrDeniedBy        *uuid.UUID  `json:"approved_or_denied_by"`
-	RequestID                 uuid.UUID   `json:"request_id"`
+	ID                        uuid.UUID   `json:"id"`
+	ReviewerID                uuid.UUID   `json:"reviewer_id"`
 }
 
 func (q *Queries) UpdateAutoDecisionRequest(ctx context.Context, arg UpdateAutoDecisionRequestParams) error {
@@ -423,7 +432,8 @@ func (q *Queries) UpdateAutoDecisionRequest(ctx context.Context, arg UpdateAutoD
 		arg.Approved,
 		arg.ApprovedByDoUpdate,
 		arg.ApprovedOrDeniedBy,
-		arg.RequestID,
+		arg.ID,
+		arg.ReviewerID,
 	)
 	return err
 }

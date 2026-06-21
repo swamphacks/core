@@ -428,22 +428,22 @@ type Account struct {
 }
 
 type Application struct {
-	UserID           uuid.UUID         `json:"user_id"`
-	Status           ApplicationStatus `json:"status"`
-	Application      []byte            `json:"application"`
-	CreatedAt        time.Time         `json:"created_at"`
-	SavedAt          time.Time         `json:"saved_at"`
-	UpdatedAt        time.Time         `json:"updated_at"`
-	SubmittedAt      *time.Time        `json:"submitted_at"`
-	WaitlistJoinTime *time.Time        `json:"waitlist_join_time"`
-	HackathonID      string            `json:"hackathon_id"`
-	IsEarly          bool              `json:"is_early"`
+	UserID      uuid.UUID         `json:"user_id"`
+	Status      ApplicationStatus `json:"status"`
+	Application []byte            `json:"application"`
+	CreatedAt   time.Time         `json:"created_at"`
+	SavedAt     time.Time         `json:"saved_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
+	SubmittedAt *time.Time        `json:"submitted_at"`
+	HackathonID string            `json:"hackathon_id"`
+	IsEarly     bool              `json:"is_early"`
+	ID          uuid.UUID         `json:"id"`
 }
 
 type ApplicationAutoDecisionRequest struct {
 	ID                 uuid.UUID                   `json:"id"`
 	ApplicationID      uuid.UUID                   `json:"application_id"`
-	ReviewerUserID     *uuid.UUID                  `json:"reviewer_user_id"`
+	ReviewerID         uuid.UUID                   `json:"reviewer_id"`
 	RequestedDecision  ApplicationAutoDecisionType `json:"requested_decision"`
 	Justification      *string                     `json:"justification"`
 	Approved           *bool                       `json:"approved"`
@@ -453,13 +453,15 @@ type ApplicationAutoDecisionRequest struct {
 }
 
 type ApplicationReview struct {
-	ApplicationID    uuid.UUID `json:"application_id"`
-	ReviewerUserID   uuid.UUID `json:"reviewer_user_id"`
-	ExperienceRating *int32    `json:"experience_rating"`
-	PassionRating    *int32    `json:"passion_rating"`
-	Notes            *string   `json:"notes"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
+	ID               uuid.UUID  `json:"id"`
+	ApplicationID    uuid.UUID  `json:"application_id"`
+	ReviewerID       uuid.UUID  `json:"reviewer_id"`
+	ExperienceRating *int32     `json:"experience_rating"`
+	PassionRating    *int32     `json:"passion_rating"`
+	Notes            *string    `json:"notes"`
+	UpdatedBy        *uuid.UUID `json:"updated_by"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
 }
 
 type BatRun struct {

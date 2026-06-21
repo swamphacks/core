@@ -79,7 +79,7 @@ func Run() {
 	}))
 
 	humaConfig := huma.DefaultConfig("SwampHacks API", "1.0.0")
-	humaConfig.DocsRenderer = huma.DocsRendererScalar
+	humaConfig.DocsRenderer = huma.DocsRendererSwaggerUI
 	humaConfig.CreateHooks = nil
 
 	// TODO: figure out a way to override the default schema name

@@ -20,13 +20,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var (
-	ErrApplicationNotOpened      = errors.New("Application not opened")
-	ErrFailedToCreateApplication = errors.New("Failed to create application")
-	ErrFailedToGetHackathon      = errors.New("Failed to get hackathon information")
-	ErrCannotReplaceResume       = errors.New("cannot replace resume before the application has been submitted")
-)
-
 type ApplicationService struct {
 	db           *database.DB
 	storage      storage.Storage
@@ -53,8 +46,6 @@ func NewService(
 		logger:       logger.With().Str("service", "ApplicationService").Str("domain", "application").Logger(),
 	}
 }
-
-// ============================== GENERAL APPLICATION FUNCTIONS ==============================
 
 func (s *ApplicationService) CreateApplication(ctx context.Context, userID uuid.UUID) (*sqlc.Application, error) {
 	hackathon, err := s.db.Query.GetHackathon(ctx)
@@ -89,6 +80,21 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, userID uuid.
 	return &application, nil
 }
 
+func (s *ApplicationService) GetApplicationById(ctx context.Context, id uuid.UUID) (*sqlc.Application, error) {
+	application, err := s.db.Query.GetApplicationById(ctx, id)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, database.ErrApplicationNotFound
+		} else {
+			s.logger.Err(err).Msg("Failed to get application by id")
+			return nil, err
+		}
+	}
+
+	return &application, nil
+}
+
 func (s *ApplicationService) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) (*sqlc.Application, error) {
 	application, err := s.db.Query.GetApplicationByUserId(ctx, userID)
 
@@ -104,147 +110,54 @@ func (s *ApplicationService) GetApplicationByUserId(ctx context.Context, userID 
 	return &application, nil
 }
 
-func (s *ApplicationService) UpdateApplicationByUserId(ctx context.Context, userID uuid.UUID, status *sqlc.ApplicationStatus, isEarly *bool) error {
-	params := sqlc.UpdateApplicationByUserIdParams{
-		UserID: userID,
+func (s *ApplicationService) UpdateApplicationById(ctx context.Context, req UpdateApplicationRequestDto) error {
+	params := sqlc.UpdateApplicationByIdParams{
+		ID: req.ApplicationID,
 	}
 
-	if status != nil {
+	if req.Status != nil {
 		params.StatusDoUpdate = true
-		params.Status = *status
+		params.Status = *req.Status
 	}
 
-	if isEarly != nil {
-		params.IsEarlyDoUpdate = true
-		params.IsEarly = *isEarly
-	}
-
-	return s.db.Query.UpdateApplicationByUserId(ctx, params)
+	return s.db.Query.UpdateApplicationById(ctx, params)
 }
 
-type ApplicationFullDetails struct {
-	UserID                   uuid.UUID              `json:"userId"`
-	Status                   sqlc.ApplicationStatus `json:"status"`
-	Application              []byte                 `json:"application"`
-	CreatedAt                time.Time              `json:"createdAt"`
-	SavedAt                  time.Time              `json:"savedAt"`
-	UpdatedAt                time.Time              `json:"updatedAt"`
-	SubmittedAt              *time.Time             `json:"submittedAt"`
-	WaitlistJoinTime         *time.Time             `json:"waitlistJoinTime"`
-	HackathonID              string                 `json:"hackathonId"`
-	IsEarly                  bool                   `json:"isEarly"`
-	ExperienceRating         *int32                 `json:"experienceRating"`
-	PassionRating            *int32                 `json:"passionRating"`
-	Notes                    *string                `json:"notes"`
-	ReviewUpdatedAt          *time.Time             `json:"reviewUpdatedAt"`
-	ReviewerName             *string                `json:"reviewerName"`
-	ReviewerImage            *string                `json:"reviewerImage"`
-	ReviewerId               *uuid.UUID             `json:"reviewerId"`
-	ApplicantName            *string                `json:"applicantName"`
-	ApplicantImage           *string                `json:"applicantImage"`
-	AutoDecision             *string                `json:"autoDecision"`
-	AutoDecisionRequestID    *string                `json:"autoDecisionRequestId"`
-	DecisionJustification    *string                `json:"decisionJustification"`
-	DecisionApproved         *bool                  `json:"decisionApproved"`
-	ApprovedOrDeniedBy       *uuid.UUID             `json:"approvedOrDeniedBy"`
-	DecisionRequestCreatedAt *time.Time             `json:"decisionRequestCreatedAt"`
-	ResumeURL                string                 `json:"resumeUrl"`
-}
+func (s *ApplicationService) GetExtendedApplicationById(ctx context.Context, id uuid.UUID) (*sqlc.GetExtendedApplicationByIdRow, error) {
+	extendedApplication, err := s.db.Query.GetExtendedApplicationById(ctx, id)
 
-func (s *ApplicationService) GetApplicationFullDetailsByUserId(ctx context.Context, userID uuid.UUID) (*ApplicationFullDetails, error) {
-	g, ctx := errgroup.WithContext(ctx)
-
-	var applicationFullDetail sqlc.GetApplicationFullDetailsByUserIdRow
-	var resumeRequest *storage.PresignedRequest
-
-	g.Go(func() error {
-		var err error
-		applicationFullDetail, err = s.db.Query.GetApplicationFullDetailsByUserId(ctx, userID)
-		return err
-	})
-
-	g.Go(func() error {
-		var err error
-		resumeRequest, err = s.GetApplicationResumeURL(ctx, userID, 600)
-		return err
-	})
-
-	if err := g.Wait(); err != nil {
+	if err != nil {
 		s.logger.Err(err).
-			Str("ApplicationId", userID.String()).
-			Msg("GetApplicationReviewDetails fail, unable to get application full details")
-		return nil, errors.New("Get application full details error")
+			Str("ApplicationId", id.String()).
+			Msg("GetExtendedApplicationById fail, unable to get extended application")
+		return nil, err
 	}
 
-	var decision *string
-
-	if applicationFullDetail.RequestedDecision.Valid {
-		decision = (*string)(&applicationFullDetail.RequestedDecision.ApplicationAutoDecisionType)
-	}
-
-	var autoDecisionRequestId *string
-	if applicationFullDetail.AutoDecisionRequestID != nil {
-		id := applicationFullDetail.AutoDecisionRequestID.String()
-		autoDecisionRequestId = &id
-	}
-
-	return &ApplicationFullDetails{
-		UserID:                   applicationFullDetail.UserID,
-		Status:                   applicationFullDetail.Status,
-		Application:              applicationFullDetail.Application,
-		CreatedAt:                applicationFullDetail.CreatedAt,
-		SavedAt:                  applicationFullDetail.SavedAt,
-		UpdatedAt:                applicationFullDetail.UpdatedAt,
-		SubmittedAt:              applicationFullDetail.SubmittedAt,
-		WaitlistJoinTime:         applicationFullDetail.WaitlistJoinTime,
-		HackathonID:              applicationFullDetail.HackathonID,
-		IsEarly:                  applicationFullDetail.IsEarly,
-		ExperienceRating:         applicationFullDetail.ExperienceRating,
-		PassionRating:            applicationFullDetail.PassionRating,
-		Notes:                    applicationFullDetail.Notes,
-		ReviewUpdatedAt:          applicationFullDetail.ReviewUpdatedAt,
-		ReviewerName:             applicationFullDetail.ReviewerName,
-		ReviewerImage:            applicationFullDetail.ReviewerImage,
-		ReviewerId:               applicationFullDetail.ReviewerID,
-		ApplicantName:            applicationFullDetail.ApplicantName,
-		ApplicantImage:           applicationFullDetail.ApplicantImage,
-		AutoDecision:             decision,
-		AutoDecisionRequestID:    autoDecisionRequestId,
-		DecisionJustification:    applicationFullDetail.DecisionJustification,
-		DecisionApproved:         applicationFullDetail.DecisionApproved,
-		ApprovedOrDeniedBy:       applicationFullDetail.ApprovedOrDeniedBy,
-		DecisionRequestCreatedAt: applicationFullDetail.DecisionRequestCreatedAt,
-		ResumeURL:                resumeRequest.URL,
-	}, nil
+	return &extendedApplication, nil
 }
 
-type AllApplications struct {
-	Applications []sqlc.ListAllApplicationsRow `json:"applications"`
-	Count        int64                         `json:"count"`
-}
-
-func (s *ApplicationService) GetAllApplications(ctx context.Context, limit, offset int32, search string) (*AllApplications, error) {
+func (s *ApplicationService) SearchApplications(ctx context.Context, limit, offset int32, search string) (*int64, []sqlc.SearchApplicationsWithUserInfoRow, error) {
 	hackathon, err := s.db.Query.GetHackathon(ctx)
 
 	if err != nil {
-		s.logger.Err(err).Msg("GetAllApplications fail because can't retrieve hackathon")
-		return nil, ErrFailedToGetHackathon
+		s.logger.Err(err).Msg("SearchApplications fail because can't retrieve hackathon")
+		return nil, nil, ErrFailedToGetHackathon
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
 
 	var applicationsCount int64
-	var applications []sqlc.ListAllApplicationsRow
+	var applications []sqlc.SearchApplicationsWithUserInfoRow
 
 	g.Go(func() error {
 		var err error
-		applicationsCount, err = s.db.Query.GetApplicationsCount(ctx)
+		applicationsCount, err = s.db.Query.GetApplicationsCount(ctx, hackathon.ID)
 		return err
 	})
 
 	g.Go(func() error {
 		var err error
-		applications, err = s.db.Query.ListAllApplications(ctx, sqlc.ListAllApplicationsParams{
+		applications, err = s.db.Query.SearchApplicationsWithUserInfo(ctx, sqlc.SearchApplicationsWithUserInfoParams{
 			HackathonID: hackathon.ID,
 			Offset:      int32(offset * limit),
 			Limit:       int32(limit),
@@ -254,56 +167,12 @@ func (s *ApplicationService) GetAllApplications(ctx context.Context, limit, offs
 	})
 
 	if err := g.Wait(); err != nil {
-		s.logger.Err(err).Msg("GetAllApplications fail")
-		return nil, err
+		s.logger.Err(err).Msg("SearchApplications fail")
+		return nil, nil, err
+
 	}
 
-	return &AllApplications{
-		Applications: applications,
-		Count:        applicationsCount,
-	}, nil
-}
-
-// TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
-// these fields are only applicable to swamphacks xi, not other events
-type ApplicationSubmissionFields struct {
-	FirstName               string `json:"firstName" validate:"required,max=50"`
-	LastName                string `json:"lastName" validate:"required,max=50"`
-	Age                     int    `json:"age" validate:"required,min=0,max=99"`
-	Phone                   string `json:"phone" validate:"required,len=10"`
-	PreferredEmail          string `json:"preferredEmail" validate:"required,email"`
-	UniversityEmail         string `json:"universityEmail" validate:"required,email"`
-	Country                 string `json:"country" validate:"required"`
-	Gender                  string `json:"gender"`
-	GenderOther             string `json:"gender-other"`
-	Pronouns                string `json:"pronouns"`
-	Race                    string `json:"race"`
-	RaceOther               string `json:"race-other"`
-	Orientation             string `json:"orientation"`
-	Linkedin                string `json:"linkedin" validate:"required,url"`
-	Github                  string `json:"github" validate:"required,url"`
-	AgeCertification        bool   `json:"ageCertification" validate:"required,boolean"`
-	School                  string `json:"school" validate:"required"`
-	Level                   string `json:"level" validate:"required"`
-	LevelOther              string `json:"level-other"`
-	Year                    string `json:"year" validate:"required"`
-	YearOther               string `json:"year-other"`
-	GraduationYear          string `json:"graduationYear" validate:"required"`
-	Majors                  string `json:"majors" validate:"required"`
-	Minors                  string `json:"minors"`
-	Experience              string `json:"experience" validate:"required"`
-	UfHackathonExp          string `json:"ufHackathonExp" validate:"required"`
-	ProjectExperience       string `json:"projectExperience" validate:"required"`
-	ShirtSize               string `json:"shirtSize" validate:"required"`
-	Diet                    string `json:"diet"`
-	Essay1                  string `json:"essay1" validate:"required"`
-	Essay2                  string `json:"essay2" validate:"required"`
-	Referral                string `json:"referral" validate:"required"`
-	PictureConsent          string `json:"pictureConsent" validate:"required"`
-	InPersonAcknowledgement string `json:"inpersonAcknowledgement" validate:"required"`
-	AgreeToConduct          string `json:"agreeToConduct" validate:"required"`
-	InfoShareAuthorization  string `json:"infoShareAuthorization" validate:"required"`
-	AgreeToMLHEmails        string `json:"agreeToMLHEmails"`
+	return &applicationsCount, applications, nil
 }
 
 func (s *ApplicationService) SubmitApplication(ctx context.Context, data ApplicationSubmissionFields, resume []byte, userID uuid.UUID) (*time.Time, error) {
@@ -518,16 +387,7 @@ func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userID uu
 	return request, nil
 }
 
-type ApplicationStatistics struct {
-	GenderStatistics sqlc.GetSubmittedApplicationGendersRow   `json:"genderStats"`
-	AgeStatistics    sqlc.GetSubmittedApplicationAgesRow      `json:"ageStats"`
-	RaceStatistics   []sqlc.GetSubmittedApplicationRacesRow   `json:"raceStats"`
-	MajorStatistics  []sqlc.GetSubmittedApplicationMajorsRow  `json:"majorStats"`
-	SchoolStatistics []sqlc.GetSubmittedApplicationSchoolsRow `json:"schoolStats"`
-	StatusStatistics sqlc.GetApplicationStatusesRow           `json:"statusStats"`
-}
-
-func (s *ApplicationService) GetApplicationStatistics(ctx context.Context) (*ApplicationStatistics, error) {
+func (s *ApplicationService) GetApplicationStatistics(ctx context.Context) (*ApplicationStatisticsDto, error) {
 	g, ctx := errgroup.WithContext(ctx)
 
 	var genderStats sqlc.GetSubmittedApplicationGendersRow
@@ -578,7 +438,7 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context) (*App
 		return nil, errors.New("Get application stats error")
 	}
 
-	return &ApplicationStatistics{
+	return &ApplicationStatisticsDto{
 		GenderStatistics: genderStats,
 		AgeStatistics:    ageStats,
 		RaceStatistics:   raceStats,
@@ -589,14 +449,14 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context) (*App
 
 }
 
-func (s *ApplicationService) JoinWaitlist(ctx context.Context, userID uuid.UUID) error {
-	err := s.db.Query.WaitlistApplicationByUserId(ctx, userID)
-	if err != nil {
-		s.logger.Err(err).Msg("Join waitlist fail")
-		return err
-	}
-	return nil
-}
+// func (s *ApplicationService) JoinWaitlist(ctx context.Context, userID uuid.UUID) error {
+// 	err := s.db.Query.WaitlistApplicationByUserId(ctx, userID)
+// 	if err != nil {
+// 		s.logger.Err(err).Msg("Join waitlist fail")
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func (s *ApplicationService) WithdrawApplication(ctx context.Context, userID uuid.UUID) error {
 	// Make atomic
@@ -683,7 +543,7 @@ func (s *ApplicationService) UpdateApplicationReviewStatusForHackathon(ctx conte
 		}
 
 		if started {
-			err = txDB.Query.MarkSubmittedApplicationAsUnderReview(ctx)
+			err = txDB.Query.MarkSubmittedApplicationsAsUnderReview(ctx)
 		} else {
 			err = txDB.Query.ResetApplicationsToSubmitted(ctx)
 		}
@@ -704,18 +564,13 @@ func (s *ApplicationService) UpdateApplicationReviewStatusForHackathon(ctx conte
 	return nil
 }
 
-type ReviewerAssignment struct {
-	ID     uuid.UUID `json:"userId"` // User/Reviewer ID
-	Amount *int      `json:"amount"` // Number of applications assigned (nil if autoassign)
-}
-
-type ReviewerAllocation struct {
-	ReviewerID             uuid.UUID   `json:"reviewerIdd"`
-	AssignedApplicationIDs []uuid.UUID `json:"assignedApplicationIds"`
-}
-
-func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, assignments []ReviewerAssignment) error {
+func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, assignments []ReviewerAssignmentRequestDto) error {
 	// TODO: Must check if applications are closed, if we havent released decisions, and more.
+	type ReviewerAllocation struct {
+		ReviewerID             uuid.UUID   `json:"reviewerIdd"`
+		AssignedApplicationIDs []uuid.UUID `json:"assignedApplicationIds"`
+	}
+
 	hackathon, err := s.db.Query.GetHackathon(ctx)
 
 	if err != nil {
@@ -727,8 +582,8 @@ func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, 
 		return errors.New("Application Review has not started")
 	}
 
-	var fixedAssignments []ReviewerAssignment
-	var autoAssignments []ReviewerAssignment
+	var fixedAssignments []ReviewerAssignmentRequestDto
+	var autoAssignments []ReviewerAssignmentRequestDto
 	var totalFixedAmount int
 
 	for _, assignment := range assignments {
@@ -744,7 +599,7 @@ func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, 
 		}
 	}
 
-	availableApplications, err := s.db.Query.ListUnderReviewApplicationIds(ctx)
+	availableApplications, err := s.db.Query.ListUnderReviewApplicationIds(ctx, hackathon.ID)
 	if err != nil {
 		return err
 	}
@@ -900,32 +755,15 @@ const (
 	ApplicationReviewStatusCompleted  ApplicationReviewStatus = "completed"
 )
 
-type AssignedApplication struct {
-	ApplicationID uuid.UUID               `json:"applicationId"`
-	Status        ApplicationReviewStatus `json:"status"`
-}
-
-func (s *ApplicationService) GetAssignedApplicationsForReviewer(ctx context.Context, reviewerId uuid.UUID) ([]AssignedApplication, error) {
+func (s *ApplicationService) GetReviewsForReviewer(ctx context.Context, reviewerId uuid.UUID) ([]sqlc.ListReviewsByReviewerIdRow, error) {
 	reviews, err := s.db.Query.ListReviewsByReviewerId(ctx, reviewerId)
+
 	if err != nil {
 		s.logger.Err(err).Msg("get assigned applications and progress fail because get applications by reviewer failed")
 		return nil, err
 	}
 
-	var assignedApps []AssignedApplication
-	for _, review := range reviews {
-		status := ApplicationReviewStatusInProgress
-		if review.ExperienceRating != nil && review.PassionRating != nil {
-			status = ApplicationReviewStatusCompleted
-		}
-
-		assignedApps = append(assignedApps, AssignedApplication{
-			ApplicationID: review.ApplicationID,
-			Status:        status,
-		})
-	}
-
-	return assignedApps, nil
+	return reviews, nil
 }
 
 func (s *ApplicationService) GetAllReviewersAndProgress(ctx context.Context) ([]sqlc.ListReviewersAndProgressRow, error) {
@@ -939,73 +777,36 @@ func (s *ApplicationService) GetAllReviewersAndProgress(ctx context.Context) ([]
 	return results, nil
 }
 
-type ApplicationReviewDetails struct {
-	PassionRating         *int32  `json:"passionRating"`
-	ExperienceRating      *int32  `json:"experienceRating"`
-	Notes                 *string `json:"notes"`
-	Application           []byte  `json:"application"`
-	ResumeURL             string  `json:"resumeUrl"`
-	AutoDecision          *string `json:"autoDecision"`
-	AutoDecisionRequestId *string `json:"autoDecisionRequestId"`
+func (s *ApplicationService) GetReviewById(ctx context.Context, reviewId uuid.UUID) (*sqlc.GetReviewByIdRow, *storage.PresignedRequest, error) {
+	review, err := s.db.Query.GetReviewById(ctx, reviewId)
+
+	if err != nil {
+		s.logger.Err(err).Msg("GetReviewById fail, unable to get review")
+		return nil, nil, err
+	}
+
+	resumeRequest, err := s.GetApplicationResumeURL(ctx, review.UserID, 600)
+
+	if err != nil {
+		s.logger.Err(err).Msg("GetReviewById fail, unable to get resume")
+		return nil, nil, err
+	}
+
+	return &review, resumeRequest, nil
 }
 
-func (s *ApplicationService) GetApplicationReviewDetails(ctx context.Context, applicationId uuid.UUID) (*ApplicationReviewDetails, error) {
-	g, ctx := errgroup.WithContext(ctx)
-
-	var applicationReviewDetail sqlc.GetApplicationReviewDetailsRow
-	var resumeRequest *storage.PresignedRequest
-
-	g.Go(func() error {
-		var err error
-		applicationReviewDetail, err = s.db.Query.GetApplicationReviewDetails(ctx, applicationId)
-		return err
-	})
-
-	g.Go(func() error {
-		var err error
-		resumeRequest, err = s.GetApplicationResumeURL(ctx, applicationId, 600)
-		return err
-	})
-
-	if err := g.Wait(); err != nil {
-		s.logger.Err(err).
-			Str("ApplicationId", applicationId.String()).
-			Msg("GetApplicationReviewDetails fail, unable to get application details for review")
-		return nil, errors.New("Get application review details error")
-	}
-
-	var decision *string
-
-	if applicationReviewDetail.RequestedDecision.Valid {
-		decision = (*string)(&applicationReviewDetail.RequestedDecision.ApplicationAutoDecisionType)
-	}
-
-	var autoDecisionRequestId *string
-	if applicationReviewDetail.AutoDecisionRequestID != nil {
-		id := applicationReviewDetail.AutoDecisionRequestID.String()
-		autoDecisionRequestId = &id
-	}
-
-	return &ApplicationReviewDetails{
-		PassionRating:         applicationReviewDetail.PassionRating,
-		ExperienceRating:      applicationReviewDetail.ExperienceRating,
-		Notes:                 applicationReviewDetail.Notes,
-		Application:           applicationReviewDetail.Application,
-		ResumeURL:             resumeRequest.URL,
-		AutoDecision:          decision,
-		AutoDecisionRequestId: autoDecisionRequestId,
-	}, nil
-}
-
-func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewerRole sqlc.UserRole, reviewerId, applicationId uuid.UUID, experienceRating, passionRating int, notes string) error {
+func (s *ApplicationService) SaveApplicationReview(ctx context.Context, req SaveReviewRequestDto, reviewerId uuid.UUID, reviewerRole sqlc.UserRole) error {
 	// Log everything for debug
-	s.logger.Debug().Str("ReviewerId", reviewerId.String()).Str("ApplicantId", applicationId.String()).Int32("Passion Rating", int32(passionRating)).Int32("Experiene Rating", int32(experienceRating)).Msg("Saving app review.")
+	s.logger.Debug().Str("ReviewerId", reviewerId.String()).
+		Str("ApplicantId", req.ApplicationId.String()).
+		Int32("Passion Rating", int32(req.PassionRating)).
+		Int32("Experiene Rating", int32(req.ExperienceRating)).Msg("Saving app review.")
 
 	if reviewerRole == sqlc.UserRoleStaff {
-		reviewerIds, err := s.db.Query.ListReviewersByApplicationId(ctx, applicationId)
+		reviewerIds, err := s.db.Query.ListApplicationReviewersById(ctx, req.ApplicationId)
 		if err != nil {
 			s.logger.Err(err).
-				Str("ApplicationId", applicationId.String()).
+				Str("ApplicationId", req.ApplicationId.String()).
 				Msg("SaveApplicationReview fail, unable to get reviewers for application")
 			return err
 		}
@@ -1019,18 +820,20 @@ func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewer
 		}
 	}
 
-	newExperienceRating := int32(experienceRating)
-	newPassionRating := int32(passionRating)
+	newExperienceRating := int32(req.ExperienceRating)
+	newPassionRating := int32(req.PassionRating)
 
 	if err := s.db.Query.UpdateApplicationReview(ctx, sqlc.UpdateApplicationReviewParams{
-		ApplicationID:            applicationId,
+		ID:                       req.ReviewId,
 		ReviewerID:               reviewerId,
 		ExperienceRatingDoUpdate: true,
 		ExperienceRating:         &newExperienceRating,
 		PassionRatingDoUpdate:    true,
 		PassionRating:            &newPassionRating,
 		NotesDoUpdate:            true,
-		Notes:                    &notes,
+		Notes:                    &req.Notes,
+		UpdatedByDoUpdate:        true,
+		UpdatedBy:                &reviewerId,
 	}); err != nil {
 		s.logger.Err(err).Msg("Something went wrong updating the application review")
 	}
@@ -1038,28 +841,31 @@ func (s *ApplicationService) SaveApplicationReview(ctx context.Context, reviewer
 	return nil
 }
 
-func (s *ApplicationService) UpdateApplicationReview(ctx context.Context, reviewerId, applicationId uuid.UUID, experienceRating, passionRating *int, notes *string) error {
+func (s *ApplicationService) UpdateApplicationReview(ctx context.Context, req UpdateReviewRequestDto, reviewerId uuid.UUID) error {
 	params := sqlc.UpdateApplicationReviewParams{
-		ApplicationID: applicationId,
-		ReviewerID:    reviewerId,
+		ID:         req.ReviewId,
+		ReviewerID: reviewerId,
 	}
 
-	if experienceRating != nil {
-		newExperienceRating := int32(*experienceRating)
+	if req.ExperienceRating != nil {
+		newExperienceRating := int32(*req.ExperienceRating)
 		params.ExperienceRatingDoUpdate = true
 		params.ExperienceRating = &newExperienceRating
 	}
 
-	if passionRating != nil {
-		newPassionRating := int32(*passionRating)
+	if req.PassionRating != nil {
+		newPassionRating := int32(*req.PassionRating)
 		params.PassionRatingDoUpdate = true
 		params.PassionRating = &newPassionRating
 	}
 
-	if notes != nil {
+	if req.Notes != nil {
 		params.NotesDoUpdate = true
-		params.Notes = notes
+		params.Notes = req.Notes
 	}
+
+	params.UpdatedByDoUpdate = true
+	params.UpdatedBy = &reviewerId
 
 	return s.db.Query.UpdateApplicationReview(ctx, params)
 }
@@ -1075,28 +881,22 @@ func (s *ApplicationService) GetAllAutoDecisionRequests(ctx context.Context) ([]
 	return requests, nil
 }
 
-type AutoDecisionRequest struct {
-	ApplicationID     uuid.UUID                        `json:"applicationId"`
-	RequestedDecision sqlc.ApplicationAutoDecisionType `json:"decision" enum:"auto_accept,auto_reject"`
-	Justification     *string                          `json:"justification"`
-}
-
-func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request AutoDecisionRequest, reviewerId uuid.UUID, reviewerRole sqlc.UserRole) error {
+func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request CreateAutoDecisionRequestDto, reviewerId uuid.UUID, reviewerRole sqlc.UserRole) (*uuid.UUID, error) {
 	hackathon, err := s.db.Query.GetHackathon(ctx)
 
 	if err != nil {
 		s.logger.Err(err).Msg("RequestAutoDecision fail because can't retrieve hackathon")
-		return err
+		return nil, err
 	}
 
 	if !hackathon.ApplicationReviewStarted {
-		return errors.New("Application Review has not started")
+		return nil, errors.New("Application Review has not started")
 	}
 
 	params := sqlc.RequestAutoDecisionParams{
 		ApplicationID:     request.ApplicationID,
-		ReviewerUserID:    &reviewerId,
-		RequestedDecision: request.RequestedDecision,
+		ReviewerID:        reviewerId,
+		RequestedDecision: (sqlc.ApplicationAutoDecisionType)(request.RequestedDecision),
 		Justification:     request.Justification,
 	}
 
@@ -1106,19 +906,19 @@ func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request Au
 		params.ApprovedOrDeniedBy = &reviewerId
 	}
 
-	err = s.db.Query.RequestAutoDecision(ctx, params)
+	id, err := s.db.Query.RequestAutoDecision(ctx, params)
 
 	if err != nil {
 		s.logger.Err(err).Msg("RequestAutoDecision fail")
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &id, nil
 }
 
 func (s *ApplicationService) DeleteAutoDecisionRequest(ctx context.Context, requestId, reviewerId uuid.UUID) error {
 	err := s.db.Query.DeleteAutoDecisionRequest(ctx, sqlc.DeleteAutoDecisionRequestParams{
-		RequestID:  requestId,
+		ID:         requestId,
 		ReviewerID: reviewerId,
 	})
 
@@ -1130,11 +930,11 @@ func (s *ApplicationService) DeleteAutoDecisionRequest(ctx context.Context, requ
 	return nil
 }
 
-func (s *ApplicationService) UpdateAutoDecisionRequest(ctx context.Context, requestId, approverId uuid.UUID, approved bool) error {
+func (s *ApplicationService) UpdateAutoDecisionRequest(ctx context.Context, req UpdateAutoDecisionRequestDto, approverId uuid.UUID) error {
 	err := s.db.Query.UpdateAutoDecisionRequest(ctx, sqlc.UpdateAutoDecisionRequestParams{
-		RequestID:          requestId,
+		ID:                 req.RequestID,
 		ApprovedDoUpdate:   true,
-		Approved:           &approved,
+		Approved:           &req.Approved,
 		ApprovedByDoUpdate: true,
 		ApprovedOrDeniedBy: &approverId,
 	})
@@ -1148,7 +948,14 @@ func (s *ApplicationService) UpdateAutoDecisionRequest(ctx context.Context, requ
 }
 
 func (s *ApplicationService) CheckApplicationReviewsComplete(ctx context.Context) (bool, error) {
-	underReviewApplicationIds, err := s.db.Query.ListUnderReviewApplicationIds(ctx)
+	hackathon, err := s.db.Query.GetHackathon(ctx)
+
+	if err != nil {
+		s.logger.Err(err).Msg("CheckApplicationReviewsComplete fail because can't retrieve hackathon")
+		return false, err
+	}
+
+	underReviewApplicationIds, err := s.db.Query.ListUnderReviewApplicationIds(ctx, hackathon.ID)
 	if err != nil {
 		return false, errors.New("Failed to check application reviews status")
 	}
