@@ -37,7 +37,7 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
       {
         id: "name",
         header: "Username",
-        accessorKey: "name",
+        accessorKey: "user.name",
         minSize: 250,
         cell: ({ row }) => {
           const avatarUrl = row.original.user.image;
@@ -47,10 +47,10 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
                 <img
                   src={avatarUrl}
                   alt={"user avatar"}
-                  className="h-8 w-8 rounded-full object-cover"
+                  className="size-8 rounded-full object-cover"
                 />
               ) : (
-                <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
+                <div className="size-8 rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
                   <span className="text-gray-600 dark:text-neutral-400">
                     N/A
                   </span>
@@ -103,14 +103,14 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
       {
         id: "is_early",
         header: "Is Early",
-        accessorKey: "is_early",
+        accessorKey: "isEarly",
         size: 100,
         cell: ({ row }) => (row.original.isEarly ? "Yes" : "No"),
       },
       {
         id: "submitted_at",
         header: "Submitted At",
-        accessorKey: "submitted_at",
+        accessorKey: "submittedAt",
         enableGlobalFilter: false,
         size: 200,
         cell: ({ row }) =>
@@ -123,7 +123,7 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
       {
         id: "email",
         header: "Email",
-        accessorKey: "email",
+        accessorKey: "user.email",
         size: 300,
         cell: ({ row }) => row.original.user.email,
       },

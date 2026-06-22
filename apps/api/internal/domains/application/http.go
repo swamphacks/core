@@ -67,7 +67,7 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 		OperationID:   "search-applications",
 		Method:        http.MethodGet,
 		Summary:       "Search Applications",
-		Description:   "Search applications for the current hackthaton. If params are empty, all applications are returned with pagination.",
+		Description:   "Search applications for the current hackthaton.",
 		Tags:          []string{"Application"},
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
 		Path:          "/search",
@@ -271,6 +271,19 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
 	}, applicationHandler.handleResetApplicationReviews)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "search-auto-decision-requests",
+		Method:        http.MethodGet,
+		Summary:       "Search Auto Decision Requests",
+		Description:   "Search auto deicision requests",
+		Tags:          []string{"Application Review"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Path:          "/review/search-auto-decision-requests",
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, applicationHandler.handleSearchAutoDecisionRequests)
 
 	huma.Register(group, huma.Operation{
 		OperationID:   "get-auto-decision-requests",

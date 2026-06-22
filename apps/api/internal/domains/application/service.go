@@ -169,7 +169,6 @@ func (s *ApplicationService) SearchApplications(ctx context.Context, limit, offs
 	if err := g.Wait(); err != nil {
 		s.logger.Err(err).Msg("SearchApplications fail")
 		return nil, nil, err
-
 	}
 
 	return &applicationsCount, applications, nil
@@ -870,6 +869,47 @@ func (s *ApplicationService) UpdateApplicationReview(ctx context.Context, req Up
 	return s.db.Query.UpdateApplicationReview(ctx, params)
 }
 
+func (s *ApplicationService) SearchAutoDecisionRequests(ctx context.Context, req SearchAutoDecisionRequestsDto) (*int64, []sqlc.SearchAutoDecisionRequestsRow, error) {
+	g, ctx := errgroup.WithContext(ctx)
+
+	var requestsCount int64
+	var requests []sqlc.SearchAutoDecisionRequestsRow
+
+	g.Go(func() error {
+		var err error
+		requestsCount, err = s.db.Query.GetAutoDecisionRequestsCount(ctx)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		var decision sqlc.NullApplicationAutoDecisionType
+
+		if req.Decision == "all" {
+			decision.Valid = false
+		} else {
+			decision.Valid = true
+			decision.ApplicationAutoDecisionType = sqlc.ApplicationAutoDecisionType(req.Decision)
+		}
+
+		requests, err = s.db.Query.SearchAutoDecisionRequests(ctx, sqlc.SearchAutoDecisionRequestsParams{
+			Offset:   int32(req.Offset * req.Limit),
+			Limit:    int32(req.Limit),
+			Search:   &req.Search,
+			Approved: req.Approved,
+			Decision: decision,
+		})
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
+		s.logger.Err(err).Msg("SearchAutoDecisionRequests fail")
+		return nil, nil, err
+	}
+
+	return &requestsCount, requests, nil
+}
+
 func (s *ApplicationService) GetAllAutoDecisionRequests(ctx context.Context) ([]sqlc.ListAutoDecisionRequestsRow, error) {
 	requests, err := s.db.Query.ListAutoDecisionRequests(ctx)
 
@@ -903,7 +943,7 @@ func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request Cr
 	if reviewerRole == sqlc.UserRoleAdmin {
 		approved := true
 		params.Approved = &approved
-		params.ApprovedOrDeniedBy = &reviewerId
+		params.DecidedBy = &reviewerId
 	}
 
 	req, err := s.db.Query.RequestAutoDecision(ctx, params)
@@ -936,7 +976,7 @@ func (s *ApplicationService) UpdateAutoDecisionRequest(ctx context.Context, req 
 		ApprovedDoUpdate:   true,
 		Approved:           &req.Approved,
 		ApprovedByDoUpdate: true,
-		ApprovedOrDeniedBy: &approverId,
+		DecidedBy:          &approverId,
 	})
 
 	if err != nil {

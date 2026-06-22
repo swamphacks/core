@@ -151,11 +151,12 @@ SELECT
     reviewer.image AS reviewer_image,
     applicant.name AS user_name,
     applicant.image AS user_image,
+    applicant.email AS user_email,
     aadr.requested_decision,
     aadr.id AS auto_decision_request_id,
     aadr.justification AS decision_justification,
     aadr.approved AS decision_approved,
-    aadr.approved_or_denied_by,
+    aadr.decided_by,
     aadr.created_at AS decision_request_created_at
 FROM applications a
 JOIN users AS applicant ON applicant.id = a.user_id
@@ -187,11 +188,12 @@ type GetExtendedApplicationByIdRow struct {
 	ReviewerImage            *string                         `json:"reviewer_image"`
 	UserName                 string                          `json:"user_name"`
 	UserImage                *string                         `json:"user_image"`
+	UserEmail                *string                         `json:"user_email"`
 	RequestedDecision        NullApplicationAutoDecisionType `json:"requested_decision"`
 	AutoDecisionRequestID    *uuid.UUID                      `json:"auto_decision_request_id"`
 	DecisionJustification    *string                         `json:"decision_justification"`
 	DecisionApproved         *bool                           `json:"decision_approved"`
-	ApprovedOrDeniedBy       *uuid.UUID                      `json:"approved_or_denied_by"`
+	DecidedBy                *uuid.UUID                      `json:"decided_by"`
 	DecisionRequestCreatedAt *time.Time                      `json:"decision_request_created_at"`
 }
 
@@ -220,11 +222,12 @@ func (q *Queries) GetExtendedApplicationById(ctx context.Context, id uuid.UUID) 
 		&i.ReviewerImage,
 		&i.UserName,
 		&i.UserImage,
+		&i.UserEmail,
 		&i.RequestedDecision,
 		&i.AutoDecisionRequestID,
 		&i.DecisionJustification,
 		&i.DecisionApproved,
-		&i.ApprovedOrDeniedBy,
+		&i.DecidedBy,
 		&i.DecisionRequestCreatedAt,
 	)
 	return i, err

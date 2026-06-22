@@ -42,7 +42,7 @@ SELECT
     aadr.id AS decision_request_id,
     aadr.justification AS decision_justification,
     aadr.approved AS decision_approved,
-    aadr.approved_or_denied_by AS decision_approved_or_denied_by,
+    aadr.decided_by AS decision_decided_by,
     aadr.created_at AS decision_request_created_at,
     applications.user_id,
     applications.application
@@ -67,8 +67,46 @@ WHERE
 DELETE FROM application_reviews;
 
 -- name: RequestAutoDecision :one
-INSERT INTO application_auto_decision_requests (application_id, reviewer_id, requested_decision, justification, approved, approved_or_denied_by) 
-VALUES (@application_id, @reviewer_id, @requested_decision, @justification, @approved, @approved_or_denied_by) RETURNING *;
+INSERT INTO application_auto_decision_requests (application_id, reviewer_id, requested_decision, justification, approved, decided_by) 
+VALUES (@application_id, @reviewer_id, @requested_decision, @justification, @approved, @decided_by) RETURNING *;
+
+-- name: GetAutoDecisionRequestsCount :one
+SELECT COUNT(*) FROM application_auto_decision_requests;
+
+-- name: SearchAutoDecisionRequests :many
+SELECT
+    aadr.*,
+    reviewer.name AS reviewer_name,
+    reviewer.image AS reviewer_image,
+    approver.id AS approver_id,
+    approver.name AS approver_name,
+    approver.image AS approver_image,
+    applicant.id AS user_id,
+    applicant.name AS user_name,
+    applicant.image AS user_image
+FROM application_auto_decision_requests AS aadr
+JOIN users AS reviewer
+    ON reviewer.id = aadr.reviewer_id
+JOIN applications
+    ON applications.id = aadr.application_id
+JOIN users AS applicant
+    ON applicant.id = applications.user_id
+LEFT JOIN users AS approver
+    ON approver.id = aadr.decided_by
+WHERE (LOWER(reviewer.name) LIKE LOWER('%' || COALESCE(sqlc.arg('search'), '') || '%')
+    OR LOWER(applicant.name) LIKE LOWER('%' || COALESCE(sqlc.arg('search'), '') || '%'))
+    AND (
+        sqlc.arg('approved')::text = 'all'
+        OR (sqlc.arg('approved')::text = 'pending' AND aadr.approved IS NULL)
+        OR (sqlc.arg('approved')::text = 'approved' AND aadr.approved = true)
+        OR (sqlc.arg('approved')::text = 'denied' AND aadr.approved = false)
+    )
+    AND (
+        sqlc.narg('decision')::application_auto_decision_type IS NULL
+        OR aadr.requested_decision = sqlc.narg('decision')::application_auto_decision_type
+    )
+ORDER BY aadr.created_at DESC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 -- name: ListAutoDecisionRequests :many
 SELECT
@@ -78,14 +116,18 @@ SELECT
     approver.id AS approver_id,
     approver.name AS approver_name,
     approver.image AS approver_image,
-    applications.user_id
+    applicant.id AS user_id,
+    applicant.name AS user_name,
+    applicant.image AS user_image
 FROM application_auto_decision_requests AS aadr
 JOIN users AS reviewer
-    ON reviewer.id = reviewer_id
+    ON reviewer.id = aadr.reviewer_id
 JOIN applications
     ON applications.id = aadr.application_id
+JOIN users AS applicant
+    ON applicant.id = applications.user_id
 LEFT JOIN users AS approver
-    ON approver.id = aadr.approved_or_denied_by
+    ON approver.id = aadr.decided_by
 ORDER BY aadr.created_at DESC;
 
 -- name: DeleteAutoDecisionRequest :exec
@@ -98,7 +140,7 @@ SET
     requested_decision = CASE WHEN @requested_decision_do_update::boolean AND @requested_decision <> '' THEN @requested_decision::application_auto_decision_type ELSE requested_decision END,
     justification = CASE WHEN @justification_do_update::boolean THEN @justification ELSE justification END,
     approved = CASE WHEN @approved_do_update::boolean THEN @approved ELSE approved END,
-    approved_or_denied_by = CASE WHEN @approved_by_do_update::boolean THEN @approved_or_denied_by ELSE approved_or_denied_by END
+    decided_by = CASE WHEN @approved_by_do_update::boolean THEN @decided_by ELSE decided_by END
 WHERE id = @id AND reviewer_id = @reviewer_id;
 
 -- name: DeleteAllAutoDecisionRequests :exec

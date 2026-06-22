@@ -137,7 +137,7 @@ func (h *handler) handleGetExtendedApplicationById(ctx context.Context, input *s
 			Justification:        application.DecisionJustification,
 			AutoDecisionApproved: *application.DecisionApproved,
 			CreatedAt:            *application.DecisionRequestCreatedAt,
-			ApprovedOrDeniedBy:   application.ApprovedOrDeniedBy,
+			DecidedBy:            application.DecidedBy,
 		}
 	}
 
@@ -147,6 +147,7 @@ func (h *handler) handleGetExtendedApplicationById(ctx context.Context, input *s
 			ID:       application.UserID,
 			UserName: application.UserName,
 			Image:    application.UserImage,
+			Email:    application.UserEmail,
 		},
 		Status:              string(application.Status),
 		Application:         application.Application,
@@ -456,7 +457,7 @@ func (h *handler) handleGetReviewById(ctx context.Context, input *struct {
 			Justification:        review.DecisionJustification,
 			AutoDecisionApproved: *review.DecisionApproved,
 			CreatedAt:            *review.DecisionRequestCreatedAt,
-			ApprovedOrDeniedBy:   review.DecisionApprovedOrDeniedBy,
+			DecidedBy:            review.DecisionDecidedBy,
 		}
 	}
 
@@ -594,6 +595,57 @@ func (h *handler) handleGetAllReviewersAndProgress(ctx context.Context, input *s
 	}, nil
 }
 
+type SearchAutoDecisionRequestsOutput struct {
+	Body SearchAutoDecisionRequestsResponseDto
+}
+
+func (h *handler) handleSearchAutoDecisionRequests(ctx context.Context, input *SearchAutoDecisionRequestsDto) (*SearchAutoDecisionRequestsOutput, error) {
+	count, requests, err := h.applicationService.SearchAutoDecisionRequests(ctx, *input)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("error retrieving requests")
+	}
+
+	searchAutoDecisionRequestsResponses := make([]ExtendedAutoDecisionRequestDto, len(requests))
+
+	for i, val := range requests {
+		var decidedBy *AppUser
+		if val.DecidedBy != nil {
+			decidedBy = &AppUser{
+				ID:       *val.DecidedBy,
+				UserName: *val.ApproverName,
+				Image:    val.ApproverImage,
+			}
+		}
+
+		searchAutoDecisionRequestsResponses[i] = ExtendedAutoDecisionRequestDto{
+			ID: val.ID,
+			User: AppUser{
+				ID:       val.UserID,
+				UserName: val.UserName,
+				Image:    val.UserImage,
+			},
+			ApplicationID: val.ApplicationID,
+			Reviewer: AppUser{
+				ID:       val.ReviewerID,
+				UserName: val.ReviewerName,
+				Image:    val.ReviewerImage,
+			},
+			DecidedBy:         decidedBy,
+			RequestedDecision: string(val.RequestedDecision),
+			Justification:     val.Justification,
+			Approved:          val.Approved,
+			UpdatedAt:         val.UpdatedAt,
+			CreatedAt:         val.CreatedAt,
+		}
+	}
+
+	return &SearchAutoDecisionRequestsOutput{Body: SearchAutoDecisionRequestsResponseDto{
+		Count:    *count,
+		Requests: searchAutoDecisionRequestsResponses,
+	}}, nil
+}
+
 type GetAutoDecisionRequestsOutput struct {
 	Body []ExtendedAutoDecisionRequestDto `json:"body" nullable:"false"`
 }
@@ -609,9 +661,9 @@ func (h *handler) handleGetAutoDecisionRequests(ctx context.Context, input *stru
 
 	for i, val := range requests {
 		var decidedBy *AppUser
-		if val.ApprovedOrDeniedBy != nil {
+		if val.DecidedBy != nil {
 			decidedBy = &AppUser{
-				ID:       *val.ApprovedOrDeniedBy,
+				ID:       *val.DecidedBy,
 				UserName: *val.ApproverName,
 				Image:    val.ApproverImage,
 			}
@@ -619,8 +671,12 @@ func (h *handler) handleGetAutoDecisionRequests(ctx context.Context, input *stru
 
 		extendedRequests[i] = ExtendedAutoDecisionRequestDto{
 			ID:            val.ID,
-			UserID:        val.UserID,
 			ApplicationID: val.ApplicationID,
+			User: AppUser{
+				ID:       val.UserID,
+				UserName: val.UserName,
+				Image:    val.UserImage,
+			},
 			Reviewer: AppUser{
 				ID:       val.ReviewerID,
 				UserName: val.ReviewerName,
@@ -664,7 +720,7 @@ func (h *handler) handleRequestAutoDecision(ctx context.Context, input *struct {
 		Justification:        req.Justification,
 		AutoDecisionApproved: *req.Approved,
 		CreatedAt:            req.CreatedAt,
-		ApprovedOrDeniedBy:   req.ApprovedOrDeniedBy,
+		DecidedBy:            req.DecidedBy,
 	}}, nil
 }
 

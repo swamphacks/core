@@ -104,62 +104,68 @@ export function Table<TData>({
             ))}
           </tbody>
         </table>
-      </div>{" "}
+      </div>
       {showPagination && (
-        <div className="flex items-center gap-2 p-3">
-          <Button
-            className="rounded p-1"
-            variant="secondary"
-            onClick={() => table.firstPage()}
-            isDisabled={!table.getCanPreviousPage()}
-          >
-            <TablerChevronsLeft></TablerChevronsLeft>
-          </Button>
-          <Button
-            className="rounded p-1"
-            variant="secondary"
-            onClick={() => table.previousPage()}
-            isDisabled={!table.getCanPreviousPage()}
-          >
-            <TablerChevronLeft></TablerChevronLeft>
-          </Button>
-          <Button
-            className="rounded p-1"
-            variant="secondary"
-            onClick={() => table.nextPage()}
-            isDisabled={!table.getCanNextPage()}
-          >
-            <TablerChevronRight></TablerChevronRight>
-          </Button>
-          <Button
-            className="rounded p-1"
-            variant="secondary"
-            onClick={() => table.lastPage()}
-            isDisabled={!table.getCanNextPage()}
-          >
-            <TablerChevronsRight></TablerChevronsRight>
-          </Button>
-          <div className="flex text-sm items-center gap-1 mx-1 min-w-17">
-            <span>
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount().toLocaleString()}
-            </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 mt-3">
+            <Button
+              className="rounded p-1"
+              variant="secondary"
+              onClick={() => table.firstPage()}
+              isDisabled={!table.getCanPreviousPage()}
+            >
+              <TablerChevronsLeft></TablerChevronsLeft>
+            </Button>
+            <Button
+              className="rounded p-1"
+              variant="secondary"
+              onClick={() => table.previousPage()}
+              isDisabled={!table.getCanPreviousPage()}
+            >
+              <TablerChevronLeft></TablerChevronLeft>
+            </Button>
+            <Button
+              className="rounded p-1"
+              variant="secondary"
+              onClick={() => table.nextPage()}
+              isDisabled={!table.getCanNextPage()}
+            >
+              <TablerChevronRight></TablerChevronRight>
+            </Button>
+            <Button
+              className="rounded p-1"
+              variant="secondary"
+              onClick={() => table.lastPage()}
+              isDisabled={!table.getCanNextPage()}
+            >
+              <TablerChevronsRight></TablerChevronsRight>
+            </Button>
+            <div className="flex text-sm items-center gap-1 mx-1 min-w-17">
+              <span>
+                Page {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount().toLocaleString()}
+              </span>
+            </div>
+            <Select
+              className="text-sm"
+              aria-label="Select Page Size"
+              selectedKey={String(table.getState().pagination.pageSize)}
+              items={[5, 10, 20, 50, 100].map((size) => ({
+                id: String(size),
+                name: `Row Size: ${size}`,
+              }))}
+              onSelectionChange={(key) => {
+                if (key) {
+                  table.setPageSize(Number(key));
+                }
+              }}
+              children={null}
+            ></Select>
           </div>
-          <Select
-            className="text-sm"
-            aria-label="Select Page Size"
-            selectedKey={String(table.getState().pagination.pageSize)}
-            items={[5, 10, 20, 50, 100].map((size) => ({
-              id: String(size),
-              name: `Row Size: ${size}`,
-            }))}
-            onSelectionChange={(key) => {
-              if (key) {
-                table.setPageSize(Number(key));
-              }
-            }}
-            children={null}
-          ></Select>
+
+          <div className="mt-4">
+            <span>Total Rows: {table.getRowCount()}</span>
+          </div>
         </div>
       )}
     </div>

@@ -244,6 +244,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/application/review/search-auto-decision-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Auto Decision Requests
+         * @description Search auto deicision requests
+         */
+        get: operations["search-auto-decision-requests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/application/review/update-status": {
         parameters: {
             query?: never;
@@ -313,7 +333,7 @@ export interface paths {
         };
         /**
          * Search Applications
-         * @description Search applications for the current hackthaton. If params are empty, all applications are returned with pagination.
+         * @description Search applications for the current hackthaton.
          */
         get: operations["search-applications"];
         put?: never;
@@ -422,6 +442,74 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/email/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Email Campaigns
+         * @description Returns all saved email campaigns for a hackathon.
+         */
+        get: operations["list-email-campaigns"];
+        put?: never;
+        /**
+         * Create Email Campaign
+         * @description Creates a saved email campaign draft for a hackathon.
+         */
+        post: operations["create-email-campaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/email/campaigns/{campaignId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Email Campaign
+         * @description Returns one saved email campaign by id.
+         */
+        get: operations["get-email-campaign"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Email Campaign
+         * @description Updates editable fields on a draft or scheduled email campaign.
+         */
+        patch: operations["update-email-campaign"];
+        trace?: never;
+    };
+    "/email/campaigns/{campaignId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Email Campaign Status
+         * @description Updates lifecycle fields such as status, scheduled_at, sent_at, and last_error.
+         */
+        patch: operations["update-email-campaign-status"];
         trace?: never;
     };
     "/email/queue-confirmation-email": {
@@ -1380,9 +1468,9 @@ export interface components {
         AutoDecisionRequestDto: {
             applicationId: string;
             approved: boolean;
-            approvedOrDeniedBy?: string;
             /** Format: date-time */
             createdAt: string;
+            decidedBy?: string;
             decision: string;
             id: string;
             justification?: string | null;
@@ -1395,6 +1483,17 @@ export interface components {
             applicationId: string;
             decision: string;
             justification: string | null;
+        };
+        CreateEmailCampaignRequest: {
+            body: string;
+            description?: string;
+            format: string;
+            hackathonId: string;
+            recipientTypes: string[] | null;
+            /** Format: date-time */
+            scheduledAt?: string;
+            subject: string;
+            title: string;
         };
         CreateJoinRequest: {
             message: string | null;
@@ -1421,6 +1520,28 @@ export interface components {
         };
         DeleteAutoDecisionRequest: {
             requestId: string;
+        };
+        EmailCampaign: {
+            body: string;
+            /** Format: date-time */
+            created_at: string;
+            created_by_user_id: string;
+            description: string | null;
+            format: string;
+            hackathon_id: string;
+            id: string;
+            last_error: string | null;
+            recipient_types: string[] | null;
+            /** Format: date-time */
+            scheduled_at: string | null;
+            /** Format: date-time */
+            sent_at: string | null;
+            status: string;
+            subject: string;
+            title: string;
+            /** Format: date-time */
+            updated_at: string;
+            updated_by_user_id: string;
         };
         ErrorDetail: {
             /** @description Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id' */
@@ -1482,7 +1603,7 @@ export interface components {
             reviewer: components["schemas"]["AppUser"];
             /** Format: date-time */
             updatedAt: string;
-            userId: string;
+            user: components["schemas"]["AppUser"];
         };
         FormFile: {
             ContentType: string;
@@ -1753,6 +1874,20 @@ export interface components {
             /** Format: int64 */
             count: number;
         };
+        SearchAutoDecisionRequestsDto: {
+            approved: boolean | null;
+            decision: string;
+            /** Format: int32 */
+            limit: number;
+            /** Format: int32 */
+            offset: number;
+            search: string | null;
+        };
+        SearchAutoDecisionRequestsResponseDto: {
+            autoDecisionRequests: components["schemas"]["ExtendedAutoDecisionRequestDto"][];
+            /** Format: int64 */
+            count: number;
+        };
         SubmitApplicationResponseDto: {
             /** Format: date-time */
             submittedAt: string | null;
@@ -1801,6 +1936,24 @@ export interface components {
         UpdateAutoDecisionRequestDto: {
             approved: boolean;
             requestId: string;
+        };
+        UpdateEmailCampaignRequest: {
+            body?: string;
+            description?: string;
+            format?: string;
+            recipientTypes?: string[];
+            /** Format: date-time */
+            scheduledAt?: string;
+            subject?: string;
+            title?: string;
+        };
+        UpdateEmailCampaignStatusRequest: {
+            lastError?: string;
+            /** Format: date-time */
+            scheduledAt?: string;
+            /** Format: date-time */
+            sentAt?: string;
+            status: string;
         };
         UpdateEmailConsentRequest: {
             emailConsent: boolean;
@@ -2686,6 +2839,60 @@ export interface operations {
             };
         };
     };
+    "search-auto-decision-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SearchAutoDecisionRequestsDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchAutoDecisionRequestsResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
     "update-application-review-status": {
         parameters: {
             query?: never;
@@ -3112,6 +3319,354 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "list-email-campaigns": {
+        parameters: {
+            query: {
+                hackathonId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailCampaign"][] | null;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "create-email-campaign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEmailCampaignRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailCampaign"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "get-email-campaign": {
+        parameters: {
+            query: {
+                hackathonId: string;
+            };
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailCampaign"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "update-email-campaign": {
+        parameters: {
+            query: {
+                hackathonId: string;
+            };
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEmailCampaignRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailCampaign"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "update-email-campaign-status": {
+        parameters: {
+            query: {
+                hackathonId: string;
+            };
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie: {
+                /** @description Session cookie used to authenticate the user */
+                sh_session_id: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEmailCampaignStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailCampaign"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

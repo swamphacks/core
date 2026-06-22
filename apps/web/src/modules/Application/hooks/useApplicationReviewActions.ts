@@ -140,7 +140,7 @@ export const useApplicationReviewActions = (
               autoDecisionRequest: {
                 applicationId,
                 approved: res.approved,
-                approvedOrDeniedBy: res.approvedOrDeniedBy,
+                decidedBy: res.decidedBy,
                 createdAt: res.createdAt,
                 decision: res.decision,
                 id: res.id,
@@ -161,7 +161,7 @@ export const useApplicationReviewActions = (
             autoDecisionRequest: {
               applicationId,
               approved: res.approved,
-              approvedOrDeniedBy: res.approvedOrDeniedBy,
+              decidedBy: res.decidedBy,
               createdAt: res.createdAt,
               decision: res.decision,
               id: res.id,

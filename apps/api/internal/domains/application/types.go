@@ -148,7 +148,7 @@ type AutoDecisionRequestDto struct {
 	CreatedAt            time.Time  `json:"createdAt"`
 	RequestedDecision    string     `json:"decision"`
 	AutoDecisionApproved bool       `json:"approved"`
-	ApprovedOrDeniedBy   *uuid.UUID `json:"approvedOrDeniedBy" required:"false"`
+	DecidedBy            *uuid.UUID `json:"decidedBy" required:"false"`
 }
 
 type ExtendedAutoDecisionRequestDto struct {
@@ -157,11 +157,24 @@ type ExtendedAutoDecisionRequestDto struct {
 	Justification     *string   `json:"justification" required:"false"`
 	CreatedAt         time.Time `json:"createdAt"`
 	RequestedDecision string    `json:"requestedDecision"`
-	UserID            uuid.UUID `json:"userId"`
 	Approved          *bool     `json:"approved" required:"false"`
 	UpdatedAt         time.Time `json:"updatedAt"`
 	Reviewer          AppUser   `json:"reviewer"`
 	DecidedBy         *AppUser  `json:"decidedBy" required:"false"`
+	User              AppUser   `json:"user"`
+}
+
+type SearchAutoDecisionRequestsDto struct {
+	Search   string `query:"search"`
+	Approved string `query:"approved"`
+	Decision string `query:"decision"`
+	Offset   int32  `query:"offset"`
+	Limit    int32  `query:"limit"`
+}
+
+type SearchAutoDecisionRequestsResponseDto struct {
+	Requests []ExtendedAutoDecisionRequestDto `json:"autoDecisionRequests" nullable:"false"`
+	Count    int64                            `json:"count"`
 }
 
 // TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.

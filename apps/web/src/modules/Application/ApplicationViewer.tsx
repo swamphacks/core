@@ -56,15 +56,11 @@ export default function ApplicationViewer({
     }
 
     return (
-      <div
-        key={field.name}
-        className="rounded-lg border border-input-border bg-card p-2"
-      >
-        <p className="text-sm font-medium text-text-secondary mb-2">{label}</p>
-
-        <div className="text-base whitespace-pre-wrap break-words leading-relaxed">
+      <div>
+        <span className="text-text-secondary">{label}</span>
+        <p className="whitespace-pre-wrap break-words leading-relaxed">
           {renderAnswer(appFields[field.name as keyof ApplicationFields])}
-        </div>
+        </p>
       </div>
     );
   };
@@ -80,12 +76,36 @@ export default function ApplicationViewer({
 
       <Tabs>
         <TabList aria-label="Tabs" className="text-base">
-          <Tab id="responses">Responses</Tab>
+          <Tab id="application">Application</Tab>
           <Tab id="status-and-reviews">Status and Reviews</Tab>
         </TabList>
         <TabPanels>
-          <TabPanel id="responses">
+          <TabPanel id="application">
             <div className="mt-2 space-y-6 w-full">
+              <div>
+                <div className="flex items-center gap-2">
+                  {extendedApplication.data.user.image ? (
+                    <img
+                      src={extendedApplication.data.user.image}
+                      alt={"user avatar"}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
+                      <span className="text-gray-600 dark:text-neutral-400">
+                        N/A
+                      </span>
+                    </div>
+                  )}
+                  <span className="text-sm inline-block max-w-40 font-medium truncate">
+                    {extendedApplication.data.user.name}
+                  </span>
+                </div>
+                <div className="space-y-1 mt-2">
+                  <p>User ID: {extendedApplication.data.user.id}</p>
+                  <p>Email: {extendedApplication.data.user.email}</p>
+                </div>
+              </div>
               {Object.entries(parsedForm).map(([sectionLabel, fields]) => (
                 <div key={sectionLabel}>
                   <h3 className="text-lg font-semibold text-text-main mb-4 pb-2 border-b border-input-border">

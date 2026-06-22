@@ -66,11 +66,12 @@ SELECT
     reviewer.image AS reviewer_image,
     applicant.name AS user_name,
     applicant.image AS user_image,
+    applicant.email AS user_email,
     aadr.requested_decision,
     aadr.id AS auto_decision_request_id,
     aadr.justification AS decision_justification,
     aadr.approved AS decision_approved,
-    aadr.approved_or_denied_by,
+    aadr.decided_by,
     aadr.created_at AS decision_request_created_at
 FROM applications a
 JOIN users AS applicant ON applicant.id = a.user_id

@@ -35,7 +35,7 @@ create table application_auto_decision_requests (
     requested_decision application_auto_decision_type not null,
     justification text,
     approved boolean,
-    approved_or_denied_by uuid references users(id) on delete set null,
+    decided_by uuid references users(id) on delete set null,
 
     updated_at timestamptz not null default now(),
     created_at timestamptz not null default now(),
