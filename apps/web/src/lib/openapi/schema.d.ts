@@ -4,190 +4,6 @@
  */
 
 export interface paths {
-<<<<<<< HEAD
-  "/application": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get My Application
-     * @description Get the application of the current user
-     */
-    get: operations["get-application"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/all": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get All Applications
-     * @description Get all applications for the current hackthaton
-     */
-    get: operations["get-all-applications"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/assigned": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Assigned Applications
-     * @description Returns assigned applications and their review progress for the authenticated reviewer
-     */
-    get: operations["get-assigned-applications"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/confirm-attendance": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Confirm Attendance
-     * @description Confirm attendance after being accepted. Sets event role to attendee from applicant.
-     */
-    patch: operations["confirm-attendance"];
-    trace?: never;
-  };
-  "/application/resume": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Resume Download URL
-     * @description Returns a presigned S3 URL with GET permission for the user's specific object, which is their uploaded resume. The client can use this URL to download the object.
-     */
-    get: operations["get-download-resume-url"];
-    /**
-     * Replace Resume
-     * @description Replaces the resume of an already-submitted application without modifying any question responses.
-     */
-    put: operations["replace-resume"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/review/assign": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Assign Application Reviewers
-     * @description Assigns applications to reviewers for the application review process.
-     */
-    post: operations["assign-application-reviewers"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/review/auto-decision": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Auto Decision Requests
-     * @description Get all auto deicision requests created by staff
-     */
-    get: operations["get-auto-decision-requests"];
-    put?: never;
-    /**
-     * Request Auto Decision
-     * @description Create a request to auto accept or auto reject applications.
-     */
-    post: operations["request-auto-decision"];
-    /**
-     * Delete Auto Decision
-     * @description Delete an existing auto decision made by current reviewer
-     */
-    delete: operations["delete-auto-decision"];
-    options?: never;
-    head?: never;
-    /**
-     * Update Auto Decision Request
-     * @description Update an auto decision request
-     */
-    patch: operations["update-auto-decision-request"];
-    trace?: never;
-  };
-  "/application/review/progress": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get All Reviewers and Progress
-     * @description Get all reviewers and their progress
-     */
-    get: operations["get-reviewers-and-progress"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/review/reset": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-=======
     "/application": {
         parameters: {
             query?: never;
@@ -387,113 +203,67 @@ export interface paths {
          */
         patch: operations["update-auto-decision-request"];
         trace?: never;
->>>>>>> 2ce5cee (application frontend refactor and some small tweaks to backend)
     };
-    get?: never;
-    put?: never;
-    /**
-     * Reset Application Reviews
-     * @description Resets all application reviews, clearing any existing reviewer assignments.
-     */
-    post: operations["reset-application-reviews"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/review/update-status": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/application/review/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Reviewers and Progress
+         * @description Get all reviewers and their progress
+         */
+        get: operations["get-reviewers-and-progress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Update Application Review Status
-     * @description Update the application review status for the current hackathon
-     */
-    post: operations["update-application-review-status"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/review/{applicationId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/application/review/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Application Reviews
+         * @description Resets all application reviews, clearing any existing reviewer assignments.
+         */
+        post: operations["reset-application-reviews"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Application For Review
-     * @description Get application details including ratings, application json, and resume for review
-     */
-    get: operations["get-application-for-review"];
-    put?: never;
-    /**
-     * Submit Application Review
-     * @description Handles ratings submissions from staff during the application review process
-     */
-    post: operations["submit-application-review"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/review/{applicationId}/resume": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/application/review/update-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update Application Review Status
+         * @description Update the application review status for the current hackathon
+         */
+        post: operations["update-application-review-status"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-<<<<<<< HEAD
-    /**
-     * Get Resume URL By Application Id (for review process)
-     * @description Returns a presigned S3 URL with GET permission for a specific user's resume as an object. The client can use this URL to download the object temporarily for application review.
-     */
-    get: operations["get-resume"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/save": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Save Application
-     * @description Save user's progress on the application. File/Upload fields are not saved (eg. resumes).
-     */
-    post: operations["save-application"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/stats": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-=======
     "/application/review/{reviewId}": {
         parameters: {
             query?: never;
@@ -513,49 +283,27 @@ export interface paths {
         head?: never;
         patch?: never;
         trace?: never;
->>>>>>> 2ce5cee (application frontend refactor and some small tweaks to backend)
     };
-    /**
-     * Get Application Statistics
-     * @description Aggregates applications by race, gender, age, majors, and schools
-     */
-    get: operations["get-application-statistics"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/submit": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/application/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Application
+         * @description Save user's progress on the application. File/Upload fields are not saved (eg. resumes).
+         */
+        post: operations["save-application"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-<<<<<<< HEAD
-    get?: never;
-    put?: never;
-    /**
-     * Submit Application
-     * @description Submit the application
-     */
-    post: operations["submit-application"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/application/withdraw-application": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-=======
     "/application/search": {
         parameters: {
             query?: never;
@@ -595,89 +343,27 @@ export interface paths {
         head?: never;
         patch?: never;
         trace?: never;
->>>>>>> 2ce5cee (application frontend refactor and some small tweaks to backend)
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Withdraw Application
-     * @description Withdraw application after being accepted to the hackthon. Sets application status from accepted to withdrawn.
-     */
-    patch: operations["withdraw-application"];
-    trace?: never;
-  };
-  "/application/{userId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/application/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Application
+         * @description Submit the application
+         */
+        post: operations["submit-application"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-<<<<<<< HEAD
-    /**
-     * Get Application By User ID
-     * @description Get the application of the specified user
-     */
-    get: operations["get-application-by-user-id"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/callback": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * OAuth Callback
-     * @description Handles the OAuth provider callback, validates state and nonce, and sets the session cookie.
-     */
-    get: operations["oauth-callback"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/logout": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Logout
-     * @description Logs out the authenticated user by invalidating their session
-     */
-    post: operations["logout"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/email/queue-confirmation-email": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-=======
     "/application/withdraw": {
         parameters: {
             query?: never;
@@ -717,911 +403,930 @@ export interface paths {
         head?: never;
         patch?: never;
         trace?: never;
->>>>>>> 2ce5cee (application frontend refactor and some small tweaks to backend)
     };
-    get?: never;
-    put?: never;
-    /**
-     * Queue Confirmation Email
-     * @description Pushes a confirmation email request to the task queue
-     */
-    post: operations["queue-confirmation-email"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/email/queue-text-email": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Logout
+         * @description Logs out the authenticated user by invalidating their session
+         */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Queue Text Email
-     * @description Pushes a text email request to the task queue
-     */
-    post: operations["queue-text-email"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/email/queue-welcome-email": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/email/queue-confirmation-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queue Confirmation Email
+         * @description Pushes a confirmation email request to the task queue
+         */
+        post: operations["queue-confirmation-email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Queue Welcome Email
-     * @description Pushes a welcome email request to the task queue
-     */
-    post: operations["queue-welcome-email"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/email/send-welcome-emails": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/email/queue-text-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queue Text Email
+         * @description Pushes a text email request to the task queue
+         */
+        post: operations["queue-text-email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Send Welcome Emails
-     * @description Send welcome emails to all attendees
-     */
-    post: operations["send-welcome-emails"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/hackathon": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/email/queue-welcome-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queue Welcome Email
+         * @description Pushes a welcome email request to the task queue
+         */
+        post: operations["queue-welcome-email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Hackathon
-     * @description Returns public information of the hackathon
-     */
-    get: operations["get-hackathon"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update Hackathon
-     * @description Updates the information of the hackathon
-     */
-    patch: operations["update-hackathon"];
-    trace?: never;
-  };
-  "/hackathon/attendees/count": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/email/send-welcome-emails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Welcome Emails
+         * @description Send welcome emails to all attendees
+         */
+        post: operations["send-welcome-emails"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Hackathon Attendees Count
-     * @description Returns the number of users who is attending the hackathon
-     */
-    get: operations["get-hackathon-attendees-count"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/hackathon/attendees/discord": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/hackathon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hackathon
+         * @description Returns public information of the hackathon
+         */
+        get: operations["get-hackathon"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Hackathon
+         * @description Updates the information of the hackathon
+         */
+        patch: operations["update-hackathon"];
+        trace?: never;
     };
-    /**
-     * Get Hackathon Attendees with Discord
-     * @description Returns all users with a discord account that is also attending the hackathon
-     */
-    get: operations["get-hackathon-attendees-with-discord"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/hackathon/attendees/userids": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/hackathon/attendees/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hackathon Attendees Count
+         * @description Returns the number of users who is attending the hackathon
+         */
+        get: operations["get-hackathon-attendees-count"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Hackathon Attendees User Ids
-     * @description Returns all users ids of users who are attending the hackathon
-     */
-    get: operations["get-hackathon-attendees-userids"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/hackathon/banner": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/hackathon/attendees/discord": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hackathon Attendees with Discord
+         * @description Returns all users with a discord account that is also attending the hackathon
+         */
+        get: operations["get-hackathon-attendees-with-discord"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Upload Banner
-     * @description Uploads an image to be used as the banner for the hackathon
-     */
-    post: operations["upload-banner"];
-    /**
-     * Delete Banner
-     * @description Deletes the banner
-     */
-    delete: operations["delete-banner"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/hackathon/checkin": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/hackathon/attendees/userids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hackathon Attendees User Ids
+         * @description Returns all users ids of users who are attending the hackathon
+         */
+        get: operations["get-hackathon-attendees-userids"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Check In User
-     * @description Staff route for checking a user to an event. The user to check in must be an attendee and have never been checked in yet.
-     */
-    post: operations["check-in"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/hackathon/detailed": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/hackathon/banner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Banner
+         * @description Uploads an image to be used as the banner for the hackathon
+         */
+        post: operations["upload-banner"];
+        /**
+         * Delete Banner
+         * @description Deletes the banner
+         */
+        delete: operations["delete-banner"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Detailed Hackathon
-     * @description Returns all information of the hackathon
-     */
-    get: operations["get-hackathon-for-staff"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/hackathon/interest": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/hackathon/checkin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check In User
+         * @description Staff route for checking a user to an event. The user to check in must be an attendee and have never been checked in yet.
+         */
+        post: operations["check-in"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Submit Interest Email
-     * @description Submits an email to interest/mailing list for the hackathon
-     */
-    post: operations["submit-interest-email"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/hackathon/staff": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/hackathon/detailed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Detailed Hackathon
+         * @description Returns all information of the hackathon
+         */
+        get: operations["get-hackathon-for-staff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Hackathon Staff
-     * @description Returns the users who are part of the current staff of the hackathon
-     */
-    get: operations["get-hackathon-staff"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/ping": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/hackathon/interest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Interest Email
+         * @description Submits an email to interest/mailing list for the hackathon
+         */
+        post: operations["submit-interest-email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Ping
-     * @description Health Check
-     */
-    get: operations["ping"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/redeemables": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/hackathon/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hackathon Staff
+         * @description Returns the users who are part of the current staff of the hackathon
+         */
+        get: operations["get-hackathon-staff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Redeemables
-     * @description Returns a list of all redeemable items
-     */
-    get: operations["get-redeemables"];
-    put?: never;
-    /**
-     * Create Redeemable
-     * @description Creates a new redeemable item
-     */
-    post: operations["create-redeemable"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/redeemables/{redeemableId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/ping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ping
+         * @description Health Check
+         */
+        get: operations["ping"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete Redeemable
-     * @description Deletes a redeemable by id
-     */
-    delete: operations["delete-redeemable"];
-    options?: never;
-    head?: never;
-    /**
-     * Update Redeemable
-     * @description Update specific fields (name, stock, max per user) of a redeemable
-     */
-    patch: operations["update-redeemable"];
-    trace?: never;
-  };
-  "/redeemables/{redeemableId}/users/{userID}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/redeemables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Redeemables
+         * @description Returns a list of all redeemable items
+         */
+        get: operations["get-redeemables"];
+        put?: never;
+        /**
+         * Create Redeemable
+         * @description Creates a new redeemable item
+         */
+        post: operations["create-redeemable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Redeem Redeemable
-     * @description Redeems a redeemable by id. Creates a redemption record linking a specific user to a redeemable item
-     */
-    post: operations["redeem-redeemable"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update Redemption
-     * @description Updates a redemption created by the user.
-     */
-    patch: operations["update-redemption"];
-    trace?: never;
-  };
-  "/teams": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/redeemables/{redeemableId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Redeemable
+         * @description Deletes a redeemable by id
+         */
+        delete: operations["delete-redeemable"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Redeemable
+         * @description Update specific fields (name, stock, max per user) of a redeemable
+         */
+        patch: operations["update-redeemable"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Create Team
-     * @description Creates a new team and assigns the user as the owner. Returns the team.
-     */
-    post: operations["create-team"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/redeemables/{redeemableId}/users/{userID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redeem Redeemable
+         * @description Redeems a redeemable by id. Creates a redemption record linking a specific user to a redeemable item
+         */
+        post: operations["redeem-redeemable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Redemption
+         * @description Updates a redemption created by the user.
+         */
+        patch: operations["update-redemption"];
+        trace?: never;
     };
-    /**
-     * Get My Team
-     * @description Returns the team information and the full list of team members for the currently authenticated user
-     */
-    get: operations["get-my-team"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/me/pending-joins": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Team
+         * @description Creates a new team and assigns the user as the owner. Returns the team.
+         */
+        post: operations["create-team"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get User's Pending Join Requests
-     * @description Returns the current user's pending requests for teams.
-     */
-    get: operations["get-my-pending-join-requests"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{requestId}/accept": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/teams/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Team
+         * @description Returns the team information and the full list of team members for the currently authenticated user
+         */
+        get: operations["get-my-team"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Accept Team Join Request
-     * @description Accepts a pending team join request. Only the team owner can perform this action.
-     */
-    post: operations["accept-team-join-request"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{requestId}/reject": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/teams/me/pending-joins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User's Pending Join Requests
+         * @description Returns the current user's pending requests for teams.
+         */
+        get: operations["get-my-pending-join-requests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Reject Team Join Request
-     * @description Rejects a pending team join request. Only the team owner can perform this action.
-     */
-    post: operations["reject-team-join-request"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{teamId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/teams/{requestId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept Team Join Request
+         * @description Accepts a pending team join request. Only the team owner can perform this action.
+         */
+        post: operations["accept-team-join-request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Team
-     * @description Returns the team information and the full list of team members by team id
-     */
-    get: operations["get-team"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{teamId}/join": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/teams/{requestId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject Team Join Request
+         * @description Rejects a pending team join request. Only the team owner can perform this action.
+         */
+        post: operations["reject-team-join-request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Request to Join Team
-     * @description Requests to join a team or fails if user is already on a team.
-     */
-    post: operations["create-join-team-request"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{teamId}/kick/{memberId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/teams/{teamId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Team
+         * @description Returns the team information and the full list of team members by team id
+         */
+        get: operations["get-team"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Kick Team Member
-     * @description Kicks a member from a team. Only the team owner can perform this action.
-     */
-    post: operations["kick-member-from-team"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{teamId}/leave": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/teams/{teamId}/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request to Join Team
+         * @description Requests to join a team or fails if user is already on a team.
+         */
+        post: operations["create-join-team-request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Leave Team
-     * @description Leaves a team if the user is on the team.
-     */
-    post: operations["leave-team"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/teams/{teamId}/pending-joins": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/teams/{teamId}/kick/{memberId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kick Team Member
+         * @description Kicks a member from a team. Only the team owner can perform this action.
+         */
+        post: operations["kick-member-from-team"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Pending Join Requests for Team
-     * @description Returns a team's pending join requests. This is only allowed for the team's owner.
-     */
-    get: operations["get-pending-join-team-requests"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/teams/{teamId}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Leave Team
+         * @description Leaves a team if the user is on the team.
+         */
+        post: operations["leave-team"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Users
-     * @description Get or search for users by name or email. If no search term is provided, returns all users with pagination.
-     */
-    get: operations["get-users"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users/email/{email}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/teams/{teamId}/pending-joins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Pending Join Requests for Team
+         * @description Returns a team's pending join requests. This is only allowed for the team's owner.
+         */
+        get: operations["get-pending-join-team-requests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get User By Email
-     * @description Returns the user associated with the email
-     */
-    get: operations["get-user-by-email"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Users
+         * @description Get or search for users by name or email. If no search term is provided, returns all users with pagination.
+         */
+        get: operations["get-users"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Me
-     * @description Returns the authenticated user's profile
-     */
-    get: operations["get-me"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update User
-     * @description Updates information of the authenticated user
-     */
-    patch: operations["update-user"];
-    trace?: never;
-  };
-  "/users/me/acknowledge-new-application-status": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/email/{email}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User By Email
+         * @description Returns the user associated with the email
+         */
+        get: operations["get-user-by-email"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Acknowledge New Application Status
-     * @description Mark that the user has seen their new application status
-     */
-    post: operations["update-has-seen-new-application-status"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users/me/email-consent": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Me
+         * @description Returns the authenticated user's profile
+         */
+        get: operations["get-me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update User
+         * @description Updates information of the authenticated user
+         */
+        patch: operations["update-user"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update Email Consent
-     * @description Updates the user's email consent setting
-     */
-    patch: operations["update-email-consent"];
-    trace?: never;
-  };
-  "/users/me/onboarding": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/me/acknowledge-new-application-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Acknowledge New Application Status
+         * @description Mark that the user has seen their new application status
+         */
+        post: operations["update-has-seen-new-application-status"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Onboard User
-     * @description Allows the user to submit information such as name and preferred email, and complete the onboarding process
-     */
-    patch: operations["onboard-user"];
-    trace?: never;
-  };
-  "/users/rfid/{rfid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/me/email-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Email Consent
+         * @description Updates the user's email consent setting
+         */
+        patch: operations["update-email-consent"];
+        trace?: never;
     };
-    /**
-     * Get User By RFID
-     * @description Returns the user associated with the RFID
-     */
-    get: operations["get-user-by-rfid"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users/roles/assign": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/me/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Onboard User
+         * @description Allows the user to submit information such as name and preferred email, and complete the onboarding process
+         */
+        patch: operations["onboard-user"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Assign Role
-     * @description Assigns/modify a user's role
-     */
-    post: operations["assign-role"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users/roles/batch-assign": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/rfid/{rfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User By RFID
+         * @description Returns the user associated with the RFID
+         */
+        get: operations["get-user-by-rfid"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Batch Assign Roles
-     * @description Batch assign/modify multiple users' roles
-     */
-    post: operations["batch-assign-roles"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users/roles/revoke/{userID}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/roles/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Assign Role
+         * @description Assigns/modify a user's role
+         */
+        post: operations["assign-role"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Revoke Role
-     * @description Remove a user's role
-     */
-    post: operations["revoke-role"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/users/userid/{userID}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/roles/batch-assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Batch Assign Roles
+         * @description Batch assign/modify multiple users' roles
+         */
+        post: operations["batch-assign-roles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get User By Id
-     * @description Returns the user associated with the user id
-     */
-    get: operations["get-user-by-id"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/workshops": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/roles/revoke/{userID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke Role
+         * @description Remove a user's role
+         */
+        post: operations["revoke-role"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get all UPCOMING workshops
-     * @description Returns a list of all workshops.
-     */
-    get: operations["get-all-workshops"];
-    put?: never;
-    /**
-     * Create a workshop
-     * @description Creates a workshop based on the provided body.
-     */
-    post: operations["create-workshop"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/workshops/delete-all": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/users/userid/{userID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User By Id
+         * @description Returns the user associated with the user id
+         */
+        get: operations["get-user-by-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete all workshops
-     * @description Deletes all the workshops
-     */
-    delete: operations["delete-all-workshops"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/workshops/view-all": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/workshops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all UPCOMING workshops
+         * @description Returns a list of all workshops.
+         */
+        get: operations["get-all-workshops"];
+        put?: never;
+        /**
+         * Create a workshop
+         * @description Creates a workshop based on the provided body.
+         */
+        post: operations["create-workshop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * View all workshops ever made
-     * @description Returns a list of all workshops, including past workshops.
-     */
-    get: operations["view-all-workshops"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/workshops/{workshopId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/workshops/delete-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete all workshops
+         * @description Deletes all the workshops
+         */
+        delete: operations["delete-all-workshops"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get a workshop off of workshopID
-     * @description Returns a workshop based on the provided id.
-     */
-    get: operations["get-workshop"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete a workshop
-     * @description Deletes a workshop based on the provided id.
-     */
-    delete: operations["delete-workshop"];
-    options?: never;
-    head?: never;
-    /**
-     * Update a workshop
-     * @description Updates a workshop based on the provided id and body. Only the fields provided in the body will be updated.
-     */
-    patch: operations["update-workshop"];
-    trace?: never;
-  };
-  "/workshops/{workshopId}/register": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/workshops/view-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * View all workshops ever made
+         * @description Returns a list of all workshops, including past workshops.
+         */
+        get: operations["view-all-workshops"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Register for a workshop
-     * @description Lets a user register for a workshop.
-     */
-    post: operations["register-for-workshop"];
-    /**
-     * Unregister for a workshop
-     * @description Lets a user unregister for a workshop.
-     */
-    delete: operations["unregister-for-workshop"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
+    "/workshops/{workshopId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a workshop off of workshopID
+         * @description Returns a workshop based on the provided id.
+         */
+        get: operations["get-workshop"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a workshop
+         * @description Deletes a workshop based on the provided id.
+         */
+        delete: operations["delete-workshop"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a workshop
+         * @description Updates a workshop based on the provided id and body. Only the fields provided in the body will be updated.
+         */
+        patch: operations["update-workshop"];
+        trace?: never;
+    };
+    "/workshops/{workshopId}/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register for a workshop
+         * @description Lets a user register for a workshop.
+         */
+        post: operations["register-for-workshop"];
+        /**
+         * Unregister for a workshop
+         * @description Lets a user unregister for a workshop.
+         */
+        delete: operations["unregister-for-workshop"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-<<<<<<< HEAD
-  schemas: {
-    AllApplications: {
-      applications: components["schemas"]["ListAllApplicationsRow"][] | null;
-      /** Format: int64 */
-      count: number;
-=======
     schemas: {
         AppUser: {
             email: string | null;
@@ -2207,778 +1912,15 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
->>>>>>> 2ce5cee (application frontend refactor and some small tweaks to backend)
     };
-    ApplicationReviewDetails: {
-      application: string;
-      autoDecision: string | null;
-      autoDecisionRequestId: string | null;
-      /** Format: int32 */
-      experienceRating: number | null;
-      notes: string | null;
-      /** Format: int32 */
-      passionRating: number | null;
-      resumeUrl: string;
-    };
-    ApplicationStatistics: {
-      ageStats: components["schemas"]["GetSubmittedApplicationAgesRow"];
-      genderStats: components["schemas"]["GetSubmittedApplicationGendersRow"];
-      majorStats:
-        | components["schemas"]["GetSubmittedApplicationMajorsRow"][]
-        | null;
-      raceStats:
-        | components["schemas"]["GetSubmittedApplicationRacesRow"][]
-        | null;
-      schoolStats:
-        | components["schemas"]["GetSubmittedApplicationSchoolsRow"][]
-        | null;
-      statusStats: components["schemas"]["GetApplicationStatusesRow"];
-    };
-    AssignRoleBatchRequest: {
-      assignments: components["schemas"]["AssignRoleRequest"][] | null;
-    };
-    AssignRoleRequest: {
-      email: string | null;
-      role: string;
-      userID: string | null;
-    };
-    AssignedApplication: {
-      applicationId: string;
-      status: string;
-    };
-    AutoDecisionRequest: {
-      applicationId: string;
-      /** @enum {string} */
-      decision: "auto_accept" | "auto_reject";
-      justification: string | null;
-    };
-    CheckInRequest: {
-      rfid: string | null;
-      userID: string;
-    };
-    CreateJoinRequest: {
-      message: string | null;
-    };
-    CreateRedeemableRequest: {
-      /** Format: int64 */
-      amount: number;
-      /** Format: int64 */
-      maxUserAmount: number;
-      name: string;
-    };
-    CreateTeamRequest: {
-      name: string;
-    };
-    CreateWorkshopInput: {
-      description: string;
-      /** Format: date-time */
-      end_time: string;
-      location: string;
-      presenter: string;
-      /** Format: date-time */
-      start_time: string;
-      title: string;
-    };
-    DeleteAutoDecisionRequest: {
-      requestId: string;
-    };
-    ErrorDetail: {
-      /** @description Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id' */
-      location?: string;
-      /** @description Error message text */
-      message?: string;
-      /** @description The value at the given location */
-      value?: unknown;
-    };
-    ErrorModel: {
-      /** @description A human-readable explanation specific to this occurrence of the problem. */
-      detail?: string;
-      /** @description Optional list of individual error details */
-      errors?: components["schemas"]["ErrorDetail"][] | null;
-      /**
-       * Format: uri
-       * @description A URI reference that identifies the specific occurrence of the problem.
-       */
-      instance?: string;
-      /**
-       * Format: int64
-       * @description HTTP status code
-       */
-      status?: number;
-      /** @description A short, human-readable summary of the problem type. This value should not change between occurrences of the error. */
-      title?: string;
-      /**
-       * Format: uri
-       * @description A URI reference to human-readable documentation for the error.
-       * @default about:blank
-       */
-      type: string;
-    };
-    FormFile: {
-      ContentType: string;
-      Filename: string;
-      IsSet: boolean;
-      /** Format: int64 */
-      Size: number;
-    };
-    GetApplicationStatusesRow: {
-      /** Format: int64 */
-      accepted: number;
-      /** Format: int64 */
-      rejected: number;
-      /** Format: int64 */
-      started: number;
-      /** Format: int64 */
-      submitted: number;
-      /** Format: int64 */
-      under_review: number;
-      /** Format: int64 */
-      waitlisted: number;
-      /** Format: int64 */
-      withdrawn: number;
-    };
-    GetAttendeesWithDiscordRow: {
-      discord_id: string;
-      email: string | null;
-      name: string;
-      user_id: string;
-    };
-    GetRedeemablesRow: {
-      /** Format: date-time */
-      created_at: string;
-      id: string;
-      /** Format: int32 */
-      max_user_amount: number;
-      name: string;
-      total_redeemed: unknown;
-      /** Format: int32 */
-      total_stock: number;
-      /** Format: date-time */
-      updated_at: string;
-    };
-    GetSubmittedApplicationAgesRow: {
-      /** Format: int64 */
-      age_18: number;
-      /** Format: int64 */
-      age_19: number;
-      /** Format: int64 */
-      age_20: number;
-      /** Format: int64 */
-      age_21: number;
-      /** Format: int64 */
-      age_22: number;
-      /** Format: int64 */
-      age_23_plus: number;
-      /** Format: int64 */
-      underage: number;
-    };
-    GetSubmittedApplicationGendersRow: {
-      /** Format: int64 */
-      female: number;
-      /** Format: int64 */
-      male: number;
-      /** Format: int64 */
-      non_binary: number;
-      /** Format: int64 */
-      other: number;
-    };
-    GetSubmittedApplicationMajorsRow: {
-      /** Format: int64 */
-      count: number;
-      major: string;
-    };
-    GetSubmittedApplicationRacesRow: {
-      /** Format: int64 */
-      count: number;
-      race_group: string;
-    };
-    GetSubmittedApplicationSchoolsRow: {
-      /** Format: int64 */
-      count: number;
-      school: string;
-    };
-    Hackathon: {
-      accept_early_applications: boolean;
-      /** Format: date-time */
-      application_close: string;
-      /** Format: date-time */
-      application_open: string;
-      application_review_started: boolean;
-      banner: string | null;
-      /** Format: date-time */
-      created_at: string;
-      /** Format: date-time */
-      decision_release: string | null;
-      description: string | null;
-      /** Format: date-time */
-      early_application_close: string | null;
-      /** Format: date-time */
-      early_application_open: string | null;
-      /** Format: date-time */
-      end_time: string;
-      id: string;
-      is_active: boolean;
-      location: string | null;
-      location_url: string | null;
-      /** Format: int32 */
-      max_attendees: number | null;
-      name: string;
-      /** Format: date-time */
-      rsvp_deadline: string | null;
-      /** Format: date-time */
-      start_time: string;
-      /** Format: date-time */
-      updated_at: string;
-    };
-    HackerApplication: {
-      application: string;
-      /** Format: date-time */
-      createdAt: string;
-      hackathonId: string;
-      /** Format: date-time */
-      savedAt: string;
-      status: string;
-      /** Format: date-time */
-      submittedAt: string | null;
-      /** Format: date-time */
-      updatedAt: string;
-      userId: string;
-    };
-    ListAllApplicationsRow: {
-      application: string;
-      /** Format: date-time */
-      created_at: string;
-      email: string | null;
-      image: string | null;
-      is_early: boolean;
-      name: string | null;
-      status: string;
-      /** Format: date-time */
-      submitted_at: string | null;
-      user_id: string;
-    };
-    ListAutoDecisionRequestsRow: {
-      application_id: string;
-      approved: boolean | null;
-      approved_or_denied_by: string;
-      approver_id: string;
-      approver_name: string | null;
-      /** Format: date-time */
-      created_at: string;
-      id: string;
-      justification: string | null;
-      requested_decision: string;
-      reviewer_id: string;
-      reviewer_image: string | null;
-      reviewer_name: string | null;
-      reviewer_user_id: string;
-      /** Format: date-time */
-      updated_at: string;
-    };
-    ListJoinRequestsByTeamAndStatusWithUserRow: {
-      /** Format: date-time */
-      created_at: string;
-      id: string;
-      /** Format: date-time */
-      processed_at: string | null;
-      processed_by_user_id: string;
-      request_message: string | null;
-      status: string;
-      team_id: string;
-      /** Format: date-time */
-      updated_at: string;
-      user_email: string | null;
-      user_id: string;
-      user_image: string | null;
-      user_name: string;
-    };
-    ListReviewersAndProgressRow: {
-      /** Format: int64 */
-      completed_count: number;
-      id: string;
-      image: string | null;
-      name: string | null;
-      /** Format: int64 */
-      total_assigned: number;
-    };
-    MemberWithUserInfo: {
-      email: string | null;
-      image: string | null;
-      /** Format: date-time */
-      joinedAt: string;
-      name: string;
-      userID: string;
-    };
-    OnboardingRequest: {
-      name: string;
-      preferredEmail: string;
-    };
-    OpenWorkshop: {
-      /** Format: int64 */
-      attendees: number;
-      description: string;
-      /** Format: date-time */
-      end_time: string;
-      id: string;
-      location: string;
-      presenter: string;
-      /** Format: date-time */
-      start_time: string;
-      title: string;
-    };
-    PublicHackathon: {
-      acceptEarlyApplications: boolean;
-      /** Format: date-time */
-      applicationClose: string;
-      /** Format: date-time */
-      applicationOpen: string;
-      banner: string | null;
-      description: string | null;
-      /** Format: date-time */
-      earlyApplicationClose: string | null;
-      /** Format: date-time */
-      earlyApplicationOpen: string | null;
-      /** Format: date-time */
-      endTime: string;
-      id: string;
-      location: string | null;
-      locationUrl: string | null;
-      name: string;
-      /** Format: date-time */
-      rsvpDeadline: string | null;
-      /** Format: date-time */
-      startTime: string;
-    };
-    QueueConfirmationEmailRequest: {
-      email: string;
-      firstName: string;
-    };
-    QueueTextEmailRequest: {
-      body: string;
-      subject: string;
-      to: string[] | null;
-    };
-    QueueWelcomeEmailRequest: {
-      email: string;
-      firstName: string;
-      recipientId: string;
-    };
-    Redeemable: {
-      /** Format: int32 */
-      amount: number;
-      /** Format: date-time */
-      created_at: string;
-      hackathon_id: string;
-      id: string;
-      /** Format: int32 */
-      max_user_amount: number;
-      name: string;
-      /** Format: date-time */
-      updated_at: string;
-    };
-    Review: {
-      /** Format: int64 */
-      experienceRating: number;
-      notes: string;
-      /** Format: int64 */
-      passionRating: number;
-    };
-    ReviewStatus: {
-      started: boolean;
-    };
-    ReviewerAssignment: {
-      /** Format: int64 */
-      amount: number | null;
-      userId: string;
-    };
-    SubmissionResult: {
-      /** Format: date-time */
-      submittedAt: string | null;
-    };
-    SubmitInterestEmailRequest: {
-      email: string;
-      source: string | null;
-    };
-    Team: {
-      /** Format: date-time */
-      created_at: string;
-      hackathon_id: string;
-      id: string;
-      name: string;
-      owner_id: string;
-      /** Format: date-time */
-      updated_at: string;
-    };
-    TeamJoinRequest: {
-      /** Format: date-time */
-      created_at: string;
-      id: string;
-      /** Format: date-time */
-      processed_at: string | null;
-      processed_by_user_id: string;
-      request_message: string | null;
-      status: string;
-      team_id: string;
-      /** Format: date-time */
-      updated_at: string;
-      user_id: string;
-    };
-    TeamWithMembers: {
-      id: string;
-      members: components["schemas"]["MemberWithUserInfo"][] | null;
-      name: string;
-      ownerId: string;
-    };
-    UpdateAutoDecisionRequestBody: {
-      approved: boolean;
-      requestId: string;
-    };
-    UpdateEmailConsentRequest: {
-      emailConsent: boolean;
-    };
-    UpdateHackathonRequest: {
-      /** Format: date-time */
-      applicationClose?: string;
-      /** Format: date-time */
-      applicationOpen?: string;
-      /** Format: date-time */
-      decisionRelease?: string | null;
-      description?: string | null;
-      /** Format: date-time */
-      endTime?: string;
-      location?: string | null;
-      locationUrl?: string | null;
-      /** Format: int32 */
-      maxAttendees?: number | null;
-      name?: string;
-      /** Format: date-time */
-      rsvpDeadline?: string | null;
-      /** Format: date-time */
-      startTime?: string;
-    };
-    UpdateRedeemableRequest: {
-      /** Format: int64 */
-      maxUserAmount?: number;
-      name?: string;
-      /** Format: int64 */
-      totalStock?: number;
-    };
-    UpdateRedemptionRequest: {
-      /** Format: int64 */
-      newAmount?: number;
-    };
-    UpdateUserRequest: {
-      name: string;
-      preferredEmail: string;
-    };
-    UpdateWorkshopInput: {
-      description: string | null;
-      /** Format: date-time */
-      end_time: string | null;
-      location: string | null;
-      presenter: string | null;
-      /** Format: date-time */
-      start_time: string | null;
-      title: string | null;
-    };
-    User: {
-      /** Format: date-time */
-      checked_in_at: string | null;
-      /** Format: date-time */
-      created_at: string;
-      email: string | null;
-      email_consent: boolean;
-      email_verified: boolean;
-      has_seen_new_application_status: boolean | null;
-      id: string;
-      image: string | null;
-      name: string;
-      onboarded: boolean;
-      preferred_email: string | null;
-      rfid: string | null;
-      role: string;
-      /** Format: date-time */
-      role_assigned_at: string | null;
-      /** Format: date-time */
-      updated_at: string;
-    };
-    UserContext: {
-      /** Format: date-time */
-      checkedInAt: string | null;
-      email: string | null;
-      emailConsent: boolean;
-      hasSeenNewApplicationStatus: boolean | null;
-      image: string | null;
-      name: string;
-      onboarded: boolean;
-      preferredEmail: string | null;
-      rfid: string | null;
-      /** @enum {string} */
-      role: "admin" | "staff" | "attendee" | "applicant" | "visitor";
-      /** Format: uuid */
-      userId: string;
-    };
-    Workshop: {
-      /** Format: date-time */
-      created_at: string;
-      description: string | null;
-      /** Format: date-time */
-      end_time: string;
-      id: string;
-      location: string | null;
-      /** Format: int32 */
-      num_attendees: number;
-      presenter: string | null;
-      /** Format: date-time */
-      start_time: string;
-      title: string;
-      /** Format: date-time */
-      updated_at: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-<<<<<<< HEAD
-  "get-application": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HackerApplication"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-all-applications": {
-    parameters: {
-      query?: {
-        limit?: number;
-        offset?: number;
-        search?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AllApplications"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-assigned-applications": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["AssignedApplication"][]
-            | null;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "confirm-attendance": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-download-resume-url": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": string;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "replace-resume": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: {
-      content: {
-        "multipart/form-data": {
-          /** Format: binary */
-          resume: string;
-=======
     "get-my-application": {
         parameters: {
             query?: never;
@@ -7234,3991 +6176,6 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ErrorModel"];
                 };
             };
->>>>>>> 2ce5cee (application frontend refactor and some small tweaks to backend)
         };
-      };
     };
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "assign-application-reviewers": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json":
-          | components["schemas"]["ReviewerAssignment"][]
-          | null;
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-auto-decision-requests": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["ListAutoDecisionRequestsRow"][]
-            | null;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "request-auto-decision": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AutoDecisionRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "delete-auto-decision": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DeleteAutoDecisionRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "update-auto-decision-request": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateAutoDecisionRequestBody"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-reviewers-and-progress": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["ListReviewersAndProgressRow"][]
-            | null;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "reset-application-reviews": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "update-application-review-status": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ReviewStatus"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-application-for-review": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        applicationId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ApplicationReviewDetails"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "submit-application-review": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        applicationId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["Review"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-resume": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        applicationId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": string;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "save-application": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: {
-      content: {
-        "application/json": unknown;
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-application-statistics": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ApplicationStatistics"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "submit-application": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SubmissionResult"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "withdraw-application": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-application-by-user-id": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HackerApplication"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "oauth-callback": {
-    parameters: {
-      query: {
-        /** @description OAuth authorization code */
-        code: string;
-        /** @description Base64 encoded OAuth state */
-        state: string;
-      };
-      header?: {
-        /** @description Client user agent */
-        "User-Agent"?: string;
-      };
-      path?: never;
-      cookie: {
-        /** @description Auth nonce cookie for CSRF protection */
-        sh_auth_nonce: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          Location?: string;
-          "Set-Cookie"?: string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Implemented */
-      501: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  logout: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          "Set-Cookie"?: string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "queue-confirmation-email": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QueueConfirmationEmailRequest"];
-      };
-    };
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "queue-text-email": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QueueTextEmailRequest"];
-      };
-    };
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "queue-welcome-email": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QueueWelcomeEmailRequest"];
-      };
-    };
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "send-welcome-emails": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-hackathon": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PublicHackathon"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "update-hackathon": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateHackathonRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-hackathon-attendees-count": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": number;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-hackathon-attendees-with-discord": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["GetAttendeesWithDiscordRow"][]
-            | null;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-hackathon-attendees-userids": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": string[] | null;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "upload-banner": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: {
-      content: {
-        "multipart/form-data": {
-          /** Format: binary */
-          image: string;
-        };
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": string | null;
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "delete-banner": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "check-in": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CheckInRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-hackathon-for-staff": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Hackathon"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "submit-interest-email": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SubmitInterestEmailRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-hackathon-staff": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["User"][] | null;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  ping: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": string;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-redeemables": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["GetRedeemablesRow"][]
-            | null;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "create-redeemable": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateRedeemableRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Redeemable"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "delete-redeemable": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        redeemableId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "update-redeemable": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        redeemableId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateRedeemableRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "redeem-redeemable": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        redeemableId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "update-redemption": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        redeemableId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateRedemptionRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "create-team": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateTeamRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Team"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-my-team": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TeamWithMembers"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-my-pending-join-requests": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TeamJoinRequest"][] | null;
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "accept-team-join-request": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        requestId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "reject-team-join-request": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        requestId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-team": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        teamId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TeamWithMembers"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "create-join-team-request": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        teamId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateJoinRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TeamJoinRequest"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "kick-member-from-team": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        memberId: string;
-        teamId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "leave-team": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        teamId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-pending-join-team-requests": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        teamId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["ListJoinRequestsByTeamAndStatusWithUserRow"][]
-            | null;
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-users": {
-    parameters: {
-      query?: {
-        search?: string;
-        limit?: number;
-        offset?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["User"][] | null;
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-user-by-email": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        email: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["User"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserContext"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "update-user": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateUserRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "update-has-seen-new-application-status": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "update-email-consent": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateEmailConsentRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "onboard-user": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["OnboardingRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-user-by-rfid": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        rfid: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["User"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "assign-role": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AssignRoleRequest"];
-      };
-    };
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "batch-assign-roles": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AssignRoleBatchRequest"];
-      };
-    };
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "revoke-role": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userID: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-user-by-id": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userID: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["User"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-all-workshops": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Workshop"][] | null;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "create-workshop": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateWorkshopInput"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["OpenWorkshop"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "delete-all-workshops": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "view-all-workshops": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Workshop"][] | null;
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "get-workshop": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workshopId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["OpenWorkshop"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "delete-workshop": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workshopId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "update-workshop": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workshopId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateWorkshopInput"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["OpenWorkshop"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "register-for-workshop": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workshopId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["OpenWorkshop"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
-  "unregister-for-workshop": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workshopId: string;
-      };
-      cookie: {
-        /** @description Session cookie used to authenticate the user */
-        sh_session_id: string;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["OpenWorkshop"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["ErrorModel"];
-        };
-      };
-    };
-  };
 }
