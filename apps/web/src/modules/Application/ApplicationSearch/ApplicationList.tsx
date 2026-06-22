@@ -160,7 +160,7 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
     </div>
   ) : (
     <Table
-      className="max-h-100 overflow-auto w-full"
+      className="max-h-[78vh] overflow-auto w-full"
       headerClassName="text-text-secondary text-sm"
       table={applicationsTable}
     />

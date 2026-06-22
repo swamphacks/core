@@ -46,63 +46,65 @@ export function Table<TData>({
   showPagination = true,
 }: TableProps<TData>) {
   return (
-    <div className={className}>
-      <table
-        {...{
-          style: {
-            tableLayout: "fixed",
-            width: table.getCenterTotalSize(),
-          },
-        }}
-      >
-        <thead className={headerClassName ? headerClassName : ""}>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  className={`text-left py-2 px-2`}
-                  key={header.id}
-                  {...{
-                    colSpan: header.colSpan,
-                    style: {
-                      width: header.getSize(),
-                    },
-                  }}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row, i) => (
-            <tr
-              key={row.id}
-              className={i % 2 === 0 ? "bg-surface" : "bg-table-bg-row"}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  {...{
-                    style: {
-                      width: cell.column.getSize(),
-                    },
-                  }}
-                  className={`px-2 py-2`}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div>
+      <div className={className}>
+        <table
+          {...{
+            style: {
+              tableLayout: "fixed",
+              width: table.getCenterTotalSize(),
+            },
+          }}
+        >
+          <thead className={headerClassName ? headerClassName : ""}>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    className={`text-left py-2 px-2`}
+                    key={header.id}
+                    {...{
+                      colSpan: header.colSpan,
+                      style: {
+                        width: header.getSize(),
+                      },
+                    }}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row, i) => (
+              <tr
+                key={row.id}
+                className={i % 2 === 0 ? "bg-surface" : "bg-table-bg-row"}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    {...{
+                      style: {
+                        width: cell.column.getSize(),
+                      },
+                    }}
+                    className={`px-2 py-2`}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>{" "}
       {showPagination && (
         <div className="flex items-center gap-2 p-3">
           <Button

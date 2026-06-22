@@ -19,7 +19,7 @@ export default function ApplicationSearchPage() {
       </div>
 
       <div className="mt-5 p-2 rounded-md bg-surface max-w-fit flex flex-col">
-        <div className="w-70">
+        <div className="w-70 mb-3">
           <Input
             aria-label="search input"
             className="rounded-md"
