@@ -12,7 +12,7 @@ import (
 
 func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.Middleware) {
 	huma.Register(group, huma.Operation{
-		OperationID:   "get-application",
+		OperationID:   "get-my-application",
 		Method:        http.MethodGet,
 		Summary:       "Get My Application",
 		Description:   "Get the application of the current user",
@@ -169,13 +169,13 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 	// REVIEWS
 
 	huma.Register(group, huma.Operation{
-		OperationID:   "get-assigned-applications",
+		OperationID:   "get-review-assignments",
 		Method:        http.MethodGet,
-		Summary:       "Get Assigned Applications",
-		Description:   "Returns assigned applications and their review progress for the authenticated reviewer",
+		Summary:       "Get Review Assignments",
+		Description:   "Get review assignments for the reviewer and review status for each",
 		Tags:          []string{"Application Review"},
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Path:          "/assigned",
+		Path:          "/review/assignments",
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
@@ -188,7 +188,7 @@ func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.
 		Description:   "Get an application review detail including ratings, the application json, and resume",
 		Tags:          []string{"Application Review"},
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Path:          "/review",
+		Path:          "/review/{reviewId}",
 		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,

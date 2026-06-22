@@ -3,23 +3,19 @@ import { Modal } from "@/components/ui/Modal";
 import { Sheet } from "@/components/ui/Sheet";
 import { Table } from "@/components/ui/Table";
 import type { UserContext } from "@/lib/auth/types";
-import type {
-  ApplicationAutoDecisionRequest,
-  StaffHackathon,
-} from "@/lib/openapi/types";
 import ReviewerAssignmentModal from "@/modules/Application/ApplicationReview/ReviewersAssignmentModal";
 import ReviewNotStartedAdmin from "@/modules/Application/ApplicationReview/ReviewNotStartedAdmin";
 import { useApplicationReviewAdminActions } from "@/modules/Application/hooks/useApplicationReviewAdminActions";
 import {
   useAutoDecisionRequests,
   useUpdateAutoDecisionRequest,
+  type AutoDecisionRequestResponse,
 } from "@/modules/Application/hooks/useAutoDecisionRequests";
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { DialogTrigger } from "react-aria-components";
 import TablerBrowserShare from "~icons/tabler/browser-share";
 import TablerUserEdit from "~icons/tabler/user-edit";
-import { useApplicationForReview } from "../hooks/useApplicationForReview";
 import { Popover } from "@/components/ui/Popover";
 import {
   getCoreRowModel,
@@ -33,10 +29,11 @@ import { Input } from "@/components/ui/Field";
 import { Select } from "@/components/ui/Select";
 import TablerSearch from "~icons/tabler/search";
 import useParsedForm from "@/modules/Application/hooks/useParsedForm";
-import ApplicationResponsesViewer from "@/modules/Application/ApplicationResponsesViewer";
+import ApplicationViewer from "@/modules/Application/ApplicationViewer";
+import type { components } from "@/lib/openapi/schema";
 
 interface ApplicationReviewPageProps {
-  hackathon: StaffHackathon;
+  hackathon: components["schemas"]["Hackathon"];
   user: UserContext;
 }
 
@@ -110,10 +107,10 @@ function AutoDecisionRequestsTable() {
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  const requests: ApplicationAutoDecisionRequest = data ?? [];
-  type RequestRow = ApplicationAutoDecisionRequest[number];
+  const requests = data ?? [];
+  type AutoDecisionRequest = AutoDecisionRequestResponse[number];
 
-  const columns: ColumnDef<RequestRow>[] = useMemo(
+  const columns: ColumnDef<AutoDecisionRequest>[] = useMemo(
     () => [
       {
         id: "reviewer_name",
@@ -121,7 +118,7 @@ function AutoDecisionRequestsTable() {
         accessorKey: "reviewer_name",
         size: 200,
         cell: ({ row }) => {
-          const avatarUrl = row.original.reviewer_image;
+          const avatarUrl = row.original.reviewer.image;
           return (
             <div className="flex items-center gap-2">
               {avatarUrl ? (
@@ -137,9 +134,9 @@ function AutoDecisionRequestsTable() {
                   </span>
                 </div>
               )}
-              <div className="text-sm">
-                <div className="font-medium">{row.original.reviewer_name}</div>
-              </div>
+              <span className="text-sm inline-block max-w-40 font-medium truncate">
+                {row.original.reviewer.name}
+              </span>
             </div>
           );
         },
@@ -153,13 +150,10 @@ function AutoDecisionRequestsTable() {
               Open
             </Button>
             <Sheet sheetClassName="w-full sm:w-160 lg:w-200">
-              <ApplicationResponsesViewer
+              <ApplicationViewer
                 parsedForm={parsedForm!}
-                applicationId={row.original.application_id}
+                applicationId={row.original.applicationId}
               />
-              {/* <UserApplicationSideDrawer
-                applicationId={row.original.application_id}
-              /> */}
             </Sheet>
           </DialogTrigger>
         ),
@@ -169,7 +163,7 @@ function AutoDecisionRequestsTable() {
         accessorKey: "requested_decision",
         size: 130,
         cell: ({ row }) =>
-          row.original.requested_decision === "auto_accept"
+          row.original.requestedDecision === "auto_accept"
             ? "Auto Accept"
             : "Auto Reject",
       },
@@ -194,25 +188,20 @@ function AutoDecisionRequestsTable() {
       {
         header: "Created At",
         size: 200,
-        cell: ({ row }) => new Date(row.original.created_at).toLocaleString(),
+        cell: ({ row }) => new Date(row.original.createdAt).toLocaleString(),
       },
       {
         header: "Actions",
         id: "actions",
         size: 150,
         accessorFn: (row) =>
-          row.approved_or_denied_by
-            ? row.approved
-              ? "approved"
-              : "denied"
-            : "pending",
-        cell: (info) => {
-          const row = info.row.original as RequestRow;
-          const isResolved = row.approved_or_denied_by !== null;
+          row.decidedBy ? (row.approved ? "approved" : "denied") : "pending",
+        cell: ({ row }) => {
+          const isResolved = row.original.decidedBy !== null;
 
           return isResolved ? (
             <span className="text-sm text-text-secondary">
-              {row.approved ? "Approved" : "Denied"}
+              {row.original.approved ? "Approved" : "Denied"}
             </span>
           ) : (
             <div className="flex gap-2">
@@ -318,7 +307,7 @@ function AutoDecisionRequestsTable() {
               { id: "auto_accept", name: "Auto Accept" },
               { id: "auto_reject", name: "Auto Reject" },
             ]}
-            onSelectionChange={(key) => {
+            onChange={(key) => {
               const val = key === "" ? undefined : key;
               setColumnFilters((prev) => {
                 const next = prev.filter((p) => p.id !== "requested_decision");
@@ -334,7 +323,7 @@ function AutoDecisionRequestsTable() {
           <span className="text-sm">Approval Filter:</span>
           <Select
             className="text-sm max-w-40"
-            selectedKey={String(
+            value={String(
               (columnFilters.find((f) => f.id === "actions")
                 ?.value as string) ?? "",
             )}
@@ -344,7 +333,7 @@ function AutoDecisionRequestsTable() {
               { id: "denied", name: "Denied" },
               { id: "pending", name: "Pending" },
             ]}
-            onSelectionChange={(key) => {
+            onChange={(key) => {
               const val = key === "" ? undefined : key;
               setColumnFilters((prev) => {
                 const next = prev.filter((p) => p.id !== "actions");
@@ -371,163 +360,6 @@ function AutoDecisionRequestsTable() {
           showPagination={false}
         />
       )}
-    </div>
-  );
-}
-
-interface UserApplicationSideDrawerProps {
-  applicationId: string;
-}
-
-export function UserApplicationSideDrawer({
-  applicationId,
-}: UserApplicationSideDrawerProps) {
-  const applicationReviewDetails = useApplicationForReview(applicationId);
-
-  if (!applicationReviewDetails.data || applicationReviewDetails.isLoading) {
-    return <p>Loading...</p>;
-  }
-
-  const getHackathonExperienceText = (experience: string) => {
-    switch (experience) {
-      case "first_time":
-        return "Swamphacks would be my first!";
-      case "one":
-        return "1";
-      case "two":
-        return "2";
-      case "three":
-        return "3";
-      case "four_or_more":
-        return "4+";
-      default:
-        return "";
-    }
-  };
-
-  const getProjectExperienceText = (experience: string) => {
-    switch (experience) {
-      case "no_experience":
-        return "Swamphacks would be my first!";
-      case "course_experience":
-        return "From courses";
-      case "independent_project":
-        return "Yes";
-      default:
-        return "";
-    }
-  };
-
-  const appFields = applicationReviewDetails.data.application;
-  const resume = applicationReviewDetails.data.resumeUrl;
-
-  function ApplicantInfo() {
-    return (
-      <div className="p-4 rounded-md border border-input-border bg-card">
-        <h2 className="block mb-3 text-lg font-medium">
-          Applicant Information
-        </h2>
-        <div className="flex gap-15 items-start">
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <div className="text-text-secondary">Name</div>
-              <div className="font-medium">
-                {appFields.firstName + " " + appFields.lastName}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-text-secondary">Major(s)</div>
-              <div className="font-medium">{appFields.majors}</div>
-            </div>
-
-            <div>
-              <div className="text-text-secondary">School</div>
-              <div className="truncate max-w-60">{appFields.school}</div>
-            </div>
-
-            <div>
-              <div className="text-text-secondary">Graduation Year</div>
-              <div className="font-medium">{appFields.graduationYear}</div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <div className="text-text-secondary">
-                # of Hackathons Attended
-              </div>
-              <div className="font-medium">
-                {getHackathonExperienceText(appFields.experience)}
-              </div>
-            </div>
-            <div>
-              <div className="text-text-secondary">Project Experience</div>
-              <div className="font-medium">
-                {getProjectExperienceText(appFields.projectExperience)}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  function Essays() {
-    return (
-      <div className="space-y-4">
-        <div className="p-4 rounded-md border border-input-border bg-card">
-          <h2 className="block mb-3 text-lg font-medium">Essay Responses</h2>
-          <div className="space-y-6">
-            <div>
-              <div className="text-text-secondary mb-2">
-                What is your most memorable experience working in a group? What
-                did you learn and accomplish?
-              </div>
-              <div className="whitespace-pre-wrap bg-surface p-3 rounded-md">
-                {appFields.essay1}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-text-secondary mb-2">
-                Tell us about a project you are most proud of.
-              </div>
-              <div className="whitespace-pre-wrap bg-surface p-3 rounded-md">
-                {appFields.essay2}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid gap-6 max-h-[99vh] overflow-y-auto">
-      <div className="space-y-3">
-        <ApplicantInfo />
-        <Essays />
-      </div>
-
-      <div className="space-y-4">
-        <div className="p-2 rounded-md border border-input-border h-200">
-          {resume === "" ? (
-            <p>No resume provided.</p>
-          ) : (
-            <object
-              className="w-full h-full"
-              type="application/pdf"
-              data={resume}
-            >
-              <p>
-                Your browser does not support PDFs.{" "}
-                <a href={resume}>Download the PDF</a>.
-              </p>
-            </object>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
@@ -568,12 +400,12 @@ function Reviewers() {
       {
         header: "Assigned",
         size: 80,
-        cell: ({ row }) => row.original.total_assigned,
+        cell: ({ row }) => row.original.totalAssigned,
       },
       {
         header: "Completed",
         size: 60,
-        cell: ({ row }) => row.original.completed_count,
+        cell: ({ row }) => row.original.completedCount,
       },
     ],
     [],
@@ -594,11 +426,11 @@ function Reviewers() {
   }
 
   const totalApps = reviewers.reduce((prev, curr) => {
-    return curr.total_assigned + prev;
+    return curr.totalAssigned + prev;
   }, 0);
 
   const completed = reviewers.reduce((prev, curr) => {
-    return curr.completed_count + prev;
+    return curr.completedCount + prev;
   }, 0);
 
   return (

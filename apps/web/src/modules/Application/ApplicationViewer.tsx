@@ -2,83 +2,38 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { api } from "@/lib/ky";
-import type { components } from "@/lib/openapi/schema";
 import { RatingFields } from "@/modules/Application/ApplicationReview/Workspace";
-import {
-  ApplicationFieldsSchema,
-  type ApplicationFields,
-} from "@/modules/Application/hooks/useApplication";
+import { type ApplicationFields } from "@/modules/Application/hooks/useApplication";
 import type { ParsedForm } from "@/modules/Application/hooks/useParsedForm";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { TextArea } from "react-aria-components";
 import TablerX from "~icons/tabler/x";
 import TablerCheck from "~icons/tabler/check";
 import { useApplicationReviewActions } from "@/modules/Application/hooks/useApplicationReviewActions";
-
-type ApplicationFullDetails = components["schemas"]["ApplicationFullDetails"];
-
-export type ParsedApplicationFullDetails = Omit<
-  ApplicationFullDetails,
-  "application"
-> & {
-  application: ApplicationFields;
-};
-
-async function fetchApplicationFullDetails(
-  application_id: string,
-): Promise<ParsedApplicationFullDetails> {
-  const result = await api
-    .get<ParsedApplicationFullDetails>(
-      `application/full-details/${application_id}`,
-    )
-    .json();
-
-  const parsedApplication = ApplicationFieldsSchema.safeParse(
-    JSON.parse(atob(result.application as unknown as string)),
-  );
-
-  if (!parsedApplication.success) {
-    console.error("Failed to parse application data:", parsedApplication.error);
-    throw new Error("Invalid application data format");
-  }
-
-  return {
-    ...result,
-    application: parsedApplication.data,
-  };
-}
-
-export function useApplicationFullDetails(application_id: string) {
-  return useQuery({
-    queryKey: ["application-full-details", application_id],
-    queryFn: () => fetchApplicationFullDetails(application_id),
-    staleTime: 1000 * 60 * 5, // 5 minutes,
-  });
-}
-
-const applicationFullDetailsQueryKey = (application_id: string) => [
-  "application-full-details",
-  application_id,
-];
+import {
+  extendedApplicationQueryKey,
+  useExtendedApplication,
+  type ParsedExtendedApplicationResponse,
+} from "@/modules/Application/hooks/useExtendedApplication";
 
 interface ApplicationResponsesProps {
   parsedForm: ParsedForm;
   applicationId: string;
 }
 
-export default function ApplicationResponsesViewer({
+export default function ApplicationViewer({
   parsedForm,
   applicationId,
 }: ApplicationResponsesProps) {
-  const applicationFullDetails = useApplicationFullDetails(applicationId);
+  const extendedApplication = useExtendedApplication(applicationId);
 
-  if (!applicationFullDetails.data || applicationFullDetails.isLoading) {
+  if (!extendedApplication.data || extendedApplication.isLoading) {
     return <p>Loading...</p>;
   }
 
-  const appFields = applicationFullDetails.data.application;
-  const resume = applicationFullDetails.data.resumeUrl;
+  const appFields = extendedApplication.data.application;
+  const resume = extendedApplication.data.resumeUrl;
 
   const renderAnswer = (value: unknown): string => {
     if (value === null || value === undefined) return "—";
@@ -161,9 +116,26 @@ export default function ApplicationResponsesViewer({
             </div>
           </TabPanel>
           <TabPanel id="status-and-reviews">
-            <StatusAndReviews
-              applicationFullDetails={applicationFullDetails.data}
-            />
+            <div className="space-y-3">
+              <ApplicationStatus
+                status={extendedApplication.data.status}
+                applicationId={extendedApplication.data.id}
+                userId={extendedApplication.data.user.id}
+              />
+              {extendedApplication.data.review && (
+                <ApplicationReviews
+                  review={extendedApplication.data.review}
+                  applicationId={extendedApplication.data.id}
+                  userId={extendedApplication.data.user.id}
+                />
+              )}
+              <ApplicationAutoDecision
+                request={extendedApplication.data.autoDecisionRequest}
+                applicationId={extendedApplication.data.id}
+                reviewId={extendedApplication.data.review?.id}
+                userId={extendedApplication.data.user.id}
+              />
+            </div>
           </TabPanel>
         </TabPanels>
       </Tabs>
@@ -171,11 +143,16 @@ export default function ApplicationResponsesViewer({
   );
 }
 
-interface StatusAndReviewsProps {
-  applicationFullDetails: ParsedApplicationFullDetails;
+interface ApplicationReviewsProps {
+  applicationId: string;
+  userId: string;
+  review: NonNullable<ParsedExtendedApplicationResponse["review"]>;
 }
 
-function StatusAndReviews({ applicationFullDetails }: StatusAndReviewsProps) {
+function ApplicationReviews({
+  review,
+  applicationId,
+}: ApplicationReviewsProps) {
   const {
     experience,
     passion,
@@ -186,137 +163,37 @@ function StatusAndReviews({ applicationFullDetails }: StatusAndReviewsProps) {
     setNotes,
     reset: resetRatings,
   } = useReview(
-    applicationFullDetails.experienceRating || 0,
-    applicationFullDetails.passionRating || 0,
-    applicationFullDetails.notes || "",
+    review.experienceRating || 0,
+    review.passionRating || 0,
+    review.notes || "",
   );
-  const {
-    status,
-    isDirty: isStatusDirty,
-    setStatus,
-  } = useStatus(applicationFullDetails.status);
-  const { updateApplication, updateReview } = useApplicationActionsAdmin();
-  const { requestAutoDecision, deleteAutoDecisionRequest } =
-    useApplicationReviewActions(applicationFullDetails.userId);
-
-  const handleUpdateStatus = async () => {
-    if (!isStatusDirty) return;
-
-    await updateApplication.mutateAsync({
-      status,
-      userId: applicationFullDetails.userId,
-    });
-  };
-
+  const { updateReview } = useApplicationActionsAdmin(applicationId);
   const handleUpdateReview = async () => {
     if (!isReviewsDirty) return;
 
     await updateReview.mutateAsync({
-      applicationId: applicationFullDetails.userId,
-      reviewerId: applicationFullDetails.reviewerId,
+      reviewId: review.id,
       experienceRating: experience,
       passionRating: passion,
       notes,
     });
   };
 
-  const handleRequestAutoAccept = async () => {
-    await requestAutoDecision.mutateAsync({
-      applicationId: applicationFullDetails.userId,
-      accept: true,
-      justification: "",
-    });
-  };
-
-  const handleRequestAutoReject = async () => {
-    await requestAutoDecision.mutateAsync({
-      applicationId: applicationFullDetails.userId,
-      accept: false,
-      justification: "",
-    });
-  };
-
-  const handleUndoAutoDecision = async () => {
-    if (applicationFullDetails.autoDecisionRequestId === null) return;
-
-    await deleteAutoDecisionRequest.mutateAsync({
-      requestId: applicationFullDetails.autoDecisionRequestId,
-    });
-  };
-
   return (
     <div className="text-lg space-y-5">
-      <div>
-        <div className="flex gap-2">
-          <span className="mr-2">Status:</span>
-          <Select
-            value={status}
-            onChange={(v) => {
-              if (v != null) {
-                setStatus(v.toString());
-              }
-            }}
-            items={[
-              {
-                id: "started",
-                name: "Started",
-              },
-              {
-                id: "submitted",
-                name: "Submitted",
-              },
-              {
-                id: "under_review",
-                name: "Under Review",
-              },
-              {
-                id: "accepted",
-                name: "Accepted",
-              },
-              {
-                id: "rejected",
-                name: "Rejected",
-              },
-              {
-                id: "waitlisted",
-                name: "Waitlisted",
-              },
-              {
-                id: "withdrawn",
-                name: "Withdrawn",
-              },
-              {
-                id: "confirmed",
-                name: "Confirmed",
-              },
-            ]}
-            children={null}
-          />
-        </div>
-        <Button
-          onClick={handleUpdateStatus}
-          size="sm"
-          isDisabled={!isStatusDirty}
-          className="mt-3"
-        >
-          Update Status
-        </Button>
-      </div>
       <div>
         <div className="flex items-center gap-3">
           <p>Reviewer:</p>
           <div className="flex items-center gap-2">
-            {applicationFullDetails.reviewerImage && (
+            {review.reviewer.image && (
               <img
-                src={applicationFullDetails.reviewerImage}
+                src={review.reviewer.image}
                 alt={"user avatar"}
                 className="h-8 w-8 rounded-full object-cover"
               />
             )}
             <span className="inline-block max-w-40 truncate">
-              {applicationFullDetails.reviewerName
-                ? applicationFullDetails.reviewerName
-                : "None"}
+              {review.reviewer.name ? review.reviewer.name : "None"}
             </span>
           </div>
         </div>
@@ -358,79 +235,196 @@ function StatusAndReviews({ applicationFullDetails }: StatusAndReviewsProps) {
             Update Reviews
           </Button>
         </div>
-
-        <div className="mt-3">
-          {applicationFullDetails.autoDecision ? (
-            <div className="flex items-center gap-2">
-              <div
-                className={`flex items-center gap-2 px-3 py-1 rounded-md border text-sm font-medium ${
-                  applicationFullDetails.autoDecision === "auto_accept"
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                    : "bg-rose-50 border-rose-200 text-rose-800"
-                }`}
-              >
-                {applicationFullDetails.autoDecision === "auto_accept" ? (
-                  <TablerCheck />
-                ) : (
-                  <TablerX />
-                )}
-                <span>
-                  {applicationFullDetails.autoDecision === "auto_accept"
-                    ? "Auto Accept Requested"
-                    : "Auto Reject Requested"}
-                </span>
-              </div>
-              <Button
-                variant="secondary"
-                className="h-9"
-                onClick={handleUndoAutoDecision}
-              >
-                Undo
-              </Button>
-            </div>
-          ) : (
-            <div className="flex gap-2 mt-2 mr-2">
-              <Button onClick={handleRequestAutoAccept} size="sm">
-                <TablerCheck />
-                Auto Accept
-              </Button>
-              <Button
-                onClick={handleRequestAutoReject}
-                size="sm"
-                variant="danger"
-              >
-                <TablerX />
-                Auto Reject
-              </Button>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
 }
 
-async function updateApplicationFn(userId: string, status: string) {
+interface ApplicationStatusProps {
+  status: string;
+  applicationId: string;
+  userId: string;
+}
+
+function ApplicationStatus({
+  status: initialStatus,
+  applicationId,
+}: ApplicationStatusProps) {
+  const {
+    status,
+    isDirty: isStatusDirty,
+    setStatus,
+  } = useStatus(initialStatus);
+  const { updateApplication } = useApplicationActionsAdmin(applicationId);
+
+  const handleUpdateStatus = async () => {
+    if (!isStatusDirty) return;
+
+    await updateApplication.mutateAsync({
+      status,
+    });
+  };
+
+  return (
+    <div>
+      <div className="flex gap-2">
+        <span className="mr-2 text-lg">Status:</span>
+        <Select
+          value={status}
+          onChange={(v) => {
+            if (v != null) {
+              setStatus(v.toString());
+            }
+          }}
+          items={[
+            {
+              id: "started",
+              name: "Started",
+            },
+            {
+              id: "submitted",
+              name: "Submitted",
+            },
+            {
+              id: "under_review",
+              name: "Under Review",
+            },
+            {
+              id: "accepted",
+              name: "Accepted",
+            },
+            {
+              id: "rejected",
+              name: "Rejected",
+            },
+            {
+              id: "waitlisted",
+              name: "Waitlisted",
+            },
+            {
+              id: "withdrawn",
+              name: "Withdrawn",
+            },
+            {
+              id: "confirmed",
+              name: "Confirmed",
+            },
+          ]}
+          children={null}
+        />
+      </div>
+      <Button
+        onClick={handleUpdateStatus}
+        size="sm"
+        isDisabled={!isStatusDirty}
+        className="mt-3"
+      >
+        Update Status
+      </Button>
+    </div>
+  );
+}
+
+interface ApplicationAutoDecisionProps {
+  request: ParsedExtendedApplicationResponse["autoDecisionRequest"];
+  reviewId?: string;
+  applicationId: string;
+  userId: string;
+}
+
+function ApplicationAutoDecision({
+  request,
+  reviewId,
+  applicationId,
+}: ApplicationAutoDecisionProps) {
+  const { requestAutoDecision, deleteAutoDecisionRequest } =
+    useApplicationReviewActions(applicationId, reviewId);
+
+  const handleRequestAutoAccept = async () => {
+    await requestAutoDecision.mutateAsync({
+      applicationId,
+      accept: true,
+      justification: "",
+    });
+  };
+
+  const handleRequestAutoReject = async () => {
+    await requestAutoDecision.mutateAsync({
+      applicationId,
+      accept: false,
+      justification: "",
+    });
+  };
+
+  const handleUndoAutoDecision = async () => {
+    if (!request) return;
+
+    await deleteAutoDecisionRequest.mutateAsync({
+      requestId: request.id,
+    });
+  };
+
+  return (
+    <div className="mt-3">
+      {request ? (
+        <div className="flex items-center gap-2">
+          <div
+            className={`flex items-center gap-2 px-3 py-1 rounded-md border text-sm font-medium ${
+              request.decision === "auto_accept"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-rose-50 border-rose-200 text-rose-800"
+            }`}
+          >
+            {request.decision === "auto_accept" ? <TablerCheck /> : <TablerX />}
+            <span>
+              {request.decision === "auto_accept"
+                ? "Auto Accept Requested"
+                : "Auto Reject Requested"}
+            </span>
+          </div>
+          <Button
+            variant="secondary"
+            className="h-9"
+            onClick={handleUndoAutoDecision}
+          >
+            Undo
+          </Button>
+        </div>
+      ) : (
+        <div className="flex gap-2 mt-2 mr-2">
+          <Button onClick={handleRequestAutoAccept} size="sm">
+            <TablerCheck />
+            Auto Accept
+          </Button>
+          <Button onClick={handleRequestAutoReject} size="sm" variant="danger">
+            <TablerX />
+            Auto Reject
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+async function updateApplicationFn(applicationId: string, status: string) {
   try {
-    await api.patch(`application/${userId}`, {
-      json: { userId, status },
+    await api.patch(`application`, {
+      json: { applicationId, status },
     });
 
-    return { userId, status };
+    return { applicationId, status };
   } catch (err) {
     throw err;
   }
 }
 
 async function updateReviewFn({
-  applicationId,
-  reviewerId,
+  reviewId,
   passionRating,
   experienceRating,
   notes,
 }: {
-  applicationId: string;
-  reviewerId: string;
+  reviewId: string;
   passionRating: number;
   experienceRating: number;
   notes: string;
@@ -438,8 +432,7 @@ async function updateReviewFn({
   try {
     await api.patch(`application/review`, {
       json: {
-        applicationId,
-        reviewerId,
+        id: reviewId,
         passionRating,
         experienceRating,
         notes,
@@ -447,8 +440,7 @@ async function updateReviewFn({
     });
 
     return {
-      applicationId,
-      reviewerId,
+      reviewId,
       passionRating,
       experienceRating,
       notes,
@@ -458,30 +450,29 @@ async function updateReviewFn({
   }
 }
 
-export function useApplicationActionsAdmin() {
+export function useApplicationActionsAdmin(applicationId: string) {
   const queryClient = useQueryClient();
 
   const updateReview = useMutation({
     mutationFn: (args: {
-      applicationId: string;
-      reviewerId: string;
+      reviewId: string;
       passionRating: number;
       experienceRating: number;
       notes: string;
     }) => updateReviewFn(args),
-    onSuccess: ({ applicationId }) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: applicationFullDetailsQueryKey(applicationId),
+        queryKey: extendedApplicationQueryKey(applicationId),
       });
     },
   });
 
   const updateApplication = useMutation({
-    mutationFn: ({ userId, status }: { userId: string; status: string }) =>
-      updateApplicationFn(userId, status),
-    onSuccess: ({ userId }) => {
+    mutationFn: ({ status }: { status: string }) =>
+      updateApplicationFn(applicationId, status),
+    onSuccess: ({ applicationId }) => {
       queryClient.invalidateQueries({
-        queryKey: applicationFullDetailsQueryKey(userId),
+        queryKey: extendedApplicationQueryKey(applicationId),
       });
     },
   });

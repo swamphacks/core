@@ -1,28 +1,28 @@
 import { api } from "@/lib/ky";
-import type { ApplicationReviewDetails } from "@/lib/openapi/types";
+import type { operations } from "@/lib/openapi/schema";
 import {
   ApplicationFieldsSchema,
   type ApplicationFields,
 } from "@/modules/Application/hooks/useApplication";
 import { useQuery } from "@tanstack/react-query";
 
-export const applicationReviewDetailsQueryKey = (applicationId: string) => [
-  "applicationReviewDetails",
-  applicationId,
+export const applicationReviewQueryKey = (reviewId: string) => [
+  "applicationReview",
+  reviewId,
 ];
 
-export type ParsedApplicationReviewDetails = Omit<
-  ApplicationReviewDetails,
+export type ParsedApplicationReview = Omit<
+  operations["get-review-by-id"]["responses"]["200"]["content"]["application/json"],
   "application"
 > & {
   application: ApplicationFields;
 };
 
-export async function fetchApplicationForReview(
-  applicationId: string,
-): Promise<ParsedApplicationReviewDetails> {
+export async function fetchApplicationReview(
+  reviewId: string,
+): Promise<ParsedApplicationReview> {
   const result = await api
-    .get<ParsedApplicationReviewDetails>(`application/review/${applicationId}`)
+    .get<ParsedApplicationReview>(`application/review/${reviewId}`)
     .json();
 
   const parsedApplication = ApplicationFieldsSchema.safeParse(
@@ -40,10 +40,10 @@ export async function fetchApplicationForReview(
   };
 }
 
-export function useApplicationForReview(applicationId: string) {
+export function useApplicationReview(reviewId: string) {
   return useQuery({
-    queryKey: applicationReviewDetailsQueryKey(applicationId),
-    queryFn: () => fetchApplicationForReview(applicationId),
+    queryKey: applicationReviewQueryKey(reviewId),
+    queryFn: () => fetchApplicationReview(reviewId),
     staleTime: 1000 * 60 * 15, // 15 minutes,
   });
 }

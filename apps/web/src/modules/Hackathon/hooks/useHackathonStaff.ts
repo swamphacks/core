@@ -1,6 +1,9 @@
 import { api } from "@/lib/ky";
-import type { HackathonStaff } from "@/lib/openapi/types";
+import type { operations } from "@/lib/openapi/schema";
 import { useQuery } from "@tanstack/react-query";
+
+export type HackathonStaff =
+  operations["get-hackathon-staff"]["responses"]["200"]["content"]["application/json"];
 
 export const hackathonStaffQueryKey = ["hackathon-staff"];
 

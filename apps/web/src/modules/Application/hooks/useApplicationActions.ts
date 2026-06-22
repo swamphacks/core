@@ -7,7 +7,7 @@ import type { ErrorResponse } from "@/lib/auth/types";
 
 async function confirmAttendanceFn() {
   try {
-    await api.patch("application/confirm-attendance");
+    await api.patch("application/confirm");
   } catch (err) {
     if (err instanceof HTTPError) {
       const errorBody = await err.response.json<ErrorResponse>();
@@ -22,7 +22,7 @@ async function confirmAttendanceFn() {
 
 async function withdrawApplicationFn() {
   try {
-    await api.patch("application/withdraw-application");
+    await api.patch("application/withdraw");
   } catch (err) {
     if (err instanceof HTTPError) {
       const errorBody = await err.response.json<ErrorResponse>();

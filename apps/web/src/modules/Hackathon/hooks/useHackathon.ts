@@ -1,6 +1,11 @@
 import { api } from "@/lib/ky";
-import type { Hackathon, StaffHackathon } from "@/lib/openapi/types";
+import type { operations } from "@/lib/openapi/schema";
 import { queryOptions, useQuery } from "@tanstack/react-query";
+
+export type Hackathon =
+  operations["get-hackathon"]["responses"]["200"]["content"]["application/json"];
+export type StaffHackathon =
+  operations["get-hackathon-for-staff"]["responses"]["200"]["content"]["application/json"];
 
 export const hackthonQueryKey = ["hackathon"];
 export const staffHackthonQueryKey = ["staff-hackathon"];

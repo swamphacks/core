@@ -1,6 +1,9 @@
 import { api } from "@/lib/ky";
-import type { ApplicationStats } from "@/lib/openapi/types";
+import type { operations } from "@/lib/openapi/schema";
 import { useQuery } from "@tanstack/react-query";
+
+export type ApplicationStats =
+  operations["get-application-statistics"]["responses"]["200"]["content"]["application/json"];
 
 export const applicationStatisticsQueryKey = ["applicationStatistics"];
 

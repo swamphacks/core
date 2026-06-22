@@ -1,24 +1,35 @@
 import { api } from "@/lib/ky";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { assignedApplicationsQueryKey } from "./useAssignedApplications";
-import type {
-  ApplicationReviewDetails,
-  AssignedApplications,
-} from "@/lib/openapi/types";
-import { applicationReviewDetailsQueryKey } from "./useApplicationForReview";
+import {
+  reviewAssignmentsQueryKey,
+  type ReviewAssignments,
+} from "./useReviewAssignments";
+import {
+  applicationReviewQueryKey,
+  type ParsedApplicationReview,
+} from "./useApplicationReview";
+import type { operations } from "@/lib/openapi/schema";
+import {
+  extendedApplicationQueryKey,
+  type ParsedExtendedApplicationResponse,
+} from "@/modules/Application/hooks/useExtendedApplication";
 
 const requestAutoDecisionFn = async (
   applicationId: string,
   accept: boolean,
   justification: string,
 ) => {
-  await api.post(`application/review/auto-decision`, {
-    json: {
-      applicationId,
-      decision: accept ? "auto_accept" : "auto_reject",
-      justification,
-    },
-  });
+  return await (
+    await api.post<
+      operations["request-auto-decision"]["responses"]["200"]["content"]["application/json"]
+    >(`application/review/auto-decision`, {
+      json: {
+        applicationId,
+        decision: accept ? "auto_accept" : "auto_reject",
+        justification,
+      },
+    })
+  ).json();
 };
 
 const deleteAutoDecisionRequestFn = async (requestId: string) => {
@@ -30,13 +41,16 @@ const deleteAutoDecisionRequestFn = async (requestId: string) => {
 };
 
 const submitReview = async (
+  reviewId: string,
   applicationId: string,
   experienceRating: number,
   passionRating: number,
   notes: string,
 ) => {
-  await api.post(`application/review/${applicationId}`, {
+  await api.post(`application/review`, {
     json: {
+      id: reviewId,
+      applicationId,
       experienceRating,
       passionRating,
       notes,
@@ -44,28 +58,42 @@ const submitReview = async (
   });
 
   return {
+    reviewId,
+    applicationId,
     experienceRating,
     passionRating,
     notes,
   };
 };
 
-export const useApplicationReviewActions = (applicationId: string) => {
+export const useApplicationReviewActions = (
+  applicationId: string,
+  reviewId?: string,
+) => {
   const queryClient = useQueryClient();
 
   const review = useMutation({
     mutationFn: ({
+      reviewId,
       experienceRating,
       passionRating,
       notes,
     }: {
+      reviewId: string;
       experienceRating: number;
       passionRating: number;
       notes: string;
-    }) => submitReview(applicationId, experienceRating, passionRating, notes),
-    onSuccess: ({ experienceRating, passionRating, notes }) => {
-      queryClient.setQueryData<AssignedApplications>(
-        assignedApplicationsQueryKey,
+    }) =>
+      submitReview(
+        reviewId,
+        applicationId,
+        experienceRating,
+        passionRating,
+        notes,
+      ),
+    onSuccess: ({ reviewId, experienceRating, passionRating, notes }) => {
+      queryClient.setQueryData<ReviewAssignments>(
+        reviewAssignmentsQueryKey,
         (oldData) =>
           oldData?.map((app) =>
             app.applicationId === applicationId
@@ -74,8 +102,8 @@ export const useApplicationReviewActions = (applicationId: string) => {
           ),
       );
 
-      queryClient.setQueryData<ApplicationReviewDetails>(
-        applicationReviewDetailsQueryKey(applicationId),
+      queryClient.setQueryData<ParsedApplicationReview>(
+        applicationReviewQueryKey(reviewId),
         (oldData) => {
           if (!oldData) return oldData;
 
@@ -91,7 +119,7 @@ export const useApplicationReviewActions = (applicationId: string) => {
   });
 
   const requestAutoDecision = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       applicationId,
       accept,
       justification,
@@ -99,17 +127,46 @@ export const useApplicationReviewActions = (applicationId: string) => {
       applicationId: string;
       accept: boolean;
       justification: string;
-    }) => requestAutoDecisionFn(applicationId, accept, justification),
-    onSuccess: (_, { applicationId, accept, justification }) => {
-      queryClient.setQueryData<ApplicationReviewDetails>(
-        applicationReviewDetailsQueryKey(applicationId),
+    }) => await requestAutoDecisionFn(applicationId, accept, justification),
+    onSuccess: (res) => {
+      if (reviewId) {
+        queryClient.setQueryData<ParsedApplicationReview>(
+          applicationReviewQueryKey(reviewId),
+          (oldData) => {
+            if (!oldData) return oldData;
+
+            return {
+              ...oldData,
+              autoDecisionRequest: {
+                applicationId,
+                approved: res.approved,
+                approvedOrDeniedBy: res.approvedOrDeniedBy,
+                createdAt: res.createdAt,
+                decision: res.decision,
+                id: res.id,
+                justification: res.justification,
+              },
+            };
+          },
+        );
+      }
+
+      queryClient.setQueryData<ParsedExtendedApplicationResponse>(
+        extendedApplicationQueryKey(applicationId),
         (oldData) => {
           if (!oldData) return oldData;
 
           return {
             ...oldData,
-            autoDecision: accept ? "auto_accept" : "auto_reject",
-            justification,
+            autoDecisionRequest: {
+              applicationId,
+              approved: res.approved,
+              approvedOrDeniedBy: res.approvedOrDeniedBy,
+              createdAt: res.createdAt,
+              decision: res.decision,
+              id: res.id,
+              justification: res.justification,
+            },
           };
         },
       );
@@ -120,15 +177,28 @@ export const useApplicationReviewActions = (applicationId: string) => {
     mutationFn: ({ requestId }: { requestId: string }) =>
       deleteAutoDecisionRequestFn(requestId),
     onSuccess: (_) => {
-      queryClient.setQueryData<ApplicationReviewDetails>(
-        applicationReviewDetailsQueryKey(applicationId),
+      if (reviewId) {
+        queryClient.setQueryData<ParsedApplicationReview>(
+          applicationReviewQueryKey(reviewId),
+          (oldData) => {
+            if (!oldData) return oldData;
+
+            return {
+              ...oldData,
+              autoDecisionRequest: undefined,
+            };
+          },
+        );
+      }
+
+      queryClient.setQueryData<ParsedExtendedApplicationResponse>(
+        extendedApplicationQueryKey(applicationId),
         (oldData) => {
           if (!oldData) return oldData;
 
           return {
             ...oldData,
-            autoDecision: null,
-            autoDecisionRequestId: null,
+            autoDecisionRequest: undefined,
           };
         },
       );

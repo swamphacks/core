@@ -331,7 +331,7 @@ func (q *Queries) ListReviewsByReviewerId(ctx context.Context, reviewerID uuid.U
 
 const requestAutoDecision = `-- name: RequestAutoDecision :one
 INSERT INTO application_auto_decision_requests (application_id, reviewer_id, requested_decision, justification, approved, approved_or_denied_by) 
-VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
+VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, application_id, reviewer_id, requested_decision, justification, approved, approved_or_denied_by, updated_at, created_at
 `
 
 type RequestAutoDecisionParams struct {
@@ -343,7 +343,7 @@ type RequestAutoDecisionParams struct {
 	ApprovedOrDeniedBy *uuid.UUID                  `json:"approved_or_denied_by"`
 }
 
-func (q *Queries) RequestAutoDecision(ctx context.Context, arg RequestAutoDecisionParams) (uuid.UUID, error) {
+func (q *Queries) RequestAutoDecision(ctx context.Context, arg RequestAutoDecisionParams) (ApplicationAutoDecisionRequest, error) {
 	row := q.db.QueryRow(ctx, requestAutoDecision,
 		arg.ApplicationID,
 		arg.ReviewerID,
@@ -352,9 +352,19 @@ func (q *Queries) RequestAutoDecision(ctx context.Context, arg RequestAutoDecisi
 		arg.Approved,
 		arg.ApprovedOrDeniedBy,
 	)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i ApplicationAutoDecisionRequest
+	err := row.Scan(
+		&i.ID,
+		&i.ApplicationID,
+		&i.ReviewerID,
+		&i.RequestedDecision,
+		&i.Justification,
+		&i.Approved,
+		&i.ApprovedOrDeniedBy,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updateApplicationReview = `-- name: UpdateApplicationReview :exec

@@ -1,4 +1,4 @@
-import type { AssignedApplications } from "@/lib/openapi/types";
+import type { ReviewAssignments } from "@/modules/Application/hooks/useReviewAssignments";
 import { useState, useEffect } from "react";
 /**
  * Custom hook to manage application review progress.
@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
  *
  * @param apps - Array of assigned applications
  */
-export const useAppReviewProgress = (apps: AssignedApplications) => {
+export const useAppReviewProgress = (apps: ReviewAssignments) => {
   /**
    * Determines the initial index when the hook is first used.
    * - If apps are empty → -1 (loading / no apps)
@@ -53,7 +53,7 @@ export const useAppReviewProgress = (apps: AssignedApplications) => {
    * The application corresponding to the current index.
    * Null when at the virtual finish step.
    */
-  const currentAssignedApplication =
+  const currentAssignment =
     currentIndex < apps.length ? apps[currentIndex] : null;
 
   /**
@@ -87,7 +87,7 @@ export const useAppReviewProgress = (apps: AssignedApplications) => {
   const finished = currentIndex === apps.length;
 
   return {
-    currentAssignedApplication,
+    currentAssignment,
     currentIndex,
     totalApplications: apps.length,
     finished,

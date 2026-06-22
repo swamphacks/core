@@ -1,5 +1,5 @@
 import { api } from "@/lib/ky";
-import type { Application as ApplicationResponse } from "@/lib/openapi/types";
+import type { operations } from "@/lib/openapi/schema";
 import { useQuery } from "@tanstack/react-query";
 
 import { z } from "zod";
@@ -43,6 +43,9 @@ export const ApplicationFieldsSchema = z.object({
   infoShareAuthorization: z.string(),
   agreeToMLHEmails: z.string().optional(),
 });
+
+export type ApplicationResponse =
+  operations["get-my-application"]["responses"]["200"]["content"]["application/json"];
 
 export type ApplicationFields = z.infer<typeof ApplicationFieldsSchema>;
 

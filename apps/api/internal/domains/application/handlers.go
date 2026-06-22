@@ -91,43 +91,6 @@ func (h *handler) handleUpdateApplicationById(ctx context.Context, input *struct
 	return &UpdateApplicationByIdOutput{Status: http.StatusNoContent}, nil
 }
 
-// type GetApplicationByUserIdOutput struct {
-// 	Body Application
-// }
-
-// // TODO: Return StaffApplicationResponse instead
-// func (h *handler) handleGetApplicationByUserId(ctx context.Context, input *struct {
-// 	UserID string `path:"userId"`
-// }) (*GetApplicationByUserIdOutput, error) {
-// 	userID, err := uuid.Parse(input.UserID)
-
-// 	if err != nil {
-// 		return nil, huma.Error400BadRequest("Invalid user id")
-// 	}
-
-// 	application, err := h.applicationService.GetApplicationByUserId(ctx, userID)
-
-// 	if err != nil {
-// 		if errors.Is(err, database.ErrApplicationNotFound) {
-// 			return nil, huma.Error404NotFound("Application not found for user")
-// 		}
-
-// 		return nil, huma.Error500InternalServerError("error retrieving application")
-// 	}
-
-// 	return &GetApplicationByUserIdOutput{Body: Application{
-// 		ID:          application.ID,
-// 		UserID:      application.UserID,
-// 		Status:      string(application.Status),
-// 		Application: application.Application,
-// 		CreatedAt:   application.CreatedAt,
-// 		SavedAt:     application.SavedAt,
-// 		UpdatedAt:   application.UpdatedAt,
-// 		SubmittedAt: application.SubmittedAt,
-// 		HackathonID: application.HackathonID,
-// 	}}, nil
-// }
-
 type GetExtendedApplicationOutput struct {
 	Body ExtendedApplicationResponseDto
 }
@@ -553,7 +516,7 @@ func (h *handler) handleUpdateApplicationReview(ctx context.Context, input *stru
 }
 
 type GetReviewAssignmentsOutput struct {
-	Body []ReviewAssignmentDto
+	Body []ReviewAssignmentDto `json:"body" nullable:"false"`
 }
 
 func (h *handler) handleGetReviewAssignments(ctx context.Context, input *struct{}) (*GetReviewAssignmentsOutput, error) {
@@ -632,7 +595,7 @@ func (h *handler) handleGetAllReviewersAndProgress(ctx context.Context, input *s
 }
 
 type GetAutoDecisionRequestsOutput struct {
-	Body []ExtendedAutoDecisionRequestDto
+	Body []ExtendedAutoDecisionRequestDto `json:"body" nullable:"false"`
 }
 
 func (h *handler) handleGetAutoDecisionRequests(ctx context.Context, input *struct{}) (*GetAutoDecisionRequestsOutput, error) {
@@ -676,7 +639,7 @@ func (h *handler) handleGetAutoDecisionRequests(ctx context.Context, input *stru
 }
 
 type RequestAutoDecisionOutput struct {
-	Body uuid.UUID
+	Body AutoDecisionRequestDto
 }
 
 func (h *handler) handleRequestAutoDecision(ctx context.Context, input *struct {
@@ -688,13 +651,21 @@ func (h *handler) handleRequestAutoDecision(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	id, err := h.applicationService.RequestAutoDecision(ctx, input.Body, userCtx.UserID, userCtx.Role)
+	req, err := h.applicationService.RequestAutoDecision(ctx, input.Body, userCtx.UserID, userCtx.Role)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to request decision")
 	}
 
-	return &RequestAutoDecisionOutput{Body: *id}, nil
+	return &RequestAutoDecisionOutput{Body: AutoDecisionRequestDto{
+		ID:                   req.ID,
+		ApplicationID:        req.ApplicationID,
+		RequestedDecision:    string(req.RequestedDecision),
+		Justification:        req.Justification,
+		AutoDecisionApproved: *req.Approved,
+		CreatedAt:            req.CreatedAt,
+		ApprovedOrDeniedBy:   req.ApprovedOrDeniedBy,
+	}}, nil
 }
 
 type DeleteAutoDecisionRequest struct {
@@ -763,38 +734,6 @@ func (h *handler) handleResetApplicationReviews(ctx context.Context, input *stru
 	return &ResetApplicationReviewsOutput{Status: http.StatusOK}, nil
 }
 
-type GetResumePresignedUrlOutput struct {
-	Body string
-}
-
-func (h *handler) handleGetResumePresignedUrlByApplicationId(ctx context.Context, input *struct {
-	ApplicationId string `path:"applicationId"`
-}) (*GetResumePresignedUrlOutput, error) {
-	userCtx := ctxutils.GetUserFromCtx(ctx)
-
-	if userCtx == nil {
-		return nil, huma.Error400BadRequest("Failed to get current user info")
-	}
-
-	applicationId, err := uuid.Parse(input.ApplicationId)
-
-	if err != nil {
-		return nil, huma.Error400BadRequest("Invalid applicationId")
-	}
-
-	if userCtx.Role != sqlc.UserRoleStaff && userCtx.Role != sqlc.UserRoleAdmin && userCtx.UserID != applicationId {
-		return nil, huma.Error400BadRequest("You are not allowed to see other ppls resumes :(")
-	}
-
-	request, err := h.applicationService.GetApplicationResumeURL(ctx, applicationId, 600)
-
-	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to retrieve download url")
-	}
-
-	return &GetResumePresignedUrlOutput{Body: request.URL}, nil
-}
-
 type WithdrawApplicationOutput struct {
 	Status int
 }
@@ -842,6 +781,75 @@ func (h *handler) handleConfirmAttendance(ctx context.Context, input *struct{}) 
 
 	return &ConfirmAttendanceOutput{Status: http.StatusOK}, nil
 }
+
+// type GetApplicationByUserIdOutput struct {
+// 	Body Application
+// }
+
+// // TODO: Return StaffApplicationResponse instead
+// func (h *handler) handleGetApplicationByUserId(ctx context.Context, input *struct {
+// 	UserID string `path:"userId"`
+// }) (*GetApplicationByUserIdOutput, error) {
+// 	userID, err := uuid.Parse(input.UserID)
+
+// 	if err != nil {
+// 		return nil, huma.Error400BadRequest("Invalid user id")
+// 	}
+
+// 	application, err := h.applicationService.GetApplicationByUserId(ctx, userID)
+
+// 	if err != nil {
+// 		if errors.Is(err, database.ErrApplicationNotFound) {
+// 			return nil, huma.Error404NotFound("Application not found for user")
+// 		}
+
+// 		return nil, huma.Error500InternalServerError("error retrieving application")
+// 	}
+
+// 	return &GetApplicationByUserIdOutput{Body: Application{
+// 		ID:          application.ID,
+// 		UserID:      application.UserID,
+// 		Status:      string(application.Status),
+// 		Application: application.Application,
+// 		CreatedAt:   application.CreatedAt,
+// 		SavedAt:     application.SavedAt,
+// 		UpdatedAt:   application.UpdatedAt,
+// 		SubmittedAt: application.SubmittedAt,
+// 		HackathonID: application.HackathonID,
+// 	}}, nil
+// }
+
+// type GetResumePresignedUrlOutput struct {
+// 	Body string
+// }
+
+// func (h *handler) handleGetResumePresignedUrlByApplicationId(ctx context.Context, input *struct {
+// 	ApplicationId string `path:"applicationId"`
+// }) (*GetResumePresignedUrlOutput, error) {
+// 	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+// 	if userCtx == nil {
+// 		return nil, huma.Error400BadRequest("Failed to get current user info")
+// 	}
+
+// 	applicationId, err := uuid.Parse(input.ApplicationId)
+
+// 	if err != nil {
+// 		return nil, huma.Error400BadRequest("Invalid applicationId")
+// 	}
+
+// 	if userCtx.Role != sqlc.UserRoleStaff && userCtx.Role != sqlc.UserRoleAdmin && userCtx.UserID != applicationId {
+// 		return nil, huma.Error400BadRequest("You are not allowed to see other ppls resumes :(")
+// 	}
+
+// 	request, err := h.applicationService.GetApplicationResumeURL(ctx, applicationId, 600)
+
+// 	if err != nil {
+// 		return nil, huma.Error500InternalServerError("Unable to retrieve download url")
+// 	}
+
+// 	return &GetResumePresignedUrlOutput{Body: request.URL}, nil
+// }
 
 // type JoinWaitlistOutput struct {
 // 	Status int

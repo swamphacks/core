@@ -1,12 +1,8 @@
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { Table } from "@/components/ui/Table";
-import type { components } from "@/lib/openapi/schema";
-import ApplicationResponsesViewer from "@/modules/Application/ApplicationResponsesViewer";
-import {
-  useAllApplications,
-  type AllApplicationsData,
-} from "@/modules/Application/hooks/useAllApplications";
+import ApplicationViewer from "@/modules/Application/ApplicationViewer";
+import { useSearchApplications } from "@/modules/Application/hooks/useSearchApplications";
 import useParsedForm from "@/modules/Application/hooks/useParsedForm";
 import {
   type ColumnDef,
@@ -15,8 +11,6 @@ import {
 } from "@tanstack/react-table";
 import { useState, useMemo } from "react";
 import { DialogTrigger } from "react-aria-components";
-
-type ApplicationRow = components["schemas"]["ListAllApplicationsRow"];
 
 interface ApplicationListProps {
   searchInput: string;
@@ -28,7 +22,7 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
     pageSize: 10,
   });
 
-  const allApplicationsData = useAllApplications(
+  const searchApplicationsData = useSearchApplications(
     pagination.pageSize,
     pagination.pageIndex,
     searchInput,
@@ -36,10 +30,9 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
 
   const parsedForm = useParsedForm();
 
-  const applicationRows: AllApplicationsData["applications"] =
-    allApplicationsData.data?.applications ?? [];
+  const applicationRows = searchApplicationsData.data?.applications ?? [];
 
-  const columns: ColumnDef<ApplicationRow>[] = useMemo(
+  const columns: ColumnDef<(typeof applicationRows)[number]>[] = useMemo(
     () => [
       {
         id: "name",
@@ -47,7 +40,7 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
         accessorKey: "name",
         minSize: 250,
         cell: ({ row }) => {
-          const avatarUrl = row.original.image;
+          const avatarUrl = row.original.user.image;
           return (
             <div className="flex items-center gap-2">
               {avatarUrl ? (
@@ -64,7 +57,7 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
                 </div>
               )}
               <span className="text-sm inline-block max-w-40 font-medium truncate">
-                {row.original.name}
+                {row.original.user.name}
               </span>
             </div>
           );
@@ -99,9 +92,9 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
               Open
             </Button>
             <Sheet sheetClassName="w-full sm:w-160 lg:w-200">
-              <ApplicationResponsesViewer
+              <ApplicationViewer
                 parsedForm={parsedForm!}
-                applicationId={row.original.user_id}
+                applicationId={row.original.id}
               />
             </Sheet>
           </DialogTrigger>
@@ -112,7 +105,7 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
         header: "Is Early",
         accessorKey: "is_early",
         size: 100,
-        cell: ({ row }) => (row.original.is_early ? "Yes" : "No"),
+        cell: ({ row }) => (row.original.isEarly ? "Yes" : "No"),
       },
       {
         id: "submitted_at",
@@ -121,8 +114,8 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
         enableGlobalFilter: false,
         size: 200,
         cell: ({ row }) =>
-          row.original.submitted_at
-            ? new Date(row.original.submitted_at).toLocaleString("en-US", {
+          row.original.submittedAt
+            ? new Date(row.original.submittedAt).toLocaleString("en-US", {
                 timeZone: "America/New_York",
               })
             : null,
@@ -132,7 +125,7 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
         header: "Email",
         accessorKey: "email",
         size: 300,
-        cell: ({ row }) => row.original.email,
+        cell: ({ row }) => row.original.user.email,
       },
     ],
     [parsedForm],
@@ -148,16 +141,16 @@ export default function ApplicationList({ searchInput }: ApplicationListProps) {
     onPaginationChange: setPagination,
     // onGlobalFilterChange: setSearchInput,
     // autoResetPageIndex: true,
-    rowCount: allApplicationsData.data?.count,
+    rowCount: searchApplicationsData.data?.count,
     manualPagination: true,
     manualFiltering: true,
   });
 
-  if (allApplicationsData.isLoading) {
+  if (searchApplicationsData.isLoading) {
     return <p>Loading applications....</p>;
   }
 
-  if (!allApplicationsData.data) {
+  if (!searchApplicationsData.data) {
     return <p>Unable to load applications.</p>;
   }
 

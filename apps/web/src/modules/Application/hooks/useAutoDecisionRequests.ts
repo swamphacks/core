@@ -1,12 +1,17 @@
 import { api } from "@/lib/ky";
-import type { ApplicationAutoDecisionRequest } from "@/lib/openapi/types";
+import type { operations } from "@/lib/openapi/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+export type AutoDecisionRequestResponse =
+  operations["get-auto-decision-requests"]["responses"]["200"]["content"]["application/json"];
 
 export const autoDecisionRequestsQueryKey = ["autoDecisionRequests"];
 
-export async function fetchAutoDecisionRequests(): Promise<ApplicationAutoDecisionRequest> {
+export async function fetchAutoDecisionRequests(): Promise<AutoDecisionRequestResponse> {
   return await api
-    .get<ApplicationAutoDecisionRequest>(`application/review/auto-decision`)
+    .get<AutoDecisionRequestResponse>(
+      `application/review/all-auto-decision-requests`,
+    )
     .json();
 }
 

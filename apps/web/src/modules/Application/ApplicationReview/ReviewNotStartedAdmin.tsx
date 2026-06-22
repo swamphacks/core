@@ -1,6 +1,6 @@
 import { useApplicationStatistics } from "@/modules/Application/hooks/useApplicationStatistics";
-import type { StaffHackathon } from "@/lib/openapi/types";
 import { Button } from "@/components/ui/Button";
+import type { StaffHackathon } from "@/modules/Hackathon/hooks/useHackathon";
 
 interface ReviewNotStartedProps {
   hackathon: StaffHackathon;

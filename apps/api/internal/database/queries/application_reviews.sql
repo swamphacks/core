@@ -68,7 +68,7 @@ DELETE FROM application_reviews;
 
 -- name: RequestAutoDecision :one
 INSERT INTO application_auto_decision_requests (application_id, reviewer_id, requested_decision, justification, approved, approved_or_denied_by) 
-VALUES (@application_id, @reviewer_id, @requested_decision, @justification, @approved, @approved_or_denied_by) RETURNING id;
+VALUES (@application_id, @reviewer_id, @requested_decision, @justification, @approved, @approved_or_denied_by) RETURNING *;
 
 -- name: ListAutoDecisionRequests :many
 SELECT

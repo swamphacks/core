@@ -881,7 +881,7 @@ func (s *ApplicationService) GetAllAutoDecisionRequests(ctx context.Context) ([]
 	return requests, nil
 }
 
-func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request CreateAutoDecisionRequestDto, reviewerId uuid.UUID, reviewerRole sqlc.UserRole) (*uuid.UUID, error) {
+func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request CreateAutoDecisionRequestDto, reviewerId uuid.UUID, reviewerRole sqlc.UserRole) (*sqlc.ApplicationAutoDecisionRequest, error) {
 	hackathon, err := s.db.Query.GetHackathon(ctx)
 
 	if err != nil {
@@ -906,14 +906,14 @@ func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request Cr
 		params.ApprovedOrDeniedBy = &reviewerId
 	}
 
-	id, err := s.db.Query.RequestAutoDecision(ctx, params)
+	req, err := s.db.Query.RequestAutoDecision(ctx, params)
 
 	if err != nil {
 		s.logger.Err(err).Msg("RequestAutoDecision fail")
 		return nil, err
 	}
 
-	return &id, nil
+	return &req, nil
 }
 
 func (s *ApplicationService) DeleteAutoDecisionRequest(ctx context.Context, requestId, reviewerId uuid.UUID) error {

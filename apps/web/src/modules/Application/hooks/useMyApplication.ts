@@ -1,11 +1,14 @@
 import { api } from "@/lib/ky";
-import type { Application } from "@/lib/openapi/types";
+import type { operations } from "@/lib/openapi/schema";
 import { queryOptions, useQuery } from "@tanstack/react-query";
+
+export type ApplicationResponse =
+  operations["get-my-application"]["responses"]["200"]["content"]["application/json"];
 
 export const myApplicationQueryKey = ["my-application"];
 
-export async function fetchMyApplication(): Promise<Application> {
-  return await api.get<Application>(`application`).json();
+export async function fetchMyApplication(): Promise<ApplicationResponse> {
+  return await api.get<ApplicationResponse>(`application`).json();
 }
 
 export const myApplicationQueryOptions = () =>

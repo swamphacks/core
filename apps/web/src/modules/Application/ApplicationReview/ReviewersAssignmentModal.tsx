@@ -6,13 +6,15 @@ import {
 } from "../hooks/useApplicationReviewAdminActions";
 import { toast } from "react-toastify";
 import { useApplicationStatistics } from "@/modules/Application/hooks/useApplicationStatistics";
-import { useHackathonStaff } from "@/modules/Hackathon/hooks/useHackathonStaff";
+import {
+  useHackathonStaff,
+  type HackathonStaff,
+} from "@/modules/Hackathon/hooks/useHackathonStaff";
 import { Checkbox, CheckboxGroup } from "@/components/ui/Checkbox";
 import { NumberField, Input } from "react-aria-components";
 import { Tooltip } from "@/components/ui/Tooltip";
 import TablerHelpCircle from "~icons/tabler/help-circle";
 import type { Dispatch, SetStateAction } from "react";
-import type { HackathonStaff } from "@/lib/openapi/types";
 
 interface Props {
   onClose: () => void;

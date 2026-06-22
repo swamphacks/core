@@ -1,13 +1,15 @@
 import type { UserContext } from "@/lib/auth/types";
 import { Link } from "@tanstack/react-router";
 import { useRatings } from "@/modules/Application/hooks/useRatings";
-import { useAssignedApplications } from "@/modules/Application/hooks/useAssignedApplications";
-import { useAppReviewProgress } from "@/modules/Application/hooks/useAppReviewProgress";
-import type { AssignedApplications } from "@/lib/openapi/types";
 import {
-  useApplicationForReview,
-  type ParsedApplicationReviewDetails,
-} from "@/modules/Application/hooks/useApplicationForReview";
+  useReviewAssignments,
+  type ReviewAssignments,
+} from "@/modules/Application/hooks/useReviewAssignments";
+import { useAppReviewProgress } from "@/modules/Application/hooks/useAppReviewProgress";
+import {
+  useApplicationReview,
+  type ParsedApplicationReview,
+} from "@/modules/Application/hooks/useApplicationReview";
 import { useApplicationReviewActions } from "@/modules/Application/hooks/useApplicationReviewActions";
 import { toast } from "react-toastify";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -30,10 +32,10 @@ interface ApplicationReviewWorkspaceProps {
 export default function ApplicationReviewWorkspace({
   user,
 }: ApplicationReviewWorkspaceProps) {
-  const assignedApps = useAssignedApplications();
-  const appReviewProgress = useAppReviewProgress(assignedApps.data || []);
+  const assignments = useReviewAssignments();
+  const appReviewProgress = useAppReviewProgress(assignments.data || []);
 
-  if (assignedApps.isLoading) {
+  if (assignments.isLoading) {
     return (
       <div className="flex gap-2">
         <p>Loading assigned applications...</p>
@@ -41,7 +43,7 @@ export default function ApplicationReviewWorkspace({
     );
   }
 
-  if (!assignedApps.data || assignedApps.data.length === 0) {
+  if (!assignments.data || assignments.data.length === 0) {
     return (
       <div>
         <p className="text-text-secondary">
@@ -108,14 +110,14 @@ export default function ApplicationReviewWorkspace({
         </div>
       </div>
 
-      {appReviewProgress.currentAssignedApplication ? (
+      {appReviewProgress.currentAssignment ? (
         <ApplicationViewer
           user={user}
           next={appReviewProgress.goNext}
           back={appReviewProgress.goPrevious}
           currentIndex={appReviewProgress.currentIndex}
           totalApplications={appReviewProgress.totalApplications}
-          assignedApplication={appReviewProgress.currentAssignedApplication}
+          assignment={appReviewProgress.currentAssignment}
         />
       ) : (
         <div>Loading application...</div>
@@ -126,7 +128,7 @@ export default function ApplicationReviewWorkspace({
 
 interface ApplicationViewerProps {
   user: UserContext;
-  assignedApplication: AssignedApplications[number];
+  assignment: ReviewAssignments[number];
   currentIndex: number;
   totalApplications: number;
   next: () => void;
@@ -135,22 +137,20 @@ interface ApplicationViewerProps {
 
 function ApplicationViewer({
   user,
-  assignedApplication,
+  assignment,
   totalApplications,
   currentIndex,
   next,
   back,
 }: ApplicationViewerProps) {
-  const applicationReviewDetails = useApplicationForReview(
-    assignedApplication.applicationId,
-  );
+  const applicationReview = useApplicationReview(assignment.reviewId);
 
-  if (!applicationReviewDetails.data || applicationReviewDetails.isLoading) {
+  if (!applicationReview.data || applicationReview.isLoading) {
     return <p>Loading...</p>;
   }
 
-  const appFields = applicationReviewDetails.data.application;
-  const resume = applicationReviewDetails.data.resumeUrl;
+  const appFields = applicationReview.data.application;
+  const resume = applicationReview.data.resumeUrl;
 
   return (
     <div className="grid lg:grid-cols-2 gap-6 mb-8">
@@ -181,8 +181,8 @@ function ApplicationViewer({
           user={user}
           currentIndex={currentIndex}
           totalApplications={totalApplications}
-          applicationReviewDetails={applicationReviewDetails.data}
-          assignedApplication={assignedApplication}
+          applicationReview={applicationReview.data}
+          assignment={assignment}
           next={next}
           back={back}
         />
@@ -309,8 +309,8 @@ function Essays({ appFields }: EssaysProps) {
 
 interface ReviewerPanelProps {
   user: UserContext;
-  assignedApplication: AssignedApplications[number];
-  applicationReviewDetails: ParsedApplicationReviewDetails;
+  assignment: ReviewAssignments[number];
+  applicationReview: ParsedApplicationReview;
   totalApplications: number;
   currentIndex: number;
   next: () => void;
@@ -319,15 +319,15 @@ interface ReviewerPanelProps {
 
 function ReviewerPanel({
   user,
-  applicationReviewDetails,
-  assignedApplication,
+  applicationReview,
+  assignment,
   totalApplications,
   currentIndex,
   next,
   back,
 }: ReviewerPanelProps) {
   const { review, requestAutoDecision, deleteAutoDecisionRequest } =
-    useApplicationReviewActions(assignedApplication.applicationId);
+    useApplicationReviewActions(assignment.applicationId, assignment.reviewId);
   const {
     experience,
     passion,
@@ -336,13 +336,13 @@ function ReviewerPanel({
     setPassion,
     reset: resetRatings,
   } = useRatings(
-    applicationReviewDetails.experienceRating || 0,
-    applicationReviewDetails.passionRating || 0,
+    applicationReview.experienceRating || 0,
+    applicationReview.passionRating || 0,
   );
-  const [notes, setNotes] = useState(applicationReviewDetails.notes || "");
+  const [notes, setNotes] = useState(applicationReview.notes || "");
 
-  const autoDecision = applicationReviewDetails.autoDecision;
-  const isCompleted = assignedApplication.status === "completed";
+  const autoDecisionRequest = applicationReview.autoDecisionRequest;
+  const isCompleted = assignment.status === "completed";
   const isLast = currentIndex === totalApplications - 1;
   const isFilled = experience > 0 && passion > 0;
   const allowSubmit = isFilled && isDirty;
@@ -358,6 +358,7 @@ function ReviewerPanel({
 
     await review.mutateAsync(
       {
+        reviewId: assignment.reviewId,
         experienceRating: experience,
         passionRating: passion,
         notes,
@@ -377,7 +378,7 @@ function ReviewerPanel({
 
   const handleRequestAutoAccept = async (justification: string) => {
     await requestAutoDecision.mutateAsync({
-      applicationId: assignedApplication.applicationId,
+      applicationId: assignment.applicationId,
       accept: true,
       justification,
     });
@@ -385,17 +386,17 @@ function ReviewerPanel({
 
   const handleRequestAutoReject = async (justification: string) => {
     await requestAutoDecision.mutateAsync({
-      applicationId: assignedApplication.applicationId,
+      applicationId: assignment.applicationId,
       accept: false,
       justification,
     });
   };
 
   const handleUndoAutoDecision = async () => {
-    if (applicationReviewDetails.autoDecisionRequestId === null) return;
+    if (!autoDecisionRequest) return;
 
     await deleteAutoDecisionRequest.mutateAsync({
-      requestId: applicationReviewDetails.autoDecisionRequestId,
+      requestId: autoDecisionRequest.id,
     });
   };
 
@@ -433,18 +434,22 @@ function ReviewerPanel({
         />
       </div>
       <div className="absolute top-0 right-0">
-        {autoDecision ? (
+        {autoDecisionRequest ? (
           <div className="flex items-center gap-2 p-2">
             <div
               className={`flex items-center gap-2 px-3 py-1 rounded-md border text-sm font-medium ${
-                autoDecision === "auto_accept"
+                autoDecisionRequest.decision === "auto_accept"
                   ? "bg-emerald-50 border-emerald-200 text-emerald-800"
                   : "bg-rose-50 border-rose-200 text-rose-800"
               }`}
             >
-              {autoDecision === "auto_accept" ? <TablerCheck /> : <TablerX />}
+              {autoDecisionRequest.decision === "auto_accept" ? (
+                <TablerCheck />
+              ) : (
+                <TablerX />
+              )}
               <span>
-                {autoDecision === "auto_accept"
+                {autoDecisionRequest.decision === "auto_accept"
                   ? "Auto Accept Requested"
                   : "Auto Reject Requested"}
               </span>
