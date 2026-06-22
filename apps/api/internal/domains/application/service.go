@@ -329,7 +329,7 @@ func (s *ApplicationService) GetApplicationResumeURL(ctx context.Context, userID
 // touching any of the question responses. Hackers sometimes submit the wrong resume
 // and need to swap it out after the fact.
 func (s *ApplicationService) ReplaceResume(ctx context.Context, userID uuid.UUID, resume []byte) error {
-	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
+	hackathon, err := s.db.Query.GetHackathon(ctx)
 	if err != nil {
 		s.logger.Err(err).Msg("Replace resume fail because can't retrieve hackathon")
 		return ErrFailedToGetHackathon
@@ -369,7 +369,7 @@ func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userID uu
 		return nil, err
 	}
 
-	hackathon, err := s.hackathonRepo.GetHackathon(ctx)
+	hackathon, err := s.db.Query.GetHackathon(ctx)
 	if err != nil {
 		s.logger.Err(err).Msg("download resume fail because can't retrieve hackathon")
 		return nil, ErrFailedToGetHackathon
@@ -377,7 +377,7 @@ func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userID uu
 
 	// Resumes are stored under hackathonID/userID (see SubmitApplication and ReplaceResume),
 	// so the presigned download key must match that prefix.
-	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+hackathon.ID+"/"+userID.String(), lifetimeSecs)
+	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+userID.String(), lifetimeSecs)
 
 	if err != nil {
 		s.logger.Err(err).Msg("fail presign get object")
