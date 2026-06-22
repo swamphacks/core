@@ -2,10 +2,7 @@
 // The FileTrigger component doesn't support form submission yet, hence we use a custom file field component here.
 
 import { useFormValidation } from "@react-aria/form";
-import {
-  FormValidationContext,
-  useFormValidationState,
-} from "@react-stately/form";
+import { useFormValidationState } from "@react-stately/form";
 import {
   createContext,
   type JSX,
@@ -15,7 +12,11 @@ import {
   useMemo,
   useRef,
 } from "react";
-import { FieldErrorContext, InputContext } from "react-aria-components";
+import {
+  FieldErrorContext,
+  FormValidationContext,
+  InputContext,
+} from "react-aria-components";
 import { Description, FieldError, Label } from "@/components/ui/Field";
 import { FileInput } from "./FileInput";
 import type { ValidationError } from "@tanstack/react-form";

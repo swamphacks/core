@@ -23,7 +23,7 @@ import TablerChevronDown from "~icons/tabler/chevron-down";
 import { cn } from "@/utils/cn";
 
 export const styles = tv({
-  base: "h-9.5 flex items-center text-start gap-4 w-full cursor-default border border-input-border rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-input-bg",
+  base: "h-9.5 flex items-center text-start gap-4 w-full cursor-default rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-input-bg",
   variants: {
     isDisabled: {
       false:
@@ -73,6 +73,7 @@ export function Select<T extends { id: string; name: string }>({
         props.className,
         "group flex flex-col gap-1 font-figtree",
       )}
+      aria-label="select"
       // style={{
       //   maxWidth,
       // }}

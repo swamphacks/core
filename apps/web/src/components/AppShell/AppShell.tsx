@@ -110,7 +110,7 @@ const AppShellBase: FC<PropsWithChildren> = ({ children }) => {
 
           {/* Main content */}
           {main && (
-            <main className="flex-1 p-6 overflow-y-auto relative bg-background">
+            <main className="flex-1 px-6 py-3 overflow-y-auto relative bg-background">
               {main}
             </main>
           )}

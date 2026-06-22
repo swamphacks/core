@@ -13,6 +13,8 @@ import VisitorNavbar from "@/components/AppShell/VisitorNavbar";
 import { Logo } from "@/components/Logo";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { userQueryOptions } from "@/lib/auth/hooks/useUser";
+import StaffNavbar from "@/components/AppShell/StaffNavbar";
+import AdminNavbar from "@/components/AppShell/AdminNavbar";
 
 // This layout component performs authentication checks before the user can access protected pages
 export const Route = createFileRoute("/_protected")({
@@ -66,13 +68,17 @@ function RouteComponent() {
       case "attendee":
         return <AttendeeNavbar pathname={pathname} />;
       case "admin":
-        break;
+        return <AdminNavbar pathname={pathname} />;
       case "staff":
-        break;
+        return <StaffNavbar pathname={pathname} />;
       default:
         break;
     }
   };
+
+  if (pathname === "/application-review/workspace") {
+    return <Outlet />;
+  }
 
   return (
     <AppShell>

@@ -305,7 +305,7 @@ func (h *handler) handleUpdateHackathon(ctx context.Context, input *struct {
 }
 
 type GetStaffOutput struct {
-	Body []sqlc.User
+	Body []sqlc.User `json:"body" nullable:"false"`
 }
 
 func (h *handler) handleGetStaff(ctx context.Context, input *struct{}) (*GetStaffOutput, error) {

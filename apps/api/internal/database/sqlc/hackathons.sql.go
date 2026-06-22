@@ -272,7 +272,8 @@ SET
     start_time = CASE WHEN $19::boolean THEN $20 ELSE start_time END,
     end_time = CASE WHEN $21::boolean THEN $22 ELSE end_time END,
     banner = CASE WHEN $23::boolean THEN $24 ELSE banner END,
-    application_review_started = CASE WHEN $25::boolean THEN $26 ELSE application_review_started END
+    application_review_started = CASE WHEN $25::boolean THEN $26 ELSE application_review_started END,
+    updated_at = NOW()
 WHERE is_active = true
 RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, is_active, created_at, updated_at, banner, application_review_started, accept_early_applications, early_application_open, early_application_close
 `

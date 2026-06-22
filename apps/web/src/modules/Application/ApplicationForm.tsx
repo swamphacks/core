@@ -19,8 +19,9 @@ import Bell from "./assets/bell.svg?react";
 
 // TODO: dynamically fetch application json data from somewhere (backend, cdn?) instead of hardcoding it in the frontend
 import data from "./application.json";
-import type { Application, Hackathon } from "@/lib/openapi/types";
 import { HTTPError } from "ky";
+import type { Hackathon } from "@/modules/Hackathon/hooks/useHackathon";
+import type { Application } from "@/modules/Application/hooks/useApplication";
 
 const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 

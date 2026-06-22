@@ -8,7 +8,7 @@ import { api } from "@/lib/ky";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useUserQueryKey } from "@/lib/auth/hooks/useUser";
 import type { AuthUserResponse } from "@/lib/auth/types";
-import { myApplicationQueryOptions } from "@/modules/Application/hooks/useMyApplication";
+import { useMyApplication } from "@/modules/Application/hooks/useMyApplication";
 import { useApplicationActions } from "@/modules/Application/hooks/useApplicationActions";
 import { Button } from "@/components/ui/Button";
 import { PageLoading } from "@/components/PageLoading";
@@ -26,7 +26,6 @@ export const Route = createFileRoute("/_protected/application")({
   loader: ({ context }) => {
     return Promise.all([
       context.queryClient.ensureQueryData(hackathonQueryOptions()),
-      context.queryClient.ensureQueryData(myApplicationQueryOptions()),
     ]);
   },
 });
@@ -35,7 +34,12 @@ function RouteComponent() {
   const { user } = Route.useRouteContext();
   const queryClient = useQueryClient();
   const hackathon = useSuspenseQuery(hackathonQueryOptions());
-  const application = useSuspenseQuery(myApplicationQueryOptions());
+  const application = useMyApplication();
+
+  const now = new Date();
+  const applicationOpen = new Date(hackathon.data.applicationOpen);
+  const applicationClose = new Date(hackathon.data.applicationClose);
+  const isApplicationOpen = now >= applicationOpen && now <= applicationClose;
 
   // Show a confirmation dialog when the user closes the tab
   // useEffect(() => {
@@ -67,15 +71,12 @@ function RouteComponent() {
     }
   }, [user]);
 
-  if (new Date() > new Date(hackathon.data.applicationClose)) {
-    return (
-      <div className="max-w-xs mx-auto h-full flex flex-col justify-center items-center gap-8 text-text-secondary">
-        <div className="flex flex-row items-center justify-center gap-2">
-          <TablerAlertCircle />
-          <p>Applications have closed!</p>
-        </div>
-      </div>
-    );
+  if (application.isLoading) {
+    return <PageLoading />;
+  }
+
+  if (!application.data) {
+    return <div>Something went wrong while loading application...</div>;
   }
 
   const applicationResponses = JSON.parse(atob(application.data.application));
@@ -95,6 +96,17 @@ function RouteComponent() {
 
   if (application.data.status === "withdrawn") {
     return <Withdrawn name={name} />;
+  }
+
+  if (!isApplicationOpen) {
+    return (
+      <div className="max-w-xs mx-auto h-full flex flex-col justify-center items-center gap-8 text-text-secondary">
+        <div className="flex flex-row items-center justify-center gap-2">
+          <TablerAlertCircle />
+          <p>Applications have closed!</p>
+        </div>
+      </div>
+    );
   }
 
   return (
