@@ -19,12 +19,12 @@ import { useReviewersProgress } from "@/modules/Application/hooks/useReviewersPr
 import { Input } from "@/components/ui/Field";
 import { Select } from "@/components/ui/Select";
 import TablerSearch from "~icons/tabler/search";
-import type { components } from "@/lib/openapi/schema";
 import { useDebounce } from "@uidotdev/usehooks";
 import AutoDecisionRequestList from "@/modules/Application/ApplicationReview/AutoDecisionRequestList";
+import type { Hackathon } from "@/modules/Hackathon/hooks/useHackathon";
 
 interface ApplicationReviewPageProps {
-  hackathon: components["schemas"]["Hackathon"];
+  hackathon: Hackathon;
   user: UserContext;
 }
 
@@ -99,7 +99,7 @@ function AutoDecisionRequestsTable() {
   const [decisionFilter, setDecisionFilter] = useState("all");
 
   return (
-    <div className="overflow-x-auto rounded-lg bg-surface p-4 min-w-100 max-w-fit">
+    <div className="overflow-x-auto rounded-lg bg-surface border border-border p-4 min-w-100 max-w-fit">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Auto Decision Requests</h2>
       </div>
@@ -222,16 +222,16 @@ function Reviewers() {
     return <p>Unable to load reviewers progress data.</p>;
   }
 
-  const totalApps = reviewers.reduce((prev, curr) => {
+  const totalApps = reviewers.reduce((prev: any, curr: any) => {
     return curr.totalAssigned + prev;
   }, 0);
 
-  const completed = reviewers.reduce((prev, curr) => {
+  const completed = reviewers.reduce((prev: any, curr: any) => {
     return curr.completedCount + prev;
   }, 0);
 
   return (
-    <div className="rounded-lg bg-surface p-4 min-w-100 max-w-200">
+    <div className="rounded-lg bg-surface border border-border p-4 min-w-100 max-w-200">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Reviewers</h2>
         <span className="text-sm text-text-secondary">

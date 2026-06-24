@@ -23,7 +23,7 @@ import TablerChevronDown from "~icons/tabler/chevron-down";
 import { cn } from "@/utils/cn";
 
 export const styles = tv({
-  base: "h-9.5 flex items-center text-start gap-4 w-full cursor-default rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-input-bg",
+  base: "h-9.5 flex items-center text-start gap-4 w-full border border-input-border cursor-default rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-input-bg",
   variants: {
     isDisabled: {
       false:

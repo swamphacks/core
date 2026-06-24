@@ -56,7 +56,7 @@ export default function ApplicationViewer({
     }
 
     return (
-      <div>
+      <div key={label}>
         <span className="text-text-secondary">{label}</span>
         <p className="whitespace-pre-wrap break-words leading-relaxed">
           {renderAnswer(appFields[field.name as keyof ApplicationFields])}

@@ -26,7 +26,7 @@ export const button = tv({
       primary:
         "bg-button-primary hover:bg-button-primary-hover pressed:bg-button-primary-pressed text-white",
       secondary:
-        "bg-button-secondary hover:bg-button-secondary-hover pressed:bg-button-secondary-pressed",
+        "bg-button-secondary hover:bg-button-secondary-hover pressed:bg-button-secondary-pressed text-text-secondary",
       success:
         "bg-green-500 hover:bg-green-600 pressed:bg-green-700 text-white",
       danger:

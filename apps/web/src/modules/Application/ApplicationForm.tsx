@@ -10,12 +10,13 @@ import { Button } from "@/components/ui/Button";
 import { useReplaceResume } from "@/modules/Application/hooks/useReplaceResume";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
 
-import Cloud from "./assets/cloud.svg?react";
-import Cloud2 from "./assets/cloud2.svg?react";
-import Cloud3 from "./assets/cloud3.svg?react";
-import Cloud4 from "./assets/cloud4.svg?react";
-import Tower from "./assets/tower.svg?react";
-import Bell from "./assets/bell.svg?react";
+// import Cloud from "./assets/cloud.svg?react";
+// import Cloud2 from "./assets/cloud2.svg?react";
+// import Cloud3 from "./assets/cloud3.svg?react";
+// import Cloud4 from "./assets/cloud4.svg?react";
+// import Tower from "./assets/tower.svg?react";
+// import Bell from "./assets/bell.svg?react";
+import Sticker from "./assets/XII_Sticker.svg?react";
 
 // TODO: dynamically fetch application json data from somewhere (backend, cdn?) instead of hardcoding it in the frontend
 import data from "./application.json";
@@ -185,9 +186,13 @@ export function ApplicationForm({
           isSubmitting={isSubmitting}
           renderFormHeader={(metadata) => {
             return (
-              <div className="space-y-3 py-3 rounded-md relative overflow-hidden bg-[#ebf7fc] dark:bg-gray-700 px-4 mt-1">
-                <div className="opacity-85">
-                  <div className="absolute -bottom-50 -right-33 z-10">
+              // bg-[#ebf7fc] dark:bg-gray-700
+              <div className="space-y-3 py-3 rounded-md relative overflow-hidden mt-1">
+                <div className="invisible opacity-65 sm:visible">
+                  <div className="absolute right-0 z-10">
+                    <Sticker className="size-30 z-1" />
+                  </div>
+                  {/* <div className="absolute -bottom-50 -right-33 z-10">
                     <div className="relative inline-block">
                       <Tower className="relative size-90 [transform:rotateX(25deg)_scale(1,0.9)] [transform-origin:bottom_center] z-20" />
                       <Bell className="absolute top-20 right-39 z-10 size-8" />
@@ -196,17 +201,32 @@ export function ApplicationForm({
                       <Cloud3 className="absolute top-1 right-32 z-10 size-20 opacity-50 sm:opacity-100" />
                       <Cloud4 className="absolute -top-5 right-55 z-10 size-20 opacity-30 sm:opacity-100" />
                     </div>
-                  </div>
+                  </div> */}
                 </div>
 
-                <p className="relative text-2xl text-text-main font-medium z-11 -top-1">
+                <p className="relative text-2xl text-text-main font-bold z-11 -top-1">
                   {isAccessingEarlyApplication
                     ? metadata.earlyTitle
                     : metadata.title}
                 </p>
-                <p className="relative text-text-main z-11 w-[85%] -top-1 font-medium sm:font-normal">
+                <div className="space-y-2 z-20">
+                  <p className="relative z-20">
+                    Applications are due{" "}
+                    <b>September 1, 2026 at 11:59 PM EST.</b>
+                  </p>
+                  <p>
+                    Questions? Email{" "}
+                    <a
+                      className="text-text-link"
+                      href="mailto:contact@swamphacks.com"
+                    >
+                      contact@swamphacks.com
+                    </a>
+                  </p>
+                </div>
+                {/* <p className="relative text-text-main z-11 w-[85%] -top-1 font-medium sm:font-normal">
                   {metadata.description}
-                </p>
+                </p> */}
               </div>
             );
           }}
