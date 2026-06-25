@@ -6,6 +6,7 @@ from typing import List
 from dotenv import load_dotenv
 from botocore.exceptions import ClientError
 from math import ceil
+import json
 
 load_dotenv()
 
@@ -15,11 +16,15 @@ REGION = "us-east-1"
 
 
 class Contact:
-    def __init__(self, email: str):
+    def __init__(self, email: str, name: str):
         self.email = email
+        self.name = name
 
     def get_email(self):
         return self.email
+
+    def get_name(self):
+        return self.name
 
 
 def parse_csv(csv_path="contacts.csv") -> List[Contact]:
@@ -29,7 +34,7 @@ def parse_csv(csv_path="contacts.csv") -> List[Contact]:
         for row in reader:
             if "email" not in row or not row["email"]:
                 raise ValueError(f"Missing email field in row: {row}")
-            contacts.append(Contact(row["email"]))
+            contacts.append(Contact(row["email"], row["name"]))
     return contacts
 
 
@@ -38,7 +43,7 @@ def get_ses_client():
         "ses",
         region_name=REGION,
         aws_access_key_id=AWS_ACCESS_KEY,
-        aws_secret_access_key=AWS_ACCESS_KEY_SECRET
+        aws_secret_access_key=AWS_ACCESS_KEY_SECRET,
     )
 
 
@@ -54,7 +59,12 @@ def list_templates():
         print(f"- {t['Name']} (Created: {t['CreatedTimestamp']})")
 
 
-def upload_template(template_name: str, html_file_name: str, subject: str = "No Subject", text: str = "Your email client does not support HTML"):
+def upload_template(
+    template_name: str,
+    html_file_name: str,
+    subject: str = "No Subject",
+    text: str = "Your email client does not support HTML",
+):
     # Construct path relative to the templates/ folder
     html_file_path = os.path.join("templates", html_file_name)
 
@@ -74,19 +84,19 @@ def upload_template(template_name: str, html_file_name: str, subject: str = "No 
             Template={
                 "TemplateName": template_name,
                 "SubjectPart": subject,
-                "TextPart": text,
-                "HtmlPart": html_content
+                # "TextPart": text,
+                "HtmlPart": html_content,
             }
         )
         print(f"Template '{template_name}' updated successfully.")
     except ClientError as e:
-        if e.response['Error']['Code'] == "TemplateDoesNotExist":
+        if e.response["Error"]["Code"] == "TemplateDoesNotExist":
             ses.create_template(
                 Template={
                     "TemplateName": template_name,
                     "SubjectPart": subject,
-                    "TextPart": text,
-                    "HtmlPart": html_content
+                    # "TextPart": text,
+                    "HtmlPart": html_content,
                 }
             )
             print(f"Template '{template_name}' created successfully.")
@@ -97,7 +107,7 @@ def upload_template(template_name: str, html_file_name: str, subject: str = "No 
 def chunk_list(lst, chunk_size: int):
     """Split a list into chunks of size chunk_size."""
     for i in range(0, len(lst), chunk_size):
-        yield lst[i:i + chunk_size]
+        yield lst[i : i + chunk_size]
 
 
 def send_emails(template_name: str, csv_path="contacts.csv"):
@@ -112,14 +122,20 @@ def send_emails(template_name: str, csv_path="contacts.csv"):
     chunk_size = 50
 
     for chunk_index, chunk in enumerate(chunk_list(contacts, chunk_size), start=1):
-        destinations = [{"Destination": {"ToAddresses": [contact.get_email()]}} for contact in chunk]
+        destinations = [
+            {
+                "Destination": {"ToAddresses": [contact.get_email()]},
+                "ReplacementTemplateData": json.dumps({"Name": contact.get_name()}),
+            }
+            for contact in chunk
+        ]
 
         try:
             ses.send_bulk_templated_email(
-                Source="noreply@swamphacks.com",
+                Source="SwampHacks <team@swamphacks.com>",
                 Template=template_name,
                 Destinations=destinations,
-                DefaultTemplateData="{}"
+                DefaultTemplateData="{}",
             )
             print(f"Chunk {chunk_index}: Emails sent successfully!")
         except ClientError as e:
@@ -134,16 +150,28 @@ def main():
     subparsers.add_parser("list", help="List SES templates")
 
     # Upload template
-    upload_parser = subparsers.add_parser("upload", help="Upload or update SES template from HTML file")
+    upload_parser = subparsers.add_parser(
+        "upload", help="Upload or update SES template from HTML file"
+    )
     upload_parser.add_argument("name", help="Template name")
     upload_parser.add_argument("html_path", help="Path to HTML file")
-    upload_parser.add_argument("--subject", help="Email subject line", default="No Subject")
-    upload_parser.add_argument("--text", help="Plain text fallback", default="Your email client does not support HTML")
+    upload_parser.add_argument(
+        "--subject", help="Email subject line", default="No Subject"
+    )
+    upload_parser.add_argument(
+        "--text",
+        help="Plain text fallback",
+        default="Your email client does not support HTML",
+    )
 
     # Send emails
-    send_parser = subparsers.add_parser("send", help="Send bulk emails using a template")
+    send_parser = subparsers.add_parser(
+        "send", help="Send bulk emails using a template"
+    )
     send_parser.add_argument("template_name", help="SES template name to use")
-    send_parser.add_argument("--csv", help="Path to contacts CSV", default="contacts.csv")
+    send_parser.add_argument(
+        "--csv", help="Path to contacts CSV", default="contacts.csv"
+    )
 
     args = parser.parse_args()
 

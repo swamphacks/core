@@ -242,7 +242,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 		return nil
 	})
 
-	err = s.emailService.QueueConfirmationEmail(data.PreferredEmail, data.FirstName)
+	err = s.emailService.QueueApplicationConfirmationEmail(data.PreferredEmail, data.FirstName)
 
 	// Non-blocking error
 	if err != nil {

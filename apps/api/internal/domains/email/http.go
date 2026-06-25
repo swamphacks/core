@@ -112,7 +112,7 @@ type QueueConfirmationEmailOutput struct {
 func (h *handler) handleQueueConfirmationEmail(ctx context.Context, input *struct {
 	Body QueueConfirmationEmailRequest
 }) (*QueueConfirmationEmailOutput, error) {
-	err := h.emailService.QueueConfirmationEmail(input.Body.Email, input.Body.FirstName)
+	err := h.emailService.QueueApplicationConfirmationEmail(input.Body.Email, input.Body.FirstName)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to queue confirmation email")

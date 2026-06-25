@@ -45,8 +45,8 @@ func NewEmailService(
 	}
 }
 
-func (s *EmailService) QueueConfirmationEmail(recipient string, name string) error {
-	subject := "SwampHacks XII: we received your application!"
+func (s *EmailService) QueueApplicationConfirmationEmail(recipient string, name string) error {
+	subject := "SwampHacks XII: We received your application!"
 	templateEmailFilepath := s.config.EmailTemplateDirectory + "ConfirmationEmail.html"
 
 	type emailTemplateData struct {
