@@ -209,11 +209,25 @@ export function ApplicationForm({
                     ? metadata.earlyTitle
                     : metadata.title}
                 </p>
-                <div className="space-y-2 z-20">
-                  <p className="relative z-20">
-                    Applications are due{" "}
-                    <b>September 1, 2026 at 11:59 PM EST.</b>
-                  </p>
+                <div className="space-y-2 max-w-110 z-20">
+                  {isAccessingEarlyApplication && (
+                    <>
+                      <p className="relative z-20">
+                        Early applications are due{" "}
+                        <b>August 21, 2026 at 11:59 PM EST.</b>
+                      </p>
+                      <p>
+                        Applications submitted after this deadline will be
+                        considered as regular submissions.
+                      </p>
+                    </>
+                  )}
+                  {!isAccessingEarlyApplication && (
+                    <p className="relative z-20">
+                      Applications are due{" "}
+                      <b>September 4, 2026 at 11:59 PM EST.</b>
+                    </p>
+                  )}
                   <p>
                     Questions? Email{" "}
                     <a
