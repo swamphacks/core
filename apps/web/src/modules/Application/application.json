@@ -37,16 +37,27 @@
         {
           "type": "layout",
           "content": [
-            {
+          {
               "name": "age",
-              "questionType": "number",
+              "questionType": "select",
               "placeholder": "Enter your age",
               "label": "Age",
               "required": true,
-              "validation": {
-                "min": 0,
-                "max": 99
-              }
+              "hasOther": false,
+              "options": [
+                {
+                  "label": "<18",
+                  "value": "<18"
+                },
+                {
+                  "label": "18-22",
+                  "value": "18-22"
+                },
+                {
+                  "label": ">23",
+                  "value": ">23"
+                }
+              ]
             },
             {
               "name": "phone",
@@ -276,7 +287,7 @@
           "required": true,
           "options": [
             {
-              "label": "By clicking this,  I certify that I am 18 years old or will turn 18 before the event date.",
+              "label": "I certify that I am 18 years old or will turn 18 before the event date (Oct 16, 2026)",
               "value": "true"
             }
           ]
@@ -310,20 +321,36 @@
               "hasOther": true,
               "options": [
                 {
-                  "label": "High School",
-                  "value": "high_school"
+                  "label": "Undergraduate University (2 year - community college or similar)",
+                  "value": "undergrad_two_year"
                 },
                 {
-                  "label": "Undergraduate",
-                  "value": "undergraduate"
+                  "label": "Undergraduate University (3+ year)",
+                  "value": "undergrad_three_plus_year"
                 },
                 {
-                  "label": "Graduate",
+                  "label": "Graduate University (Masters, Professional, Doctoral, etc.)",
                   "value": "graduate"
                 },
                 {
-                  "label": "Professional / Continuing Education",
-                  "value": "professional"
+                  "label": "Post Doctorate",
+                  "value": "post_doctorate"
+                },
+                {
+                  "label": "Code School / Bootcamp",
+                  "value": "bootcamp"
+                },
+                {
+                  "label": "Other Vocational / Trade Program or Apprenticeship",
+                  "value": "other_program"
+                },
+                {
+                  "label": "I'm not currently a student",
+                  "value": "not_student"
+                },
+                {
+                  "label": "Prefer Not to Answer",
+                  "value": "prefer_no_answer"
                 },
                 {
                   "label": "Other",
@@ -557,22 +584,22 @@
           "name": "essay1",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
-          "label": "What is your most memorable experience working in a group? What did you learn and accomplish? (max. 150 words)",
+          "label": "Why do you want to participate in this hackathon, and what do you hope to build, learn, or contribute? [150-250 words]",
           "required": true,
           "showWordCount": true,
           "validation": {
-            "max": 150
+            "max": 250
           }
         },
         {
           "name": "essay2",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
-          "label": "Tell us about a project you are most proud of. (max. 150 words)",
-          "required": true,
+          "label": "Tell us a joke!",
+          "required": false,
           "showWordCount": true,
           "validation": {
-            "max": 150
+            "max": 250
           }
         },
         {
@@ -669,7 +696,7 @@
         {
           "name": "infoShareAuthorization",
           "questionType": "checkbox",
-          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>. I further agree to the terms of both the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/contest-terms.md\">MLH Contest Terms and Conditions</a> and the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>.",
+          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and administration (including the creation of linked accounts on MLH and <a class=\"link\" target=\"blank\" href=\"https://dev.to\">DEV</a>) in-line with the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>. I further agree to the terms of both the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/contest-terms.md\">MLH Contest Terms and Conditions</a> and the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>.",
           "renderLabelAsHTML": true,
           "required": true,
           "options": [
@@ -682,7 +709,7 @@
         {
           "name": "agreeToMLHEmails",
           "questionType": "checkbox",
-          "label": "I authorize MLH to send me occasional emails about relevant events, career opportunities, and community announcements.",
+          "label": "I authorize MLH + DEV to send me occasional emails about relevant events, career opportunities, and community announcements.",
           "required": false,
           "options": [
             {

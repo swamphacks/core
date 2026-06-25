@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-playground/validator/v10"
@@ -252,16 +251,10 @@ func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) 
 	submission.FirstName = r.FormValue("firstName")
 	submission.LastName = r.FormValue("lastName")
 
-	if ageStr := r.FormValue("age"); ageStr != "" {
-		if age, err := strconv.Atoi(ageStr); err == nil {
-			submission.Age = age
-		}
-	}
-
 	submission.Phone = r.FormValue("phone")
 	submission.PreferredEmail = r.FormValue("preferredEmail")
 	submission.UniversityEmail = r.FormValue("universityEmail")
-
+	submission.Age = r.FormValue("age")
 	submission.Country = r.FormValue("country")
 	submission.Gender = r.FormValue("gender")
 	submission.GenderOther = r.FormValue("gender-other")

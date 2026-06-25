@@ -182,7 +182,7 @@ type SearchAutoDecisionRequestsResponseDto struct {
 type ApplicationSubmissionFields struct {
 	FirstName               string `json:"firstName" validate:"required,max=50"`
 	LastName                string `json:"lastName" validate:"required,max=50"`
-	Age                     int    `json:"age" validate:"required,min=0,max=99"`
+	Age                     string `json:"age" validate:"required"`
 	Phone                   string `json:"phone" validate:"required,len=10"`
 	PreferredEmail          string `json:"preferredEmail" validate:"required,email"`
 	UniversityEmail         string `json:"universityEmail" validate:"required,email"`
