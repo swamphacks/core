@@ -26,7 +26,7 @@ services:
     image: ghcr.io/caddybuilds/caddy-cloudflare:latest
     container_name: caddy
     env_file:
-      - ./secrets/.env.dev.web # This needs to be pulled first since Caddy needs to compelte DNS challenge!
+      - ./secrets/.env.web # This needs to be pulled first since Caddy needs to compelte DNS challenge!
     ports:
       - "80:80"
       - "443:443"
@@ -37,7 +37,7 @@ services:
     networks:
       - caddy_net
     depends_on:
-      - web-dev
+      - web
 
 volumes:
   caddy_data:
