@@ -76,6 +76,6 @@ jobs:
               --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
               > ./secrets/.env.web
             
-            docker compose -f docker-compose.web.yml pull web
-            docker compose -f docker-compose.web.yml up -d --no-deps --force-recreate web
+            docker compose -f docker-compose.web.yml pull web caddy
+            docker compose -f docker-compose.web.yml up -d --no-deps --force-recreate web caddy
 
