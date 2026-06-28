@@ -71,7 +71,7 @@ export default function ApplicationPage({
   return (
     <ErrorBoundary FallbackComponent={Fallback}>
       <ApplicationForm
-        hackathon={hackathon.data}
+        hackathon={hackathon}
         application={application.data}
         applicationResponses={applicationResponses}
       />

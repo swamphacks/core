@@ -264,7 +264,7 @@ func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) 
 	submission.Orientation = r.FormValue("orientation")
 
 	submission.Linkedin = r.FormValue("linkedin")
-	submission.Github = r.FormValue("github")
+	// submission.Github = r.FormValue("github")
 
 	if ageCertStr := r.FormValue("ageCertification"); ageCertStr != "" {
 		submission.AgeCertification = (ageCertStr == "true" || ageCertStr == "1")

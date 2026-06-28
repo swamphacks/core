@@ -29,7 +29,19 @@ function RouteComponent() {
   const now = new Date();
   const applicationOpen = new Date(hackathon.data.applicationOpen);
   const applicationClose = new Date(hackathon.data.applicationClose);
-  const isApplicationOpen = now >= applicationOpen && now <= applicationClose;
+
+  let isApplicationOpen;
+  if (hackathon.data.acceptEarlyApplications) {
+    const earlyApplicationOpen = new Date(hackathon.data.earlyApplicationOpen!);
+    const earlyApplicationClose = new Date(
+      hackathon.data.earlyApplicationClose!,
+    );
+    isApplicationOpen =
+      (now >= earlyApplicationOpen && now <= earlyApplicationClose) ||
+      (now >= applicationOpen && now <= applicationClose);
+  } else {
+    isApplicationOpen = now >= applicationOpen && now <= applicationClose;
+  }
 
   if (!isApplicationOpen) {
     return (
@@ -42,5 +54,5 @@ function RouteComponent() {
     );
   }
 
-  return <ApplicationPage hackathon={hackathon} user={user} />;
+  return <ApplicationPage hackathon={hackathon.data} user={user} />;
 }

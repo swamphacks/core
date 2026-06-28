@@ -16,14 +16,19 @@ func main() {
 
 	hackathonRepo := repository.NewHackathonRepository(db)
 
-	appOpenTime := time.Date(2026, 4, 26, 19, 13, 20, 0, time.UTC)
-	appCloseTime := time.Date(2026, 6, 26, 19, 13, 20, 0, time.UTC)
-	earlyAppOpenTime := time.Date(2026, 4, 20, 19, 13, 20, 0, time.UTC)
-	earlyAppCloseTime := time.Date(2026, 4, 26, 19, 13, 20, 0, time.UTC)
-	startTime := time.Date(2026, 10, 26, 19, 13, 20, 0, time.UTC)
-	endTime := time.Date(2026, 10, 29, 19, 13, 20, 0, time.UTC)
+	loc, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		panic(err)
+	}
 
-	_, err := hackathonRepo.CreateHackathon(context.TODO(), sqlc.CreateHackathonParams{
+	earlyAppOpenTime := time.Date(2026, time.June, 20, 19, 13, 20, 0, loc)
+	earlyAppCloseTime := time.Date(2026, time.August, 21, 23, 59, 59, 0, loc)
+	appOpenTime := time.Date(2026, time.August, 22, 0, 0, 0, 0, loc)
+	appCloseTime := time.Date(2026, time.September, 4, 23, 59, 59, 0, loc)
+	startTime := time.Date(2026, time.October, 16, 19, 13, 20, 0, loc)
+	endTime := time.Date(2026, time.October, 18, 19, 13, 20, 0, loc)
+
+	_, err = hackathonRepo.CreateHackathon(context.TODO(), sqlc.CreateHackathonParams{
 		ID:                      "xii",
 		Name:                    "SwampHacks XII",
 		ApplicationOpen:         appOpenTime,

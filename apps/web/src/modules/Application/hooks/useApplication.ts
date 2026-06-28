@@ -7,7 +7,7 @@ import { z } from "zod";
 export const ApplicationFieldsSchema = z.object({
   firstName: z.string().max(50),
   lastName: z.string().max(50),
-  age: z.number().int().min(0).max(99),
+  age: z.string(),
   phone: z.string().length(10),
   preferredEmail: z.email(),
   universityEmail: z.email(),
@@ -19,7 +19,7 @@ export const ApplicationFieldsSchema = z.object({
   "race-other": z.string().optional(),
   orientation: z.string().optional(),
   linkedin: z.url(),
-  github: z.url(),
+  // github: z.url(),
   ageCertification: z.boolean(),
   school: z.string(),
   level: z.string(),

@@ -81,7 +81,7 @@ export function Select<T extends { id: string; name: string }>({
     >
       {label && <Label isRequired={props.isRequired}>{label}</Label>}
       <Button className={styles}>
-        <SelectValue className="flex-1 placeholder-shown:opacity-50" />
+        <SelectValue className="min-w-0 flex-1 truncate placeholder-shown:opacity-50" />
         <TablerChevronDown
           aria-hidden
           className="w-4 h-4 text-gray-600 dark:text-zinc-400 forced-colors:text-[ButtonText] group-disabled:text-gray-200 dark:group-disabled:text-zinc-600 forced-colors:group-disabled:text-[GrayText]"
@@ -89,7 +89,7 @@ export function Select<T extends { id: string; name: string }>({
       </Button>
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
-      <Popover className="min-w-(--trigger-width)">
+      <Popover className="w-(--trigger-width)">
         {virtualized ? (
           <Virtualizer
             layout={ListLayout}

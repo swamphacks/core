@@ -20,7 +20,7 @@ const SlideoutNavbar = ({ children, isOpen }: MobileSidebarProps) => {
 
       {/* Side Navigation */}
       <aside
-        className={`fixed top-16 left-0 h-full w-3/4 bg-background shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
+        className={`fixed top-16 left-0 h-full w-3/4 bg-background shadow-xl transform transition-transform duration-300 ease-in-out z-[2000] ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

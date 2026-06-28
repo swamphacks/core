@@ -37,10 +37,10 @@
         {
           "type": "layout",
           "content": [
-          {
+            {
               "name": "age",
               "questionType": "select",
-              "placeholder": "Enter your age",
+              "placeholder": "Select age",
               "label": "Age",
               "required": true,
               "hasOther": false,
@@ -106,7 +106,7 @@
         {
           "name": "country",
           "questionType": "select",
-          "placeholder": "Select your country",
+          "placeholder": "Select country",
           "label": "Country",
           "required": true,
           "searchable": true,
@@ -120,7 +120,7 @@
             {
               "name": "gender",
               "questionType": "select",
-              "placeholder": "Select your gender",
+              "placeholder": "Select gender",
               "label": "Gender",
               "required": true,
               "hasOther": true,
@@ -190,7 +190,7 @@
           "name": "race",
           "questionType": "select",
           "required": true,
-          "placeholder": "Select your race",
+          "placeholder": "Select race",
           "label": "Race/Ethnicity",
           "hasOther": true,
           "options": [
@@ -272,22 +272,12 @@
           "iconName": "linkedin"
         },
         {
-          "name": "github",
-          "questionType": "url",
-          "placeholder": "Enter link",
-          "description": "Must be a full URL. Example: https://www.github.com/my-profile",
-          "regex": "^(https?:\\/\\/)?(www\\.)?github\\.com\\/[A-Za-z0-9-]+\\/?$",
-          "label": "Github URL",
-          "required": true,
-          "iconName": "github"
-        },
-        {
           "name": "ageCertification",
           "questionType": "checkbox",
           "required": true,
           "options": [
             {
-              "label": "I certify that I am 18 years old or will turn 18 before the event date (Oct 16, 2026)",
+              "label": "I certify that I am 18 years old or will turn 18 before the event date",
               "value": "true"
             }
           ]
@@ -299,64 +289,59 @@
       "label": "Education",
       "content": [
         {
-          "type": "layout",
-          "content": [
+          "name": "school",
+          "questionType": "select",
+          "placeholder": "Start typing...",
+          "label": "School",
+          "required": true,
+          "searchable": true,
+          "options": {
+            "data": "schools"
+          }
+        },
+        {
+          "name": "level",
+          "questionType": "select",
+          "placeholder": "Select level",
+          "label": "Level of Study",
+          "required": true,
+          "hasOther": true,
+          "options": [
             {
-              "name": "school",
-              "questionType": "select",
-              "placeholder": "Start typing...",
-              "label": "School",
-              "required": true,
-              "searchable": true,
-              "options": {
-                "data": "schools"
-              }
+              "label": "Undergraduate University (2 year - community college or similar)",
+              "value": "undergrad_two_year"
             },
             {
-              "name": "level",
-              "questionType": "select",
-              "placeholder": "Select your level",
-              "label": "Level of Study",
-              "required": true,
-              "hasOther": true,
-              "options": [
-                {
-                  "label": "Undergraduate University (2 year - community college or similar)",
-                  "value": "undergrad_two_year"
-                },
-                {
-                  "label": "Undergraduate University (3+ year)",
-                  "value": "undergrad_three_plus_year"
-                },
-                {
-                  "label": "Graduate University (Masters, Professional, Doctoral, etc.)",
-                  "value": "graduate"
-                },
-                {
-                  "label": "Post Doctorate",
-                  "value": "post_doctorate"
-                },
-                {
-                  "label": "Code School / Bootcamp",
-                  "value": "bootcamp"
-                },
-                {
-                  "label": "Other Vocational / Trade Program or Apprenticeship",
-                  "value": "other_program"
-                },
-                {
-                  "label": "I'm not currently a student",
-                  "value": "not_student"
-                },
-                {
-                  "label": "Prefer Not to Answer",
-                  "value": "prefer_no_answer"
-                },
-                {
-                  "label": "Other",
-                  "value": "other"
-                }
-              ]
+              "label": "Undergraduate University (3+ year)",
+              "value": "undergrad_three_plus_year"
+            },
+            {
+              "label": "Graduate University (Masters, Professional, Doctoral, etc.)",
+              "value": "graduate"
+            },
+            {
+              "label": "Post Doctorate",
+              "value": "post_doctorate"
+            },
+            {
+              "label": "Code School / Bootcamp",
+              "value": "bootcamp"
+            },
+            {
+              "label": "Other Vocational / Trade Program or Apprenticeship",
+              "value": "other_program"
+            },
+            {
+              "label": "I'm not currently a student",
+              "value": "not_student"
+            },
+            {
+              "label": "Prefer Not to Answer",
+              "value": "prefer_no_answer"
+            },
+            {
+              "label": "Other",
+              "value": "other"
             }
           ]
         },
@@ -366,7 +351,7 @@
             {
               "name": "year",
               "questionType": "select",
-              "placeholder": "Select your year",
+              "placeholder": "Select year",
               "label": "Year in College",
               "required": true,
               "hasOther": true,
@@ -400,7 +385,7 @@
             {
               "name": "graduationYear",
               "questionType": "select",
-              "placeholder": "Select Year",
+              "placeholder": "Select year",
               "label": "Graduation Year",
               "required": true,
               "options": {
@@ -414,7 +399,7 @@
         {
           "name": "majors",
           "questionType": "multiselect",
-          "placeholder": "Select your major(s)",
+          "placeholder": "Select major(s)",
           "label": "Major(s)",
           "required": true,
           "options": {
@@ -424,7 +409,7 @@
         {
           "name": "minors",
           "questionType": "shortAnswer",
-          "placeholder": "Enter your minor(s)",
+          "placeholder": "Enter minor(s)",
           "label": "Minor(s)",
           "required": false
         }

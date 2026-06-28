@@ -38,7 +38,8 @@ def read_csv(csv_path: str) -> list:
     return rows
 
 
-def write_json(json_path: str | None, data: list) -> None:
+def write_json(json_path: str, data: list) -> None:
+    data = list(dict.fromkeys(data))
     text = json.dumps(data, ensure_ascii=False, indent=2)
     if json_path:
         with open(json_path, "w", encoding="utf-8") as jsonfile:

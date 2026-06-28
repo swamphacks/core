@@ -180,21 +180,21 @@ type SearchAutoDecisionRequestsResponseDto struct {
 // TODO: figure out a way to create the submission fields dynamically using the json form files with proper validation.
 // these fields are only applicable to swamphacks xi, not other events
 type ApplicationSubmissionFields struct {
-	FirstName               string `json:"firstName" validate:"required,max=50"`
-	LastName                string `json:"lastName" validate:"required,max=50"`
-	Age                     string `json:"age" validate:"required"`
-	Phone                   string `json:"phone" validate:"required,len=10"`
-	PreferredEmail          string `json:"preferredEmail" validate:"required,email"`
-	UniversityEmail         string `json:"universityEmail" validate:"required,email"`
-	Country                 string `json:"country" validate:"required"`
-	Gender                  string `json:"gender"`
-	GenderOther             string `json:"gender-other"`
-	Pronouns                string `json:"pronouns"`
-	Race                    string `json:"race"`
-	RaceOther               string `json:"race-other"`
-	Orientation             string `json:"orientation"`
-	Linkedin                string `json:"linkedin" validate:"required,url"`
-	Github                  string `json:"github" validate:"required,url"`
+	FirstName       string `json:"firstName" validate:"required,max=50"`
+	LastName        string `json:"lastName" validate:"required,max=50"`
+	Age             string `json:"age" validate:"required"`
+	Phone           string `json:"phone" validate:"required,len=10"`
+	PreferredEmail  string `json:"preferredEmail" validate:"required,email"`
+	UniversityEmail string `json:"universityEmail" validate:"required,email"`
+	Country         string `json:"country" validate:"required"`
+	Gender          string `json:"gender"`
+	GenderOther     string `json:"gender-other"`
+	Pronouns        string `json:"pronouns"`
+	Race            string `json:"race"`
+	RaceOther       string `json:"race-other"`
+	Orientation     string `json:"orientation"`
+	Linkedin        string `json:"linkedin" validate:"required,url"`
+	// Github                  string `json:"github" validate:"required,url"`
 	AgeCertification        bool   `json:"ageCertification" validate:"required,boolean"`
 	School                  string `json:"school" validate:"required"`
 	Level                   string `json:"level" validate:"required"`

@@ -22,13 +22,13 @@ import Sticker from "./assets/XII_Sticker.svg?react";
 import data from "./application.json";
 import { HTTPError } from "ky";
 import type { Hackathon } from "@/modules/Hackathon/hooks/useHackathon";
-import type { Application } from "@/modules/Application/hooks/useApplication";
+import type { ApplicationResponse } from "@/modules/Application/hooks/useApplication";
 
 const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
 interface ApplicationFormProps {
   hackathon: Hackathon;
-  application: Application;
+  application: ApplicationResponse;
   applicationResponses: any;
 }
 
@@ -165,6 +165,17 @@ export function ApplicationForm({
     now >= new Date(hackathon.earlyApplicationOpen as string) &&
     now <= new Date(hackathon.earlyApplicationClose as string);
 
+  const applicationDeadlineFormatted =
+    new Date(hackathon.applicationClose).toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }) + " ET";
+
   return (
     <>
       <div className="flex-col">
@@ -189,7 +200,7 @@ export function ApplicationForm({
               // bg-[#ebf7fc] dark:bg-gray-700
               <div className="space-y-3 py-3 rounded-md relative overflow-hidden mt-1">
                 <div className="invisible opacity-65 sm:visible">
-                  <div className="absolute right-0 z-10">
+                  <div className="absolute right-0 top-5 z-10">
                     <Sticker className="size-30 z-1" />
                   </div>
                   {/* <div className="absolute -bottom-50 -right-33 z-10">
@@ -214,18 +225,30 @@ export function ApplicationForm({
                     <>
                       <p className="relative z-20">
                         Early applications are due{" "}
-                        <b>August 21, 2026 at 11:59 PM EST.</b>
+                        <b>
+                          {new Date(
+                            hackathon.earlyApplicationClose!,
+                          ).toLocaleString("en-US", {
+                            timeZone: "America/New_York",
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          }) + " ET"}
+                        </b>
                       </p>
                       <p>
                         Applications submitted after this deadline will be
-                        considered as regular submissions.
+                        considered as regular submissions, which are due at{" "}
+                        {applicationDeadlineFormatted}.
                       </p>
                     </>
                   )}
                   {!isAccessingEarlyApplication && (
                     <p className="relative z-20">
-                      Applications are due{" "}
-                      <b>September 4, 2026 at 11:59 PM EST.</b>
+                      Applications are due <b>{applicationDeadlineFormatted}</b>
                     </p>
                   )}
                   <p>
@@ -235,6 +258,14 @@ export function ApplicationForm({
                       href="mailto:contact@swamphacks.com"
                     >
                       contact@swamphacks.com
+                    </a>{" "}
+                    or join our{" "}
+                    <a
+                      target="_blank"
+                      className="text-text-link"
+                      href="https://discord.com/invite/NfRPv9JtAG"
+                    >
+                      Discord server
                     </a>
                   </p>
                 </div>
