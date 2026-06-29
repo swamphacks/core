@@ -16,6 +16,7 @@ export const ShortAnswerQuestion = createQuestionItem({
     regex: z.string().optional(),
     validation: z
       .object({
+        minLength: z.number(),
         maxLength: z.number(),
         email: z.boolean(),
       })
@@ -53,11 +54,19 @@ export const ShortAnswerQuestion = createQuestionItem({
         );
       }
 
+      if (typeof validation.minLength === "number") {
+        schema = schema.min(validation.minLength, error.tooShort);
+      }
+
       if (typeof validation.maxLength === "number") {
         schema = schema.max(validation.maxLength, error.tooLong);
       }
 
       return schema;
+    }
+
+    if (typeof validation.minLength === "number") {
+      schema = schema.min(validation.minLength, error.tooShort);
     }
 
     if (typeof validation.maxLength === "number") {
