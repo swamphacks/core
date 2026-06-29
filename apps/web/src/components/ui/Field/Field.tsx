@@ -119,7 +119,7 @@ export const Input = forwardRef(
     ref: React.ForwardedRef<HTMLInputElement>,
   ) => {
     const inputClassName =
-      "min-h-9 py-1.5 w-full min-w-0 outline-0 bg-input-bg text-base text-text-main disabled:cursor-not-allowed disabled:text-input-text-disabled disabled:bg-input-bg-disbaled disabled:opacity-70";
+      "min-h-9 py-1.5 w-full min-w-0 outline-0 bg-input-bg border border-input-border text-base text-text-main disabled:cursor-not-allowed disabled:text-input-text-disabled disabled:bg-input-bg-disbaled disabled:opacity-70";
 
     if (!Icon) {
       return (
@@ -133,7 +133,6 @@ export const Input = forwardRef(
         />
       );
     }
-    // console.log(iconPlacement);
 
     return (
       <div className="flex items-center gap-1 bg-surface relative">

@@ -10,23 +10,25 @@ import { Button } from "@/components/ui/Button";
 import { useReplaceResume } from "@/modules/Application/hooks/useReplaceResume";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
 
-import Cloud from "./assets/cloud.svg?react";
-import Cloud2 from "./assets/cloud2.svg?react";
-import Cloud3 from "./assets/cloud3.svg?react";
-import Cloud4 from "./assets/cloud4.svg?react";
-import Tower from "./assets/tower.svg?react";
-import Bell from "./assets/bell.svg?react";
+// import Cloud from "./assets/cloud.svg?react";
+// import Cloud2 from "./assets/cloud2.svg?react";
+// import Cloud3 from "./assets/cloud3.svg?react";
+// import Cloud4 from "./assets/cloud4.svg?react";
+// import Tower from "./assets/tower.svg?react";
+// import Bell from "./assets/bell.svg?react";
+import Sticker from "./assets/XII_Sticker.svg?react";
 
 // TODO: dynamically fetch application json data from somewhere (backend, cdn?) instead of hardcoding it in the frontend
 import data from "./application.json";
-import type { Application, Hackathon } from "@/lib/openapi/types";
 import { HTTPError } from "ky";
+import type { Hackathon } from "@/modules/Hackathon/hooks/useHackathon";
+import type { ApplicationResponse } from "@/modules/Application/hooks/useApplication";
 
 const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
 interface ApplicationFormProps {
   hackathon: Hackathon;
-  application: Application;
+  application: ApplicationResponse;
   applicationResponses: any;
 }
 
@@ -163,6 +165,17 @@ export function ApplicationForm({
     now >= new Date(hackathon.earlyApplicationOpen as string) &&
     now <= new Date(hackathon.earlyApplicationClose as string);
 
+  const applicationDeadlineFormatted =
+    new Date(hackathon.applicationClose).toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }) + " ET";
+
   return (
     <>
       <div className="flex-col">
@@ -184,9 +197,13 @@ export function ApplicationForm({
           isSubmitting={isSubmitting}
           renderFormHeader={(metadata) => {
             return (
-              <div className="space-y-3 py-3 rounded-md relative overflow-hidden bg-[#ebf7fc] dark:bg-gray-700 px-4 mt-1">
-                <div className="opacity-85">
-                  <div className="absolute -bottom-50 -right-33 z-10">
+              // bg-[#ebf7fc] dark:bg-gray-700
+              <div className="space-y-3 py-3 rounded-md relative overflow-hidden mt-1">
+                <div className="invisible opacity-65 sm:visible">
+                  <div className="absolute right-0 top-5 z-10">
+                    <Sticker className="size-30 z-1" />
+                  </div>
+                  {/* <div className="absolute -bottom-50 -right-33 z-10">
                     <div className="relative inline-block">
                       <Tower className="relative size-90 [transform:rotateX(25deg)_scale(1,0.9)] [transform-origin:bottom_center] z-20" />
                       <Bell className="absolute top-20 right-39 z-10 size-8" />
@@ -195,17 +212,66 @@ export function ApplicationForm({
                       <Cloud3 className="absolute top-1 right-32 z-10 size-20 opacity-50 sm:opacity-100" />
                       <Cloud4 className="absolute -top-5 right-55 z-10 size-20 opacity-30 sm:opacity-100" />
                     </div>
-                  </div>
+                  </div> */}
                 </div>
 
-                <p className="relative text-2xl text-text-main font-medium z-11 -top-1">
+                <p className="relative text-2xl text-text-main font-bold z-11 -top-1">
                   {isAccessingEarlyApplication
                     ? metadata.earlyTitle
                     : metadata.title}
                 </p>
-                <p className="relative text-text-main z-11 w-[85%] -top-1 font-medium sm:font-normal">
+                <div className="space-y-2 max-w-110 z-20">
+                  {isAccessingEarlyApplication && (
+                    <>
+                      <p className="relative z-20">
+                        Early applications are due{" "}
+                        <b>
+                          {new Date(
+                            hackathon.earlyApplicationClose!,
+                          ).toLocaleString("en-US", {
+                            timeZone: "America/New_York",
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          }) + " ET"}
+                        </b>
+                      </p>
+                      <p>
+                        Applications submitted after this deadline will be
+                        considered as regular submissions, which are due at{" "}
+                        {applicationDeadlineFormatted}.
+                      </p>
+                    </>
+                  )}
+                  {!isAccessingEarlyApplication && (
+                    <p className="relative z-20">
+                      Applications are due <b>{applicationDeadlineFormatted}</b>
+                    </p>
+                  )}
+                  <p>
+                    Questions? Email{" "}
+                    <a
+                      className="text-text-link"
+                      href="mailto:contact@swamphacks.com"
+                    >
+                      contact@swamphacks.com
+                    </a>{" "}
+                    or join our{" "}
+                    <a
+                      target="_blank"
+                      className="text-text-link"
+                      href="https://discord.com/invite/NfRPv9JtAG"
+                    >
+                      Discord server
+                    </a>
+                  </p>
+                </div>
+                {/* <p className="relative text-text-main z-11 w-[85%] -top-1 font-medium sm:font-normal">
                   {metadata.description}
-                </p>
+                </p> */}
               </div>
             );
           }}

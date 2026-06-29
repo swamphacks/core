@@ -387,7 +387,7 @@ export function build(formObject: FormObject): {
           if (item.type === "section") {
             return (
               <div className="mt-7 text-text-main" key={item.id}>
-                <p className="text-xl font-medium">{item.label}</p>
+                <p className="text-xl font-bold">{item.label}</p>
                 {item.description && (
                   <div className="my-4">
                     <p>{item.description}</p>

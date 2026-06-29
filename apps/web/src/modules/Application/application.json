@@ -39,14 +39,25 @@
           "content": [
             {
               "name": "age",
-              "questionType": "number",
-              "placeholder": "Enter your age",
+              "questionType": "select",
+              "placeholder": "Select age",
               "label": "Age",
               "required": true,
-              "validation": {
-                "min": 0,
-                "max": 99
-              }
+              "hasOther": false,
+              "options": [
+                {
+                  "label": "<18",
+                  "value": "<18"
+                },
+                {
+                  "label": "18-22",
+                  "value": "18-22"
+                },
+                {
+                  "label": ">23",
+                  "value": ">23"
+                }
+              ]
             },
             {
               "name": "phone",
@@ -95,7 +106,7 @@
         {
           "name": "country",
           "questionType": "select",
-          "placeholder": "Select your country",
+          "placeholder": "Select country",
           "label": "Country",
           "required": true,
           "searchable": true,
@@ -109,7 +120,7 @@
             {
               "name": "gender",
               "questionType": "select",
-              "placeholder": "Select your gender",
+              "placeholder": "Select gender",
               "label": "Gender",
               "required": true,
               "hasOther": true,
@@ -179,7 +190,7 @@
           "name": "race",
           "questionType": "select",
           "required": true,
-          "placeholder": "Select your race",
+          "placeholder": "Select race",
           "label": "Race/Ethnicity",
           "hasOther": true,
           "options": [
@@ -261,22 +272,12 @@
           "iconName": "linkedin"
         },
         {
-          "name": "github",
-          "questionType": "url",
-          "placeholder": "Enter link",
-          "description": "Must be a full URL. Example: https://www.github.com/my-profile",
-          "regex": "^(https?:\\/\\/)?(www\\.)?github\\.com\\/[A-Za-z0-9-]+\\/?$",
-          "label": "Github URL",
-          "required": true,
-          "iconName": "github"
-        },
-        {
           "name": "ageCertification",
           "questionType": "checkbox",
           "required": true,
           "options": [
             {
-              "label": "By clicking this,  I certify that I am 18 years old or will turn 18 before the event date.",
+              "label": "I certify that I am 18 years old or will turn 18 before the event date",
               "value": "true"
             }
           ]
@@ -288,48 +289,59 @@
       "label": "Education",
       "content": [
         {
-          "type": "layout",
-          "content": [
+          "name": "school",
+          "questionType": "select",
+          "placeholder": "Start typing...",
+          "label": "School",
+          "required": true,
+          "searchable": true,
+          "options": {
+            "data": "schools"
+          }
+        },
+        {
+          "name": "level",
+          "questionType": "select",
+          "placeholder": "Select level",
+          "label": "Level of Study",
+          "required": true,
+          "hasOther": true,
+          "options": [
             {
-              "name": "school",
-              "questionType": "select",
-              "placeholder": "Start typing...",
-              "label": "School",
-              "required": true,
-              "searchable": true,
-              "options": {
-                "data": "schools"
-              }
+              "label": "Undergraduate University (2 year - community college or similar)",
+              "value": "undergrad_two_year"
             },
             {
-              "name": "level",
-              "questionType": "select",
-              "placeholder": "Select your level",
-              "label": "Level of Study",
-              "required": true,
-              "hasOther": true,
-              "options": [
-                {
-                  "label": "High School",
-                  "value": "high_school"
-                },
-                {
-                  "label": "Undergraduate",
-                  "value": "undergraduate"
-                },
-                {
-                  "label": "Graduate",
-                  "value": "graduate"
-                },
-                {
-                  "label": "Professional / Continuing Education",
-                  "value": "professional"
-                },
-                {
-                  "label": "Other",
-                  "value": "other"
-                }
-              ]
+              "label": "Undergraduate University (3+ year)",
+              "value": "undergrad_three_plus_year"
+            },
+            {
+              "label": "Graduate University (Masters, Professional, Doctoral, etc.)",
+              "value": "graduate"
+            },
+            {
+              "label": "Post Doctorate",
+              "value": "post_doctorate"
+            },
+            {
+              "label": "Code School / Bootcamp",
+              "value": "bootcamp"
+            },
+            {
+              "label": "Other Vocational / Trade Program or Apprenticeship",
+              "value": "other_program"
+            },
+            {
+              "label": "I'm not currently a student",
+              "value": "not_student"
+            },
+            {
+              "label": "Prefer Not to Answer",
+              "value": "prefer_no_answer"
+            },
+            {
+              "label": "Other",
+              "value": "other"
             }
           ]
         },
@@ -339,7 +351,7 @@
             {
               "name": "year",
               "questionType": "select",
-              "placeholder": "Select your year",
+              "placeholder": "Select year",
               "label": "Year in College",
               "required": true,
               "hasOther": true,
@@ -373,7 +385,7 @@
             {
               "name": "graduationYear",
               "questionType": "select",
-              "placeholder": "Select Year",
+              "placeholder": "Select year",
               "label": "Graduation Year",
               "required": true,
               "options": {
@@ -387,7 +399,7 @@
         {
           "name": "majors",
           "questionType": "multiselect",
-          "placeholder": "Select your major(s)",
+          "placeholder": "Select major(s)",
           "label": "Major(s)",
           "required": true,
           "options": {
@@ -397,7 +409,7 @@
         {
           "name": "minors",
           "questionType": "shortAnswer",
-          "placeholder": "Enter your minor(s)",
+          "placeholder": "Enter minor(s)",
           "label": "Minor(s)",
           "required": false
         }
@@ -557,22 +569,22 @@
           "name": "essay1",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
-          "label": "What is your most memorable experience working in a group? What did you learn and accomplish? (max. 150 words)",
+          "label": "Why do you want to participate in this hackathon, and what do you hope to build, learn, or contribute? [150-250 words]",
           "required": true,
           "showWordCount": true,
           "validation": {
-            "max": 150
+            "max": 250
           }
         },
         {
           "name": "essay2",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
-          "label": "Tell us about a project you are most proud of. (max. 150 words)",
-          "required": true,
+          "label": "Tell us a joke!",
+          "required": false,
           "showWordCount": true,
           "validation": {
-            "max": 150
+            "max": 250
           }
         },
         {
@@ -669,7 +681,7 @@
         {
           "name": "infoShareAuthorization",
           "questionType": "checkbox",
-          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>. I further agree to the terms of both the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/contest-terms.md\">MLH Contest Terms and Conditions</a> and the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>.",
+          "label": "I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and administration (including the creation of linked accounts on MLH and <a class=\"link\" target=\"blank\" href=\"https://dev.to\">DEV</a>) in-line with the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>. I further agree to the terms of both the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/contest-terms.md\">MLH Contest Terms and Conditions</a> and the <a class=\"link\" target=\"blank\" href=\"https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md\">MLH Privacy Policy</a>.",
           "renderLabelAsHTML": true,
           "required": true,
           "options": [
@@ -682,7 +694,7 @@
         {
           "name": "agreeToMLHEmails",
           "questionType": "checkbox",
-          "label": "I authorize MLH to send me occasional emails about relevant events, career opportunities, and community announcements.",
+          "label": "I authorize MLH + DEV to send me occasional emails about relevant events, career opportunities, and community announcements.",
           "required": false,
           "options": [
             {

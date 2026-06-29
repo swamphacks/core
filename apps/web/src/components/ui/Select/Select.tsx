@@ -23,7 +23,7 @@ import TablerChevronDown from "~icons/tabler/chevron-down";
 import { cn } from "@/utils/cn";
 
 export const styles = tv({
-  base: "h-9.5 flex items-center text-start gap-4 w-full cursor-default border border-input-border rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-input-bg",
+  base: "h-9.5 flex items-center text-start gap-4 w-full border border-input-border cursor-default rounded-sm pl-3 pr-2 py-1.5 min-w-[150px] bg-input-bg",
   variants: {
     isDisabled: {
       false:
@@ -73,6 +73,7 @@ export function Select<T extends { id: string; name: string }>({
         props.className,
         "group flex flex-col gap-1 font-figtree",
       )}
+      aria-label="select"
       // style={{
       //   maxWidth,
       // }}
@@ -80,7 +81,7 @@ export function Select<T extends { id: string; name: string }>({
     >
       {label && <Label isRequired={props.isRequired}>{label}</Label>}
       <Button className={styles}>
-        <SelectValue className="flex-1 placeholder-shown:opacity-50" />
+        <SelectValue className="min-w-0 flex-1 truncate placeholder-shown:opacity-50" />
         <TablerChevronDown
           aria-hidden
           className="w-4 h-4 text-gray-600 dark:text-zinc-400 forced-colors:text-[ButtonText] group-disabled:text-gray-200 dark:group-disabled:text-zinc-600 forced-colors:group-disabled:text-[GrayText]"
@@ -88,7 +89,7 @@ export function Select<T extends { id: string; name: string }>({
       </Button>
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
-      <Popover className="min-w-(--trigger-width)">
+      <Popover className="w-(--trigger-width)">
         {virtualized ? (
           <Virtualizer
             layout={ListLayout}

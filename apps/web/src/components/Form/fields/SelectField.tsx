@@ -6,7 +6,5 @@ export default function SelectField<T extends { id: string; name: string }>(
 ) {
   const field = useFieldContext();
 
-  return (
-    <Select onSelectionChange={(val) => field.handleChange(val)} {...props} />
-  );
+  return <Select onChange={(val) => field.handleChange(val)} {...props} />;
 }

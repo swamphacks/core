@@ -7,7 +7,7 @@ export async function replaceResume(resume: File): Promise<void> {
   const formData = new FormData();
   formData.append("resume", resume);
 
-  await api.put(`application/resume`, {
+  await api.patch(`application/resume`, {
     body: formData,
   });
 }

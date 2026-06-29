@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { OnboardingModal } from "@/modules/Onboarding/OnboardingModal";
 import Cookies from "js-cookie";
+import { PageLoading } from "@/components/PageLoading";
+import { hackathonQueryOptions } from "@/modules/Hackathon/hooks/useHackathon";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import InformationPage from "@/modules/Information/InformationPage";
 
 export const Route = createFileRoute("/_protected/information")({
   beforeLoad: (context) => {
@@ -12,20 +14,19 @@ export const Route = createFileRoute("/_protected/information")({
       showOnboardingModal: showOnboardingModal,
     };
   },
+  pendingComponent: PageLoading,
   component: RouteComponent,
+  loader: ({ context }) => {
+    return Promise.all([
+      context.queryClient.ensureQueryData(hackathonQueryOptions()),
+    ]);
+  },
 });
 
 function RouteComponent() {
-  const { showOnboardingModal } = Route.useRouteContext();
-  const [isModalOpen, setIsModalOpen] = useState(showOnboardingModal);
+  const { user } = Route.useRouteContext();
+  // const [isModalOpen, setIsModalOpen] = useState(showOnboardingModal);
+  const hackathon = useSuspenseQuery(hackathonQueryOptions());
 
-  return (
-    <div>
-      <p>TODO</p>
-      <OnboardingModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-      ></OnboardingModal>
-    </div>
-  );
+  return <InformationPage user={user} hackathon={hackathon.data} />;
 }

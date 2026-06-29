@@ -1,5 +1,5 @@
 import { api } from "@/lib/ky";
-import type { paths } from "@/lib/openapi/schema";
+import type { operations } from "@/lib/openapi/schema";
 import { useQuery } from "@tanstack/react-query";
 
 import { z } from "zod";
@@ -7,7 +7,7 @@ import { z } from "zod";
 export const ApplicationFieldsSchema = z.object({
   firstName: z.string().max(50),
   lastName: z.string().max(50),
-  age: z.number().int().min(0).max(99),
+  age: z.string(),
   phone: z.string().length(10),
   preferredEmail: z.email(),
   universityEmail: z.email(),
@@ -19,7 +19,7 @@ export const ApplicationFieldsSchema = z.object({
   "race-other": z.string().optional(),
   orientation: z.string().optional(),
   linkedin: z.url(),
-  github: z.url(),
+  // github: z.url(),
   ageCertification: z.boolean(),
   school: z.string(),
   level: z.string(),
@@ -44,22 +44,17 @@ export const ApplicationFieldsSchema = z.object({
   agreeToMLHEmails: z.string().optional(),
 });
 
-export type ApplicationFields = z.infer<typeof ApplicationFieldsSchema>;
-
 export type ApplicationResponse =
-  paths["/events/{eventId}/application/{applicationId}"]["get"]["responses"]["200"]["content"]["application/json"];
+  operations["get-my-application"]["responses"]["200"]["content"]["application/json"];
+
+export type ApplicationFields = z.infer<typeof ApplicationFieldsSchema>;
 
 export type Application = Omit<ApplicationResponse, "application"> & {
   application: ApplicationFields;
 };
 
-export async function fetchApplication(
-  eventId: string,
-  userId: string,
-): Promise<Application> {
-  const result = await api
-    .get<Application>(`events/${eventId}/application/${userId}`)
-    .json();
+export async function fetchApplication(userId: string): Promise<Application> {
+  const result = await api.get<Application>(`application/${userId}`).json();
 
   const parsedApplication = ApplicationFieldsSchema.safeParse(
     JSON.parse(atob(result.application as unknown as string)),
@@ -75,14 +70,10 @@ export async function fetchApplication(
   };
 }
 
-export function useApplication(eventId: string, userId: string) {
+export function useApplication(userId: string) {
   return useQuery({
-    queryKey: getApplicationQueryKey(eventId, userId),
-    queryFn: () => fetchApplication(eventId, userId),
+    queryKey: ["application", userId],
+    queryFn: () => fetchApplication(userId),
     staleTime: 1000 * 60 * 15, // 15 minutes,
   });
-}
-
-export function getApplicationQueryKey(eventId: string, userId: string) {
-  return ["events", eventId, "application", userId] as const;
 }

@@ -79,6 +79,28 @@ export function ComingSoonPage() {
       className="coming-soon"
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
+      <a
+        id="mlh-trust-badge"
+        style={{
+          display: "block",
+          maxWidth: "100px",
+          minWidth: "60px",
+          position: "fixed",
+          right: "50px",
+          top: 0,
+          width: "10%",
+          zIndex: 10000,
+        }}
+        href="https://mlh.io/na?utm_source=na-hackathon&utm_medium=TrustBadge&utm_campaign=2026-season&utm_content=white"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img
+          src="https://logged-assets.s3.amazonaws.com/trust-badge/2027/mlh-trust-badge-2027-white.svg"
+          alt="Major League Hacking 2026 Hackathon Season"
+          style={{ width: "100%" }}
+        />
+      </a>
       <section className="coming-soon__content">
         <div>
           <img src={swamphacksIcon} className="icon-image" />
@@ -133,6 +155,15 @@ export function ComingSoonPage() {
             <i className="nes-icon github"></i>
           </a>
         </section>
+
+        <div className="codeofconduct">
+          <a
+            target="_blank"
+            href="https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md"
+          >
+            MLH Code Of Conduct
+          </a>
+        </div>
 
         <img
           src={gatorGif}

@@ -211,6 +211,17 @@
   color: #9ab85f;
 }
 
+.codeofconduct {
+  margin-top: 10px;
+}
+
+.codeofconduct a {
+  font-family: "Jersey 20", cursive;
+  font-size: 1.2rem;
+  color: #fff4d8;
+  text-decoration: underline;
+}
+
 @media (min-width: 768px) {
   .coming-soon__title {
     font-size: 99px;

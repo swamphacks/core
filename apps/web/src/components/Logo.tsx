@@ -31,14 +31,14 @@ export function Logo({
         hideOnMobile && "hidden md:flex",
       )}
     >
-      <div className={cn("w-13", hideLogoOnMobile && "hidden md:flex")}>
+      <div className={cn("w-14", hideLogoOnMobile && "hidden md:flex")}>
         <img
           src={
             logo
               ? logo
               : theme === "dark" // Default logos if no logo prop is provided
-                ? "/assets/SwampHacks_Logo_Light.png"
-                : "/assets/SwampHacks_Logo_Dark.png"
+                ? "/assets/XII_Logo.png"
+                : "/assets/XII_Logo.png"
           }
           alt="SwampHacks Logo"
         />

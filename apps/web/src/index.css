@@ -104,3 +104,25 @@ body,
     }
   }
 }
+
+/* Target the overall scrollbar width/height */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+/* Make the track (background) transparent */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Style the draggable thumb handle so it stays visible */
+::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 6px;
+  border: 3px solid transparent; /* Gives padding if track is transparent */
+}
+
+.leaflet-attribution-flag {
+  display: none !important;
+}
