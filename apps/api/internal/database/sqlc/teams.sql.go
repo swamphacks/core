@@ -7,31 +7,68 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
 
-const createTeam = `-- name: CreateTeam :one
-INSERT INTO teams (
-    name,
-    owner_id,
-    hackathon_id
+const addUserToTeam = `-- name: AddUserToTeam :one
+INSERT INTO team_members (team_id, user_id) VALUES ($1, $2) RETURNING user_id, team_id, joined_at
+`
+
+type AddUserToTeamParams struct {
+	TeamID uuid.UUID `json:"team_id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) AddUserToTeam(ctx context.Context, arg AddUserToTeamParams) (TeamMember, error) {
+	row := q.db.QueryRow(ctx, addUserToTeam, arg.TeamID, arg.UserID)
+	var i TeamMember
+	err := row.Scan(&i.UserID, &i.TeamID, &i.JoinedAt)
+	return i, err
+}
+
+const createInvitation = `-- name: CreateInvitation :one
+INSERT INTO team_invitations (
+    team_id, inviter_id, expires_at
 ) VALUES (
-    $1,
-    $2,
-    $3
+    $1, $2, $3
 )
-RETURNING id, name, owner_id, created_at, updated_at, hackathon_id
+RETURNING id, team_id, inviter_id, status, expires_at, created_at, updated_at
+`
+
+type CreateInvitationParams struct {
+	TeamID    uuid.UUID  `json:"team_id"`
+	InviterID uuid.UUID  `json:"inviter_id"`
+	ExpiresAt *time.Time `json:"expires_at"`
+}
+
+func (q *Queries) CreateInvitation(ctx context.Context, arg CreateInvitationParams) (TeamInvitation, error) {
+	row := q.db.QueryRow(ctx, createInvitation, arg.TeamID, arg.InviterID, arg.ExpiresAt)
+	var i TeamInvitation
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.InviterID,
+		&i.Status,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createTeam = `-- name: CreateTeam :one
+INSERT INTO teams (name, owner_id) VALUES ($1, $2) RETURNING id, name, owner_id, created_at, updated_at
 `
 
 type CreateTeamParams struct {
-	Name        string     `json:"name"`
-	OwnerID     *uuid.UUID `json:"owner_id"`
-	HackathonID string     `json:"hackathon_id"`
+	Name    string    `json:"name"`
+	OwnerID uuid.UUID `json:"owner_id"`
 }
 
 func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, error) {
-	row := q.db.QueryRow(ctx, createTeam, arg.Name, arg.OwnerID, arg.HackathonID)
+	row := q.db.QueryRow(ctx, createTeam, arg.Name, arg.OwnerID)
 	var i Team
 	err := row.Scan(
 		&i.ID,
@@ -39,23 +76,49 @@ func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, e
 		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.HackathonID,
 	)
 	return i, err
 }
 
-const deleteTeam = `-- name: DeleteTeam :exec
-DELETE FROM teams
-WHERE id = $1
+const deleteInvitation = `-- name: DeleteInvitation :exec
+DELETE FROM team_invitations WHERE id = $1
 `
 
-func (q *Queries) DeleteTeam(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteTeam, id)
+func (q *Queries) DeleteInvitation(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteInvitation, id)
 	return err
 }
 
+const deleteTeamById = `-- name: DeleteTeamById :exec
+DELETE FROM teams WHERE id = $1
+`
+
+func (q *Queries) DeleteTeamById(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteTeamById, id)
+	return err
+}
+
+const getInvitationByID = `-- name: GetInvitationByID :one
+SELECT id, team_id, inviter_id, status, expires_at, created_at, updated_at FROM team_invitations WHERE id = $1
+`
+
+func (q *Queries) GetInvitationByID(ctx context.Context, id uuid.UUID) (TeamInvitation, error) {
+	row := q.db.QueryRow(ctx, getInvitationByID, id)
+	var i TeamInvitation
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.InviterID,
+		&i.Status,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getTeamById = `-- name: GetTeamById :one
-SELECT id, name, owner_id, created_at, updated_at, hackathon_id
+SELECT id, name, owner_id, created_at, updated_at
 FROM teams
 WHERE id = $1
 `
@@ -69,35 +132,107 @@ func (q *Queries) GetTeamById(ctx context.Context, id uuid.UUID) (Team, error) {
 		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.HackathonID,
 	)
 	return i, err
 }
 
-const getUserTeam = `-- name: GetUserTeam :one
+const getTeamByUserId = `-- name: GetTeamByUserId :one
 SELECT
     t.id,
     t.name,
     t.owner_id
-FROM
-    teams t
-JOIN
-    team_members tm ON t.id = tm.team_id
+FROM teams t
+JOIN team_members tm ON t.id = tm.team_id
 WHERE tm.user_id = $1
-LIMIT 1
 `
 
-type GetUserTeamRow struct {
-	ID      uuid.UUID  `json:"id"`
-	Name    string     `json:"name"`
-	OwnerID *uuid.UUID `json:"owner_id"`
+type GetTeamByUserIdRow struct {
+	ID      uuid.UUID `json:"id"`
+	Name    string    `json:"name"`
+	OwnerID uuid.UUID `json:"owner_id"`
 }
 
-func (q *Queries) GetUserTeam(ctx context.Context, userID uuid.UUID) (GetUserTeamRow, error) {
-	row := q.db.QueryRow(ctx, getUserTeam, userID)
-	var i GetUserTeamRow
+func (q *Queries) GetTeamByUserId(ctx context.Context, userID uuid.UUID) (GetTeamByUserIdRow, error) {
+	row := q.db.QueryRow(ctx, getTeamByUserId, userID)
+	var i GetTeamByUserIdRow
 	err := row.Scan(&i.ID, &i.Name, &i.OwnerID)
 	return i, err
+}
+
+const getTeamDetails = `-- name: GetTeamDetails :one
+SELECT 
+    t.id, t.name, t.owner_id, t.created_at, t.updated_at, 
+    COALESCE(
+        json_agg(
+            json_build_object(
+                'id', tm.user_id,
+                'name', users.name,
+                'image', users.image,
+                'joinedAt', tm.joined_at
+            )
+        ) FILTER (WHERE tm.user_id IS NOT NULL),
+        '[]'
+    ) AS members
+FROM teams t
+LEFT JOIN team_members tm ON tm.team_id = t.id
+LEFT JOIN users ON users.id = tm.user_id
+WHERE t.id = $1
+GROUP BY t.id
+`
+
+type GetTeamDetailsRow struct {
+	ID        uuid.UUID   `json:"id"`
+	Name      string      `json:"name"`
+	OwnerID   uuid.UUID   `json:"owner_id"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
+	Members   interface{} `json:"members"`
+}
+
+func (q *Queries) GetTeamDetails(ctx context.Context, id uuid.UUID) (GetTeamDetailsRow, error) {
+	row := q.db.QueryRow(ctx, getTeamDetails, id)
+	var i GetTeamDetailsRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Members,
+	)
+	return i, err
+}
+
+const getTeamMembers = `-- name: GetTeamMembers :many
+SELECT tm.user_id, users.image, users.name FROM team_members tm
+JOIN users ON users.id = tm.user_id
+WHERE tm.team_id = $1
+`
+
+type GetTeamMembersRow struct {
+	UserID uuid.UUID `json:"user_id"`
+	Image  *string   `json:"image"`
+	Name   string    `json:"name"`
+}
+
+func (q *Queries) GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]GetTeamMembersRow, error) {
+	rows, err := q.db.Query(ctx, getTeamMembers, teamID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetTeamMembersRow{}
+	for rows.Next() {
+		var i GetTeamMembersRow
+		if err := rows.Scan(&i.UserID, &i.Image, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listTeamsWithMembers = `-- name: ListTeamsWithMembers :many
@@ -105,7 +240,6 @@ SELECT
     t.id,
     t.name,
     t.owner_id,
-    -- Step 1: Cast the aggregated JSON array to JSONB
     (COALESCE(
         json_agg(
             json_build_object(
@@ -118,18 +252,12 @@ SELECT
         ) FILTER (WHERE u.id IS NOT NULL),
         '[]'::json
     ))::jsonb AS members -- <--- Explicitly cast to jsonb
-FROM
-    teams t
-LEFT JOIN
-    team_members tm ON t.id = tm.team_id
-LEFT JOIN
-    users u ON tm.user_id = u.id
-GROUP BY
-    t.id
-ORDER BY
-    t.created_at DESC
-LIMIT $1
-OFFSET $2
+FROM teams t
+LEFT JOIN team_members tm ON t.id = tm.team_id
+LEFT JOIN users u ON tm.user_id = u.id
+GROUP BY t.id
+ORDER BY t.created_at DESC
+LIMIT $1 OFFSET $2
 `
 
 type ListTeamsWithMembersParams struct {
@@ -138,10 +266,10 @@ type ListTeamsWithMembersParams struct {
 }
 
 type ListTeamsWithMembersRow struct {
-	ID      uuid.UUID  `json:"id"`
-	Name    string     `json:"name"`
-	OwnerID *uuid.UUID `json:"owner_id"`
-	Members []byte     `json:"members"`
+	ID      uuid.UUID `json:"id"`
+	Name    string    `json:"name"`
+	OwnerID uuid.UUID `json:"owner_id"`
+	Members []byte    `json:"members"`
 }
 
 func (q *Queries) ListTeamsWithMembers(ctx context.Context, arg ListTeamsWithMembersParams) ([]ListTeamsWithMembersRow, error) {
@@ -169,22 +297,36 @@ func (q *Queries) ListTeamsWithMembers(ctx context.Context, arg ListTeamsWithMem
 	return items, nil
 }
 
+const removeUserFromTeam = `-- name: RemoveUserFromTeam :exec
+DELETE FROM team_members WHERE user_id = $1 AND team_id = $2
+`
+
+type RemoveUserFromTeamParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	TeamID uuid.UUID `json:"team_id"`
+}
+
+func (q *Queries) RemoveUserFromTeam(ctx context.Context, arg RemoveUserFromTeamParams) error {
+	_, err := q.db.Exec(ctx, removeUserFromTeam, arg.UserID, arg.TeamID)
+	return err
+}
+
 const updateTeamById = `-- name: UpdateTeamById :one
 UPDATE teams
 SET
     owner_id = CASE WHEN $1::boolean THEN $2 ELSE owner_id END,
     name = CASE WHEN $3::boolean THEN $4 ELSE name END
 WHERE
-    id = $5::uuid
-RETURNING id, name, owner_id, created_at, updated_at, hackathon_id
+    id = $5
+RETURNING id, name, owner_id, created_at, updated_at
 `
 
 type UpdateTeamByIdParams struct {
-	OwnerIDDoUpdate bool       `json:"owner_id_do_update"`
-	OwnerID         *uuid.UUID `json:"owner_id"`
-	NameDoUpdate    bool       `json:"name_do_update"`
-	Name            string     `json:"name"`
-	ID              uuid.UUID  `json:"id"`
+	OwnerIDDoUpdate bool      `json:"owner_id_do_update"`
+	OwnerID         uuid.UUID `json:"owner_id"`
+	NameDoUpdate    bool      `json:"name_do_update"`
+	Name            string    `json:"name"`
+	ID              uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateTeamById(ctx context.Context, arg UpdateTeamByIdParams) (Team, error) {
@@ -202,7 +344,6 @@ func (q *Queries) UpdateTeamById(ctx context.Context, arg UpdateTeamByIdParams) 
 		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.HackathonID,
 	)
 	return i, err
 }

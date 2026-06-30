@@ -546,24 +546,21 @@ type Session struct {
 }
 
 type Team struct {
-	ID          uuid.UUID  `json:"id"`
-	Name        string     `json:"name"`
-	OwnerID     *uuid.UUID `json:"owner_id"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	HackathonID string     `json:"hackathon_id"`
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	OwnerID   uuid.UUID `json:"owner_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type TeamInvitation struct {
-	ID              uuid.UUID            `json:"id"`
-	TeamID          uuid.UUID            `json:"team_id"`
-	InvitedByUserID uuid.UUID            `json:"invited_by_user_id"`
-	InvitedEmail    string               `json:"invited_email"`
-	InvitedUserID   *uuid.UUID           `json:"invited_user_id"`
-	Status          TeamInvitationStatus `json:"status"`
-	ExpiresAt       *time.Time           `json:"expires_at"`
-	CreatedAt       time.Time            `json:"created_at"`
-	UpdatedAt       time.Time            `json:"updated_at"`
+	ID        uuid.UUID            `json:"id"`
+	TeamID    uuid.UUID            `json:"team_id"`
+	InviterID uuid.UUID            `json:"inviter_id"`
+	Status    TeamInvitationStatus `json:"status"`
+	ExpiresAt *time.Time           `json:"expires_at"`
+	CreatedAt time.Time            `json:"created_at"`
+	UpdatedAt time.Time            `json:"updated_at"`
 }
 
 type TeamJoinRequest struct {
