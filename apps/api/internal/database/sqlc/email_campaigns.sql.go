@@ -88,6 +88,46 @@ func (q *Queries) CreateEmailCampaign(ctx context.Context, arg CreateEmailCampai
 	return i, err
 }
 
+const getApplicantContactEmailsByStatus = `-- name: GetApplicantContactEmailsByStatus :many
+SELECT
+    (CASE
+        WHEN u.preferred_email IS NOT NULL AND u.preferred_email != '' THEN u.preferred_email
+        ELSE u.email
+    END)::text AS contact_email
+FROM applications a
+JOIN users u ON u.id = a.user_id
+WHERE a.hackathon_id = $1
+    AND a.status = ANY($2::text[]::application_status[])
+`
+
+type GetApplicantContactEmailsByStatusParams struct {
+	HackathonID string   `json:"hackathon_id"`
+	Statuses    []string `json:"statuses"`
+}
+
+// Resolves an applicant recipient group to contact emails for a hackathon.
+// The service passes the application statuses that map to a recipient_type
+// (e.g. 'accepted' for accepted_applicants).
+func (q *Queries) GetApplicantContactEmailsByStatus(ctx context.Context, arg GetApplicantContactEmailsByStatusParams) ([]string, error) {
+	rows, err := q.db.Query(ctx, getApplicantContactEmailsByStatus, arg.HackathonID, arg.Statuses)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var contact_email string
+		if err := rows.Scan(&contact_email); err != nil {
+			return nil, err
+		}
+		items = append(items, contact_email)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getEmailCampaignByID = `-- name: GetEmailCampaignByID :one
 SELECT id, hackathon_id, title, description, subject, body, format, recipient_types, status, scheduled_at, sent_at, last_error, created_by_user_id, updated_by_user_id, created_at, updated_at
 FROM email_campaigns
