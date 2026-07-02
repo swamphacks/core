@@ -554,13 +554,12 @@ type Team struct {
 }
 
 type TeamInvitation struct {
-	ID        uuid.UUID            `json:"id"`
-	TeamID    uuid.UUID            `json:"team_id"`
-	InviterID uuid.UUID            `json:"inviter_id"`
-	Status    TeamInvitationStatus `json:"status"`
-	ExpiresAt *time.Time           `json:"expires_at"`
-	CreatedAt time.Time            `json:"created_at"`
-	UpdatedAt time.Time            `json:"updated_at"`
+	ID        uuid.UUID  `json:"id"`
+	TeamID    uuid.UUID  `json:"team_id"`
+	InviterID uuid.UUID  `json:"inviter_id"`
+	ExpiresAt *time.Time `json:"expires_at"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 }
 
 type TeamJoinRequest struct {

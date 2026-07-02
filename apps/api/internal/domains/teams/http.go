@@ -24,6 +24,19 @@ func RegisterRoutes(teamHandler *handler, group huma.API, mw *middleware.Middlew
 	}, teamHandler.handleGetMyTeam)
 
 	huma.Register(group, huma.Operation{
+		OperationID:   "get-team-by-invite-id",
+		Method:        http.MethodGet,
+		Summary:       "Get Team By Invitation Id",
+		Description:   "Returns the team information by invitation id",
+		Tags:          []string{"Team"},
+		Path:          "/invitation/{inviteId}/team",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Errors:        []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusBadRequest, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, teamHandler.handleGetTeamByInvitationId)
+
+	huma.Register(group, huma.Operation{
 		OperationID:   "get-team-details",
 		Method:        http.MethodGet,
 		Summary:       "Get Team Details",
@@ -63,6 +76,19 @@ func RegisterRoutes(teamHandler *handler, group huma.API, mw *middleware.Middlew
 	}, teamHandler.handleCreateTeam)
 
 	huma.Register(group, huma.Operation{
+		OperationID:   "delete-team",
+		Method:        http.MethodDelete,
+		Summary:       "Delete Team",
+		Description:   "Delete a team. The user must be the owner of the team.",
+		Tags:          []string{"Team"},
+		Path:          "",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Errors:        []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusConflict, http.StatusBadRequest, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, teamHandler.handleDeleteTeam)
+
+	huma.Register(group, huma.Operation{
 		OperationID:   "leave-team",
 		Method:        http.MethodPost,
 		Summary:       "Leave Team",
@@ -81,7 +107,7 @@ func RegisterRoutes(teamHandler *handler, group huma.API, mw *middleware.Middlew
 		Summary:       "Kick Team Member",
 		Description:   "Kicks a member from a team. Only the team owner can perform this action.",
 		Tags:          []string{"Team"},
-		Path:          "/{teamId}/kick/{memberId}",
+		Path:          "/{teamId}/kick",
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
 		Errors:        []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
@@ -90,7 +116,7 @@ func RegisterRoutes(teamHandler *handler, group huma.API, mw *middleware.Middlew
 
 	huma.Register(group, huma.Operation{
 		OperationID:   "join-team",
-		Method:        http.MethodGet,
+		Method:        http.MethodPost,
 		Summary:       "Join Team",
 		Description:   "Join a team through an invitation link.",
 		Tags:          []string{"Team"},
@@ -107,12 +133,25 @@ func RegisterRoutes(teamHandler *handler, group huma.API, mw *middleware.Middlew
 		Summary:       "Create Invitation",
 		Description:   "Create an invitation for other users to join the team",
 		Tags:          []string{"Team"},
-		Path:          "/invitation",
+		Path:          "/{teamId}/invitation",
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
 		Errors:        []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
 	}, teamHandler.handleCreateInvitation)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "get-invitation",
+		Method:        http.MethodGet,
+		Summary:       "Get Invitation",
+		Description:   "Get an invitation id, which can be used to construct a team join link",
+		Tags:          []string{"Team"},
+		Path:          "/{teamId}/invitation",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Errors:        []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, teamHandler.handleGetInvitation)
 }
 
 type handler struct {

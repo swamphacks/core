@@ -29,13 +29,6 @@ func NewService(
 }
 
 func (s *TeamService) CreateTeam(ctx context.Context, name string, userID uuid.UUID) (*sqlc.Team, error) {
-	_, err := s.db.Query.GetTeamByUserId(ctx, userID)
-
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		s.logger.Err(err).Msg("CreateTeam fail, unable to get team by user id")
-		return nil, ErrCreateTeam
-	}
-
 	var newTeam sqlc.Team
 
 	// Transactionally create a new team and assign the user as the owner.
@@ -58,6 +51,16 @@ func (s *TeamService) CreateTeam(ctx context.Context, name string, userID uuid.U
 			return err
 		}
 
+		_, err = txDB.Query.CreateInvitation(ctx, sqlc.CreateInvitationParams{
+			TeamID:    team.ID,
+			InviterID: userID,
+			ExpiresAt: nil,
+		})
+
+		if err != nil {
+			return err
+		}
+
 		newTeam = team
 		return nil
 	}); err != nil {
@@ -76,6 +79,20 @@ func (s *TeamService) GetTeamByUserId(ctx context.Context, userID uuid.UUID) (*s
 			return nil, ErrNotInTeam
 		}
 		s.logger.Err(err).Msg("GetTeamByUserId fail")
+		return nil, ErrGetTeam
+	}
+
+	return &team, nil
+}
+
+func (s *TeamService) GetTeamByInvitationId(ctx context.Context, inviteId uuid.UUID) (*sqlc.Team, error) {
+	team, err := s.db.Query.GetTeamByInvitationId(ctx, inviteId)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNoTeamFound
+		}
+		s.logger.Err(err).Msg("fail to get team by invitation id")
 		return nil, ErrGetTeam
 	}
 
@@ -105,24 +122,32 @@ func (s *TeamService) GetTeamDetails(ctx context.Context, teamID uuid.UUID) (*sq
 }
 
 func (s *TeamService) JoinTeam(ctx context.Context, userID, teamID uuid.UUID) error {
-	team, err := s.db.Query.GetTeamByUserId(ctx, userID)
+	members, err := s.GetTeamMembers(ctx, teamID)
 
-	canJoin := false
+	if err != nil {
+		s.logger.Err(err).Msg("fail to get team members")
+		return ErrJoinTeam
+	}
+
+	if len(members) >= 4 {
+		return ErrMembersLimitReached
+	}
+
+	team, err := s.db.Query.GetTeamByUserId(ctx, userID)
 
 	switch {
 	case errors.Is(err, pgx.ErrNoRows):
-		canJoin = true
+		// User is not on a team, continue joining.
 
-	case err != nil:
-		s.logger.Err(err).Msg("JoinTeam fail, GetTeamByUserId fail")
+	case err != nil && !errors.Is(err, pgx.ErrNoRows):
+		s.logger.Err(err).Msg("JoinTeam failed: GetTeamByUserId")
 		return ErrJoinTeam
 
 	case team.ID == teamID:
 		return ErrJoinSameTeam
-	}
 
-	if !canJoin {
-		return nil
+	default:
+		return ErrAlreadyHasTeam
 	}
 
 	_, err = s.db.Query.AddUserToTeam(ctx, sqlc.AddUserToTeamParams{
@@ -248,6 +273,28 @@ func (s *TeamService) GetInvitation(ctx context.Context, id uuid.UUID) (*sqlc.Te
 
 	if err != nil {
 		s.logger.Err(err).Msg("fail to get invitation")
+		return nil, ErrGetInvitation
+	}
+
+	return &invitation, nil
+}
+
+func (s *TeamService) GetInvitationByTeamID(ctx context.Context, teamID, userID uuid.UUID) (*sqlc.TeamInvitation, error) {
+	team, err := s.GetTeamByUserId(ctx, userID)
+
+	if err != nil {
+		s.logger.Err(err).Msg("fail to get team by user id")
+		return nil, ErrGetInvitation
+	}
+
+	if team.OwnerID != userID {
+		return nil, ErrUserNotTeamOwner
+	}
+
+	invitation, err := s.db.Query.GetInvitationByTeamID(ctx, teamID)
+
+	if err != nil {
+		s.logger.Err(err).Msg("fail to get invitation by team id")
 		return nil, ErrGetInvitation
 	}
 

@@ -9,7 +9,8 @@ WHERE id = @id;
 -- name: GetTeamMembers :many
 SELECT tm.user_id, users.image, users.name FROM team_members tm
 JOIN users ON users.id = tm.user_id
-WHERE tm.team_id = @team_id;
+WHERE tm.team_id = @team_id
+ORDER BY users.name ASC;
 
 -- name: GetTeamDetails :one
 SELECT 
@@ -19,12 +20,12 @@ SELECT
             json_build_object(
                 'id', tm.user_id,
                 'name', users.name,
-                'image', users.image,
-                'joinedAt', tm.joined_at
+                'image', users.image
+                -- 'joinedAt', tm.joined_at
             )
         ) FILTER (WHERE tm.user_id IS NOT NULL),
         '[]'
-    ) AS members
+    )::jsonb AS members
 FROM teams t
 LEFT JOIN team_members tm ON tm.team_id = t.id
 LEFT JOIN users ON users.id = tm.user_id
@@ -39,6 +40,13 @@ SELECT
 FROM teams t
 JOIN team_members tm ON t.id = tm.team_id
 WHERE tm.user_id = @user_id;
+
+-- name: GetTeamByInvitationId :one
+SELECT
+    t.*
+FROM teams t
+JOIN team_invitations ti ON ti.team_id = t.id
+WHERE ti.id = @invitation_id;
 
 -- name: UpdateTeamById :one
 UPDATE teams
@@ -92,6 +100,9 @@ RETURNING *;
 
 -- name: GetInvitationByID :one
 SELECT * FROM team_invitations WHERE id = @id;
+
+-- name: GetInvitationByTeamID :one
+SELECT * FROM team_invitations WHERE team_id = @team_id;
 
 -- name: DeleteInvitation :exec
 DELETE FROM team_invitations WHERE id = @id;

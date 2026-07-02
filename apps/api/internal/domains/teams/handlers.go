@@ -2,6 +2,7 @@ package teams
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -30,25 +31,23 @@ func (h *handler) handleGetMyTeam(ctx context.Context, input *struct{}) (*GetMyT
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
-	teamDetails, err := h.teamService.GetTeamDetails(ctx, team.ID)
+	teamMembers, err := h.teamService.GetTeamMembers(ctx, team.ID)
 
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
+	teamMembersDto := make([]TeamMemberDto, len(teamMembers))
 
-	members, ok := teamDetails.Members.([]TeamMemberDto)
-
-	if !ok {
-		h.logger.Err(err).Msg("Fail to parse team member details")
-		return nil, huma.Error500InternalServerError("Fail to get team members")
+	for i, val := range teamMembers {
+		teamMembersDto[i] = TeamMemberDto{
+			ID:    val.UserID,
+			Name:  val.Name,
+			Image: val.Image,
+		}
 	}
 
 	return &GetMyTeamOutput{Body: TeamDetailsDto{
-		ID:        team.ID,
-		Name:      team.Name,
-		OwnerID:   team.OwnerID,
-		CreatedAt: teamDetails.CreatedAt,
-		Members:   members,
+		ID:      team.ID,
+		Name:    team.Name,
+		OwnerID: team.OwnerID,
+		Members: teamMembersDto,
 	}}, nil
 }
 
@@ -65,24 +64,45 @@ func (h *handler) handleGetTeamDetails(ctx context.Context, input *struct {
 		return nil, huma.Error500InternalServerError("Fail to get team details")
 	}
 
-	members, ok := teamDetails.Members.([]TeamMemberDto)
+	var members []TeamMemberDto
+	err = json.Unmarshal(teamDetails.Members, &members)
 
-	if !ok {
+	if err != nil {
 		h.logger.Err(err).Msg("Fail to parse team member details")
 		return nil, huma.Error500InternalServerError("Fail to get team members")
 	}
 
 	return &GetTeamDetailsOutput{Body: TeamDetailsDto{
-		ID:        teamDetails.ID,
-		Name:      teamDetails.Name,
-		OwnerID:   teamDetails.OwnerID,
-		CreatedAt: teamDetails.CreatedAt,
-		Members:   members,
+		ID:      teamDetails.ID,
+		Name:    teamDetails.Name,
+		OwnerID: teamDetails.OwnerID,
+		// CreatedAt: teamDetails.CreatedAt,
+		Members: members,
+	}}, nil
+}
+
+type GetTeamByInvitationIdOutput struct {
+	Body TeamDto
+}
+
+func (h *handler) handleGetTeamByInvitationId(ctx context.Context, input *struct {
+	InviteId uuid.UUID `path:"inviteId"`
+}) (*GetTeamByInvitationIdOutput, error) {
+	team, err := h.teamService.GetTeamByInvitationId(ctx, input.InviteId)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Fail to get team")
+	}
+
+	return &GetTeamByInvitationIdOutput{Body: TeamDto{
+		ID:      team.ID,
+		Name:    team.Name,
+		OwnerID: team.OwnerID,
 	}}, nil
 }
 
 type GetTeamMembersOutput struct {
-	Body []TeamMemberDto
+	Body []TeamMemberDto `nullable:"false"`
 }
 
 func (h *handler) handleGetTeamMembers(ctx context.Context, input *struct {
@@ -134,6 +154,28 @@ func (h *handler) handleCreateTeam(ctx context.Context, input *struct {
 		OwnerID:   team.OwnerID,
 		CreatedAt: team.CreatedAt,
 	}}, nil
+}
+
+type DeleteTeamOutput struct {
+	Status int
+}
+
+func (h *handler) handleDeleteTeam(ctx context.Context, input *struct {
+	Body DeleteTeamRequestDto
+}) (*DeleteTeamOutput, error) {
+	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
+	}
+
+	err := h.teamService.DeleteTeam(ctx, userCtx.UserID, input.Body.TeamID)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+
+	return &DeleteTeamOutput{Status: http.StatusOK}, nil
 }
 
 type JoinTeamOutput struct {
@@ -191,8 +233,8 @@ type KickMemberFromTeamOutput struct {
 }
 
 func (h *handler) handleKickMember(ctx context.Context, input *struct {
-	MemberId uuid.UUID `path:"memberId"`
-	TeamId   uuid.UUID `path:"teamId"`
+	Body   KickMemberRequestDto
+	TeamId uuid.UUID `path:"teamId"`
 }) (*KickMemberFromTeamOutput, error) {
 	userCtx := ctxutils.GetUserFromCtx(ctx)
 
@@ -200,7 +242,7 @@ func (h *handler) handleKickMember(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	err := h.teamService.KickMember(ctx, input.MemberId, input.TeamId, userCtx.UserID)
+	err := h.teamService.KickMember(ctx, input.Body.MemberId, input.TeamId, userCtx.UserID)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
@@ -227,6 +269,28 @@ func (h *handler) handleCreateInvitation(ctx context.Context, input *struct{}) (
 	}
 
 	return &CreateInvitationOutput{Body: *invitation}, nil
+}
+
+type GetInvitationOutput struct {
+	Body uuid.UUID
+}
+
+func (h *handler) handleGetInvitation(ctx context.Context, input *struct {
+	TeamID uuid.UUID `path:"teamId"`
+}) (*GetInvitationOutput, error) {
+	userCtx := ctxutils.GetUserFromCtx(ctx)
+
+	if userCtx == nil {
+		return nil, huma.Error400BadRequest("Failed to get current user info")
+	}
+
+	invitation, err := h.teamService.GetInvitationByTeamID(ctx, input.TeamID, userCtx.UserID)
+
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+
+	return &GetInvitationOutput{Body: invitation.ID}, nil
 }
 
 // type CreateJoinRequest struct {

@@ -34,7 +34,7 @@ INSERT INTO team_invitations (
 ) VALUES (
     $1, $2, $3
 )
-RETURNING id, team_id, inviter_id, status, expires_at, created_at, updated_at
+RETURNING id, team_id, inviter_id, expires_at, created_at, updated_at
 `
 
 type CreateInvitationParams struct {
@@ -50,7 +50,6 @@ func (q *Queries) CreateInvitation(ctx context.Context, arg CreateInvitationPara
 		&i.ID,
 		&i.TeamID,
 		&i.InviterID,
-		&i.Status,
 		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -99,7 +98,7 @@ func (q *Queries) DeleteTeamById(ctx context.Context, id uuid.UUID) error {
 }
 
 const getInvitationByID = `-- name: GetInvitationByID :one
-SELECT id, team_id, inviter_id, status, expires_at, created_at, updated_at FROM team_invitations WHERE id = $1
+SELECT id, team_id, inviter_id, expires_at, created_at, updated_at FROM team_invitations WHERE id = $1
 `
 
 func (q *Queries) GetInvitationByID(ctx context.Context, id uuid.UUID) (TeamInvitation, error) {
@@ -109,7 +108,24 @@ func (q *Queries) GetInvitationByID(ctx context.Context, id uuid.UUID) (TeamInvi
 		&i.ID,
 		&i.TeamID,
 		&i.InviterID,
-		&i.Status,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getInvitationByTeamID = `-- name: GetInvitationByTeamID :one
+SELECT id, team_id, inviter_id, expires_at, created_at, updated_at FROM team_invitations WHERE team_id = $1
+`
+
+func (q *Queries) GetInvitationByTeamID(ctx context.Context, teamID uuid.UUID) (TeamInvitation, error) {
+	row := q.db.QueryRow(ctx, getInvitationByTeamID, teamID)
+	var i TeamInvitation
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.InviterID,
 		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -125,6 +141,27 @@ WHERE id = $1
 
 func (q *Queries) GetTeamById(ctx context.Context, id uuid.UUID) (Team, error) {
 	row := q.db.QueryRow(ctx, getTeamById, id)
+	var i Team
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTeamByInvitationId = `-- name: GetTeamByInvitationId :one
+SELECT
+    t.id, t.name, t.owner_id, t.created_at, t.updated_at
+FROM teams t
+JOIN team_invitations ti ON ti.team_id = t.id
+WHERE ti.id = $1
+`
+
+func (q *Queries) GetTeamByInvitationId(ctx context.Context, invitationID uuid.UUID) (Team, error) {
+	row := q.db.QueryRow(ctx, getTeamByInvitationId, invitationID)
 	var i Team
 	err := row.Scan(
 		&i.ID,
@@ -167,12 +204,12 @@ SELECT
             json_build_object(
                 'id', tm.user_id,
                 'name', users.name,
-                'image', users.image,
-                'joinedAt', tm.joined_at
+                'image', users.image
+                -- 'joinedAt', tm.joined_at
             )
         ) FILTER (WHERE tm.user_id IS NOT NULL),
         '[]'
-    ) AS members
+    )::jsonb AS members
 FROM teams t
 LEFT JOIN team_members tm ON tm.team_id = t.id
 LEFT JOIN users ON users.id = tm.user_id
@@ -181,12 +218,12 @@ GROUP BY t.id
 `
 
 type GetTeamDetailsRow struct {
-	ID        uuid.UUID   `json:"id"`
-	Name      string      `json:"name"`
-	OwnerID   uuid.UUID   `json:"owner_id"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
-	Members   interface{} `json:"members"`
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	OwnerID   uuid.UUID `json:"owner_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Members   []byte    `json:"members"`
 }
 
 func (q *Queries) GetTeamDetails(ctx context.Context, id uuid.UUID) (GetTeamDetailsRow, error) {
@@ -207,6 +244,7 @@ const getTeamMembers = `-- name: GetTeamMembers :many
 SELECT tm.user_id, users.image, users.name FROM team_members tm
 JOIN users ON users.id = tm.user_id
 WHERE tm.team_id = $1
+ORDER BY users.name ASC
 `
 
 type GetTeamMembersRow struct {
