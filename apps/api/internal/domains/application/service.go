@@ -52,7 +52,7 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, userID uuid.
 
 	if err != nil {
 		s.logger.Err(err).Msg("Create application fail because can't retrieve hackathon")
-		return nil, ErrFailedToGetHackathon
+		return nil, ErrGetHackathon
 	}
 
 	isEarly := false
@@ -74,7 +74,7 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, userID uuid.
 
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to create application")
-		return nil, ErrFailedToCreateApplication
+		return nil, ErrCreateApplication
 	}
 
 	return &application, nil
@@ -103,7 +103,7 @@ func (s *ApplicationService) GetApplicationByUserId(ctx context.Context, userID 
 			return nil, database.ErrApplicationNotFound
 		} else {
 			s.logger.Err(err).Msg("Failed to get application by user id")
-			return nil, err
+			return nil, ErrGetApplication
 		}
 	}
 
@@ -130,7 +130,7 @@ func (s *ApplicationService) GetExtendedApplicationById(ctx context.Context, id 
 		s.logger.Err(err).
 			Str("ApplicationId", id.String()).
 			Msg("GetExtendedApplicationById fail, unable to get extended application")
-		return nil, err
+		return nil, ErrGetApplication
 	}
 
 	return &extendedApplication, nil
@@ -141,7 +141,7 @@ func (s *ApplicationService) SearchApplications(ctx context.Context, limit, offs
 
 	if err != nil {
 		s.logger.Err(err).Msg("SearchApplications fail because can't retrieve hackathon")
-		return nil, nil, ErrFailedToGetHackathon
+		return nil, nil, ErrGetHackathon
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -168,7 +168,7 @@ func (s *ApplicationService) SearchApplications(ctx context.Context, limit, offs
 
 	if err := g.Wait(); err != nil {
 		s.logger.Err(err).Msg("SearchApplications fail")
-		return nil, nil, err
+		return nil, nil, ErrSearchApplications
 	}
 
 	return &applicationsCount, applications, nil
@@ -179,7 +179,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 
 	if err != nil {
 		s.logger.Err(err).Msg("Submit application fail because can't retrieve hackathon")
-		return nil, err
+		return nil, ErrGetHackathon
 	}
 
 	now := time.Now()
@@ -196,7 +196,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 	dataJSON, err := json.Marshal(data)
 
 	if err != nil {
-		return nil, errors.New("Failed to parse application data")
+		return nil, ErrParseApplicationData
 	}
 
 	// Submitting application is an atomic operation
@@ -244,7 +244,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())
-		return nil, err
+		return nil, ErrSubmitApplication
 	}
 
 	err = s.emailService.QueueApplicationConfirmationEmail(data.PreferredEmail, data.FirstName)
@@ -267,22 +267,22 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 
 	application, err := s.GetApplicationByUserId(ctx, userID)
 	if err != nil {
-		return err
+		return ErrGetApplication
 	}
 
 	// This check should almost never fail, but just in case
 	if application == nil {
-		return errors.New("Application not found when saving the application")
+		return ErrGetApplication
 	}
 
 	if application.Status != sqlc.ApplicationStatusStarted {
-		return errors.New("application has already been submitted and cannot be modified")
+		return ErrApplicationAlreadySubmitted
 	}
 
 	dataJSON, err := json.Marshal(data)
 
 	if err != nil {
-		return errors.New("Failed to parse application data")
+		return ErrParseApplicationData
 	}
 
 	err = s.db.Query.UpdateApplicationByUserId(ctx, sqlc.UpdateApplicationByUserIdParams{
@@ -297,7 +297,7 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 
 	if err != nil {
 		s.logger.Err(err).Msg("Save application fail")
-		return err
+		return ErrSaveApplication
 	}
 
 	return nil
@@ -311,19 +311,18 @@ func (s *ApplicationService) GetApplicationResumeURL(ctx context.Context, userID
 	if !ok {
 		err := errors.New("unable to type cast `Storage` to `PresignableStorage`")
 		s.logger.Err(err).Msg("download resume fail storage setup")
-		return nil, err
+		return nil, ErrGetResume
 	}
 
 	if lifetimeSecs <= 0 {
-		err := errors.New("invalid number of lifetime seconds")
-		return nil, err
+		return nil, ErrGetResume
 	}
 
 	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+userID.String(), lifetimeSecs)
 
 	if err != nil {
 		s.logger.Err(err).Msg("fail presign get object")
-		return nil, err
+		return nil, ErrGetResume
 	}
 
 	return request, nil
@@ -336,59 +335,28 @@ func (s *ApplicationService) ReplaceResume(ctx context.Context, userID uuid.UUID
 	hackathon, err := s.db.Query.GetHackathon(ctx)
 	if err != nil {
 		s.logger.Err(err).Msg("Replace resume fail because can't retrieve hackathon")
-		return ErrFailedToGetHackathon
+		return ErrGetHackathon
 	}
 
 	application, err := s.GetApplicationByUserId(ctx, userID)
 	if err != nil {
-		return err
+		s.logger.Err(err).Msg("fail to replace resume because can't get application by user id")
+		return ErrGetApplication
 	}
 
 	// Only allow replacing the resume once the application has actually been submitted.
 	// Before submission the resume is handled as part of the normal submit flow.
 	if application.Status == sqlc.ApplicationStatusStarted {
-		return ErrCannotReplaceResume
+		return ErrApplicationNotSubmitted
 	}
 
 	contentType := "application/pdf"
 	if err := s.storage.Store(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+userID.String(), resume, &contentType); err != nil {
 		s.logger.Err(err).Msg("Replace resume fail while storing resume")
-		return err
+		return ErrReplaceResume
 	}
 
 	return nil
-}
-
-func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userID uuid.UUID, lifetimeSecs int64) (*storage.PresignedRequest, error) {
-	presignableStorage, ok := s.storage.(storage.PresignableStorage)
-
-	if !ok {
-		err := errors.New("unable to type cast `Storage` to `PresignableStorage`")
-		s.logger.Err(err).Msg("download resume fail storage setup")
-		return nil, err
-	}
-
-	if lifetimeSecs <= 0 {
-		err := errors.New("invalid number of lifetime seconds")
-		return nil, err
-	}
-
-	hackathon, err := s.db.Query.GetHackathon(ctx)
-	if err != nil {
-		s.logger.Err(err).Msg("download resume fail because can't retrieve hackathon")
-		return nil, ErrFailedToGetHackathon
-	}
-
-	// Resumes are stored under hackathonID/userID (see SubmitApplication and ReplaceResume),
-	// so the presigned download key must match that prefix.
-	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+userID.String(), lifetimeSecs)
-
-	if err != nil {
-		s.logger.Err(err).Msg("fail presign get object")
-		return nil, err
-	}
-
-	return request, nil
 }
 
 func (s *ApplicationService) GetApplicationStatistics(ctx context.Context) (*ApplicationStatisticsDto, error) {
@@ -439,7 +407,7 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context) (*App
 
 	if err := g.Wait(); err != nil {
 		s.logger.Err(err).Msg("Something went wrong while getting application statistics")
-		return nil, errors.New("Get application stats error")
+		return nil, ErrGetApplicationStats
 	}
 
 	return &ApplicationStatisticsDto{
@@ -484,7 +452,7 @@ func (s *ApplicationService) WithdrawApplication(ctx context.Context, userID uui
 	})
 	if err != nil {
 		s.logger.Err(err).Str("userID", userID.String()).Msg("WithdrawAttendance fail")
-		return err
+		return ErrWithdrawApplication
 	}
 	return nil
 }
@@ -525,7 +493,7 @@ func (s *ApplicationService) ConfirmAttendance(ctx context.Context, userID uuid.
 
 	if err != nil {
 		s.logger.Err(err).Str("userID", userID.String()).Msg("ConfirmAttendance fail")
-		return err
+		return ErrConfirmAttendance
 	}
 	return nil
 }
@@ -562,7 +530,7 @@ func (s *ApplicationService) UpdateApplicationReviewStatusForHackathon(ctx conte
 
 	if err != nil {
 		s.logger.Err(err).Msg("StartApplicationReview fail")
-		return err
+		return ErrUpdateHackathonReview
 	}
 
 	return nil
@@ -579,11 +547,11 @@ func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, 
 
 	if err != nil {
 		s.logger.Err(err).Msg("AssignReviewerToApplications fail because can't retrieve hackathon")
-		return err
+		return ErrGetHackathon
 	}
 
 	if !hackathon.ApplicationReviewStarted {
-		return errors.New("Application Review has not started")
+		return ErrApplicationReviewNotStarted
 	}
 
 	var fixedAssignments []ReviewerAssignmentRequestDto
@@ -605,7 +573,7 @@ func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, 
 
 	availableApplications, err := s.db.Query.ListUnderReviewApplicationIds(ctx, hackathon.ID)
 	if err != nil {
-		return err
+		return ErrGetApplicationsUnderReview
 	}
 
 	totalAvailable := len(availableApplications)
@@ -708,14 +676,14 @@ func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, 
 
 		if err != nil {
 			s.logger.Err(err).Msg("unable to reset all application reviews before assigning")
-			return err
+			return ErrAssignReviewers
 		}
 
 		err = txDB.Query.DeleteAllAutoDecisionRequests(ctx)
 
 		if err != nil {
 			s.logger.Err(err).Msg("unable to delete all decision requests before assigning")
-			return err
+			return ErrAssignReviewers
 		}
 
 		for _, allocation := range finalAllocations {
@@ -730,7 +698,7 @@ func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, 
 
 			if err != nil {
 				s.logger.Err(err).Msg("assign application to reviewer failed while allocating")
-				return err
+				return ErrAssignReviewers
 			}
 		}
 
@@ -764,7 +732,7 @@ func (s *ApplicationService) GetReviewsForReviewer(ctx context.Context, reviewer
 
 	if err != nil {
 		s.logger.Err(err).Msg("get assigned applications and progress fail because get applications by reviewer failed")
-		return nil, err
+		return nil, ErrGetReviews
 	}
 
 	return reviews, nil
@@ -775,7 +743,7 @@ func (s *ApplicationService) GetAllReviewersAndProgress(ctx context.Context) ([]
 
 	if err != nil {
 		s.logger.Err(err).Msg("GetAllReviewersAndProgress fail")
-		return nil, err
+		return nil, ErrGetReviewers
 	}
 
 	return results, nil
@@ -786,14 +754,14 @@ func (s *ApplicationService) GetReviewById(ctx context.Context, reviewId uuid.UU
 
 	if err != nil {
 		s.logger.Err(err).Msg("GetReviewById fail, unable to get review")
-		return nil, nil, err
+		return nil, nil, ErrGetReviews
 	}
 
 	resumeRequest, err := s.GetApplicationResumeURL(ctx, review.UserID, 600)
 
 	if err != nil {
 		s.logger.Err(err).Msg("GetReviewById fail, unable to get resume")
-		return nil, nil, err
+		return nil, nil, ErrGetResume
 	}
 
 	return &review, resumeRequest, nil
@@ -812,7 +780,7 @@ func (s *ApplicationService) SaveApplicationReview(ctx context.Context, req Save
 			s.logger.Err(err).
 				Str("ApplicationId", req.ApplicationId.String()).
 				Msg("SaveApplicationReview fail, unable to get reviewers for application")
-			return err
+			return ErrGetReviews
 		}
 
 		if !slices.Contains(reviewerIds, reviewerId) {
@@ -931,11 +899,11 @@ func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request Cr
 
 	if err != nil {
 		s.logger.Err(err).Msg("RequestAutoDecision fail because can't retrieve hackathon")
-		return nil, err
+		return nil, ErrGetHackathon
 	}
 
 	if !hackathon.ApplicationReviewStarted {
-		return nil, errors.New("Application Review has not started")
+		return nil, ErrApplicationReviewNotStarted
 	}
 
 	params := sqlc.RequestAutoDecisionParams{
@@ -955,7 +923,7 @@ func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request Cr
 
 	if err != nil {
 		s.logger.Err(err).Msg("RequestAutoDecision fail")
-		return nil, err
+		return nil, errors.New("fail to request auto decision")
 	}
 
 	return &req, nil
@@ -969,7 +937,7 @@ func (s *ApplicationService) DeleteAutoDecisionRequest(ctx context.Context, requ
 
 	if err != nil {
 		s.logger.Err(err).Msg("DeleteAutoDecisionRequest fail")
-		return err
+		return errors.New("fail to delete auto decision request")
 	}
 
 	return nil
@@ -986,7 +954,7 @@ func (s *ApplicationService) UpdateAutoDecisionRequest(ctx context.Context, req 
 
 	if err != nil {
 		s.logger.Err(err).Msg("UpdateAutoDecisionRequest fail")
-		return err
+		return errors.New("fail to update auto decision request")
 	}
 
 	return nil
@@ -1029,6 +997,38 @@ func (s *ApplicationService) isApplicationOpen(ctx context.Context) error {
 
 	return nil
 }
+
+// func (s *ApplicationService) GetDownloadResumeURL(ctx context.Context, userID uuid.UUID, lifetimeSecs int64) (*storage.PresignedRequest, error) {
+// 	presignableStorage, ok := s.storage.(storage.PresignableStorage)
+
+// 	if !ok {
+// 		err := errors.New("unable to type cast `Storage` to `PresignableStorage`")
+// 		s.logger.Err(err).Msg("download resume fail storage setup")
+// 		return nil, err
+// 	}
+
+// 	if lifetimeSecs <= 0 {
+// 		err := errors.New("invalid number of lifetime seconds")
+// 		return nil, err
+// 	}
+
+// 	hackathon, err := s.db.Query.GetHackathon(ctx)
+// 	if err != nil {
+// 		s.logger.Err(err).Msg("download resume fail because can't retrieve hackathon")
+// 		return nil, ErrGetHackathon
+// 	}
+
+// 	// Resumes are stored under hackathonID/userID (see SubmitApplication and ReplaceResume),
+// 	// so the presigned download key must match that prefix.
+// 	request, err := presignableStorage.PresignGetObject(ctx, s.buckets.ApplicationResumes, hackathon.ID+"/"+userID.String(), lifetimeSecs)
+
+// 	if err != nil {
+// 		s.logger.Err(err).Msg("fail presign get object")
+// 		return nil, err
+// 	}
+
+// 	return request, nil
+// }
 
 // func (s *ApplicationService) TransitionWaitlistedApplications(ctx context.Context, acceptanceCount uint32, acceptanceQuota uint32) error {
 // 	var acceptedUserIds []uuid.UUID

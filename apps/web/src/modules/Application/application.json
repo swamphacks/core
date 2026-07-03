@@ -580,6 +580,17 @@
           "name": "essay2",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
+          "label": "Tell us about a project that you have build and how you collaborated with others. [max 250 words]",
+          "required": true,
+          "showWordCount": true,
+          "validation": {
+            "max": 250
+          }
+        },
+        {
+          "name": "essay3",
+          "questionType": "paragraph",
+          "placeholder": "Answer here...",
           "label": "Tell us a joke!",
           "required": false,
           "showWordCount": true,

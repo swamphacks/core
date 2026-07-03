@@ -9,10 +9,27 @@ import (
 )
 
 var (
-	ErrApplicationNotOpened      = errors.New("Application not opened")
-	ErrFailedToCreateApplication = errors.New("Failed to create application")
-	ErrFailedToGetHackathon      = errors.New("Failed to get hackathon information")
-	ErrCannotReplaceResume       = errors.New("cannot replace resume before the application has been submitted")
+	ErrGetApplication              = errors.New("fail to get application")
+	ErrSearchApplications          = errors.New("fail to search applications")
+	ErrSubmitApplication           = errors.New("fail to submit application")
+	ErrApplicationNotOpened        = errors.New("application not opened")
+	ErrCreateApplication           = errors.New("failed to create application")
+	ErrGetHackathon                = errors.New("failed to get hackathon information")
+	ErrReplaceResume               = errors.New("fail to replace resume")
+	ErrParseApplicationData        = errors.New("fail to parse application data")
+	ErrApplicationNotSubmitted     = errors.New("application is not submitted")
+	ErrApplicationAlreadySubmitted = errors.New("application has already been submitted")
+	ErrSaveApplication             = errors.New("fail to save application")
+	ErrGetResume                   = errors.New("fail to get application resume")
+	ErrGetApplicationStats         = errors.New("fail to get application stats")
+	ErrWithdrawApplication         = errors.New("fail to withdraw application")
+	ErrConfirmAttendance           = errors.New("fail to confirm attendance")
+	ErrUpdateHackathonReview       = errors.New("fail to update hackathon review status")
+	ErrAssignReviewers             = errors.New("fail to assign applications to reviewer(s)")
+	ErrApplicationReviewNotStarted = errors.New("application review has not started")
+	ErrGetApplicationsUnderReview  = errors.New("fail to get applications under review")
+	ErrGetReviews                  = errors.New("fail to get reviews")
+	ErrGetReviewers                = errors.New("fail to get reviewers")
 )
 
 type AppUser struct {
@@ -211,6 +228,7 @@ type ApplicationSubmissionFields struct {
 	Diet                    string `json:"diet"`
 	Essay1                  string `json:"essay1" validate:"required"`
 	Essay2                  string `json:"essay2" validate:"required"`
+	Essay3                  string `json:"essay3" validate:"required"`
 	Referral                string `json:"referral" validate:"required"`
 	PictureConsent          string `json:"pictureConsent" validate:"required"`
 	InPersonAcknowledgement string `json:"inpersonAcknowledgement" validate:"required"`
