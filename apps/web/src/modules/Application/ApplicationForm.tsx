@@ -23,6 +23,8 @@ import data from "./application.json";
 import { HTTPError } from "ky";
 import type { Hackathon } from "@/modules/Hackathon/hooks/useHackathon";
 import type { ApplicationResponse } from "@/modules/Application/hooks/useApplication";
+import type { UserContext } from "@/lib/auth/types";
+import TeamFormation from "../Team/TeamFormation";
 
 const SAVE_DELAY_MS = 3000; // delay in time before saving form progress
 
@@ -30,12 +32,14 @@ interface ApplicationFormProps {
   hackathon: Hackathon;
   application: ApplicationResponse;
   applicationResponses: any;
+  user: UserContext;
 }
 
 export function ApplicationForm({
   hackathon,
   application,
   applicationResponses,
+  user,
 }: ApplicationFormProps) {
   // TODO: make the `build` api better so components that use this function doesn't have to call useMemo on it?
   const { Form, fieldsTypes } = useMemo(() => build(data), []);
@@ -176,6 +180,32 @@ export function ApplicationForm({
       hour12: true,
     }) + " ET";
 
+  if (isSubmitted || isApplicationSubmitted) {
+    return (
+      <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">
+        <SubmitSuccess submittedAt={submittedAt || application.submittedAt!} />
+        <ReplaceResume />
+        <p className="text-base text-text-secondary mt-2">
+          If you have questions, email{" "}
+          <a className="underline" href="mailto:contact@swamphacks.com">
+            contact@swamphacks.com
+          </a>{" "}
+          or join our{" "}
+          <a
+            className="underline"
+            target="_blank"
+            href="https://discord.com/invite/NfRPv9JtAG"
+          >
+            Discord server
+          </a>
+        </p>
+        <div className="mt-5">
+          <TeamFormation user={user} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex-col">
@@ -294,7 +324,7 @@ function SubmitSuccess({ submittedAt }: { submittedAt: string }) {
         <TablerCircleCheck />
         <p>Thank you! Your application has been received.</p>
       </div>
-      <p className="text-gray-500 mt-2">
+      <p className="text-base text-text-secondary mt-2">
         Submitted at:{" "}
         {new Intl.DateTimeFormat("en-US", {
           year: "numeric",
@@ -304,7 +334,6 @@ function SubmitSuccess({ submittedAt }: { submittedAt: string }) {
           minute: "2-digit",
         }).format(new Date(submittedAt))}
       </p>
-      <ReplaceResume />
     </div>
   );
 }
@@ -354,11 +383,10 @@ function ReplaceResume() {
   };
 
   return (
-    <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
-      <p className="text-sm text-text-secondary mb-2">
-        Uploaded the wrong resume? You can replace it below. This does not
-        change any of your other application responses.
-      </p>
+    <div className="pt-4">
+      {/* <p className="text-sm text-text-secondary mb-2">
+        Uploaded the wrong resume? You can replace it below.
+      </p> */}
       <input
         ref={inputRef}
         type="file"
@@ -374,7 +402,7 @@ function ReplaceResume() {
         className="inline-flex items-center gap-2"
       >
         {isPending ? <Spinner /> : <TablerUpload />}
-        {isPending ? "Uploading..." : "Replace resume"}
+        {isPending ? "Uploading..." : "Update resume"}
       </Button>
     </div>
   );

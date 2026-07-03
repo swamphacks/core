@@ -74,6 +74,7 @@ export default function ApplicationPage({
         hackathon={hackathon}
         application={application.data}
         applicationResponses={applicationResponses}
+        user={user}
       />
     </ErrorBoundary>
   );

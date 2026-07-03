@@ -230,7 +230,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 			return err
 		}
 
-		err = s.db.Query.UpdateRole(ctx, sqlc.UpdateRoleParams{
+		err = txDB.Query.UpdateRole(ctx, sqlc.UpdateRoleParams{
 			UserID: userID,
 			Role:   sqlc.UserRoleApplicant,
 		})
@@ -241,6 +241,11 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 
 		return nil
 	})
+
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+		return nil, err
+	}
 
 	err = s.emailService.QueueApplicationConfirmationEmail(data.PreferredEmail, data.FirstName)
 

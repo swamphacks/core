@@ -1,66 +1,105 @@
 import { api } from "@/lib/ky";
+import type { operations } from "@/lib/openapi/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { HTTPError } from "ky";
-import { toast } from "react-toastify";
-import z from "zod";
+import { myTeamQueryKey } from "./useMyTeam";
 
-export const newTeamSchema = z.object({
-  name: z
-    .string()
-    .min(2, "Must be more than 2 characters.")
-    .max(24, "Must be less than 24 characters."),
-});
-export type NewTeam = z.infer<typeof newTeamSchema>;
+type CreateTeamRequest =
+  operations["create-team"]["requestBody"]["content"]["application/json"];
 
-async function leaveTeam(teamId: string) {
-  await api.delete(`teams/${teamId}/members/me`);
+type CreateTeamResponse =
+  operations["create-team"]["responses"]["200"]["content"]["application/json"];
+
+async function createTeamFn(
+  req: CreateTeamRequest,
+): Promise<CreateTeamResponse> {
+  return api
+    .post<CreateTeamResponse>("team", {
+      json: req,
+    })
+    .json();
 }
 
-async function createTeam(eventId: string, data: NewTeam) {
-  try {
-    await api.post(`events/${eventId}/teams`, {
-      json: data,
-    });
-  } catch (err) {
-    if (err instanceof HTTPError && err.response.status === 409) {
-      toast.error("You are already part of a team. Leave it to make a team.");
-    }
-    throw err; // rethrow other errors so Tanstack Query can handle them
-  }
+type DeleteTeamRequest =
+  operations["delete-team"]["requestBody"]["content"]["application/json"];
+
+async function deleteTeamFn(req: DeleteTeamRequest) {
+  return api
+    .delete("team", {
+      json: req,
+    })
+    .json();
 }
 
-async function kickMember(teamId: string, memberId: string) {
-  await api.delete(`teams/${teamId}/members/${memberId}`);
+async function joinTeamFn(invitationId: string) {
+  return api.post(`team/join/${invitationId}`).json();
 }
 
-export function useTeamActions(eventId: string) {
+async function leaveTeamFn(teamId: string) {
+  return api.post(`team/${teamId}/leave`).json();
+}
+
+type KickMemberRequest =
+  operations["kick-member"]["requestBody"]["content"]["application/json"] & {
+    teamId: string;
+  };
+
+async function kickMemberFn(req: KickMemberRequest) {
+  return api
+    .post(`team/${req.teamId}/kick`, {
+      json: {
+        memberId: req.memberId,
+      },
+    })
+    .json();
+}
+
+export function useTeamActions() {
   const queryClient = useQueryClient();
 
-  const leave = useMutation({
-    mutationFn: (teamId: string) => leaveTeam(teamId),
-    onSuccess: () => {
-      queryClient.setQueryData(["myTeam", eventId], null);
-    },
-  });
-
-  const create = useMutation({
-    mutationFn: (data: NewTeam) => createTeam(eventId, data),
+  const createTeam = useMutation({
+    mutationFn: createTeamFn,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["myTeam", eventId],
+        queryKey: myTeamQueryKey,
       });
     },
   });
 
-  const kickTeamMember = useMutation({
-    mutationFn: ({ teamId, memberId }: { teamId: string; memberId: string }) =>
-      kickMember(teamId, memberId),
+  const deleteTeam = useMutation({
+    mutationFn: deleteTeamFn,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["myTeam", eventId],
+        queryKey: myTeamQueryKey,
       });
     },
   });
 
-  return { leave, create, kickTeamMember };
+  const joinTeam = useMutation({
+    mutationFn: joinTeamFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: myTeamQueryKey,
+      });
+    },
+  });
+
+  const leaveTeam = useMutation({
+    mutationFn: leaveTeamFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: myTeamQueryKey,
+      });
+    },
+  });
+
+  const kickMember = useMutation({
+    mutationFn: kickMemberFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: myTeamQueryKey,
+      });
+    },
+  });
+
+  return { createTeam, deleteTeam, joinTeam, leaveTeam, kickMember };
 }

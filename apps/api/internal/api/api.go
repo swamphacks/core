@@ -110,9 +110,6 @@ func Run() {
 	accountRepo := repository.NewAccountRespository(db)
 	sessionRepo := repository.NewSessionRepository(db)
 	hackathonRepo := repository.NewHackathonRepository(db)
-	teamRepo := repository.NewTeamRespository(db)
-	teamMemberRepo := repository.NewTeamMemberRespository(db)
-	teamJoinRequestRepo := repository.NewTeamJoinRequestRepository(db)
 	redeemablesRepo := repository.NewRedeemablesRepository(db)
 	eventInterestsRepo := repository.NewEventInterestsRepository(db)
 	workshopRepo := repository.NewWorkshopsRepository(db)
@@ -146,9 +143,9 @@ func Run() {
 	applicationHandler := application.NewHandler(applicationService, config, logger)
 	application.RegisterRoutes(applicationHandler, huma.NewGroup(api, "/application"), mw)
 
-	teamService := teams.NewService(teamRepo, teamMemberRepo, teamJoinRequestRepo, hackathonRepo, userRepo, txm, logger)
+	teamService := teams.NewService(db, txm, logger)
 	teamHandler := teams.NewHandler(teamService, logger)
-	teams.RegisterRoutes(teamHandler, huma.NewGroup(api, "/teams"), mw)
+	teams.RegisterRoutes(teamHandler, huma.NewGroup(api, "/team"), mw)
 
 	redeemablesService := redeemables.NewService(redeemablesRepo, logger)
 	redeemablesHandler := redeemables.NewHandler(redeemablesService, config, logger)
