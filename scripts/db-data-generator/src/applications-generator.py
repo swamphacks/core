@@ -111,6 +111,7 @@ def generate_application(user_id: str, hackathon_id: str) -> dict:
         "updated_at": updated_at,
         "submitted_at": submitted_at,
         "hackathon_id": hackathon_id,
+        "is_fake": True
     }
 
 
@@ -123,6 +124,7 @@ COLUMNS = [
     "updated_at",
     "submitted_at",
     "hackathon_id",
+    "is_fake"
 ]
 
 
@@ -132,7 +134,7 @@ def insert_applications(conn, applications: list[dict]):
     # to know about the custom enum type ahead of time.
     template = (
         "(%(user_id)s, %(status)s::application_status, %(application)s, %(created_at)s, "
-        "%(saved_at)s, %(updated_at)s, %(submitted_at)s, %(hackathon_id)s)"
+        "%(saved_at)s, %(updated_at)s, %(submitted_at)s, %(hackathon_id)s, %(is_fake)s)"
     )
 
     query = f"INSERT INTO applications ({', '.join(COLUMNS)}) VALUES %s"

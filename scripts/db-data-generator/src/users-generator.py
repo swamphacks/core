@@ -94,6 +94,7 @@ def generate_user(existing_emails: set) -> dict:
         "rfid": rfid,
         "role_assigned_at": role_assigned_at,
         "role": role,
+        "is_fake": True
     }
 
 
@@ -112,6 +113,7 @@ COLUMNS = [
     "rfid",
     "role_assigned_at",
     "role",
+    "is_fake"
 ]
 
 
@@ -124,7 +126,7 @@ def insert_users(conn, users: list[dict]):
     template = (
         "(%(id)s, %(name)s, %(email)s, %(email_verified)s, %(onboarded)s, %(image)s, "
         "%(created_at)s, %(updated_at)s, %(preferred_email)s, %(email_consent)s, "
-        "%(checked_in_at)s, %(rfid)s, %(role_assigned_at)s, %(role)s::user_role)"
+        "%(checked_in_at)s, %(rfid)s, %(role_assigned_at)s, %(role)s::user_role, %(is_fake)s)"
     )
 
     query = f"INSERT INTO users ({', '.join(COLUMNS)}) VALUES %s"
