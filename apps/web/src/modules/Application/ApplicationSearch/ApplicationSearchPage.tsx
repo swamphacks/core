@@ -26,6 +26,7 @@ export default function ApplicationSearchPage() {
             placeholder="Search by username or email"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
+            autoComplete="off"
           />
         </div>
         <ApplicationList searchInput={debouncedSearchInput} />

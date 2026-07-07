@@ -24,7 +24,7 @@ from psycopg2.extras import execute_values, Json
 
 # The fixed application payload used for every generated application.
 FAKE_APPLICATION = {
-    "age": 21,
+    "age": ">21",
     "diet": "celiac-disease",
     "race": "asian-pacific-islander",
     "year": "second_year",
@@ -32,8 +32,9 @@ FAKE_APPLICATION = {
     "phone": "1234567891",
     "essay1": "Example Response",
     "essay2": "Example Response",
+    "essay3": "Example Response",
     "gender": "man",
-    "github": "https://www.github.com/my-profile",
+    # "github": "https://www.github.com/my-profile",
     "majors": "Computer Science",
     "minors": "Entrepreneurship",
     "school": "University of Florida",

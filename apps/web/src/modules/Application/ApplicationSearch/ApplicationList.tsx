@@ -9,18 +9,27 @@ import {
   useReactTable,
   getCoreRowModel,
 } from "@tanstack/react-table";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DialogTrigger } from "react-aria-components";
 
 interface ApplicationListProps {
   searchInput: string;
 }
 
-export default function ApplicationList({ searchInput }: ApplicationListProps) {
+export default function ApplicationList({
+  searchInput: newSearchInput,
+}: ApplicationListProps) {
+  const [searchInput, setSearchInput] = useState(newSearchInput);
+
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   });
+
+  useEffect(() => {
+    setSearchInput(newSearchInput);
+    setPagination({ pageIndex: 0, pageSize: 10 });
+  }, [newSearchInput]);
 
   const searchApplicationsData = useSearchApplications(
     pagination.pageSize,
