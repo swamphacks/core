@@ -6,14 +6,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<title>SWAMPHACKS XII Front Page</title>
+<title>SwampHacks XII Front Page</title>
 </head>
 
 <body>
   <div class="b-wrapper"> 
   <!-- for positioning the fishing line-->
-    
-    <header class="banner">
+  <header class="banner">
     <!-- the banner has the entire background and text-->
     <div class="layer layer-sky"></div>
     <div class="layer layer-bushes-back"></div>
@@ -22,33 +21,36 @@
     <div class="layer layer-trees-back2"></div>
     <div class="layer layer-trees-back3"></div>
     <div class="layer layer-vegetation"></div>
-    <div class="layer layer-foreground"></div>
+    <!-- <div class="layer layer-foreground"></div> -->
     <div class="layer layer-canopy"></div>
     <div class="layer layer-canopy-back"></div>
     <div class="boat-rig">
     <!--to make the boat and rod stick together n to the corner of the banner-->
-      <img src="../assets/boat.png" class="boat"> <!--should the rig also bob in the water?-->
-      <img src="../assets/frod.png" class="rod">
+      <img src="./assets/boat.png" class="boat"> <!--should the rig also bob in the water?-->
+      <img src="./assets/frod.png" class="rod">
     </div>
-    
-    <img src="../assets/signpost.png" class="post">
-    
 
+    <div class="menu">
+      <img src="./assets/signpost.png" class="post">
+      <div class="menu-actions">
+        <img src="./assets/s-hack.png" class="hack-button">
+        <img src="./assets/s-volunteer.png" class="volunteer-button">
+        <img src="./assets/s-mentor.png" class="mentor-button">
+      </div>
+    </div>
 
     <h1>SwampHacks XII</h1>
-
   </header>
-  <div class="gator">
-    <!--similar to the boat, also to animate-->
-      <img src="../assets/gator2.png" class="frame frame-1">
-      <img src="../assets/gator3.png" class="frame frame-2">
-    </div>
+  <!-- <div class="gator">
+      <img src="./assets/gator2.png" class="frame frame-1">
+      <img src="./assets/gator3.png" class="frame frame-2">
+  </div> -->
   <div class="water-strip"></div>
   <!--seperate to make the gator+boat float in water-->
   <div class="fishing-line">
   <!--outside for scroll-->
-    <img src="../assets/string.png" class="string-img">
-    <img src="../assets/bobber.png" class="bobber-img">
+    <img src="./assets/string.png" class="string-img">
+    <img src="./assets/bobber.png" class="bobber-img">
   </div>
   <script>
     const fishingLine = document.querySelector('.fishing-line');

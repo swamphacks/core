@@ -19,9 +19,10 @@ body {
   z-index: 10;
   text-align: center;
   margin: 0;
-  padding-top: 15%;
+  padding-top: 230px;
   font-family: 'Pixelify Sans', monospace;
-  font-size: clamp(45px, 10vw, 80px);
+  font-size: 70px;
+  /* font-size: clamp(45px, 10vw, 80px); */
   color: #afa597;
   text-shadow:
     1px 1px 0 #4a2410,
@@ -49,7 +50,7 @@ body {
   bottom: 5%;
   height: 30%;
   image-rendering: pixelated;
-  background: url('../assets/bushes.png') repeat-x bottom;
+  background: url('./assets/bushes.png') repeat-x bottom;
   background-size: auto 100%;
   z-index: 1;
 }
@@ -58,7 +59,7 @@ body {
   top: 12%;
   height: 80%;
   image-rendering: pixelated;
-  background: url('../assets/trees.png') repeat-x bottom;
+  background: url('./assets/trees.png') repeat-x bottom;
   background-size: auto 100%;
   z-index: 2;
 }
@@ -67,7 +68,7 @@ body {
   top: 10%;
   height: 80%;
   image-rendering: pixelated;
-  background: url('../assets/trees.png') repeat-x bottom;
+  background: url('./assets/trees.png') repeat-x bottom;
   background-size: auto 95%;
   background-position-x: -450px;
   filter: brightness(0.35) saturate(0.5);
@@ -78,7 +79,7 @@ body {
   top: 8%;
   height: 80%;
   image-rendering: pixelated;
-  background: url('../assets/trees.png') repeat-x bottom;
+  background: url('./assets/trees.png') repeat-x bottom;
   background-size: auto 85%;
   background-position-x: 210px;
   filter: brightness(0.30) saturate(0.4);
@@ -89,7 +90,7 @@ body {
   top: 6%;
   height: 80%;
   image-rendering: pixelated;
-  background: url('../assets/trees.png') repeat-x bottom;
+  background: url('./assets/trees.png') repeat-x bottom;
   background-size: auto 75%;
   background-position-x: 370px;
   filter: brightness(0.20) saturate(0.2);
@@ -99,42 +100,42 @@ body {
 
 .layer-vegetation {
   bottom: 0%;
-  height: 25%;
+  height: 15%;
   image-rendering: pixelated;
-  background: url('../assets/vegetation.png') repeat-x bottom;
+  background: url('./assets/vegetation.png') repeat-x bottom;
   background-size: auto 100%;
   z-index: 3;
-  }
+}
 
-.layer-foreground {
+/* .layer-foreground {
   bottom: -10%;
   height: 30%;
   image-rendering: pixelated;
-  background: url('../assets/foreground.png') repeat-x bottom;
+  background: url('./assets/foreground.png') repeat-x bottom;
   background-size: auto 100%;
   z-index: 4;
-  }
+  } */
 
 
 .layer-canopy {
   top: 0;
   height: 50%;
   image-rendering: pixelated;
-  background: url('../assets/canopy.png') repeat-x top;
+  background: url('./assets/canopy.png') repeat-x top;
   background-size: auto 100%;
   z-index: 5;
-  }
+}
 
 .layer-canopy-back {
   top: 15%;
   height: 50%;
   image-rendering: pixelated;
-  background: url('../assets/canopy.png') repeat-x top;
+  background: url('./assets/canopy.png') repeat-x top;
   background-size: auto 75%;
   background-position-x: 370px;
   filter: brightness(0.40) saturate(0.6);
   z-index: 1;
-  }
+}
 
 .post {
   position: absolute;
@@ -142,6 +143,34 @@ body {
   bottom: 5%;
   right: 45%;
   width: 10%;
+}
+
+.menu-actions {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  bottom: 7%;
+  right: 41.5%;
+  z-index: 6;
+  justify-content: center;
+}
+
+.hack-button {
+  position: relative;
+  left: -10px;
+}
+
+.mentor-button {
+  position: relative;
+  top: -120px;
+  width: 290px;
+}
+
+.volunteer-button {
+  position: relative;
+  top: -70px;
+  width: 290px;
 }
 
 .water-strip {
@@ -168,8 +197,8 @@ body {
 
 .boat {
   bottom: 0;
-  right: 0;
-  width: 100%;
+  right: -200px;
+  width: 90%;
   z-index: 6;
 }
 
@@ -258,12 +287,12 @@ body {
 }
 
 .sign-left  { 
-  background: url('../assets/sign-l.png') no-repeat;
+  background: url('./assets/sign-l.png') no-repeat;
   background-size: auto 100%;
 
 }
 .sign-right { 
-  background: url('../assets/sign-r.png') no-repeat;
+  background: url('./assets/sign-r.png') no-repeat;
   background-size: auto 100%;
 
 }
@@ -271,7 +300,7 @@ body {
 .sign-middle {
   flex: 1 1 auto;
   height: 100%;
-  background: url('../assets/sign-m.png') no-repeat;
+  background: url('./assets/sign-m.png') no-repeat;
   background-size: auto 100%;
   image-rendering: pixelated;
 }

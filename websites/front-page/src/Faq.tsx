@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./FAQ.css";
 
 const faqSections = [
   {
@@ -78,9 +79,9 @@ export default function FAQ() {
   };
 
   return (
-    <div>
-      <p className="tab-title">FAQ</p>
-      <div className="tab-container faq-container">
+    <div className="faq-container">
+      <p className="faq-header">FAQ</p>
+      <div className="faq-items-container">
         {faqSections.map((item, sectionIndex) => (
           <div key={item.section}>
             <p>{item.section}</p>

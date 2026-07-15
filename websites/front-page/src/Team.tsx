@@ -1,79 +1,29 @@
-import Gabby from "./assets/pfps/Gabby.png";
-import Chris from "./assets/pfps/Chris.png";
+import "./Team.css";
 
-const team = [
-  {
-    position: "Organizers",
-    members: [
-      { name: "Christian Cardenas", pic: Gabby, linkedin: "" },
-      { name: "Gabby Houser", pic: Chris, linkedin: "" },
-    ],
-  },
-  {
-    position: "Marketing",
-    members: [
-      { name: "Christian Cardenas", pic: Gabby, linkedin: "" },
-      { name: "Gabby Houser", pic: Chris, linkedin: "" },
-    ],
-  },
-  {
-    position: "Finance",
-    members: [
-      { name: "Christian Cardenas", pic: Gabby, linkedin: "" },
-      { name: "Gabby Houser", pic: Chris, linkedin: "" },
-    ],
-  },
-  {
-    position: "Logistics",
-    members: [
-      { name: "Christian Cardenas", pic: Gabby, linkedin: "" },
-      { name: "Gabby Houser", pic: Chris, linkedin: "" },
-    ],
-  },
-  {
-    position: "Technology",
-    members: [
-      { name: "Abby Moore (Executive)", pic: Chris, linkedin: "" },
-      {
-        name: "Hieu Nguyen (Executive)",
-        pic: Gabby,
-        linkedin: "https://www.linkedin.com/in/hieutnguyendev",
-      },
-    ],
-  },
-];
+import woodenSign from "./assets/WoodenSign.png";
+import tent from "./assets/Tent.png";
+import tent2 from "./assets/Tent2.png";
+import fire from "./assets/Fire.png";
 
 export default function Team() {
   return (
-    <div>
-      <p className="tab-title">SH XII Team</p>
-      <div className="team-grid team-container">
-        {team.map((group) => (
-          <section className="team-group" key={group.position}>
-            <h2 className="team-position">{group.position}</h2>
-            <div className="team-members">
-              {group.members.map((member) => (
-                <article className="team-card" key={member.name}>
-                  <div className="avatar">
-                    <img
-                      src={member.pic}
-                      className="profile-pic"
-                      alt={member.name}
-                    />
-                  </div>
-                  <p className="team-name">{member.name}</p>
-                  <a
-                    className="profile-linkedin"
-                    target="_blank"
-                    href={member.linkedin}
-                  >
-                    <i className="nes-icon linkedin profile-linkedin"></i>
-                  </a>
-                </article>
-              ))}
-            </div>
-          </section>
-        ))}
+    <div className="team-container">
+      <h1 className="team-header">Meet the XII Team!</h1>
+
+      {/* <div className="background2">
+        <div className="foreground2"></div>
+      </div> */}
+
+      <div className="team-area">
+        <div className="sign-container">
+          <img className="sign" src={woodenSign} />
+        </div>
+
+        <div className="tent-container">
+          <img className="tent" src={tent} />
+          <img className="tent2" src={tent2} />
+          <img className="fire" src={fire} />
+        </div>
       </div>
     </div>
   );

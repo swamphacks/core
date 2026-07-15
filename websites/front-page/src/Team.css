@@ -1,0 +1,130 @@
+.background2 {
+  position: absolute !important;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.foreground2 {
+  position: absolute;
+  display: flex;
+  width: 70%;
+  justify-content: center;
+  bottom: 10%;
+  height: 30%;
+  image-rendering: pixelated;
+  background: url('./assets/foreground.png') repeat-x bottom;
+  background-size: auto 100%;
+  z-index: 2;
+}
+
+.team-container {
+    padding-top: 50px;
+    color: #d8b286;
+    font-family: "Jersey 20", cursive;
+    margin-bottom: 80px;
+}
+
+.team-header {
+    position: relative;
+    display: block;
+    text-align: center;
+    font-family: 'Pixelify Sans', monospace;
+    font-size: 40px;
+    margin: 0 auto;
+    z-index: 50;
+}
+
+.team-area {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    min-height: 600px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.sign-container {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    z-index: 2;
+}
+
+.sign {
+    width: 500px;
+    margin: 0 auto;
+}
+
+.tent-container {
+    left: -300px;
+    top: 200px;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    z-index: 3;
+}
+
+.tent {
+    position: relative;
+    top: 40px;
+    right: -300px;
+    width: 450px;
+    margin: 0 auto;
+}
+
+.tent2 {
+    position: relative;
+    top: 50px;
+    right: -50px;
+    width: 450px;
+    margin: 0 auto;
+}
+
+.fire {
+    position: relative;
+    bottom: -300px;
+    right: 500px;
+    width: 200px;
+    height: 150px;
+}
+
+@media (min-width: 768px) {
+    .sign-container {
+        left: 100px;
+    }
+
+    .tent-container  {
+        left: 500px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .team-header {
+        width: 900px;
+        text-align: left;
+    }
+
+    .sign {
+        width: 650px;
+    }
+
+    .sign-container {
+        left: 200px;
+    }
+
+    .tent-container  {
+        left: 300px;
+    }
+}
+
+@media (min-width: 1536px) {
+    .sign-container {
+        left: 400px;
+    }
+
+    .tent-container  {
+        left: 500px;
+    }
+}

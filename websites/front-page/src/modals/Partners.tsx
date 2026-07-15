@@ -1,4 +1,4 @@
-import UF from "./assets/sponsors/uf.png";
+import UF from "../assets/sponsors/uf.png";
 
 interface PartnersProps {
   closeModal: () => void;
