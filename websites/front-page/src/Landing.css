@@ -13,7 +13,7 @@
   position: absolute;
   inset: 0;
 
-  background-image: url("./assets/background.png");
+  background-image: url("/assets/background.png");
   background-position: center top;
   background-repeat: no-repeat;
   background-size: cover;
@@ -46,7 +46,7 @@
   bottom: 5%;
   height: 30%;
   image-rendering: pixelated;
-  background: url('./assets/bushes.png') repeat-x bottom;
+  background: url('/assets/bushes.png') repeat-x bottom;
   background-size: auto 100%;
   z-index: 1;
 }
@@ -55,7 +55,7 @@
   top: 12%;
   height: 80%;
   image-rendering: pixelated;
-  background: url('./assets/trees.png') repeat-x bottom;
+  background: url('/assets/trees.png') repeat-x bottom;
   background-size: auto 100%;
   z-index: 2;
 }
@@ -64,7 +64,7 @@
   top: 10%;
   height: 80%;
   image-rendering: pixelated;
-  background: url('./assets/trees.png') repeat-x bottom;
+  background: url('/assets/trees.png') repeat-x bottom;
   background-size: auto 95%;
   background-position-x: -450px;
   filter: brightness(0.35) saturate(0.5);
@@ -75,7 +75,7 @@
   top: 8%;
   height: 80%;
   image-rendering: pixelated;
-  background: url('./assets/trees.png') repeat-x bottom;
+  background: url('/assets/trees.png') repeat-x bottom;
   background-size: auto 85%;
   background-position-x: 210px;
   filter: brightness(0.30) saturate(0.4);
@@ -86,7 +86,7 @@
   top: 6%;
   height: 80%;
   image-rendering: pixelated;
-  background: url('./assets/trees.png') repeat-x bottom;
+  background: url('/assets/trees.png') repeat-x bottom;
   background-size: auto 75%;
   background-position-x: 370px;
   filter: brightness(0.20) saturate(0.2);
@@ -97,7 +97,7 @@
   bottom: 0%;
   height: 30%;
   image-rendering: pixelated;
-  background: url('./assets/vegetation.png') repeat-x bottom;
+  background: url('/assets/vegetation.png') repeat-x bottom;
   background-size: auto 100%;
   z-index: 3;
 }
@@ -106,7 +106,7 @@
   bottom: -10%;
   height: 30%;
   image-rendering: pixelated;
-  background: url('./assets/foreground.png') repeat-x bottom;
+  background: url('/assets/foreground.png') repeat-x bottom;
   background-size: auto 100%;
   z-index: 4;
 }
@@ -115,7 +115,7 @@
   top: 0;
   height: 50%;
   image-rendering: pixelated;
-  background: url('./assets/canopy.png') repeat-x top;
+  background: url('/assets/canopy.png') repeat-x top;
   background-size: auto 100%;
   z-index: 5;
 }
@@ -124,7 +124,7 @@
   top: 15%;
   height: 50%;
   image-rendering: pixelated;
-  background: url('./assets/canopy.png') repeat-x top;
+  background: url('/assets/canopy.png') repeat-x top;
   background-size: auto 75%;
   background-position-x: 370px;
   filter: brightness(0.40) saturate(0.6);
@@ -136,7 +136,7 @@
   bottom: -10%;
   height: 30%;
   image-rendering: pixelated;
-  background: url('./assets/foreground.png') repeat-x bottom;
+  background: url('/assets/foreground.png') repeat-x bottom;
   background-size: auto 100%;
   z-index: 4;
 }
@@ -270,7 +270,7 @@
   font-size: 1.7rem;
   font-family: "Jersey 20", cursive;
   /* font-family: "Press Start 2P", system-ui; */
-  background-image: url('./assets/nnnoise.svg');
+  background-image: url('/assets/nnnoise.svg');
   color: #ddc8af !important;
 
   text-shadow:

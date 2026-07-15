@@ -14,7 +14,7 @@
   bottom: 10%;
   height: 30%;
   image-rendering: pixelated;
-  background: url('./assets/foreground.png') repeat-x bottom;
+  background: url('/assets/foreground.png') repeat-x bottom;
   background-size: auto 100%;
   z-index: 2;
 }
