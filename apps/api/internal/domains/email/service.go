@@ -214,7 +214,7 @@ func (s *EmailService) SendHtmlEmail(recipient string, subject string, templateD
 		s.logger.Err(err).Msg("Failed to inject template variables for recipient '%s'.")
 	}
 
-	err = s.SESClient.SendHTMLEmail([]string{recipient}, "noreply@swamphacks.com", subject, body.String())
+	err = s.SESClient.SendHTMLEmail([]string{recipient}, "SwampHacks <noreply@swamphacks.com>", subject, body.String())
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to send html email to recipient")
 		return err

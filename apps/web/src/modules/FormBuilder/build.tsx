@@ -503,13 +503,15 @@ export function build(formObject: FormObject): {
 
       return (
         <div className="w-full sm:max-w-180 mx-auto font-figtree p-2 relative">
-          {formHeader}
           {isSubmitted ? (
             <div className="mt-3">
               <SubmitSuccessComponent />
             </div>
           ) : (
-            formContainer
+            <>
+              {formHeader}
+              {formContainer}
+            </>
           )}
         </div>
       );

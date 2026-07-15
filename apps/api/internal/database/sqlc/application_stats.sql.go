@@ -85,39 +85,23 @@ func (q *Queries) GetSubmissionTimes(ctx context.Context) ([]GetSubmissionTimesR
 
 const getSubmittedApplicationAges = `-- name: GetSubmittedApplicationAges :one
 SELECT
-    COUNT(*) FILTER (WHERE (application->>'age')::int < 18) AS underage,
-    COUNT(*) FILTER (WHERE (application->>'age')::int = 18) AS age_18,
-    COUNT(*) FILTER (WHERE (application->>'age')::int = 19) AS age_19,
-    COUNT(*) FILTER (WHERE (application->>'age')::int = 20) AS age_20,
-    COUNT(*) FILTER (WHERE (application->>'age')::int = 21) AS age_21,
-    COUNT(*) FILTER (WHERE (application->>'age')::int = 22) AS age_22,
-    COUNT(*) FILTER (WHERE (application->>'age')::int >= 23) AS age_23_plus
+    COUNT(*) FILTER (WHERE (application->>'age') = '<18') AS underage,
+    COUNT(*) FILTER (WHERE (application->>'age') = '18-22') AS between_18_and_22,
+    COUNT(*) FILTER (WHERE (application->>'age') = '>22') AS older_than_22
 FROM applications
 WHERE status <> 'started' AND status IS NOT NULL
 `
 
 type GetSubmittedApplicationAgesRow struct {
-	Underage  int64 `json:"underage"`
-	Age18     int64 `json:"age_18"`
-	Age19     int64 `json:"age_19"`
-	Age20     int64 `json:"age_20"`
-	Age21     int64 `json:"age_21"`
-	Age22     int64 `json:"age_22"`
-	Age23Plus int64 `json:"age_23_plus"`
+	Underage       int64 `json:"underage"`
+	Between18And22 int64 `json:"between_18_and_22"`
+	OlderThan22    int64 `json:"older_than_22"`
 }
 
 func (q *Queries) GetSubmittedApplicationAges(ctx context.Context) (GetSubmittedApplicationAgesRow, error) {
 	row := q.db.QueryRow(ctx, getSubmittedApplicationAges)
 	var i GetSubmittedApplicationAgesRow
-	err := row.Scan(
-		&i.Underage,
-		&i.Age18,
-		&i.Age19,
-		&i.Age20,
-		&i.Age21,
-		&i.Age22,
-		&i.Age23Plus,
-	)
+	err := row.Scan(&i.Underage, &i.Between18And22, &i.OlderThan22)
 	return i, err
 }
 

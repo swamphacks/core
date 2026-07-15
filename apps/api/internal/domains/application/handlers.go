@@ -84,7 +84,7 @@ func (h *handler) handleUpdateApplicationById(ctx context.Context, input *struct
 	err := h.applicationService.UpdateApplicationById(ctx, input.Body)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("error updating application")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &UpdateApplicationByIdOutput{Status: http.StatusNoContent}, nil
@@ -100,14 +100,14 @@ func (h *handler) handleGetExtendedApplicationById(ctx context.Context, input *s
 	application, err := h.applicationService.GetExtendedApplicationById(ctx, input.ID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("error retrieving extended application")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	resumeRequest, err := h.applicationService.GetApplicationResumeURL(ctx, application.UserID, 600)
 
 	if err != nil {
 		h.logger.Err(err).Str("ApplicationId", input.ID.String()).Msg(err.Error())
-		return nil, huma.Error500InternalServerError("unable to get application resume")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	var review *ReviewDto
@@ -172,7 +172,7 @@ func (h *handler) handleSearchApplications(ctx context.Context, input *struct {
 	count, applications, err := h.applicationService.SearchApplications(ctx, input.Limit, input.Offset, input.Search)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("error retrieving applications")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	searchApplicationResponses := make([]ApplicationWithUserInfoDto, len(applications))
@@ -285,6 +285,7 @@ func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) 
 	submission.Diet = r.FormValue("diet")
 	submission.Essay1 = r.FormValue("essay1")
 	submission.Essay2 = r.FormValue("essay2")
+	submission.Essay3 = r.FormValue("essay3")
 	submission.Referral = r.FormValue("referral")
 	submission.PictureConsent = r.FormValue("pictureConsent")
 	submission.InPersonAcknowledgement = r.FormValue("inpersonAcknowledgement")
@@ -314,10 +315,10 @@ func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) 
 
 	if err != nil {
 		if errors.Is(err, ErrApplicationNotOpened) {
-			return nil, huma.Error400BadRequest("Application is not opened")
+			return nil, huma.Error400BadRequest(err.Error())
 		}
 
-		return nil, huma.Error500InternalServerError("Fail to submit application")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &SubmitApplicationOutput{
@@ -341,7 +342,7 @@ func (h *handler) handleGetApplicationResumeURL(ctx context.Context, input *stru
 	request, err := h.applicationService.GetApplicationResumeURL(ctx, userCtx.UserID, 60)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to get url to download resume")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &GetDownloadResumeOutput{Body: request.URL}, nil
@@ -387,7 +388,7 @@ func (h *handler) handleReplaceResume(ctx context.Context, input *struct {
 		if errors.Is(err, database.ErrApplicationNotFound) {
 			return nil, huma.Error400BadRequest("No application found to replace resume for")
 		}
-		if errors.Is(err, ErrCannotReplaceResume) {
+		if errors.Is(err, ErrReplaceResume) {
 			return nil, huma.Error400BadRequest(err.Error())
 		}
 		return nil, huma.Error500InternalServerError("Unable to replace resume")
@@ -404,7 +405,7 @@ func (h *handler) handleGetApplicationStatistics(ctx context.Context, input *str
 	stats, err := h.applicationService.GetApplicationStatistics(ctx)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to get application statistics")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &GetApplicationStatisticsOutput{Body: *stats}, nil
@@ -422,7 +423,7 @@ func (h *handler) handleUpdateApplicationReviewStatusForHackathon(ctx context.Co
 	err := h.applicationService.UpdateApplicationReviewStatusForHackathon(ctx, input.Body.Started)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to update review status for hackathon")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &UpdateApplicationReviewStatusForHackathonOutput{Status: http.StatusOK}, nil
@@ -438,7 +439,7 @@ func (h *handler) handleGetReviewById(ctx context.Context, input *struct {
 	review, resume, err := h.applicationService.GetReviewById(ctx, input.ID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to get application review details")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	var autoDecisionRequest *AutoDecisionRequestDto
@@ -481,7 +482,7 @@ func (h *handler) handleSubmitApplicationReview(ctx context.Context, input *stru
 	err := h.applicationService.SaveApplicationReview(ctx, input.Body, userCtx.UserID, userCtx.Role)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to save review")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &SubmitApplicationReviewOutput{Status: http.StatusCreated}, nil
@@ -503,7 +504,7 @@ func (h *handler) handleUpdateApplicationReview(ctx context.Context, input *stru
 	err := h.applicationService.UpdateApplicationReview(ctx, input.Body, userCtx.UserID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to update review")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &UpdateApplicationReviewOutput{Status: http.StatusOK}, nil
@@ -523,7 +524,7 @@ func (h *handler) handleGetReviewAssignments(ctx context.Context, input *struct{
 	reviews, err := h.applicationService.GetReviewsForReviewer(ctx, userCtx.UserID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to get assigned applications")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	var assignments []ReviewAssignmentDto
@@ -554,7 +555,7 @@ func (h *handler) handleAssignApplicationReviewers(ctx context.Context, input *s
 	err := h.applicationService.AssignReviewersToApplications(ctx, input.Body)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to assign reviewers")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &AssignApplicationReviewersOutput{Status: http.StatusOK}, nil
@@ -568,7 +569,7 @@ func (h *handler) handleGetAllReviewersAndProgress(ctx context.Context, input *s
 	results, err := h.applicationService.GetAllReviewersAndProgress(ctx)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to get all reviewers and their progress")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	reviewersProgress := make([]ReviewerProgressResponseDto, len(results))
@@ -596,7 +597,7 @@ func (h *handler) handleSearchAutoDecisionRequests(ctx context.Context, input *S
 	count, requests, err := h.applicationService.SearchAutoDecisionRequests(ctx, *input)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("error retrieving requests")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	searchAutoDecisionRequestsResponses := make([]ExtendedAutoDecisionRequestDto, len(requests))
@@ -647,7 +648,7 @@ func (h *handler) handleGetAutoDecisionRequests(ctx context.Context, input *stru
 	requests, err := h.applicationService.GetAllAutoDecisionRequests(ctx)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to get auto decision requests")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	extendedRequests := make([]ExtendedAutoDecisionRequestDto, len(requests))
@@ -703,7 +704,7 @@ func (h *handler) handleRequestAutoDecision(ctx context.Context, input *struct {
 	req, err := h.applicationService.RequestAutoDecision(ctx, input.Body, userCtx.UserID, userCtx.Role)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to request decision")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &RequestAutoDecisionOutput{Body: AutoDecisionRequestDto{
@@ -737,7 +738,7 @@ func (h *handler) handleDeleteAutoDecision(ctx context.Context, input *struct {
 	err := h.applicationService.DeleteAutoDecisionRequest(ctx, input.Body.RequestId, userCtx.UserID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to delete auto decision request")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &DeleteAutoDecisionOutput{Status: http.StatusOK}, nil
@@ -763,7 +764,7 @@ func (h *handler) handleUpdateAutoDecision(ctx context.Context, input *struct {
 	)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to update auto decision request")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &UpdateAutoDecisionOutput{Status: http.StatusOK}, nil
@@ -777,7 +778,7 @@ func (h *handler) handleResetApplicationReviews(ctx context.Context, input *stru
 	err := h.applicationService.DeleteAllApplicationReviews(ctx)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to reset application reviews")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &ResetApplicationReviewsOutput{Status: http.StatusOK}, nil
@@ -801,7 +802,7 @@ func (h *handler) handleWithdrawApplication(ctx context.Context, input *struct{}
 	err := h.applicationService.WithdrawApplication(ctx, userCtx.UserID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to withdraw attendance")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &WithdrawApplicationOutput{Status: http.StatusOK}, nil
@@ -825,7 +826,7 @@ func (h *handler) handleConfirmAttendance(ctx context.Context, input *struct{}) 
 	err := h.applicationService.ConfirmAttendance(ctx, userCtx.UserID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Unable to withdraw attendance")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &ConfirmAttendanceOutput{Status: http.StatusOK}, nil

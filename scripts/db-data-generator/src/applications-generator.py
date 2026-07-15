@@ -24,7 +24,7 @@ from psycopg2.extras import execute_values, Json
 
 # The fixed application payload used for every generated application.
 FAKE_APPLICATION = {
-    "age": 21,
+    "age": ">21",
     "diet": "celiac-disease",
     "race": "asian-pacific-islander",
     "year": "second_year",
@@ -32,8 +32,9 @@ FAKE_APPLICATION = {
     "phone": "1234567891",
     "essay1": "Example Response",
     "essay2": "Example Response",
+    "essay3": "Example Response",
     "gender": "man",
-    "github": "https://www.github.com/my-profile",
+    # "github": "https://www.github.com/my-profile",
     "majors": "Computer Science",
     "minors": "Entrepreneurship",
     "school": "University of Florida",
@@ -111,6 +112,7 @@ def generate_application(user_id: str, hackathon_id: str) -> dict:
         "updated_at": updated_at,
         "submitted_at": submitted_at,
         "hackathon_id": hackathon_id,
+        "is_fake": True
     }
 
 
@@ -123,6 +125,7 @@ COLUMNS = [
     "updated_at",
     "submitted_at",
     "hackathon_id",
+    "is_fake"
 ]
 
 
@@ -132,7 +135,7 @@ def insert_applications(conn, applications: list[dict]):
     # to know about the custom enum type ahead of time.
     template = (
         "(%(user_id)s, %(status)s::application_status, %(application)s, %(created_at)s, "
-        "%(saved_at)s, %(updated_at)s, %(submitted_at)s, %(hackathon_id)s)"
+        "%(saved_at)s, %(updated_at)s, %(submitted_at)s, %(hackathon_id)s, %(is_fake)s)"
     )
 
     query = f"INSERT INTO applications ({', '.join(COLUMNS)}) VALUES %s"

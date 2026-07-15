@@ -54,8 +54,8 @@
                   "value": "18-22"
                 },
                 {
-                  "label": ">23",
-                  "value": ">23"
+                  "label": ">22",
+                  "value": ">22"
                 }
               ]
             },
@@ -578,6 +578,17 @@
         },
         {
           "name": "essay2",
+          "questionType": "paragraph",
+          "placeholder": "Answer here...",
+          "label": "Tell us about a project that you have build and how you collaborated with others. [max 250 words]",
+          "required": true,
+          "showWordCount": true,
+          "validation": {
+            "max": 250
+          }
+        },
+        {
+          "name": "essay3",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
           "label": "Tell us a joke!",

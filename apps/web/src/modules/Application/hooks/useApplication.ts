@@ -36,6 +36,7 @@ export const ApplicationFieldsSchema = z.object({
   diet: z.string().optional(),
   essay1: z.string(),
   essay2: z.string(),
+  essay3: z.string(),
   referral: z.string(),
   pictureConsent: z.string(),
   inpersonAcknowledgement: z.string(),

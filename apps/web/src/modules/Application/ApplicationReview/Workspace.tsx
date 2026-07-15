@@ -160,7 +160,7 @@ function ApplicationViewer({
       </div>
 
       <div className="space-y-4 mt-4">
-        <div className="p-2 rounded-md border border-input-border h-[64vh]">
+        <div className="p-2 rounded-md border border-input-border h-200 bg-input-bg">
           {resume === "" ? (
             <p>No resume provided.</p>
           ) : (
@@ -169,14 +169,10 @@ function ApplicationViewer({
               type="application/pdf"
               data={resume}
             >
-              <p>
-                Your browser does not support PDFs.{" "}
-                <a href={resume}>Download the PDF</a>.
-              </p>
+              <p>Unable to load resume.</p>
             </object>
           )}
         </div>
-
         <ReviewerPanel
           user={user}
           currentIndex={currentIndex}
@@ -285,8 +281,8 @@ function Essays({ appFields }: EssaysProps) {
         <div className="space-y-6">
           <div>
             <div className="text-text-secondary mb-2">
-              What is your most memorable experience working in a group? What
-              did you learn and accomplish?
+              Why do you want to participate in this hackathon, and what do you
+              hope to build, learn, or contribute?
             </div>
             <div className="whitespace-pre-wrap bg-surface p-3 rounded-md">
               {appFields.essay1}
@@ -295,7 +291,8 @@ function Essays({ appFields }: EssaysProps) {
 
           <div>
             <div className="text-text-secondary mb-2">
-              Tell us about a project you are most proud of.
+              Tell us about a project that you have build and how you
+              collaborated with others.
             </div>
             <div className="whitespace-pre-wrap bg-surface p-3 rounded-md">
               {appFields.essay2}

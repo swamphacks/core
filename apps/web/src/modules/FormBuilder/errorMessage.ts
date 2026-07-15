@@ -4,6 +4,7 @@ export const errorMessage = {
   [QuestionTypes.shortAnswer]: {
     required: "Required",
     tooLong: "Value is too long",
+    tooShort: "Value is too short",
   },
 
   [QuestionTypes.paragraph]: {

@@ -11,13 +11,9 @@ WHERE status <> 'started' AND status IS NOT NULL;
 
 -- name: GetSubmittedApplicationAges :one
 SELECT
-    COUNT(*) FILTER (WHERE (application->>'age')::int < 18) AS underage,
-    COUNT(*) FILTER (WHERE (application->>'age')::int = 18) AS age_18,
-    COUNT(*) FILTER (WHERE (application->>'age')::int = 19) AS age_19,
-    COUNT(*) FILTER (WHERE (application->>'age')::int = 20) AS age_20,
-    COUNT(*) FILTER (WHERE (application->>'age')::int = 21) AS age_21,
-    COUNT(*) FILTER (WHERE (application->>'age')::int = 22) AS age_22,
-    COUNT(*) FILTER (WHERE (application->>'age')::int >= 23) AS age_23_plus
+    COUNT(*) FILTER (WHERE (application->>'age') = '<18') AS underage,
+    COUNT(*) FILTER (WHERE (application->>'age') = '18-22') AS between_18_and_22,
+    COUNT(*) FILTER (WHERE (application->>'age') = '>22') AS older_than_22
 FROM applications
 WHERE status <> 'started' AND status IS NOT NULL;
 
