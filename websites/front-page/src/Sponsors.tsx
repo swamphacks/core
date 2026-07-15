@@ -2,49 +2,47 @@ import "./Sponsors.css";
 import boat from "./assets/boat.png";
 import rod from "./assets/frod.png";
 import fish from "./assets/fish.png";
-import UF from "./assets/sponsors/uf.png";
-import FifthThird from "./assets/sponsors/fifth-third.png";
-import SponsorsImg from "./assets/Sponsors.png";
-import SponsorsSvg from "./assets/Sponsors.svg";
+// import SponsorsImg from "./assets/Sponsors.png";
+// import SponsorsSvg from "./assets/Sponsors.svg";
 
-const sponsors = [
-  {
-    name: "Placeholder",
-    logo: UF,
-    url: "",
-    gridSize: "co-host",
-  },
-  {
-    name: "Placeholder",
-    logo: FifthThird,
-    url: "",
-    gridSize: "rect-long",
-  },
-  {
-    name: "Placeholder",
-    logo: UF,
-    url: "",
-    gridSize: "rect-long",
-  },
-  {
-    name: "Placeholder",
-    logo: UF,
-    url: "",
-    gridSize: "small",
-  },
-  {
-    name: "Placeholder",
-    logo: UF,
-    url: "",
-    gridSize: "small",
-  },
-  {
-    name: "Placeholder",
-    logo: UF,
-    url: "",
-    gridSize: "small",
-  },
-];
+// const sponsors = [
+//   {
+//     name: "Placeholder",
+//     logo: UF,
+//     url: "",
+//     gridSize: "co-host",
+//   },
+//   {
+//     name: "Placeholder",
+//     logo: FifthThird,
+//     url: "",
+//     gridSize: "rect-long",
+//   },
+//   {
+//     name: "Placeholder",
+//     logo: UF,
+//     url: "",
+//     gridSize: "rect-long",
+//   },
+//   {
+//     name: "Placeholder",
+//     logo: UF,
+//     url: "",
+//     gridSize: "small",
+//   },
+//   {
+//     name: "Placeholder",
+//     logo: UF,
+//     url: "",
+//     gridSize: "small",
+//   },
+//   {
+//     name: "Placeholder",
+//     logo: UF,
+//     url: "",
+//     gridSize: "small",
+//   },
+// ];
 
 export default function Sponsors() {
   const fishSchool = [] as Array<{

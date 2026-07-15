@@ -1,4 +1,3 @@
-import { useState } from "react";
 import "./Tracks.css";
 import pencil from "./assets/Pencil.png";
 import controller from "./assets/Controller.png";
@@ -40,21 +39,21 @@ const tracks = [
 ];
 
 export default function Tracks() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  // const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const toggle = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+  // const toggle = (index: number) => {
+  //   setOpenIndex(openIndex === index ? null : index);
+  // };
 
   return (
     <div className="tracks-container">
       <h1 className="tracks-header">Tracks</h1>
 
       <div className="track-container">
-        {tracks.map((track, idx) => (
+        {tracks.map((track) => (
           <div
             key={track.name}
-            className={`track ${openIndex === idx ? "open" : ""}`}
+            className="track"
             // onClick={() => toggle(idx)}
           >
             <img className="track-icon" src={track.icon} />
@@ -84,8 +83,3 @@ export default function Tracks() {
     </div>
   );
 }
-
-/*
-
-
- */

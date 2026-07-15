@@ -9,29 +9,29 @@ import { useEffect, useState } from "react";
 // import FAQ from "./modals/Faq";
 import About from "./About";
 import Sponsors from "./Sponsors";
-import Partners from "./modals/Partners";
+// import Partners from "./modals/Partners";
 import Tracks from "./Tracks";
 import StudentOrgs from "./StudentOrgs";
 import Team from "./Team";
-import FAQ from "./FAQ";
+import FAQ from "./Faq";
 
-const customModalStyles = {
-  overlay: {
-    backgroundColor: "rgba(0, 0, 0, 0.35)",
-  },
-  content: {
-    overflow: "hidden",
-    borderColor: "#231909",
-    borderWidth: "5px",
-    backgroundColor: "#7D573C",
-    top: "50%",
-    left: "50%",
-    right: "auto",
-    bottom: "auto",
-    marginRight: "-50%",
-    transform: "translate(-50%, -50%)",
-  },
-};
+// const customModalStyles = {
+//   overlay: {
+//     backgroundColor: "rgba(0, 0, 0, 0.35)",
+//   },
+//   content: {
+//     overflow: "hidden",
+//     borderColor: "#231909",
+//     borderWidth: "5px",
+//     backgroundColor: "#7D573C",
+//     top: "50%",
+//     left: "50%",
+//     right: "auto",
+//     bottom: "auto",
+//     marginRight: "-50%",
+//     transform: "translate(-50%, -50%)",
+//   },
+// };
 
 Modal.setAppElement("#root");
 
@@ -167,78 +167,78 @@ function Landing() {
   );
 }
 
-interface InformationModalProps {
-  closeModal: () => void;
-}
+// interface InformationModalProps {
+//   closeModal: () => void;
+// }
 
-function InformationModal({ closeModal }: InformationModalProps) {
-  const [currentTab, setCurrentTab] = useState("about");
+// function InformationModal({ closeModal }: InformationModalProps) {
+//   const [currentTab, setCurrentTab] = useState("about");
 
-  const handleSetTab = (tab: string) => {
-    setCurrentTab(tab);
-  };
+//   const handleSetTab = (tab: string) => {
+//     setCurrentTab(tab);
+//   };
 
-  const renderTab = () => {
-    switch (currentTab) {
-      case "about":
-        return <About />;
-      case "tracks":
-        return <Tracks />;
-      case "team":
-        return <Team />;
-      case "faq":
-        return <FAQ />;
-    }
-  };
+//   const renderTab = () => {
+//     switch (currentTab) {
+//       case "about":
+//         return <About />;
+//       case "tracks":
+//         return <Tracks />;
+//       case "team":
+//         return <Team />;
+//       case "faq":
+//         return <FAQ />;
+//     }
+//   };
 
-  return (
-    <div
-      className={`info-modal-container ${currentTab === "team" ? "modal-large" : ""}`}
-    >
-      <button onClick={closeModal} className="modal-close-btn nes-btn is-error">
-        X
-      </button>
-      <div className="tabs">
-        <button
-          onClick={() => handleSetTab("about")}
-          className="nes-btn"
-          style={{
-            opacity: currentTab === "about" ? "100%" : "50%",
-          }}
-        >
-          About
-        </button>
-        <button
-          onClick={() => handleSetTab("tracks")}
-          className="nes-btn"
-          style={{
-            opacity: currentTab === "tracks" ? "100%" : "50%",
-          }}
-        >
-          Tracks
-        </button>
-        <button
-          onClick={() => handleSetTab("faq")}
-          className="nes-btn"
-          style={{
-            opacity: currentTab === "faq" ? "100%" : "50%",
-          }}
-        >
-          FAQ
-        </button>
-        <button
-          onClick={() => handleSetTab("team")}
-          className="nes-btn"
-          style={{
-            opacity: currentTab === "team" ? "100%" : "50%",
-          }}
-        >
-          Team
-        </button>
-      </div>
-      {renderTab()}
-    </div>
-  );
-}
+//   return (
+//     <div
+//       className={`info-modal-container ${currentTab === "team" ? "modal-large" : ""}`}
+//     >
+//       <button onClick={closeModal} className="modal-close-btn nes-btn is-error">
+//         X
+//       </button>
+//       <div className="tabs">
+//         <button
+//           onClick={() => handleSetTab("about")}
+//           className="nes-btn"
+//           style={{
+//             opacity: currentTab === "about" ? "100%" : "50%",
+//           }}
+//         >
+//           About
+//         </button>
+//         <button
+//           onClick={() => handleSetTab("tracks")}
+//           className="nes-btn"
+//           style={{
+//             opacity: currentTab === "tracks" ? "100%" : "50%",
+//           }}
+//         >
+//           Tracks
+//         </button>
+//         <button
+//           onClick={() => handleSetTab("faq")}
+//           className="nes-btn"
+//           style={{
+//             opacity: currentTab === "faq" ? "100%" : "50%",
+//           }}
+//         >
+//           FAQ
+//         </button>
+//         <button
+//           onClick={() => handleSetTab("team")}
+//           className="nes-btn"
+//           style={{
+//             opacity: currentTab === "team" ? "100%" : "50%",
+//           }}
+//         >
+//           Team
+//         </button>
+//       </div>
+//       {renderTab()}
+//     </div>
+//   );
+// }
 
 export default App;
