@@ -98,6 +98,8 @@ FROM applications a
 JOIN users u ON u.id = a.user_id
 WHERE a.hackathon_id = $1
     AND a.status = ANY($2::text[]::application_status[])
+    AND NOT u.is_fake
+    AND NOT a.is_fake
 `
 
 type GetApplicantContactEmailsByStatusParams struct {

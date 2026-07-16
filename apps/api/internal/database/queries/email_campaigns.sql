@@ -116,4 +116,6 @@ SELECT
 FROM applications a
 JOIN users u ON u.id = a.user_id
 WHERE a.hackathon_id = @hackathon_id
-    AND a.status = ANY(sqlc.arg(statuses)::text[]::application_status[]);
+    AND a.status = ANY(sqlc.arg(statuses)::text[]::application_status[])
+    AND NOT u.is_fake
+    AND NOT a.is_fake;
