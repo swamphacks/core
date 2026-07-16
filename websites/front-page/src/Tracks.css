@@ -1,0 +1,91 @@
+.tracks-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+  color: #d8b286;
+  font-family: "Jersey 20", cursive;
+  margin-bottom: 170px;
+  margin: 0 auto;
+}
+
+.tracks-header {
+  display: block;
+  text-align: left;
+  font-family: 'Pixelify Sans', monospace;
+  font-size: 40px;
+}
+
+.track-container {
+  margin: 0 10px;
+  max-width: 400px;
+  flex-direction: column;
+}
+/* .track-container {
+  position: absolute;
+} */
+
+.track-header {
+  margin-left: 5px;
+  /* position: relative; */
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 1.3rem !important;
+  color: #d8b286;
+  text-align: left;
+}
+
+.track-header:focus, .faq-question:focus {
+  outline: none;
+}
+
+.track {
+  display: flex;
+  align-items: center;
+  min-height: 55px;
+}
+
+.track-description {
+  font-size: 20px;
+  width: 100%;
+}
+
+.track-icon {
+  width: 50px;
+}
+
+/* .track-items-container {
+  display: flex;
+}
+
+.track-icons-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.track-names-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  justify-content: center;
+} */
+
+@media (min-width: 768px) {
+  .tracks-container {
+    display: flex;
+    align-items: first baseline;
+    width: 900px;
+  }
+
+  .track-container {
+    margin: 0 10px;
+    max-width: 700px;
+    flex-direction: column;
+  }
+
+  .track-header {
+    font-size: 1.6rem !important;
+  }
+}

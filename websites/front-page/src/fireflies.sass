@@ -1,0 +1,72 @@
+// Credit: https://codepen.io/mikegolus/pen/Jegvym
+@use 'sass:math';
+
+// Quantity should be the same in PUG
+$quantity: 15
+    
+.firefly
+  position: absolute
+  left: 50%
+  top: 50%
+  width: 0.6vw
+  height: 0.6vw
+  margin: -0.2vw 0 0 9.8vw
+  // animation: ease 150s alternate infinite
+  pointer-events: none
+  z-index: 2
+
+  &::before,
+  &::after
+    content: ''
+    position: absolute
+    width: 100%
+    height: 100%
+    border-radius: 50%
+    transform-origin: -10vw
+  
+  &::before
+    background: black
+    opacity: 0.4
+    animation: drift ease alternate infinite
+  
+  &::after
+    background: white
+    opacity: 0
+    box-shadow: 0 0 0vw 0vw yellow
+    animation: drift ease alternate infinite, flash ease infinite
+
+  
+// Randomize Fireflies Motion
+@for $i from 1 through $quantity
+  
+  $steps: math.random(12) + 16
+  $rotationSpeed: math.random(10) + 8s
+  
+  .firefly:nth-child(#{$i})
+    animation: move#{$i} ease 150s alternate infinite
+
+    &::before
+      animation-duration: #{$rotationSpeed}
+
+    &::after
+      animation-duration: #{$rotationSpeed}, math.random(6000) + 5000ms
+      animation-delay: 0ms, math.random(8000) + 500ms
+
+  @keyframes move#{$i}
+    @for $step from 0 through $steps
+      #{$step * math.div(100, $steps)}%
+        transform: translateX(math.random(100) - 50vw) translateY(math.random(100) - 50vh) scale(math.div(math.random(75), 100) + .25)
+
+@keyframes drift
+  0%
+    transform: rotate(0deg)
+  100%
+    transform: rotate(360deg)
+
+@keyframes flash
+  0%, 30%, 100%
+    opacity: 0
+    box-shadow: 0 0 0vw 0vw yellow
+  5%
+    opacity: 1
+    box-shadow: 0 0 2vw 0.4vw yellow

@@ -1,0 +1,444 @@
+.sponsors-container {
+  display: flex;
+  flex-direction: column;
+  padding-top: 50px;
+  color: #d8b286;
+  font-family: "Jersey 20", cursive;
+  margin-bottom: 130px;
+  position: relative;
+  margin: 0 auto;
+}
+
+.sponsors-header {
+  font-family: 'Pixelify Sans', monospace;
+  text-align: center;
+  font-size: 40px;
+}
+
+.sponsors-vegetation {
+  bottom: 0%;
+  height: 100px;
+  image-rendering: pixelated;
+  background: url('/assets/vegetation.png') repeat-x bottom;
+  background-size: auto 100%;
+  z-index: 3;
+  width: 100%;
+}
+
+.boat {
+  width: 150px;
+  image-rendering: pixelated;
+}
+
+.boat-outer-container {
+  position: absolute;
+  right: 0;
+  top: -50px;
+  z-index: 10;
+}
+
+.boat-container {
+  position: relative;
+}
+
+.rod {
+  position: absolute;
+  z-index: -1;
+  left: 5px;
+  top: 8px;
+}
+
+.water {
+  position: relative;
+  display: block;
+  height: 600px;
+  width: 100%;
+  background-color: #0f4444;
+}
+
+.fish-school {
+  opacity: 15%;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fish {
+  position: absolute;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.20));
+}
+
+@media (min-width: 768px) {
+  .sponsors-container {
+    align-items: center;
+    justify-content: center;
+    
+  }
+
+  .sponsors-header {
+    text-align: left;
+    width: 900px;
+  }
+
+  .boat {
+    width: 250px;
+  }
+
+  .rod {
+    width: 50px;
+    top: 20px;
+  }
+}
+
+
+/* ================== SPONSORS STYLES (Copied from XI front page) ==================== */
+
+.sponsors-items-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 50px;
+}
+
+.sponsors {
+  max-width: 600px;
+  z-index: 100;
+}
+
+/* Sponsors Grid - Tight, Mixed Layout */
+.sponsors-grid {
+  /* margin-top: 50px;
+  overflow-x: hidden;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(70px, auto);
+  grid-auto-flow: dense;
+  gap: 0.5rem;
+  width: 100%; */
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3vw;
+
+  width: 100%;
+  /* max-width: 75vw; */
+
+  margin-left: auto;
+  margin-right: auto;
+
+  margin-top: 1.5vw;
+  padding-left: 3vw;
+  padding-right: 3vw;
+
+  justify-items: center;
+}
+
+@media (min-width: 768px) {
+  .sponsors-grid {
+    padding: 1rem;
+    max-width: none;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 100px;
+    gap: 1.5rem;
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sponsors-grid {
+    grid-auto-rows: 150px;
+    gap: 1.25rem;
+  }
+}
+
+/* Sponsor Card Base */
+.sponsor-card {
+  position: relative;
+  height: 100%;
+  z-index: 1;
+  transition: z-index 0s;
+}
+
+/* Grid Spans for Different Sizes - Mobile (3 columns) */
+.sponsor-rect-long {
+  grid-column: span 3;
+  grid-row: span 1;
+}
+
+.sponsor-rect-wide {
+  grid-column: span 3;
+  grid-row: span 1;
+}
+
+.sponsor-big-rect {
+  grid-column: span 3;
+  grid-row: span 2;
+}
+
+.sponsor-small {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+.sponsor-co-host {
+  grid-column: span 3;
+  grid-row: span 2;
+}
+
+/* Desktop (6 columns) */
+@media (min-width: 768px) {
+  /* Long rectangle: 3 columns × 1 row */
+  .sponsor-rect-long {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+
+  /* Small squares: 1 column × 1 row */
+  .sponsor-small {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+
+  /* Big rectangle: 3 columns × 2 rows */
+  .sponsor-big-rect {
+    grid-column: span 3;
+    grid-row: span 2;
+  }
+
+  /* Even longer rectangle: 3 columns × 1 row */
+  .sponsor-rect-wide {
+    grid-column: span 3;
+    grid-row: span 1;
+  }
+
+  /* Co-Host: 6 columns × 2 rows */
+  .sponsor-co-host {
+    grid-column: span 4;
+    grid-row: span 1;
+  }
+}
+
+/* Logo Card Container */
+.sponsor-logo-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .25);
+  /* border: 1px solid rgba(255, 255, 255, 0.08); */
+  /* backdrop-filter: blur(4px); */
+}
+
+/* Use height 100% for items that span multiple rows, but not for small items */
+.sponsor-rect-long .sponsor-logo-card,
+.sponsor-rect-wide .sponsor-logo-card,
+.sponsor-big-rect .sponsor-logo-card,
+.sponsor-co-host .sponsor-logo-card {
+  height: 100%;
+}
+
+@media (min-width: 768px) {
+  .sponsor-logo-card {
+    border-radius: 1rem;
+    min-height: 100px;
+  }
+}
+
+/* Different padding for different size s - Mobile */
+.sponsor-rect-long .sponsor-logo-card {
+  padding: 0.7rem;
+  height: 80px;
+  height: auto;
+  /* max-height: 80px; */
+}
+
+.sponsor-big-rect .sponsor-logo-card {
+  padding: 0.5rem;
+  min-height: 120px;
+}
+
+.sponsor-co-host .sponsor-logo-card {
+  padding: 0.75rem;
+  min-height: 140px;
+}
+
+.sponsor-small .sponsor-logo-card {
+  padding: 0.7rem;
+  height: 100%;
+}
+
+@media (min-width: 768px) {
+  .sponsor-rect-long .sponsor-logo-card {
+    padding: 1rem;
+    min-height: 100px;
+    height: 100%;
+    max-height: none;
+  }
+  .sponsor-big-rect .sponsor-logo-card {
+    padding: 2rem;
+    min-height: 200px;
+  }
+
+  .sponsor-co-host .sponsor-logo-card {
+    /* padding: 3rem; */
+    min-height: 150px;
+  }
+
+  .sponsor-small .sponsor-logo-card {
+    height: 100%;
+  }
+}
+
+/* Logo Image */
+.sponsor-logo {
+  height: auto;
+  max-width: 80%;
+  max-height: 80%;
+  padding: 0.25rem;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .sponsor-logo {
+    max-width: 120%;
+    max-height: 120%;
+    padding: 0.5rem;
+  }
+}
+
+/* Make logos larger in rect-long cards */
+.sponsor-rect-long .sponsor-logo {
+  padding: 0.25rem !important;
+  max-width: 70%;
+  max-height: 70%;
+}
+
+@media (min-width: 768px) {
+  .sponsor-rect-long .sponsor-logo {
+    padding: 0.75rem;
+    max-width: 100%;
+    max-height: 100%;
+  }
+}
+
+/* Logo Size Variations - Reduce container padding for large logos */
+.sponsor-logo-card:has(.logo-large) {
+  padding: 0.25rem !important;
+}
+
+@media (min-width: 768px) {
+  .sponsor-logo-card:has(.logo-large) {
+    padding: 1rem !important;
+  }
+
+  .sponsor-big-rect .sponsor-logo-card:has(.logo-large) {
+    padding: 1.25rem !important;
+  }
+
+  .sponsor-co-host .sponsor-logo-card:has(.logo-large) {
+    padding: 2rem !important;
+  }
+}
+
+.logo-large {
+  max-width: 70% !important;
+  max-height: 70% !important;
+  padding: 0 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+@media (min-width: 768px) {
+  .logo-large {
+    max-width: 280% !important;
+    max-height: 280% !important;
+  }
+}
+
+/* Hover Effects */
+.group:hover .sponsor-logo-card {
+  transform: scale(1.01);
+}
+
+/* Tooltip Styles */
+.sponsor-tooltip {
+  position: absolute;
+  bottom: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  border-radius: 0.5rem;
+  background-color: rgb(31, 41, 55);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s;
+  /* z-index: 101; */
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .sponsor-tooltip {
+    bottom: -3rem;
+    font-size: 0.875rem;
+  }
+}
+
+.group:hover .sponsor-tooltip {
+  opacity: 1;
+}
+/* 
+.lily-pads {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    align-content: center;
+    justify-items: center;
+    gap: 24px 40px;
+    padding: 40px 24px 80px;
+}
+
+.lily-pad-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: lily-bob 3.2s ease-in-out infinite;
+}
+
+.lily-pad-card:nth-child(2n) {
+    margin-top: 28px;
+}
+
+.lily-pad {
+    width: 100%;
+    max-width: 120px;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
+}
+
+.lily-pad-label {
+    margin-top: 6px;
+    font-size: 1.05rem;
+    color: #f7e8c7;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes lily-bob {
+    0%,
+    100% {
+        transform: translateX(-50%) translateY(0px);
+    }
+    50% {
+        transform: translateX(-50%) translateY(-6px);
+    }
+} */

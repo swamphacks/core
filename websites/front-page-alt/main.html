@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<title>SwampHacks XII Front Page</title>
+</head>
+
+<body>
+  <div class="b-wrapper"> 
+  <!-- for positioning the fishing line-->
+  <header class="banner">
+    <!-- the banner has the entire background and text-->
+    <div class="layer layer-sky"></div>
+    <div class="layer layer-bushes-back"></div>
+    <div class="layer layer-trees"></div>
+    <div class="layer layer-trees-back1"></div>
+    <div class="layer layer-trees-back2"></div>
+    <div class="layer layer-trees-back3"></div>
+    <div class="layer layer-vegetation"></div>
+    <!-- <div class="layer layer-foreground"></div> -->
+    <div class="layer layer-canopy"></div>
+    <div class="layer layer-canopy-back"></div>
+    <div class="boat-rig">
+    <!--to make the boat and rod stick together n to the corner of the banner-->
+      <img src="./assets/boat.png" class="boat"> <!--should the rig also bob in the water?-->
+      <img src="./assets/frod.png" class="rod">
+    </div>
+
+    <div class="menu">
+      <img src="./assets/signpost.png" class="post">
+      <div class="menu-actions">
+        <img src="./assets/s-hack.png" class="hack-button">
+        <img src="./assets/s-volunteer.png" class="volunteer-button">
+        <img src="./assets/s-mentor.png" class="mentor-button">
+      </div>
+    </div>
+
+    <h1>SwampHacks XII</h1>
+  </header>
+  <!-- <div class="gator">
+      <img src="./assets/gator2.png" class="frame frame-1">
+      <img src="./assets/gator3.png" class="frame frame-2">
+  </div> -->
+  <div class="water-strip"></div>
+  <!--seperate to make the gator+boat float in water-->
+  <div class="fishing-line">
+  <!--outside for scroll-->
+    <img src="./assets/string.png" class="string-img">
+    <img src="./assets/bobber.png" class="bobber-img">
+  </div>
+  <script>
+    const fishingLine = document.querySelector('.fishing-line');
+    const minHeight = 20;
+    const maxHeight = 200; 
+
+    function updateLineLength() {
+      const scrollY = window.scrollY;
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const progress = Math.min(scrollY / maxScroll, 1);
+
+      const newHeight = minHeight + progress * (maxHeight - minHeight);
+      fishingLine.style.height = newHeight + 'vh';
+    }
+
+    window.addEventListener('scroll', updateLineLength);
+      updateLineLength();
+    window.addEventListener('scroll', () => {
+      const scrollPosition = window.scrollY;
+      fishingLine.style.transform = `translateY(${scrollPosition - 10}px)`;
+    });
+  </script>
+</div>
+<div id="signs-container"></div>
+<script>
+  const signLabels = ["Hack", "Mentor", "Volunteer", "test", "test", "test"];
+
+  const container = document.getElementById('signs-container');
+
+  signLabels.forEach(label => {
+    const sign = document.createElement('div');
+    sign.className = 'sign-3slice';
+    sign.innerHTML = `
+      <div class="sign-cap sign-left"></div>
+      <div class="sign-middle"></div>
+      <div class="sign-cap sign-right"></div>
+      <span class="sign-text">${label}</span>
+    `;
+    container.appendChild(sign);
+  });
+</script>
+</body>
+</html>

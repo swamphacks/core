@@ -160,7 +160,7 @@ function ApplicationViewer({
       </div>
 
       <div className="space-y-4 mt-4">
-        <div className="p-2 rounded-md border border-input-border h-200 bg-input-bg">
+        <div className="p-2 rounded-md border border-input-border h-[63vh]">
           {resume === "" ? (
             <p>No resume provided.</p>
           ) : (
