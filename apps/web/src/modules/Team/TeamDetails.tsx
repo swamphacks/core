@@ -51,7 +51,9 @@ export default function TeamDetails({
       leaveTeam.mutate(team.id, {
         onError: async (error) => {
           if (error instanceof HTTPError) {
-            toast.error((await error.response.json()).detail);
+            toast.error(
+              `${(await error.response.json()).detail}. Try refreshing the page.`,
+            );
           } else {
             toast.error("Unknown error occurred");
           }

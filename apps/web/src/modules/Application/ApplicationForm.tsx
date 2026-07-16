@@ -186,17 +186,17 @@ export function ApplicationForm({
         <SubmitSuccess submittedAt={submittedAt || application.submittedAt!} />
         <ReplaceResume />
         <p className="text-base text-text-secondary mt-2">
-          If you have questions, email{" "}
+          If you have questions, please email{" "}
           <a className="underline" href="mailto:contact@swamphacks.com">
             contact@swamphacks.com
           </a>{" "}
-          or join our{" "}
+          or reach out to @Organizer or @Technology in our{" "}
           <a
             className="underline"
             target="_blank"
             href="https://discord.com/invite/NfRPv9JtAG"
           >
-            Discord server
+            Discord server.
           </a>
         </p>
         <div className="mt-5">
@@ -271,7 +271,7 @@ export function ApplicationForm({
                       </p>
                       <p>
                         Applications submitted after this deadline will be
-                        considered as regular submissions, which are due at{" "}
+                        considered as regular submissions, which are due{" "}
                         {applicationDeadlineFormatted}.
                       </p>
                     </>
@@ -289,7 +289,7 @@ export function ApplicationForm({
                     >
                       contact@swamphacks.com
                     </a>{" "}
-                    or join our{" "}
+                    or reach out to us in our{" "}
                     <a
                       target="_blank"
                       className="text-text-link"

@@ -43,9 +43,9 @@ export default function TeamFormation({ user }: { user: UserContext }) {
       </div>
 
       <p className="text-text-secondary mt-2">
-        If you already know who you want to hack with, form your team now to
-        increase the chances of being placed together. Final team placements
-        aren’t guaranteed.
+        Form a team now to increase your team's chances of being accepted
+        together. Although we try our best to keep teams together, we may be
+        unable to do so.
       </p>
 
       {!isPending && myTeam ? (

@@ -569,10 +569,11 @@
           "name": "essay1",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
-          "label": "Why do you want to participate in this hackathon, and what do you hope to build, learn, or contribute? [150-250 words]",
+          "label": "Why do you want to participate in SwampHacks? Talk about what you hope to build, learn, and/or contribute to our hackathon community. (100-250 words)",
           "required": true,
           "showWordCount": true,
           "validation": {
+            "min": 100,
             "max": 250
           }
         },
@@ -580,10 +581,11 @@
           "name": "essay2",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
-          "label": "Tell us about a project that you have build and how you collaborated with others. [max 250 words]",
+          "label": "Tell us about a project that you have build and how you collaborated with others. (50-250 words)",
           "required": true,
           "showWordCount": true,
           "validation": {
+            "min": 50,
             "max": 250
           }
         },
@@ -591,7 +593,7 @@
           "name": "essay3",
           "questionType": "paragraph",
           "placeholder": "Answer here...",
-          "label": "Tell us a joke!",
+          "label": "Help us get to know you better. Tell us a joke, a random fact, or anything else you like. (Optional, max 250 words)",
           "required": false,
           "showWordCount": true,
           "validation": {

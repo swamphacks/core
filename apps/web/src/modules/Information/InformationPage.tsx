@@ -280,13 +280,15 @@ export default function InformationPage({
         </span>
 
         <div className="absolute -top-5 right-0 invisible sm:visible">
-          <img className="w-50 select-none" src="/assets/XII_Sticker.png" />
+          <a target="_blank" href="https://swamphacks.com/">
+            <img className="w-50 select-none" src="/assets/XII_Sticker.png" />
+          </a>
         </div>
       </div>
 
       <div className="space-y-3 mt-25">
         <p>
-          SwampHacks brings together 300+ students each year for 36 hours of
+          SwampHacks brings together 400+ students each year for 36 hours of
           creativity, collaboration, and innovation. Recognized for excellence
           by UF’s Herbert Wertheim College of Engineering, SwampHacks offers
           hands-on workshops, mentorship, and community-building activities that
