@@ -68,13 +68,19 @@
 
 .bat-container {
   position: relative;
+  animation: bob 1.8s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
 }
 
 .bat {
   /* width: 250px; */
-  width: 150px;
+  width: 120px;
   position: absolute;
-  z-index: 10;
+  z-index: 50;
   filter: brightness(0.80) saturate(0.7);
 }
 

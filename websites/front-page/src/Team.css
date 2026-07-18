@@ -100,11 +100,49 @@
     }
 }
 
+.pfp {
+    position: absolute;
+    top: 100px;
+    display: flex;
+    z-index: 3;
+    width: 60px;
+
+}
+
+.fly-container {
+  position: relative;
+  animation: bob 1.8s ease-in-out infinite;
+  
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
+
+.fly {
+  width: 50px;
+  position: absolute;
+  z-index: 50;
+  filter: brightness(0.80) saturate(0.7);
+}
+.glow {
+    width: 60px;
+    position: absolute;
+    z-index: 49;
+    filter: brightness(0.80) saturate(0.7);
+}
+
+
 @media (min-width: 1024px) {
     .team-header {
         width: 900px;
         text-align: left;
     }
+
+    .fly {
+        width: 200px;
+     }
 
     .sign {
         width: 650px;

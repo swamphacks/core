@@ -1,6 +1,6 @@
 import "./Sponsors.css";
 import boat from "./assets/boat.png";
-import rod from "./assets/frod.png";
+import rod from "./assets/rod.png";
 import fish from "./assets/fish.png";
 // import SponsorsImg from "./assets/Sponsors.png";
 // import SponsorsSvg from "./assets/Sponsors.svg";
