@@ -11,6 +11,7 @@ import Pic6 from "./assets/random/pic3.jpg";
 import Arrow from "./assets/arrow.png";
 import Camera from "./assets/Camera.png";
 
+// Test
 const images = [Pic1, Pic2, Pic3, Pic4, Pic5, Pic6];
 
 export default function About() {
