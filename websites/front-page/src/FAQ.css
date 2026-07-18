@@ -1,6 +1,5 @@
 .faq-container {
     display: flex;
-    /* padding-top: 50px; */
     color: #d8b286;
     font-family: "Jersey 20", cursive;
     margin: 0 auto;
@@ -58,6 +57,7 @@
         display: flex;
         align-items: first baseline;
         width: 900px;
+        justify-content: center;
     }
 
     .faq-items-container {

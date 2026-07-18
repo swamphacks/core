@@ -4,34 +4,15 @@ import "./fireflies.sass";
 import swamphacksIcon from "./assets/shxii-icon-transparent.png";
 import Modal from "react-modal";
 import { useEffect, useState } from "react";
-// import Team from "./modals/Team";
-// import { Tracks } from "./modals/Tracks";
-// import FAQ from "./modals/Faq";
 import About from "./About";
 import Sponsors from "./Sponsors";
-// import Partners from "./modals/Partners";
 import Tracks from "./Tracks";
 import StudentOrgs from "./StudentOrgs";
 import Team from "./Team";
 import FAQ from "./Faq";
-
-// const customModalStyles = {
-//   overlay: {
-//     backgroundColor: "rgba(0, 0, 0, 0.35)",
-//   },
-//   content: {
-//     overflow: "hidden",
-//     borderColor: "#231909",
-//     borderWidth: "5px",
-//     backgroundColor: "#7D573C",
-//     top: "50%",
-//     left: "50%",
-//     right: "auto",
-//     bottom: "auto",
-//     marginRight: "-50%",
-//     transform: "translate(-50%, -50%)",
-//   },
-// };
+import Insta from "./assets/insta.svg";
+import Discord from "./assets/discord.svg";
+import Github from "./assets/github.svg";
 
 Modal.setAppElement("#root");
 
@@ -129,7 +110,7 @@ function Landing() {
             href="https://app.swamphacks.com/application"
             target="_blank"
           >
-            Register
+            Apply
           </a>
         </div>
 
@@ -145,15 +126,18 @@ function Landing() {
 
         <section className="icon-list">
           <a href="https://www.instagram.com/ufswamphacks/" target="_blank">
-            <i className="nes-icon instagram"></i>
+            <img src={Insta} />
+            {/* <i className="nes-icon instagram"></i> */}
           </a>
 
           <a href="https://discord.gg/YBHrXPJ8mR" target="_blank">
-            <i className="nes-icon discord"></i>
+            <img src={Discord} />
+            {/* <i className="nes-icon discord"></i> */}
           </a>
 
           <a href="https://github.com/swamphacks/core" target="_blank">
-            <i className="nes-icon github"></i>
+            <img src={Github} />
+            {/* <i className="nes-icon github"></i> */}
           </a>
         </section>
 

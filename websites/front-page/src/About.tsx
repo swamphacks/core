@@ -1,6 +1,40 @@
+import { useEffect, useState } from "react";
 import "./About.css";
+import Sign from "./assets/Sign.png";
+import Sign2 from "./assets/Sign3.png";
+import Pic1 from "./assets/random/pic1.jpg";
+import Pic2 from "./assets/random/pic2.jpg";
+import Pic3 from "./assets/random/pic3.jpg";
+import Pic4 from "./assets/random/pic3.jpg";
+import Pic5 from "./assets/random/pic3.jpg";
+import Pic6 from "./assets/random/pic3.jpg";
+import Arrow from "./assets/arrow.png";
+import Camera from "./assets/Camera.png";
+
+const images = [Pic1, Pic2, Pic3, Pic4, Pic5, Pic6];
 
 export default function About() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const isMobile = useIsMobile();
+  const itemWidth = isMobile ? 183 : 210;
+
+  const handlePrevious = () => {
+    if (activeIndex == 0) {
+      return;
+    }
+
+    setActiveIndex(
+      (currentIndex) => (currentIndex - 1 + images.length) % images.length,
+    );
+  };
+
+  const handleNext = () => {
+    if (activeIndex == images.length / 2) {
+      return;
+    }
+    setActiveIndex((currentIndex) => (currentIndex + 1) % images.length);
+  };
+
   return (
     <div className="about-container">
       <div className="about-header">
@@ -16,23 +50,106 @@ export default function About() {
             Whether you’re a first-time hacker or a seasoned coder, SwampHacks
             is the place to build, connect, and inspire.
           </p>
-
-          <div className="stats">
-            <span className="nes-badge">
-              <span className="is-primary">400+ hackers</span>
-            </span>
-            <span className="nes-badge">
-              <span className="is-primary">10+ workshops</span>
-            </span>
-            <span className="nes-badge">
-              <span className="is-primary">100+ projects</span>
-            </span>
-            <span className="nes-badge">
-              <span className="is-primary">$10k+ in prizes</span>
-            </span>
-          </div>
         </div>
+        <div className="pictures-container">
+          <img className="camera" src={Camera} />
+          <button
+            type="button"
+            className="arrow-button"
+            onClick={handlePrevious}
+            aria-label="Show previous images"
+          >
+            <img className="arrow" src={Arrow} alt="Previous" />
+          </button>
+
+          <div className="carousel-window">
+            <div
+              className="carousel-track"
+              style={{
+                transform: `translateX(-${activeIndex * itemWidth}px)`,
+              }}
+            >
+              {images.map((image, index) => (
+                <img
+                  key={`${image}-${index}`}
+                  className="hackathon-picture"
+                  src={image}
+                  alt={`Hackathon photo ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="arrow-button"
+            onClick={handleNext}
+            aria-label="Show next images"
+          >
+            <img className="arrow right" src={Arrow} alt="Next" />
+          </button>
+        </div>
+        <p className="sh-xi">SwampHacks XI (Jan 23 - 25, 2026)</p>
+      </div>
+
+      <div className="stats">
+        <img className="stats-sign" src={Sign} />
+        <span
+          className="stats-badge"
+          style={{
+            transform: "rotate(2deg)",
+          }}
+        >
+          <img className="stats-background" src={Sign2} />
+          <span className="is-primary stats-text">400+ hackers</span>
+        </span>
+        <span className="stats-badge">
+          <img className="stats-background" src={Sign2} />
+          <span className="stats-text">10+ workshops</span>
+        </span>
+        <span
+          className="stats-badge"
+          style={{
+            transform: "rotate(-2deg)",
+          }}
+        >
+          <img className="stats-background" src={Sign2} />
+          <span className="stats-text">100+ projects</span>
+        </span>
+        <span className="stats-badge">
+          <img className="stats-background" src={Sign2} />
+          <span className="stats-text">$10k+ in prizes</span>
+        </span>
       </div>
     </div>
   );
+}
+
+function useIsMobile(breakpoint: number = 768): boolean {
+  // Initialize state; default to false if window is not available (SSR safe)
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Return early if code runs on the server side
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia(`(max-width: ${breakpoint}px)`);
+
+    // Set initial value
+    setIsMobile(mediaQuery.matches);
+
+    // Listener function to catch screen size updates
+    const handleMediaQueryChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
+    };
+
+    // Listen for changes
+    mediaQuery.addEventListener("change", handleMediaQueryChange);
+
+    // Clean up event listener when component unmounts
+    return () =>
+      mediaQuery.removeEventListener("change", handleMediaQueryChange);
+  }, [breakpoint]);
+
+  return isMobile;
 }
