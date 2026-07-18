@@ -228,7 +228,7 @@ type ApplicationSubmissionFields struct {
 	Diet                    string `json:"diet"`
 	Essay1                  string `json:"essay1" validate:"required"`
 	Essay2                  string `json:"essay2" validate:"required"`
-	Essay3                  string `json:"essay3" validate:"required"`
+	Essay3                  string `json:"essay3"`
 	Referral                string `json:"referral" validate:"required"`
 	PictureConsent          string `json:"pictureConsent" validate:"required"`
 	InPersonAcknowledgement string `json:"inpersonAcknowledgement" validate:"required"`
