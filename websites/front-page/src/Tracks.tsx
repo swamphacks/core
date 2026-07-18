@@ -4,7 +4,7 @@ import controller from "./assets/Controller.png";
 import star from "./assets/Star.png";
 import leaf from "./assets/Leaf.png";
 import handshake from "./assets/Handshake.png";
-import Gator from "./assets/Gator.gif";
+import Gator from "./assets/gator.gif";
 import { useState } from "react";
 import Modal from "react-modal";
 
