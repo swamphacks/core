@@ -5,8 +5,8 @@ on:
     branches:
       - master
     paths:
-      - 'apps/api/**'
-      - 'infra/docker-compose.api.yml'
+      - "apps/api/**"
+      - "infra/docker-compose.api.yml"
   workflow_dispatch:
 
 permissions:
@@ -67,6 +67,7 @@ jobs:
           host: ${{ secrets.API_HOST }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd /root/core/infra
             git fetch
