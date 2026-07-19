@@ -14,7 +14,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - api-dev
+      # - api-dev
       - api
   # ========================
   # Development Services
@@ -91,7 +91,7 @@ services:
       - ./secrets/.env.api
     depends_on:
       - redis
-  
+
   email-worker:
     image: ghcr.io/swamphacks/core-email-worker:latest
     restart: always
@@ -197,7 +197,6 @@ services:
     depends_on:
       - alloy
       - api-dev
-
 
 volumes:
   redis_data:
