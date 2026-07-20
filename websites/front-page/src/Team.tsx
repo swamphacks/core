@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import "./Team.css";
+import "./StudentOrgs.css";
 
 import Abby from "./assets/headshots/Abigail_Moore_cropped.jpg";
 import Chris from "./assets/headshots/Christian_Cardenas_cropped.jpg";
