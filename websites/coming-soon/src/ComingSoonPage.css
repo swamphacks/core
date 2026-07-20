@@ -49,7 +49,7 @@
   display: inline-block;
   margin: 0;
   font-family: "Jersey 20", cursive;
-  color: #d8b286;
+  color: #ddc8af;
   font-size: 56px;
   line-height: 0.78;
   font-weight: 400;
@@ -84,7 +84,7 @@
 .coming-soon__date {
   margin: 25px 0 0 0;
   font-family: "Jersey 20", cursive;
-  color: #d8b286;
+  color: #ddc8af;
   font-size: 2.7rem;
   line-height: 0.78;
   /* font-weight: ; */
@@ -182,7 +182,7 @@
 }
 
 .subscribe-title {
-  color: #D8B286;
+  color: #ddc8af;
   font-size: 1.5rem;
   margin: 0;
 }

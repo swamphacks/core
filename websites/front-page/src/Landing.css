@@ -172,7 +172,7 @@
   display: inline-block;
   margin: 0;
   font-family: 'Pixelify Sans', monospace;
-  color: #d8b286;
+  color: #ddc8af;
   /* color: #afa597; */
   font-size: 46px;
   line-height: 1.3;
@@ -228,7 +228,7 @@
   display: inline-block;
   margin: 0;
   font-family: 'Pixelify Sans', monospace;
-  color: #d8b286;
+  color: #ddc8af;
   font-size: 2.0rem;
   line-height: 0.9;
   font-weight: 700;
@@ -247,7 +247,7 @@
     0 4px 10px rgba(0, 0, 0, 0.1); */
   /* margin: 25px 0 0 0;
   font-family: "Jersey 20", cursive;
-  color: #d8b286;
+  color: #ddc8af;
   font-size: 2.4rem;
   line-height: 0.78;
   -webkit-text-stroke: 0.5px #7c573c; */
@@ -419,7 +419,7 @@
 }
 
 .tab-title {
-  color: #D8B286;
+  color: #ddc8af;
   font-size: 1.5rem;
   margin: 0;
 }

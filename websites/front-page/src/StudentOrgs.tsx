@@ -14,7 +14,6 @@ export default function StudentOrgs() {
         <div className="layer trees-back1"></div>
         <div className="layer trees-back2"></div>
         <div className="layer foreground1"></div>
-        <div className="layer foreground"></div>
       </div>
 
       <div className="bat-container">

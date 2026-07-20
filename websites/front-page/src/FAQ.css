@@ -1,68 +1,161 @@
 .faq-container {
+    position: relative;
     display: flex;
-    color: #d8b286;
-    font-family: "Jersey 20", cursive;
-    margin: 0 auto;
+    flex-direction: column;
     align-items: center;
+    color: #ddc8af;
+    font-family: "Jersey 20", cursive;
+    margin-top: 80px;
+    /* max-height: 1050px; */
+    z-index: 10;
+}
+
+.faq-container footer {
+    position: absolute;
+    bottom: 0;
 }
 
 .faq-header {
-    position: relative;
-    display: block;
     text-align: center;
-    font-family: 'Pixelify Sans', monospace;
+    margin-bottom: 1rem;
+    font-family: "Pixelify Sans", monospace;
     font-size: 40px;
-    z-index: 50;
+    color: #fff3df;
+    letter-spacing: 0.08em;
+    text-shadow:
+        0 0 12px rgba(255, 221, 170, 0.2),
+        0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
-.faq-items-container {
-    display: flex;
-    align-items: first baseline;
-    margin: 0 10px;
-    max-width: 400px;
-    flex-direction: column;
+.faq-section {
+    height: 370px;
+    display: grid;
+    grid-template-rows: 45px 1fr;
+    margin-bottom: 10px;
+    padding: 1rem;
+    border: 1px solid rgba(221, 200, 175, 0.12);
+    border-radius: 10px;
+}
+
+.faq-section-header {
+    margin: 0;
+    /* padding-bottom: 0.2rem; */
+    height: 45px;
+
+    font-size: 1.7rem;
+    color: #fff3df;
+
+    border-bottom: 1px solid rgba(221, 200, 175, 0.12);
+}
+
+.faq-section-list {
+    margin-top: 10px;
+    display: grid;
+    gap: 0.9rem;
+    overflow-y: auto;
+    padding-right: 5px;
+    align-content: start;
+}
+
+.faq {
+    padding: 10px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease
+}
+
+.faq:hover {
+    cursor: pointer;
+    transform: translateY(-1px);
+    /* border-color: rgba(221, 200, 175, 0.18); */
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.faq.open {
+    background: rgba(221, 200, 175, 0.08);
+    /* border-color: rgba(221, 200, 175, 0.25); */
 }
 
 .faq-question {
-  margin-left: 5px;
-  position: relative;
-  background: none;
-  border: none;
-  outline: none;
-  font-size: 1.3rem !important;
-  color: #ddc8af;
-  text-align: left;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: none;
+    border: none;
+    color: #e2d9ce;
+    font-size: 1.25rem;
+    line-height: 1.4;
+    cursor: pointer;
+    text-align: left;
 }
 
-.faq-question::before {
-  position: absolute;
-  top: 5px;
-  left: -20px;
-  content: "";
-  width: 2px;
-  height: 2px;
-  color: #ddc8af;
-  box-shadow: 2px 2px, 4px 2px, 2px 4px, 4px 4px, 6px 4px, 8px 4px, 2px 6px, 4px 6px, 6px 6px, 8px 6px, 10px 6px, 2px 8px, 4px 8px, 6px 8px, 8px 8px, 10px 8px, 12px 8px, 2px 10px, 4px 10px, 6px 10px, 8px 10px, 10px 10px, 2px 12px, 4px 12px, 6px 12px, 8px 12px, 2px 14px, 4px 14px;
-  display: block;
+.faq-question::after {
+    content: "▼";
+    margin-left: 10px;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    transition: transform 0.25s ease;
 }
 
-.faq.open .faq-question::before {
-  transform: rotate(90deg);
-  top: 5px;
-  left: -5px;
+.faq.open .faq-question::after {
+    transform: rotate(180deg);
 }
 
-@media (min-width: 768px) {
-    .faq-container {
-        display: flex;
-        align-items: first baseline;
+.faq-answer {
+    max-width: 400px;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #e6dacb;
+    margin-top: 0.35rem;
+}
+
+.faq-answer p {
+    margin: 0;
+}
+
+.campfire {
+    width: 400px;
+    position: relative;
+    height: 100px;
+    margin-right: 80px;
+    margin-top: 30px;
+    margin-bottom: 50px;
+}
+
+.camps {
+    position: absolute;
+    width: 480px;
+}
+
+.fire {
+    position: absolute;
+    left: 170px;
+    width: 120px;
+    top: 10px;
+}
+
+.register-button-2 {
+  font-family: 'Pixelify Sans', monospace;
+  color: #ece4da !important;
+  font-weight: 700;
+  width: 200px;
+  padding: 5px;
+  font-size: 1.7rem;
+  margin-bottom: 50px;
+}
+
+@media (min-width: 900px) {
+    .faq-header {
         width: 900px;
-        justify-content: center;
+        text-align: left;
     }
-
     .faq-items-container {
-        margin: 0 10px;
-        max-width: 700px;
-        flex-direction: column;
+        column-count: 2;
+        column-gap: 10px;
+        width: 900px;
     }
 }
