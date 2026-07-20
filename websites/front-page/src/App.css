@@ -34,3 +34,8 @@ footer {
 footer p {
   color: rgb(161, 161, 161) !important;
 }
+
+.code-of-conduct {
+  text-decoration: underline;
+  color: rgb(161, 161, 161) !important;
+}
