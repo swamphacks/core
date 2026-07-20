@@ -7,6 +7,7 @@
   font-family: "Jersey 20", cursive;
   margin-bottom: 170px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .tracks-header {
@@ -26,26 +27,38 @@
 
 .track-gator {
   margin-top: 20px;
-  height: 230px;
+  height: 200px;
+}
+
+.click-instruction {
+  margin-top: 30px;
+  font-size: 1.2rem;
+  color: #ddc8af;
+  font-style: italic;
+  text-align: center;
 }
 
 .track-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: clamp(14px, 2vw, 28px);
   margin: 0 10px;
-  max-width: 400px;
-  flex-direction: column;
-  gap: 5px;
+  width: 100%;
+  align-items: end;
+  justify-items: center;
 }
 
 .track-header {
-  margin-left: 5px;
+  margin-left: 0;
   background: none;
   border: none;
   outline: none;
-  font-size: 1.3rem !important;
+  font-size: 0.95rem !important;
   color: #ddc8af;
-  /* color: #e8dbcc; */
-  text-align: left;
+  text-align: center;
+  line-height: 1.3;
+  max-height: 80px;
+  overflow: hidden;
 }
 
 .track-header:focus, .faq-question:focus {
@@ -55,9 +68,13 @@
 .track {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  min-height: 50px;
+  gap: 12px;
   cursor: pointer !important;
+  text-align: center;
+  width: min(100%, 150px);
+  transition: transform 0.2s ease;
 }
 
 .track-title {
@@ -66,6 +83,27 @@
 
 .track:hover {
   text-decoration: underline;
+  transform: scale(1.1);
+}
+
+.track-0 {
+  transform: translateY(-20px) rotate(-5deg);
+}
+
+.track-1 {
+  transform: translateY(0px) rotate(3deg);
+}
+
+.track-2 {
+  transform: translateY(-35px) rotate(-8deg);
+}
+
+.track-3 {
+  transform: translateY(10px) rotate(4deg);
+}
+
+.track-4 {
+  transform: translateY(-15px) rotate(-3deg);
 }
 
 .track-description {
@@ -74,8 +112,14 @@
 }
 
 .track-icon {
-  width: 40px;
-  /* height: 45px; */
+  width: clamp(88px, 12vw, 145px);
+  height: clamp(88px, 12vw, 145px);
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.track:hover .track-icon {
+  transform: scale(1.15);
 }
 
 .tracks-modal-container {
@@ -117,16 +161,30 @@
 
   .track-container {
     margin: 0 10px;
-    max-width: 700px;
-    flex-direction: column;
-    gap: 10px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: clamp(12px, 1.8vw, 28px);
   }
 
   .track-header {
-    font-size: 1.5rem !important;
+    font-size: clamp(0.95rem, 1vw, 1.1rem) !important;
   }
 
   .tracks-body-container {
-    flex-direction: row;
+    flex-direction: column;
+  }
+
+  .track-icon {
+    width: clamp(96px, 11vw, 150px);
+    height: clamp(96px, 11vw, 150px);
+  }
+
+  .track {
+    width: min(100%, 180px);
+  }
+}
+
+@media (min-width: 1100px) {
+  .track-container {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
