@@ -40,8 +40,8 @@
 
 .track-container {
   display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 1fr));
-  gap: clamp(14px, 2vw, 28px);
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  /* gap: clamp(14px, 2vw, 28px); */
   margin: 0 10px;
   width: 100%;
   align-items: end;
@@ -70,10 +70,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
   cursor: pointer !important;
   text-align: center;
-  width: min(100%, 150px);
+  width: 100px;
+  height: 170px;
   transition: transform 0.2s ease;
 }
 
@@ -87,23 +87,23 @@
 }
 
 .track-0 {
-  transform: translateY(-20px) rotate(-5deg);
+  transform: rotate(-3deg);
 }
 
 .track-1 {
-  transform: translateY(0px) rotate(3deg);
+  transform: rotate(2deg);
 }
 
 .track-2 {
-  transform: translateY(-35px) rotate(-8deg);
+  transform: rotate(-4deg);
 }
 
 .track-3 {
-  transform: translateY(10px) rotate(4deg);
+  transform: rotate(2deg);
 }
 
 .track-4 {
-  transform: translateY(-15px) rotate(-3deg);
+  transform: rotate(-4deg);
 }
 
 .track-description {
@@ -112,10 +112,13 @@
 }
 
 .track-icon {
-  width: clamp(88px, 12vw, 145px);
-  height: clamp(88px, 12vw, 145px);
+  width: 80px;
   object-fit: contain;
   transition: transform 0.2s ease;
+}
+
+.modal-track-icon {
+  width: 80px;
 }
 
 .track:hover .track-icon {
@@ -160,31 +163,25 @@
   }
 
   .track-container {
+    max-width: 600px;
     margin: 0 10px;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: clamp(12px, 1.8vw, 28px);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .track-header {
-    font-size: clamp(0.95rem, 1vw, 1.1rem) !important;
-  }
-
-  .tracks-body-container {
-    flex-direction: column;
-  }
-
-  .track-icon {
-    width: clamp(96px, 11vw, 150px);
-    height: clamp(96px, 11vw, 150px);
+    font-size: 18px !important;
   }
 
   .track {
-    width: min(100%, 180px);
+    width: 180px !important;
   }
-}
+  
+  .tracks-body-container {
+    flex-direction: row;
+  }
 
-@media (min-width: 1100px) {
-  .track-container {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+  .track-icon {
+    width: 110px;
+    height: 100px;
   }
 }
