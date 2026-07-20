@@ -33,9 +33,9 @@ import Kaiden from "./assets/headshots/Kaiden_Joy_cropped.jpg";
 import Ivette from "./assets/headshots/Ivette_S_Hernandez_cropped.jpg";
 import Will from "./assets/headshots/William_Chi_cropped.jpg";
 
-import bat1 from "./assets/bat_without_sign1.png";
-import bat2 from "./assets/bat_without_sign2.png";
-import bat3 from "./assets/bat_without_sign3.png";
+// import bat1 from "./assets/bat_without_sign1.png";
+// import bat2 from "./assets/bat_without_sign2.png";
+// import bat3 from "./assets/bat_without_sign3.png";
 
 const teamMembers = [
   {
