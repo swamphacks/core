@@ -30,7 +30,10 @@ export default function About() {
   };
 
   const handleNext = () => {
-    if (activeIndex == images.length / 2) {
+    if (isMobile && activeIndex == images.length / 2 + 1) {
+      return;
+    }
+    if (!isMobile && activeIndex == images.length / 2) {
       return;
     }
     setActiveIndex((currentIndex) => (currentIndex + 1) % images.length);
@@ -52,9 +55,7 @@ export default function About() {
             is the place to build, connect, and inspire.
           </p>
         </div>
-        <p className="sh-xi">
-          A look back at SwampHacks XI (Jan 23 - 25, 2026)
-        </p>
+        <p className="sh-xi">A look back at SwampHacks XI</p>
         <div className="pictures-container">
           <img className="camera" src={Camera} />
           <button
