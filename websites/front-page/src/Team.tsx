@@ -303,7 +303,7 @@ export default function Team() {
     setActiveRoleIndex(index);
   };
 
-  const currentGroup = groupedMembers[activeRoleIndex];
+  // const currentGroup = groupedMembers[activeRoleIndex];
 
   return (
     <div className="team-container">

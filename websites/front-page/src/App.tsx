@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import About from "./About";
 import Sponsors from "./Sponsors";
 import Tracks from "./Tracks";
-import StudentOrgs from "./StudentOrgs";
+// import StudentOrgs from "./StudentOrgs";
 import Team from "./Team";
 import FAQ from "./Faq";
 import Insta from "./assets/insta.svg";
