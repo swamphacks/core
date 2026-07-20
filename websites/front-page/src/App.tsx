@@ -63,7 +63,7 @@ function App() {
       <About />
       <Tracks />
       <Sponsors />
-      <StudentOrgs />
+      {/* <StudentOrgs /> */}
       <Team />
       <FAQ />
 

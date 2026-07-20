@@ -10,34 +10,34 @@ import Modal from "react-modal";
 
 const tracks = [
   {
-    name: "General Track (Overall Prize)",
+    name: "Education, Accessibility & Social Impact",
     icon: star,
     description:
-      "All projects are considered for the Overall Prize. The General Track is for any innovative projects that do not necessarily fit under any of the other tracks.",
+      "Technology for the people. Create solutions that improve accessibility, empower communities, expand educational opportunities, or tackle real-world challenges.",
   },
   {
-    name: "Education, Accessibility & Social Impact",
+    name: "Artificial Intelligence",
     icon: pencil,
     description:
-      "All projects are considered for the Overall Prize. The General Track is for any innovative projects that do not necessarily fit under any of the other tracks.",
+      "Push the boundaries of what's possible. Leverage AI to build projects powered by artificial intelligence, from LLMs and AI agents to computer vision and machine learning that make an impact across any domain.",
   },
   {
-    name: "Sustainability",
+    name: "Hardware & Physical Computing (Get Physical With It)",
     icon: leaf,
     description:
-      "All projects are considered for the Overall Prize. The General Track is for any innovative projects that do not necessarily fit under any of the other tracks.",
+      "Bring ideas into the physical world. Build hardware-based projects or develop software that interacts, controls, or enhances physical devices and embedded systems.",
   },
   {
-    name: "Game Design",
+    name: "Entertainment & Creative Technology",
     icon: controller,
     description:
-      "All projects are considered for the Overall Prize. The General Track is for any innovative projects that do not necessarily fit under any of the other tracks.",
+      "Let creativity take the lead. Create engaging digital experiences through games, interactive media, digital art, storytelling, music, and showcase the power of technology and imagination.",
   },
   {
-    name: "The Design of Everyday Life (Human-Centered Design)",
+    name: "Health & Wellness",
     icon: handshake,
     description:
-      "All projects are considered for the Overall Prize. The General Track is for any innovative projects that do not necessarily fit under any of the other tracks.",
+      "Support healthier minds and healthier lives. Innovate technology that promotes mental health and physical well-being by supporting emotional wellness and healthy habits. General health-focused projects are also welcome.",
   },
 ];
 

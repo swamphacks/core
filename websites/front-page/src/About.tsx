@@ -5,9 +5,9 @@ import Sign2 from "./assets/Sign3.png";
 import Pic1 from "./assets/random/pic1.jpg";
 import Pic2 from "./assets/random/pic2.jpg";
 import Pic3 from "./assets/random/pic3.jpg";
-import Pic4 from "./assets/random/pic3.jpg";
-import Pic5 from "./assets/random/pic3.jpg";
-import Pic6 from "./assets/random/pic3.jpg";
+import Pic4 from "./assets/random/pic4.jpg";
+import Pic5 from "./assets/random/pic5.jpg";
+import Pic6 from "./assets/random/pic6.jpg";
 import Arrow from "./assets/arrow.png";
 import Camera from "./assets/Camera.png";
 
@@ -90,7 +90,9 @@ export default function About() {
             <img className="arrow right" src={Arrow} alt="Next" />
           </button>
         </div>
-        <p className="sh-xi">SwampHacks XI (Jan 23 - 25, 2026)</p>
+        <p className="sh-xi">
+          A look back at SwampHacks XI (Jan 23 - 25, 2026)
+        </p>
       </div>
 
       <div className="stats">

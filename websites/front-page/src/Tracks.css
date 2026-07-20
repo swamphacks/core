@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: center;
   padding-top: 250px;
-  color: #d8b286;
+  color: #ddc8af;
   font-family: "Jersey 20", cursive;
   margin-bottom: 170px;
   margin: 0 auto;
@@ -43,7 +43,7 @@
   border: none;
   outline: none;
   font-size: 1.3rem !important;
-  color: #d8b286;
+  color: #ddc8af;
   /* color: #e8dbcc; */
   text-align: left;
 }
