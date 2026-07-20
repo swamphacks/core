@@ -74,8 +74,8 @@
 }
 
 .track-icon {
-  width: 45px;
-  height: 50px;
+  width: 40px;
+  /* height: 45px; */
 }
 
 .tracks-modal-container {
@@ -95,7 +95,7 @@
 
 .modal-track {
   display: flex;
-  gap: 2px;
+  gap: 10px;
   align-items: center;
   font-size: 23px;
   color: #e8dbcc;
@@ -112,7 +112,7 @@
     display: flex;
     align-items: first baseline;
     width: 900px;
-    padding-top: 30px;
+    padding-top: 60px;
   }
 
   .track-container {

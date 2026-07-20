@@ -115,7 +115,13 @@ function Landing() {
         </div>
 
         <div className="submenu-container">
-          <a className="submenu-link">Mentor Application</a>
+          <a
+            className="submenu-link"
+            href="https://swamphack.notion.site/3973b41de22f80b788ced816145e0a2d"
+            target="_blank"
+          >
+            Mentor Application
+          </a>
           {/* <p className="submenu-container-title">Support SwampHacks</p>
           <div className="submenu-links-container">
             <a className="submenu-link">Volunteer</a>

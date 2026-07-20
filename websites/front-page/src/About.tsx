@@ -52,6 +52,9 @@ export default function About() {
             is the place to build, connect, and inspire.
           </p>
         </div>
+        <p className="sh-xi">
+          A look back at SwampHacks XI (Jan 23 - 25, 2026)
+        </p>
         <div className="pictures-container">
           <img className="camera" src={Camera} />
           <button
@@ -90,9 +93,6 @@ export default function About() {
             <img className="arrow right" src={Arrow} alt="Next" />
           </button>
         </div>
-        <p className="sh-xi">
-          A look back at SwampHacks XI (Jan 23 - 25, 2026)
-        </p>
       </div>
 
       <div className="stats">

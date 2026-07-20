@@ -23,7 +23,27 @@
     padding-top: 20px;
     color: #ddc8af;
     font-family: "Jersey 20", cursive;
-    /* position: relative; */
+    position: relative;
+}
+
+.background5 {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    top: -50px;
+
+    width: 100%;
+    height: 500px;
+
+    background-image: url("/assets/testbg.png");
+    background-repeat: repeat-x;
+    background-size: auto 100%;
+    background-position: bottom;
+
+    image-rendering: pixelated;
+    filter: brightness(0.35) saturate(0.5);
+
+    z-index: 1;
 }
 
 .team-header {

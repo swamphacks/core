@@ -339,6 +339,7 @@
 
 
 .submenu-link {
+   color: #e4ceb2 !important;
   text-decoration: underline !important;
   user-select: none;
 }

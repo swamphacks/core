@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./FAQ.css";
 import Camps from "./assets/camps.png";
 import Fire from "./assets/Fire.gif";
+import Alberta from "./assets/alberta.png";
 
 const faqSections = [
   {
@@ -114,6 +115,8 @@ export default function FAQ() {
     <div className="faq-container">
       <p className="faq-header">FAQ</p>
       <div className="faq-items-container">
+        <img className="alberta" src={Alberta} />
+
         {faqSections.map((item, sectionIndex) => (
           <section className="faq-section" key={item.section}>
             <p className="faq-section-header">{item.section}</p>

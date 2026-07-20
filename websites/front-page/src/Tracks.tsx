@@ -1,29 +1,29 @@
 import "./Tracks.css";
-import pencil from "./assets/Pencil.png";
 import controller from "./assets/Controller.png";
-import star from "./assets/Star.png";
-import leaf from "./assets/Leaf.png";
-import handshake from "./assets/Handshake.png";
 import Gator from "./assets/gator.gif";
 import { useState } from "react";
 import Modal from "react-modal";
+import Earth from "./assets/earth.png";
+import Robot from "./assets/robot.png";
+import Computer from "./assets/computer.png";
+import Apple from "./assets/apple.png";
 
 const tracks = [
   {
     name: "Education, Accessibility & Social Impact",
-    icon: star,
+    icon: Earth,
     description:
       "Technology for the people. Create solutions that improve accessibility, empower communities, expand educational opportunities, or tackle real-world challenges.",
   },
   {
     name: "Artificial Intelligence",
-    icon: pencil,
+    icon: Robot,
     description:
       "Push the boundaries of what's possible. Leverage AI to build projects powered by artificial intelligence, from LLMs and AI agents to computer vision and machine learning that make an impact across any domain.",
   },
   {
     name: "Hardware & Physical Computing (Get Physical With It)",
-    icon: leaf,
+    icon: Computer,
     description:
       "Bring ideas into the physical world. Build hardware-based projects or develop software that interacts, controls, or enhances physical devices and embedded systems.",
   },
@@ -35,7 +35,7 @@ const tracks = [
   },
   {
     name: "Health & Wellness",
-    icon: handshake,
+    icon: Apple,
     description:
       "Support healthier minds and healthier lives. Innovate technology that promotes mental health and physical well-being by supporting emotional wellness and healthy habits. General health-focused projects are also welcome.",
   },

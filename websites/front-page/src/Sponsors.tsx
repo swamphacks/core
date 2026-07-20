@@ -1,6 +1,6 @@
 import "./Sponsors.css";
 import boat from "./assets/boat.png";
-import rod from "./assets/frod.png";
+// import rod from "./assets/frod.png";
 import fish from "./assets/fish.png";
 // import SponsorsImg from "./assets/Sponsors.png";
 // import SponsorsSvg from "./assets/Sponsors.svg";
@@ -190,7 +190,7 @@ export default function Sponsors() {
         <div className="boat-outer-container">
           <div className="boat-container">
             <img className="boat" src={boat} />
-            <img className="rod" src={rod}></img>
+            {/* <img className="rod" src={rod}></img> */}
           </div>
         </div>
 
