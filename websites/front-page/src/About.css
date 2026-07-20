@@ -28,7 +28,7 @@
 }
 
 .pictures-container {
-    margin-top: 30px;
+    margin-top: 10px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -54,6 +54,7 @@
     align-items: center;
     justify-content: center;
     outline: none;
+    height: 130px;
 }
 
 .arrow-button:focus {
@@ -103,11 +104,12 @@
 }
 
 .sh-xi {
+    margin-top: 20px;
     /* width: 630px; */
-    font-size: 15px;
+    font-size: 23px;
     width: 100%;
-    text-align: right;
-    opacity: 40%;
+    text-align: center;
+    /* opacity: 40%; */
 }
 
 .stats-sign {
@@ -177,10 +179,12 @@
     }
 
     .stats {
+        top: 100px;
         left: 50px;
     }
 
     .sh-xi {
+        text-align: right;
         width: 630px;
     }
 

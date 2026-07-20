@@ -5,8 +5,7 @@
     align-items: center;
     color: #ddc8af;
     font-family: "Jersey 20", cursive;
-    margin-top: 80px;
-    /* max-height: 1050px; */
+    margin-top: 60px;
     z-index: 10;
 }
 
@@ -33,7 +32,8 @@
     grid-template-rows: 45px 1fr;
     margin-bottom: 10px;
     padding: 1rem;
-    border: 1px solid rgba(221, 200, 175, 0.12);
+    background: rgba(255, 255, 255, 0.01);
+    /* border: 1px solid rgba(221, 200, 175, 0.12); */
     border-radius: 10px;
 }
 
@@ -121,21 +121,31 @@
     width: 400px;
     position: relative;
     height: 100px;
-    margin-right: 80px;
+    /* margin-right: 80px; */
     margin-top: 30px;
     margin-bottom: 50px;
 }
 
 .camps {
     position: absolute;
-    width: 480px;
+    width: 400px;
 }
 
 .fire {
     position: absolute;
-    left: 170px;
+    left: 130px;
     width: 120px;
-    top: 10px;
+}
+
+.faq-items-container {
+    position: relative;
+}
+
+.alberta {
+    position: absolute;
+    right: 0;
+    top: -70px;
+    opacity: 85%;
 }
 
 .register-button-2 {
@@ -149,6 +159,19 @@
 }
 
 @media (min-width: 900px) {
+    .campfire {
+        margin-right: 80px;
+    }
+
+    .camps {
+        width: 480px;
+    }
+
+    .fire {
+        left: 170px;
+        top: 10px;
+    }
+
     .faq-header {
         width: 900px;
         text-align: left;

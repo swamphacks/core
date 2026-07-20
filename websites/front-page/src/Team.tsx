@@ -308,10 +308,8 @@ export default function Team() {
 
   return (
     <div className="team-container">
-      <h1 className="team-header">Meet the XII Team!</h1>
-
-      <div className="background">
-        <div className="layer vegetation"></div>
+      <div className="background5">
+        {/* <div className="layer vegetation"></div>
         <div className="layer canopy"></div>
         <div className="layer trees-back1"></div>
         <div className="layer foreground1"></div>
@@ -355,8 +353,9 @@ export default function Team() {
             left: "15%",
             bottom: "80%",
           }}
-        />
+        /> */}
       </div>
+      <h1 className="team-header">Meet the XII Team!</h1>
 
       <div className="team-area">
         <div className="team-content" aria-label="Team members by role">
