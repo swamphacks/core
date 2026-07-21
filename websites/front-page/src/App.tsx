@@ -12,7 +12,7 @@ import Team from "./Team";
 import FAQ from "./Faq";
 import Insta from "./assets/insta.svg";
 import Discord from "./assets/discord.svg";
-import Github from "./assets/github.svg";
+// import Github from "./assets/github.svg";
 
 Modal.setAppElement("#root");
 
