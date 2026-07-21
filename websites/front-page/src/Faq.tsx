@@ -112,7 +112,7 @@ export default function FAQ() {
   };
 
   return (
-    <div className="faq-container">
+    <div id="faq" className="faq-container">
       <p className="faq-header">FAQ</p>
       <div className="faq-items-container">
         <img className="alberta" src={Alberta} />

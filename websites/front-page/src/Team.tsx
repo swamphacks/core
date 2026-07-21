@@ -307,7 +307,7 @@ export default function Team() {
   // const currentGroup = groupedMembers[activeRoleIndex];
 
   return (
-    <div className="team-container">
+    <div id="team" className="team-container">
       <div className="background5">
         {/* <div className="layer vegetation"></div>
         <div className="layer canopy"></div>

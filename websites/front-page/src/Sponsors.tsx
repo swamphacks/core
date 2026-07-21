@@ -86,7 +86,7 @@ export default function Sponsors() {
   }
 
   return (
-    <div className="sponsors-container">
+    <div id="sponsors" className="sponsors-container">
       <div className="sponsors-vegetation"></div>
 
       <div className="water">

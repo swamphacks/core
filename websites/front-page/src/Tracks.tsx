@@ -71,7 +71,7 @@ export default function Tracks() {
   }
 
   return (
-    <div className="tracks-container">
+    <div id="tracks" className="tracks-container">
       <h1 className="tracks-header">Tracks</h1>
 
       <div className="tracks-body-container">
