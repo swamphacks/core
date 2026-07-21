@@ -285,15 +285,27 @@
 }
 
 .register-button {
-  font-family: 'Pixelify Sans', monospace;
+  font-family: 'Jersey 20', monospace;
   color: #ece4da !important;
   font-weight: 700;
-  width: 70%;
+  width: 65%;
+  padding: 3px;
+  font-size: 1.9rem;
+}
+
+.sponsor-button {
+  font-family: 'Jersey 20', monospace;
+  color: #ece4da !important;
+  font-weight: 700;
+  width: 50%;
   padding: 5px;
-  font-size: 1.7rem;
+  font-size: 1.3rem;
+  margin-top: 10px;
 }
 
 .submenu-container {
+  display: flex;
+  flex-direction: column;
   margin-top: 10px;
   text-align: center;
   font-family: "Jersey 20", cursive;
@@ -325,7 +337,6 @@
     -1px 0 #7e5d4c,
     0 1px #7e5d4c,
     0 -1px #7e5d4c;
-  font-size: 1.5rem;
   user-select: none;
 }
 
@@ -342,6 +353,7 @@
    color: #e4ceb2 !important;
   text-decoration: underline !important;
   user-select: none;
+  font-size: 1.3rem !important;
 }
 
 .submenu-link:hover {
