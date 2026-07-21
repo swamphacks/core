@@ -82,8 +82,88 @@ function App() {
 }
 
 function Landing() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div className="container">
+      <div className="hamburger-menu" onClick={() => setIsMobileMenuOpen(true)}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="30"
+          height="30"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          className="lucide lucide-menu-icon lucide-menu"
+        >
+          <path d="M4 5h16" />
+          <path d="M4 12h16" />
+          <path d="M4 19h16" />
+        </svg>
+      </div>
+      <div
+        className={`hamburger-menu-content-container ${isMobileMenuOpen ? "open" : ""}`}
+      >
+        <button
+          className="menu-close-btn nes-btn is-error"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          X
+        </button>
+        <div className="hamburger-menu-content">
+          <div>
+            <img src={swamphacksIcon} className="menu-icon-image" />
+          </div>
+          <a
+            className="hamburger-menu-link nes-btn is-primary"
+            href="#about"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            About
+          </a>
+          <a
+            className="hamburger-menu-link nes-btn is-primary"
+            href="#tracks"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Tracks
+          </a>
+          <a
+            className="hamburger-menu-link nes-btn is-primary"
+            href="#sponsors"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Sponsors
+          </a>
+          <a
+            className="hamburger-menu-link nes-btn is-primary"
+            href="#team"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Team
+          </a>
+          <a
+            className="hamburger-menu-link nes-btn is-primary"
+            href="#faq"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            FAQ
+          </a>
+        </div>
+      </div>
+      <div className="menu">
+        <div>
+          <img src={swamphacksIcon} className="menu-icon-image" />
+        </div>
+        <a href="#about">About</a>
+        <a href="#tracks">Tracks</a>
+        <a href="#sponsors">Sponsors</a>
+        <a href="#team">Team</a>
+        <a href="#faq">FAQ</a>
+      </div>
       {Array.from({ length: 15 }).map((_, i) => (
         <div className="firefly" key={i}></div>
       ))}
@@ -104,7 +184,6 @@ function Landing() {
             <img src={swamphacksIcon} className="icon-image" />
           </div>
           <h1 className="title">SwampHacks XII</h1>
-
           <div className="subheader">
             <p className="date">Oct 16 - 18, 2026</p>
             <p className="location">Reitz Union</p>
@@ -137,120 +216,20 @@ function Landing() {
           >
             Mentor Application
           </a>
-          {/* <a
-            className="submenu-link"
-            href="https://swamphack.notion.site/3973b41de22f80b788ced816145e0a2d"
-            target="_blank"
-          >
-            Sponsor SH XII
-          </a> */}
-          {/* <p className="submenu-container-title">Support SwampHacks</p>
-          <div className="submenu-links-container">
-            <a className="submenu-link">Volunteer</a>
-            <span>&#9679;</span>
-            <a className="submenu-link">Mentor</a>
-          </div> */}
         </div>
 
         <section className="icon-list">
           <a href="https://www.instagram.com/ufswamphacks/" target="_blank">
             <img src={Insta} />
-            {/* <i className="nes-icon instagram"></i> */}
           </a>
 
           <a href="https://discord.gg/YBHrXPJ8mR" target="_blank">
             <img src={Discord} />
-            {/* <i className="nes-icon discord"></i> */}
-          </a>
-
-          <a href="https://github.com/swamphacks/core" target="_blank">
-            <img src={Github} />
-            {/* <i className="nes-icon github"></i> */}
           </a>
         </section>
-
-        {/* <img
-          src={gatorGif}
-          alt="Pixel-art alligator walking in front of the sign"
-          className="gator"
-        /> */}
       </main>
     </div>
   );
 }
-
-// interface InformationModalProps {
-//   closeModal: () => void;
-// }
-
-// function InformationModal({ closeModal }: InformationModalProps) {
-//   const [currentTab, setCurrentTab] = useState("about");
-
-//   const handleSetTab = (tab: string) => {
-//     setCurrentTab(tab);
-//   };
-
-//   const renderTab = () => {
-//     switch (currentTab) {
-//       case "about":
-//         return <About />;
-//       case "tracks":
-//         return <Tracks />;
-//       case "team":
-//         return <Team />;
-//       case "faq":
-//         return <FAQ />;
-//     }
-//   };
-
-//   return (
-//     <div
-//       className={`info-modal-container ${currentTab === "team" ? "modal-large" : ""}`}
-//     >
-//       <button onClick={closeModal} className="modal-close-btn nes-btn is-error">
-//         X
-//       </button>
-//       <div className="tabs">
-//         <button
-//           onClick={() => handleSetTab("about")}
-//           className="nes-btn"
-//           style={{
-//             opacity: currentTab === "about" ? "100%" : "50%",
-//           }}
-//         >
-//           About
-//         </button>
-//         <button
-//           onClick={() => handleSetTab("tracks")}
-//           className="nes-btn"
-//           style={{
-//             opacity: currentTab === "tracks" ? "100%" : "50%",
-//           }}
-//         >
-//           Tracks
-//         </button>
-//         <button
-//           onClick={() => handleSetTab("faq")}
-//           className="nes-btn"
-//           style={{
-//             opacity: currentTab === "faq" ? "100%" : "50%",
-//           }}
-//         >
-//           FAQ
-//         </button>
-//         <button
-//           onClick={() => handleSetTab("team")}
-//           className="nes-btn"
-//           style={{
-//             opacity: currentTab === "team" ? "100%" : "50%",
-//           }}
-//         >
-//           Team
-//         </button>
-//       </div>
-//       {renderTab()}
-//     </div>
-//   );
-// }
 
 export default App;

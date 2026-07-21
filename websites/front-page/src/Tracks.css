@@ -146,6 +146,7 @@
   align-items: center;
   font-size: 23px;
   color: #e8dbcc;
+  max-height: 60px;
 }
 
 .modal-track-description {

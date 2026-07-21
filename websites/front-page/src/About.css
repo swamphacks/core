@@ -91,6 +91,14 @@
     object-fit: cover;
     height: 130px;
     flex-shrink: 0;
+    filter: brightness(0.9);
+    transition: transform 0.1s ease-in-out;
+    cursor: pointer;
+}
+
+.hackathon-picture:hover {
+    transform: scale(1.01);
+    filter: brightness(1);
 }
 
 .stats {
@@ -144,6 +152,10 @@
     z-index: 1;
     font-size: 23px;
     color: white;
+}
+
+.image-modal {
+    width: 100%;
 }
 
 @media (min-width: 768px) {

@@ -5,7 +5,7 @@ import CSK from "./assets/clubs/CSK.svg";
 
 export default function StudentOrgs() {
   return (
-    <div className="studentorgs-container">
+    <div id="studentorgs" className="studentorgs-container">
       <h1 className="studentorgs-header">Student Orgs</h1>
 
       <div className="background">

@@ -186,7 +186,6 @@
 .team-member-card:hover {
     transform: scale(1.01);
     filter: brightness(1);
-    
 }
 
 .team-member-image {
