@@ -119,6 +119,14 @@ function Landing() {
           >
             Apply
           </a>
+
+          <a
+            className="nes-btn is-primary sponsor-button"
+            href="mailto:sponsors@swamphacks.com"
+            target="_blank"
+          >
+            Sponsor SH XII
+          </a>
         </div>
 
         <div className="submenu-container">
@@ -129,6 +137,13 @@ function Landing() {
           >
             Mentor Application
           </a>
+          {/* <a
+            className="submenu-link"
+            href="https://swamphack.notion.site/3973b41de22f80b788ced816145e0a2d"
+            target="_blank"
+          >
+            Sponsor SH XII
+          </a> */}
           {/* <p className="submenu-container-title">Support SwampHacks</p>
           <div className="submenu-links-container">
             <a className="submenu-link">Volunteer</a>
