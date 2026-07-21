@@ -46,7 +46,7 @@ func (q *Queries) AcceptWaitlistedApplications(ctx context.Context, acceptanceco
 }
 
 const createApplication = `-- name: CreateApplication :one
-INSERT INTO applications (user_id, hackathon_id, is_early) VALUES ($1, $2, $3) RETURNING user_id, status, application, created_at, saved_at, updated_at, submitted_at, hackathon_id, is_early, id
+INSERT INTO applications (user_id, hackathon_id, is_early) VALUES ($1, $2, $3) RETURNING user_id, status, application, created_at, saved_at, updated_at, submitted_at, hackathon_id, is_early, id, is_fake
 `
 
 type CreateApplicationParams struct {
@@ -69,6 +69,7 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.HackathonID,
 		&i.IsEarly,
 		&i.ID,
+		&i.IsFake,
 	)
 	return i, err
 }
@@ -83,7 +84,7 @@ func (q *Queries) DeleteApplicationById(ctx context.Context, id uuid.UUID) error
 }
 
 const getApplicationById = `-- name: GetApplicationById :one
-SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, hackathon_id, is_early, id FROM applications WHERE id = $1
+SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, hackathon_id, is_early, id, is_fake FROM applications WHERE id = $1
 `
 
 func (q *Queries) GetApplicationById(ctx context.Context, id uuid.UUID) (Application, error) {
@@ -100,12 +101,13 @@ func (q *Queries) GetApplicationById(ctx context.Context, id uuid.UUID) (Applica
 		&i.HackathonID,
 		&i.IsEarly,
 		&i.ID,
+		&i.IsFake,
 	)
 	return i, err
 }
 
 const getApplicationByUserId = `-- name: GetApplicationByUserId :one
-SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, hackathon_id, is_early, id FROM applications WHERE user_id = $1
+SELECT user_id, status, application, created_at, saved_at, updated_at, submitted_at, hackathon_id, is_early, id, is_fake FROM applications WHERE user_id = $1
 `
 
 func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) (Application, error) {
@@ -122,6 +124,7 @@ func (q *Queries) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) 
 		&i.HackathonID,
 		&i.IsEarly,
 		&i.ID,
+		&i.IsFake,
 	)
 	return i, err
 }
@@ -139,7 +142,7 @@ func (q *Queries) GetApplicationsCount(ctx context.Context, hackathonID string) 
 
 const getExtendedApplicationById = `-- name: GetExtendedApplicationById :one
 SELECT 
-    a.user_id, a.status, a.application, a.created_at, a.saved_at, a.updated_at, a.submitted_at, a.hackathon_id, a.is_early, a.id,
+    a.user_id, a.status, a.application, a.created_at, a.saved_at, a.updated_at, a.submitted_at, a.hackathon_id, a.is_early, a.id, a.is_fake,
     ar.id AS review_id,
     ar.experience_rating, 
     ar.passion_rating, 
@@ -177,6 +180,7 @@ type GetExtendedApplicationByIdRow struct {
 	HackathonID              string                          `json:"hackathon_id"`
 	IsEarly                  bool                            `json:"is_early"`
 	ID                       uuid.UUID                       `json:"id"`
+	IsFake                   bool                            `json:"is_fake"`
 	ReviewID                 *uuid.UUID                      `json:"review_id"`
 	ExperienceRating         *int32                          `json:"experience_rating"`
 	PassionRating            *int32                          `json:"passion_rating"`
@@ -211,6 +215,7 @@ func (q *Queries) GetExtendedApplicationById(ctx context.Context, id uuid.UUID) 
 		&i.HackathonID,
 		&i.IsEarly,
 		&i.ID,
+		&i.IsFake,
 		&i.ReviewID,
 		&i.ExperienceRating,
 		&i.PassionRating,
