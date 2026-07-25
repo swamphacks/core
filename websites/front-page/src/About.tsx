@@ -41,25 +41,20 @@ export default function About() {
   const isMobile = useIsMobile();
   const itemWidth = isMobile ? 183 : 210;
 
-  const handlePrevious = () => {
-    if (activeIndex == 0) {
-      return;
-    }
-
-    setActiveIndex(
-      (currentIndex) => (currentIndex - 1 + images.length) % images.length,
-    );
-  };
-
   const handleNext = () => {
-    if (isMobile && activeIndex == images.length / 2 + 1) {
-      return;
-    }
-    if (!isMobile && activeIndex == images.length / 2) {
-      return;
-    }
     setActiveIndex((currentIndex) => (currentIndex + 1) % images.length);
   };
+
+  const handlePrevious = () => {
+    setActiveIndex((currentIndex) => (currentIndex - 1 + images.length) % images.length);
+  };
+
+  useEffect(() => {
+  const interval = setInterval(() => {
+    setActiveIndex((currentIndex) => (currentIndex + 1) % images.length);
+  }, 4000);
+  return () => clearInterval(interval);
+}, [activeIndex]); 
 
   return (
     <div id="about" className="about-container">

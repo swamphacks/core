@@ -13,6 +13,7 @@ import FAQ from "./Faq";
 import Insta from "./assets/insta.svg";
 import Discord from "./assets/discord.svg";
 // import Github from "./assets/github.svg";
+import CountdownCorner from "./CountdownCorner";
 
 Modal.setAppElement("#root");
 
@@ -58,6 +59,8 @@ function App() {
           style={{ width: "100%" }}
         />
       </a>
+
+      <CountdownCorner targetDate={new Date("2026-10-16")} label="Swamphacks Begins In:" />
 
       <Landing />
       <About />

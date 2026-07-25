@@ -1,0 +1,35 @@
+.countdown-corner {
+  position: fixed;   /* pins to the viewport instead of the page, so it ignores scroll */
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;     /* stay above other page content */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  min-width: 180px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #2a170f;
+  color: #fdecec;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.countdown-corner__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #b89c94;
+  font-family: 'Pixelify Sans', monospace;
+}
+
+.countdown-corner__digits {
+  display: flex;
+  gap: 8px;
+  font-family: 'Pixelify Sans', monospace;
+  font-size: 18px;
+  font-weight: 600;
+}
