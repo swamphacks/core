@@ -45,7 +45,7 @@ const teamMembers = [
     img: Chris,
   },
   {
-    name: "Gabby Houser",
+    name: "Gabriela Houser",
     linkedin: "https://www.linkedin.com/in/gabriela-houser/",
     role: "Organizers",
     img: Gabby,
