@@ -34,7 +34,7 @@ def parse_csv(csv_path="contacts.csv") -> List[Contact]:
         for row in reader:
             if "email" not in row or not row["email"]:
                 raise ValueError(f"Missing email field in row: {row}")
-            contacts.append(Contact(row["email"], row["name"]))
+            contacts.append(Contact(row["email"], None))
     return contacts
 
 
@@ -124,15 +124,15 @@ def send_emails(template_name: str, csv_path="contacts.csv"):
     for chunk_index, chunk in enumerate(chunk_list(contacts, chunk_size), start=1):
         destinations = [
             {
-                "Destination": {"ToAddresses": [contact.get_email()]},
-                "ReplacementTemplateData": json.dumps({"Name": contact.get_name()}),
+                "Destination": {"ToAddresses": [contact.get_email()]}
+                # "ReplacementTemplateData": json.dumps({"Name": contact.get_name()}),
             }
             for contact in chunk
         ]
 
         try:
             ses.send_bulk_templated_email(
-                Source="SwampHacks <team@swamphacks.com>",
+                Source="SwampHacks <contact@swamphacks.com>",
                 Template=template_name,
                 Destinations=destinations,
                 DefaultTemplateData="{}",
