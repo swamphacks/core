@@ -13,6 +13,7 @@ import FAQ from "./Faq";
 import Insta from "./assets/insta.svg";
 import Discord from "./assets/discord.svg";
 // import Github from "./assets/github.svg";
+import CountdownCorner from "./Countdown";
 
 Modal.setAppElement("#root");
 
@@ -59,6 +60,11 @@ function App() {
         />
       </a>
 
+      <CountdownCorner
+        targetDate={new Date("2026-10-16")}
+        label="Swamphacks Begins In:"
+      />
+
       <Landing />
       <About />
       <Tracks />
@@ -94,9 +100,9 @@ function Landing() {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
           className="lucide lucide-menu-icon lucide-menu"
         >
           <path d="M4 5h16" />

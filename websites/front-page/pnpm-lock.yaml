@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      front-page:
+        specifier: 'link:'
+        version: 'link:'
       react:
         specifier: ^19.2.6
         version: 19.2.6

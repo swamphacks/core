@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "front-page": "link:",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-modal": "^3.16.3"
