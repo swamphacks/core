@@ -3,17 +3,23 @@ import controller from "./assets/Controller.png";
 import Gator from "./assets/gator.gif";
 import { useState } from "react";
 import Modal from "react-modal";
-import Earth from "./assets/earth.png";
 import Robot from "./assets/robot.png";
 import Computer from "./assets/computer.png";
-import Apple from "./assets/apple.png";
+import Star from "./assets/Star.png";
+import Handshake from "./assets/Handshake.png";
 
 const tracks = [
   {
-    name: "Education, Accessibility & Social Impact",
-    icon: Earth,
+    name: "Overall Prize",
+    icon: Star,
     description:
-      "Technology for the people. Create solutions that improve accessibility, empower communities, expand educational opportunities, or tackle real-world challenges.",
+      "All projects are considered for the Overall Prize. This track recognizes the most outstanding project at SwampHacks XII, regardless of category, based on innovation, technical achievement, impact, and overall execution.",
+  },
+  {
+    name: "First Timers",
+    icon: Handshake,
+    description:
+      "Everyone starts somewhere. This track celebrates first-time hackers and the projects they build along the way. Teams qualify if at least 50% of their members are attending their first hackathon.",
   },
   {
     name: "Artificial Intelligence",
@@ -22,7 +28,7 @@ const tracks = [
       "Push the boundaries of what's possible. Leverage AI to build projects powered by artificial intelligence, from LLMs and AI agents to computer vision and machine learning that make an impact across any domain.",
   },
   {
-    name: "Hardware & Physical Computing (Get Physical With It)",
+    name: "Hardware & Physical Computing",
     icon: Computer,
     description:
       "Bring ideas into the physical world. Build hardware-based projects or develop software that interacts, controls, or enhances physical devices and embedded systems.",
@@ -33,12 +39,12 @@ const tracks = [
     description:
       "Let creativity take the lead. Create engaging digital experiences through games, interactive media, digital art, storytelling, music, and showcase the power of technology and imagination.",
   },
-  {
-    name: "Health & Wellness",
-    icon: Apple,
-    description:
-      "Support healthier minds and healthier lives. Innovate technology that promotes mental health and physical well-being by supporting emotional wellness and healthy habits. General health-focused projects are also welcome.",
-  },
+  // {
+  //   name: "Health & Wellness",
+  //   icon: Apple,
+  //   description:
+  //     "Support healthier minds and healthier lives. Innovate technology that promotes mental health and physical well-being by supporting emotional wellness and healthy habits. General health-focused projects are also welcome.",
+  // },
 ];
 
 const customModalStyles = {

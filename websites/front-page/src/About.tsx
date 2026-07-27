@@ -61,6 +61,19 @@ export default function About() {
     setActiveIndex((currentIndex) => (currentIndex + 1) % images.length);
   };
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isMobile && activeIndex == images.length / 2 + 1) {
+        return;
+      }
+      if (!isMobile && activeIndex == images.length / 2) {
+        return;
+      }
+      setActiveIndex((currentIndex) => (currentIndex + 1) % images.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [activeIndex]);
+
   return (
     <div id="about" className="about-container">
       <div className="about-header">
