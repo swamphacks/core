@@ -72,7 +72,7 @@ const teamMembers = [
     img: Jared,
   },
   {
-    name: "Abby Moore",
+    name: "Abigail Moore",
     linkedin: "https://www.linkedin.com/in/abigail-g-moore",
     role: "Technology",
     isExec: true,
