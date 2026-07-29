@@ -205,7 +205,7 @@ export default function InformationPage({
         title: "Early Applications Deadline",
         description: `Submit your application by ${earlyApplicationDeadlineFormatted} to be considered an early applicant!`,
         icon: "calendar",
-        completed: true,
+        completed: false,
       },
       {
         date: applicationClose.toLocaleDateString("en-US", {
@@ -215,7 +215,7 @@ export default function InformationPage({
         title: "All Applications Deadline",
         description: `All applications are due by ${applicationCloseDateFormatted}.`,
         icon: "calendar",
-        completed: true,
+        completed: false,
       },
     ];
   } else {
@@ -236,7 +236,7 @@ export default function InformationPage({
         title: "Applications Deadline",
         description: `Applications are due by ${applicationCloseDateFormatted}.`,
         icon: "calendar",
-        completed: true,
+        completed: false,
       },
     ];
   }
