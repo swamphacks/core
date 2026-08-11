@@ -661,6 +661,12 @@ type UserRedemption struct {
 	HackathonID  string    `json:"hackathon_id"`
 }
 
+type UsersDismissedAnnouncement struct {
+	UserID         uuid.UUID `json:"user_id"`
+	AnnouncementID uuid.UUID `json:"announcement_id"`
+	DismissedAt    time.Time `json:"dismissed_at"`
+}
+
 type Workshop struct {
 	ID           uuid.UUID `json:"id"`
 	Title        string    `json:"title"`

@@ -1,16 +1,16 @@
+-- name: ListAnnouncements :many
+-- returns all announcements for one hackathon
+SELECT *
+FROM announcements
+WHERE hackathon_id = @hackathon_id
+ORDER BY created_at DESC;
+
 -- name: ListActiveAnnouncements :many
 -- returns all active announcements for one hackathon
 SELECT *
 FROM announcements
 WHERE hackathon_id = @hackathon_id
     AND (expires_at IS NULL OR expires_at > now())
-ORDER BY created_at DESC;
-
--- name: ListAnnouncements :many
--- returns all announcements for one hackathon
-SELECT *
-FROM announcements
-WHERE hackathon_id = @hackathon_id
 ORDER BY created_at DESC;
 
 -- name: CreateAnnouncement :one
@@ -55,3 +55,30 @@ SET
 WHERE id = @id::uuid
     AND hackathon_id = @hackathon_id
 RETURNING *;
+
+-- name: DeleteAnnouncement :exec
+-- deletes an announcement
+DELETE FROM announcements WHERE id = @id;
+
+-- name: DismissAnnouncement :one
+-- dismisses an announcement
+INSERT INTO users_dismissed_announcements (
+    user_id,
+    announcement_id
+) VALUES (
+    @user_id::uuid,
+    @id::uuid
+)
+ON CONFLICT (user_id, announcement_id)
+DO UPDATE SET
+    dismissed_at = now()
+RETURNING announcement_id;
+
+-- name: ListDismissedAnnouncements :many
+-- returns all dismissed announcements for a user
+SELECT uda.announcement_id
+FROM users_dismissed_announcements uda
+JOIN announcements a
+    ON a.id = uda.announcement_id
+WHERE uda.user_id = @user_id
+    AND (uda.dismissed_at >= a.updated_at);

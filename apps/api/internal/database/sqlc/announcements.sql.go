@@ -65,6 +65,43 @@ func (q *Queries) CreateAnnouncement(ctx context.Context, arg CreateAnnouncement
 	return i, err
 }
 
+const deleteAnnouncement = `-- name: DeleteAnnouncement :exec
+DELETE FROM announcements WHERE id = $1
+`
+
+// deletes an announcement
+func (q *Queries) DeleteAnnouncement(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAnnouncement, id)
+	return err
+}
+
+const dismissAnnouncement = `-- name: DismissAnnouncement :one
+INSERT INTO users_dismissed_announcements (
+    user_id,
+    announcement_id
+) VALUES (
+    $1::uuid,
+    $2::uuid
+)
+ON CONFLICT (user_id, announcement_id)
+DO UPDATE SET
+    dismissed_at = now()
+RETURNING announcement_id
+`
+
+type DismissAnnouncementParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	ID     uuid.UUID `json:"id"`
+}
+
+// dismisses an announcement
+func (q *Queries) DismissAnnouncement(ctx context.Context, arg DismissAnnouncementParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, dismissAnnouncement, arg.UserID, arg.ID)
+	var announcement_id uuid.UUID
+	err := row.Scan(&announcement_id)
+	return announcement_id, err
+}
+
 const listActiveAnnouncements = `-- name: ListActiveAnnouncements :many
 SELECT id, hackathon_id, title, body, source, created_at, updated_at, updated_by_user_id, expires_at
 FROM announcements
@@ -135,6 +172,36 @@ func (q *Queries) ListAnnouncements(ctx context.Context, hackathonID string) ([]
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDismissedAnnouncements = `-- name: ListDismissedAnnouncements :many
+SELECT uda.announcement_id
+FROM users_dismissed_announcements uda
+JOIN announcements a
+    ON a.id = uda.announcement_id
+WHERE uda.user_id = $1
+    AND (uda.dismissed_at >= a.updated_at)
+`
+
+// returns all dismissed announcements for a user
+func (q *Queries) ListDismissedAnnouncements(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listDismissedAnnouncements, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var announcement_id uuid.UUID
+		if err := rows.Scan(&announcement_id); err != nil {
+			return nil, err
+		}
+		items = append(items, announcement_id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
