@@ -40,6 +40,15 @@ create index idx_announcements_hackathon_id
 create index idx_announcements_created_at
     on announcements (created_at desc);
 
+create table users_dismissed_announcements
+(
+    user_id uuid not null references users(id) on delete cascade,
+    announcement_id uuid not null references announcements(id) on delete cascade,
+    dismissed_at timestamptz default now() not null,
+
+    primary key (user_id, announcement_id)
+);
+
 -- TRIGGERS
 create trigger set_updated_at_announcements
     before update on announcements
@@ -49,6 +58,7 @@ create trigger set_updated_at_announcements
 -- +goose Down
 
 drop trigger if exists set_updated_at_announcements on announcements;
+drop table if exists users_dismissed_announcements;
 drop index if exists idx_announcements_created_at;
 drop index if exists idx_announcements_hackathon_id;
 drop table if exists announcements;
