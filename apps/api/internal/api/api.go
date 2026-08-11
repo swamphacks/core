@@ -17,6 +17,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
+	"github.com/swamphacks/core/apps/api/internal/domains/announcements"
 	"github.com/swamphacks/core/apps/api/internal/domains/application"
 	"github.com/swamphacks/core/apps/api/internal/domains/auth"
 	"github.com/swamphacks/core/apps/api/internal/domains/email"
@@ -114,6 +115,7 @@ func Run() {
 	eventInterestsRepo := repository.NewEventInterestsRepository(db)
 	workshopRepo := repository.NewWorkshopsRepository(db)
 	emailCampaignRepo := repository.NewEmailCampaignRepository(db)
+	announcementsRepo := repository.NewAnnouncementsRepository(db)
 
 	mw := mw.NewMiddleware(userRepo, db, logger, config)
 
@@ -154,6 +156,11 @@ func Run() {
 	workshopService := workshops.NewService(workshopRepo, logger)
 	workshopHandler := workshops.NewHandler(workshopService, logger)
 	workshops.RegisterRoutes(workshopHandler, huma.NewGroup(api, "/workshops"), mw)
+
+	announcementsService := announcements.NewService(announcementsRepo, logger)
+	announcementsHandler := announcements.NewHandler(announcementsService, logger)
+	announcements.RegisterHTTPRoutes(announcementsHandler, huma.NewGroup(api, "/announcements"), mw)
+	announcements.RegisterWSRoutes(announcementsHandler, r, mw)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "ping",
