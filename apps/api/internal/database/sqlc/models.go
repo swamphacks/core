@@ -12,6 +12,48 @@ import (
 	"github.com/google/uuid"
 )
 
+type AnnouncementSource string
+
+const (
+	AnnouncementSourceDiscord AnnouncementSource = "discord"
+	AnnouncementSourceManual  AnnouncementSource = "manual"
+)
+
+func (e *AnnouncementSource) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AnnouncementSource(s)
+	case string:
+		*e = AnnouncementSource(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AnnouncementSource: %T", src)
+	}
+	return nil
+}
+
+type NullAnnouncementSource struct {
+	AnnouncementSource AnnouncementSource `json:"announcement_source"`
+	Valid              bool               `json:"valid"` // Valid is true if AnnouncementSource is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAnnouncementSource) Scan(value interface{}) error {
+	if value == nil {
+		ns.AnnouncementSource, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AnnouncementSource.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAnnouncementSource) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AnnouncementSource), nil
+}
+
 type ApplicationAutoDecisionType string
 
 const (
@@ -425,6 +467,18 @@ type Account struct {
 	Scope                 *string    `json:"scope"`
 	CreatedAt             time.Time  `json:"created_at"`
 	UpdatedAt             time.Time  `json:"updated_at"`
+}
+
+type Announcement struct {
+	ID              uuid.UUID          `json:"id"`
+	HackathonID     string             `json:"hackathon_id"`
+	Title           string             `json:"title"`
+	Body            string             `json:"body"`
+	Source          AnnouncementSource `json:"source"`
+	CreatedAt       time.Time          `json:"created_at"`
+	UpdatedAt       time.Time          `json:"updated_at"`
+	UpdatedByUserID *uuid.UUID         `json:"updated_by_user_id"`
+	ExpiresAt       *time.Time         `json:"expires_at"`
 }
 
 type Application struct {
