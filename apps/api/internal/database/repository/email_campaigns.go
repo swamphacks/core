@@ -102,3 +102,17 @@ func (r *EmailCampaignRepository) GetUserContactEmailsByRoles(
 ) ([]string, error) {
 	return r.db.Query.GetUserContactEmailsByRoles(ctx, roles)
 }
+
+func (r *EmailCampaignRepository) DeleteEmailCampaign(
+	ctx context.Context,
+	params sqlc.DeleteEmailCampaignParams,
+) error {
+	rows, err := r.db.Query.DeleteEmailCampaign(ctx, params)
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrEmailCampaignNotFound
+	}
+	return nil
+}

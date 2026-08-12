@@ -93,6 +93,19 @@ func RegisterCampaignRoutes(emailCampaignHandler *emailCampaignHandler, group hu
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
 	}, emailCampaignHandler.handleSendCampaign)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "delete-email-campaign",
+		Method:        http.MethodDelete,
+		Summary:       "Delete Email Campaign",
+		Description:   "Deletes a draft, scheduled, or failed email campaign. Sent campaigns are kept for the record.",
+		Tags:          []string{"Email Campaigns"},
+		Path:          "/campaigns/{campaignId}",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma},
+		Errors:        []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusNotFound, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, emailCampaignHandler.handleDeleteCampaign)
 }
 
 type emailCampaignHandler struct {
@@ -335,6 +348,30 @@ func (h *emailCampaignHandler) handleSendCampaign(ctx context.Context, input *st
 	return &EmailCampaignOutput{Body: campaign}, nil
 }
 
+type DeleteEmailCampaignOutput struct {
+	Status int
+}
+
+func (h *emailCampaignHandler) handleDeleteCampaign(ctx context.Context, input *struct {
+	CampaignID  string `path:"campaignId"`
+	HackathonID string `query:"hackathonId" required:"true"`
+}) (*DeleteEmailCampaignOutput, error) {
+	campaignID, err := uuid.Parse(input.CampaignID)
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid campaign id")
+	}
+
+	if err := h.emailCampaignService.DeleteCampaign(ctx, sqlc.DeleteEmailCampaignParams{
+		ID:          campaignID,
+		HackathonID: input.HackathonID,
+	}); err != nil {
+		h.logger.Err(err).Msg("Failed to delete email campaign")
+		return nil, campaignHTTPError(err, "Failed to delete email campaign")
+	}
+
+	return &DeleteEmailCampaignOutput{Status: http.StatusOK}, nil
+}
+
 func campaignHTTPError(err error, fallback string) error {
 	if errors.Is(err, ErrEmailCampaignNotFound) {
 		return huma.Error404NotFound("Email campaign not found")
@@ -349,7 +386,8 @@ func campaignHTTPError(err error, fallback string) error {
 		errors.Is(err, ErrEmailCampaignSentAtRequired) ||
 		errors.Is(err, ErrEmailCampaignCannotSend) ||
 		errors.Is(err, ErrEmailCampaignNoRecipients) ||
-		errors.Is(err, ErrUnsupportedRecipientType) {
+		errors.Is(err, ErrUnsupportedRecipientType) ||
+		errors.Is(err, ErrEmailCampaignCannotDelete) {
 		return huma.Error400BadRequest(err.Error())
 	}
 

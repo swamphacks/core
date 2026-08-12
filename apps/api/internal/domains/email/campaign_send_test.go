@@ -19,6 +19,7 @@ type fakeCampaignStore struct {
 	roleEmails      []string
 	resolveErr      error
 	statusCalls     []sqlc.UpdateEmailCampaignStatusParams
+	deleted         bool
 }
 
 func (f *fakeCampaignStore) GetEmailCampaignByID(ctx context.Context, params sqlc.GetEmailCampaignByIDParams) (*sqlc.EmailCampaign, error) {
@@ -41,6 +42,11 @@ func (f *fakeCampaignStore) UpdateEmailCampaignStatus(ctx context.Context, param
 	updated := *f.campaign
 	updated.Status = params.Status
 	return &updated, nil
+}
+
+func (f *fakeCampaignStore) DeleteEmailCampaign(ctx context.Context, params sqlc.DeleteEmailCampaignParams) error {
+	f.deleted = true
+	return nil
 }
 
 func (f *fakeCampaignStore) CreateEmailCampaign(ctx context.Context, params sqlc.CreateEmailCampaignParams) (*sqlc.EmailCampaign, error) {
@@ -225,5 +231,45 @@ func TestSendCampaignMarksFailedWhenQueueingFails(t *testing.T) {
 	}
 	if last.LastError == nil || *last.LastError != queueErr.Error() {
 		t.Fatalf("expected last_error to record the failure, got %v", last.LastError)
+	}
+}
+
+func TestDeleteCampaignRejectsSentCampaign(t *testing.T) {
+	campaign := newTestCampaign(sqlc.EmailCampaignStatusSent, sqlc.EmailCampaignFormatText, "accepted_applicants")
+	store := &fakeCampaignStore{campaign: campaign}
+
+	err := newTestService(store, &fakeMailer{}).DeleteCampaign(context.Background(), sqlc.DeleteEmailCampaignParams{
+		ID:          campaign.ID,
+		HackathonID: campaign.HackathonID,
+	})
+
+	if !errors.Is(err, ErrEmailCampaignCannotDelete) {
+		t.Fatalf("expected %v, got %v", ErrEmailCampaignCannotDelete, err)
+	}
+	if store.deleted {
+		t.Fatal("a sent campaign must never be removed from the record")
+	}
+}
+
+func TestDeleteCampaignAllowsDraftAndFailed(t *testing.T) {
+	for _, status := range []sqlc.EmailCampaignStatus{
+		sqlc.EmailCampaignStatusDraft,
+		sqlc.EmailCampaignStatusScheduled,
+		sqlc.EmailCampaignStatusFailed,
+	} {
+		campaign := newTestCampaign(status, sqlc.EmailCampaignFormatText, "accepted_applicants")
+		store := &fakeCampaignStore{campaign: campaign}
+
+		err := newTestService(store, &fakeMailer{}).DeleteCampaign(context.Background(), sqlc.DeleteEmailCampaignParams{
+			ID:          campaign.ID,
+			HackathonID: campaign.HackathonID,
+		})
+
+		if err != nil {
+			t.Fatalf("status %s: expected delete to succeed, got %v", status, err)
+		}
+		if !store.deleted {
+			t.Fatalf("status %s: expected the campaign to be deleted", status)
+		}
 	}
 }

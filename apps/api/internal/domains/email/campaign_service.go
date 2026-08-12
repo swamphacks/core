@@ -22,6 +22,7 @@ type campaignStore interface {
 	ListEmailCampaigns(ctx context.Context, hackathonID string) ([]sqlc.EmailCampaign, error)
 	UpdateEmailCampaign(ctx context.Context, params sqlc.UpdateEmailCampaignParams) (*sqlc.EmailCampaign, error)
 	UpdateEmailCampaignStatus(ctx context.Context, params sqlc.UpdateEmailCampaignStatusParams) (*sqlc.EmailCampaign, error)
+	DeleteEmailCampaign(ctx context.Context, params sqlc.DeleteEmailCampaignParams) error
 	GetApplicantContactEmailsByStatus(ctx context.Context, params sqlc.GetApplicantContactEmailsByStatusParams) ([]string, error)
 	GetUserContactEmailsByRoles(ctx context.Context, roles []string) ([]string, error)
 }
@@ -43,7 +44,8 @@ var (
 	ErrEmailCampaignBodyRequired       = errors.New("email campaign body is required")
 	ErrEmailCampaignRecipientsRequired = errors.New("email campaign recipients are required")
 
-	ErrEmailCampaignCannotEdit = errors.New("email campaign cannot be edited")
+	ErrEmailCampaignCannotEdit   = errors.New("email campaign cannot be edited")
+	ErrEmailCampaignCannotDelete = errors.New("email campaign cannot be deleted after it has been sent")
 
 	//status-specific validation errors
 	ErrEmailCampaignScheduledAtRequired = errors.New("scheduled_at is required for scheduled campaigns")
@@ -158,6 +160,27 @@ func (s *EmailCampaignService) UpdateCampaignStatus(
 	return s.emailCampaignRepo.UpdateEmailCampaignStatus(ctx, params)
 }
 
+// DeleteCampaign removes a campaign after checking it is still deletable.
+// It loads the campaign first so the status guard runs before anything is destroyed.
+func (s *EmailCampaignService) DeleteCampaign(
+	ctx context.Context,
+	params sqlc.DeleteEmailCampaignParams,
+) error {
+	existingCampaign, err := s.emailCampaignRepo.GetEmailCampaignByID(ctx, sqlc.GetEmailCampaignByIDParams{
+		ID:          params.ID,
+		HackathonID: params.HackathonID,
+	})
+	if err != nil {
+		return err
+	}
+
+	if !canDeleteCampaign(existingCampaign.Status) {
+		return ErrEmailCampaignCannotDelete
+	}
+
+	return s.emailCampaignRepo.DeleteEmailCampaign(ctx, params)
+}
+
 // validateCampaignContent checks fields that every campaign needs before it is saved.
 // strings.TrimSpace prevents values like "   " from passing validation.
 func validateCampaignContent(
@@ -190,6 +213,14 @@ func validateCampaignContent(
 func canSendCampaign(status sqlc.EmailCampaignStatus) bool {
 	return status == sqlc.EmailCampaignStatusDraft ||
 		status == sqlc.EmailCampaignStatusScheduled
+}
+
+// canDeleteCampaign keeps delivered mail auditable: a campaign that went out
+// (or is going out) stays on the record, so only pre-send and failed ones are removable.
+func canDeleteCampaign(status sqlc.EmailCampaignStatus) bool {
+	return status == sqlc.EmailCampaignStatusDraft ||
+		status == sqlc.EmailCampaignStatusScheduled ||
+		status == sqlc.EmailCampaignStatusFailed
 }
 
 // canEditCampaign centralizes edit rules.

@@ -131,3 +131,9 @@ SELECT
 FROM users u
 WHERE u.role = ANY(sqlc.arg(roles)::text[]::user_role[])
     AND NOT u.is_fake;
+
+-- name: DeleteEmailCampaign :execrows
+-- Removes a campaign, scoped to its hackathon so one event cannot delete another's.
+DELETE FROM email_campaigns
+WHERE id = @id::uuid
+    AND hackathon_id = @hackathon_id;

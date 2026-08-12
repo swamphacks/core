@@ -88,6 +88,26 @@ func (q *Queries) CreateEmailCampaign(ctx context.Context, arg CreateEmailCampai
 	return i, err
 }
 
+const deleteEmailCampaign = `-- name: DeleteEmailCampaign :execrows
+DELETE FROM email_campaigns
+WHERE id = $1::uuid
+    AND hackathon_id = $2
+`
+
+type DeleteEmailCampaignParams struct {
+	ID          uuid.UUID `json:"id"`
+	HackathonID string    `json:"hackathon_id"`
+}
+
+// Removes a campaign, scoped to its hackathon so one event cannot delete another's.
+func (q *Queries) DeleteEmailCampaign(ctx context.Context, arg DeleteEmailCampaignParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteEmailCampaign, arg.ID, arg.HackathonID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getApplicantContactEmailsByStatus = `-- name: GetApplicantContactEmailsByStatus :many
 SELECT
     (CASE
