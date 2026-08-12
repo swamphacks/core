@@ -12,6 +12,7 @@ create table api_keys
     role role default 'visitor'::role not null,
     created_at timestamptz default now() not null,
     expires_at timestamptz,
+    secret_hash text not null unique,
 
     constraint api_key_expires_at_after_creation
         check (

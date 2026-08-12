@@ -434,6 +434,7 @@ type ApiKey struct {
 	Role        Role       `json:"role"`
 	CreatedAt   time.Time  `json:"created_at"`
 	ExpiresAt   *time.Time `json:"expires_at"`
+	SecretHash  string     `json:"secret_hash"`
 }
 
 type Application struct {
