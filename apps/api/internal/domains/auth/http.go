@@ -53,7 +53,6 @@ func RegisterRoutes(authHandler *handler, group huma.API, mw *middleware.Middlew
 		Errors:      []int{http.StatusInternalServerError, http.StatusNotImplemented, http.StatusBadRequest, http.StatusUnauthorized},
 	}, authHandler.handleOAuthCallback)
 
-	// TODO: create middleware for API keys
 	huma.Register(group, huma.Operation{
 		OperationID: "create-session",
 		Method:      http.MethodPost,

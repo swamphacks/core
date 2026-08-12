@@ -22,7 +22,6 @@ func RegisterRoutes(handler *handler, group huma.API, mw *middleware.Middleware)
 		DefaultStatus: http.StatusOK,
 	}, handler.getAllApiKeys)
 
-	// TODO: create middleware for either admin or api key itself
 	huma.Register(group, huma.Operation{
 		OperationID:   "get-apikey",
 		Method:        http.MethodGet,
@@ -49,7 +48,6 @@ func RegisterRoutes(handler *handler, group huma.API, mw *middleware.Middleware)
 		DefaultStatus: http.StatusCreated,
 	}, handler.createApiKey)
 
-	// TODO: create middleware for either admin or api key itself
 	huma.Register(group, huma.Operation{
 		OperationID:   "delete-apikey",
 		Method:        http.MethodDelete,

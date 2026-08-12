@@ -26,6 +26,7 @@ type ctxKey string
 // Use this variable to retrieve the user object later from context!
 const UserContextKey ctxKey = "user"
 const SessionContextKey ctxKey = "session"
+const SessionTypeContextKey ctxKey = "sessionType"
 const RoleContextKey ctxKey = "eventRole"
 
 type AuthMiddleware struct {
@@ -72,6 +73,12 @@ type UserContext struct {
 type SessionContext struct {
 	SessionID uuid.UUID
 }
+
+type SessionType string
+const (
+    SessionTypeUser SessionType   = "user"
+    SessionTypeAPIKey SessionType = "api-key"
+)
 
 func NewAuthMiddleware(userRepo *repository.UserRepository, db *database.DB, logger zerolog.Logger, cfg *config.Config) *AuthMiddleware {
 	return &AuthMiddleware{
@@ -220,6 +227,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			}
 			ctx = context.WithValue(ctx, UserContextKey, &userContext)
 			ctx = context.WithValue(ctx, RoleContextKey, &userContext.Role)
+			ctx = context.WithValue(ctx, SessionTypeContextKey, SessionTypeUser)
 		} else { // API Key
 			apiKeyRole, err := m.db.Query.GetActiveSessionAPIKeyInfo(r.Context(), sessionID)
 			if err != nil {
@@ -228,6 +236,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 				return
 			}
 			ctx = context.WithValue(ctx, RoleContextKey, &apiKeyRole)
+			ctx = context.WithValue(ctx, SessionTypeContextKey, SessionTypeAPIKey)
 		}
 
 		m.checkLastUsedAt(w, r, sessionID, session.LastUsedAt)
