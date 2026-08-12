@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -223,12 +224,66 @@ func isURL(s string) bool {
 }
 
 type CreateSessionOutput struct {
-	SetCookie   []http.Cookie `header:"Set-Cookie"`
+	SetCookie   http.Cookie `header:"Set-Cookie"`
 	Status      int
 }
 
 func (h *handler) handleCreateSession(ctx context.Context, input *struct {
-	UserAgent string `header:"User-Agent" doc:"Client user agent"`
+	Authorization string `header:"Authorization" required:"true" doc:"API Key Secret prefixed with \"Bearer \""`
+	UserAgent     string `header:"User-Agent" doc:"Client user agent"`
 }) (*CreateSessionOutput, error) {
-	return nil, nil
+	r := ctx.Value(middleware.RawRequestKey{}).(*http.Request)
+
+	var ipAddress *string
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err == nil && ip != "" {
+		ipAddress = &ip
+	}
+
+	apiKeySecret, err := parseBearerToken(input.Authorization)
+	if err != nil {
+		return nil, err
+	}
+
+	session, err := h.authService.AuthenticateAPIKey(ctx, apiKeySecret, ipAddress, &input.UserAgent)
+	if err != nil {
+		switch err {
+		case ErrApiKeyNotFound:
+			return nil, huma.Error401Unauthorized("API key is invalid.")
+		default:
+			h.logger.Err(err).Msg("Something unexpected happened.")
+			return nil, huma.Error500InternalServerError("Something went wrong")
+		}
+	}
+
+	res := &CreateSessionOutput{
+		SetCookie: http.Cookie{
+			Name:     h.config.Cookie.SessionName,
+			Value:    session.ID.String(),
+			Domain:   h.config.Cookie.Domain,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   h.config.Cookie.Secure,
+			SameSite: http.SameSiteLaxMode,
+			Expires:  session.ExpiresAt,
+		},
+		Status: http.StatusOK,
+	}
+
+	return res, nil
+}
+
+func parseBearerToken(value string) (string, error) {
+	const prefix = "Bearer "
+
+	if !strings.HasPrefix(value, prefix) {
+		return "", huma.Error401Unauthorized("invalid authorization header")
+	}
+
+	token := strings.TrimSpace(strings.TrimPrefix(value, prefix))
+	if token == "" {
+		return "", huma.Error401Unauthorized("missing bearer token")
+	}
+
+	return token, nil
 }

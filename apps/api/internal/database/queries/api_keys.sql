@@ -19,6 +19,14 @@ SELECT
 FROM api_keys
 WHERE id = @id;
 
+-- name: GetApiKeyBySecret :one
+SELECT
+    id,
+    expires_at
+FROM api_keys
+WHERE secret_hash = @secret_hash
+    AND (expires_at IS NULL OR expires_at > NOW());
+
 -- name: CreateApiKey :one
 INSERT INTO api_keys (
     name,

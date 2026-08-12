@@ -117,6 +117,27 @@ func (q *Queries) GetApiKeyById(ctx context.Context, id uuid.UUID) (GetApiKeyByI
 	return i, err
 }
 
+const getApiKeyBySecret = `-- name: GetApiKeyBySecret :one
+SELECT
+    id,
+    expires_at
+FROM api_keys
+WHERE secret_hash = $1
+    AND (expires_at IS NULL OR expires_at > NOW())
+`
+
+type GetApiKeyBySecretRow struct {
+	ID        uuid.UUID  `json:"id"`
+	ExpiresAt *time.Time `json:"expires_at"`
+}
+
+func (q *Queries) GetApiKeyBySecret(ctx context.Context, secretHash string) (GetApiKeyBySecretRow, error) {
+	row := q.db.QueryRow(ctx, getApiKeyBySecret, secretHash)
+	var i GetApiKeyBySecretRow
+	err := row.Scan(&i.ID, &i.ExpiresAt)
+	return i, err
+}
+
 const listApiKeys = `-- name: ListApiKeys :many
 SELECT
     id,

@@ -2,9 +2,6 @@ package apikeys
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 
 	"github.com/google/uuid"
@@ -48,20 +45,6 @@ func (s *ApiKeysService) GetApiKeyByID(
 	return s.apiKeysRepo.GetApiKeyByID(ctx, id)
 }
 
-// Generates secret of length 64
-func generateAPIKeySecret() (string, error) {
-    b := make([]byte, 32)
-    if _, err := rand.Read(b); err != nil {
-        return "", err
-    }
-    return hex.EncodeToString(b), nil
-}
-
-func hashAPIKeySecret(secret string) string {
-    hash := sha256.Sum256([]byte(secret))
-    return hex.EncodeToString(hash[:])
-}
-
 func (s *ApiKeysService) CreateApiKey(
 	ctx context.Context,
 	request *CreateApiKeyRequest,
@@ -74,7 +57,7 @@ func (s *ApiKeysService) CreateApiKey(
 	if err != nil {
 		return nil, err
 	}
-	secretHash := hashAPIKeySecret(secret)
+	secretHash := HashAPIKeySecret(secret)
 
 	params := sqlc.CreateApiKeyParams{
 		Name:        request.Name,

@@ -12,21 +12,56 @@ import (
 	"github.com/google/uuid"
 )
 
-const createSession = `-- name: CreateSession :one
+const createSessionForAPIKey = `-- name: CreateSessionForAPIKey :one
+INSERT INTO sessions (api_key_id, expires_at, ip_address, user_agent)
+VALUES ($1, $2, $3, $4)
+RETURNING id, user_id, expires_at, ip_address, user_agent, created_at, updated_at, last_used_at, api_key_id
+`
+
+type CreateSessionForAPIKeyParams struct {
+	ApiKeyID  *uuid.UUID `json:"api_key_id"`
+	ExpiresAt time.Time  `json:"expires_at"`
+	IpAddress *string    `json:"ip_address"`
+	UserAgent *string    `json:"user_agent"`
+}
+
+func (q *Queries) CreateSessionForAPIKey(ctx context.Context, arg CreateSessionForAPIKeyParams) (Session, error) {
+	row := q.db.QueryRow(ctx, createSessionForAPIKey,
+		arg.ApiKeyID,
+		arg.ExpiresAt,
+		arg.IpAddress,
+		arg.UserAgent,
+	)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.ExpiresAt,
+		&i.IpAddress,
+		&i.UserAgent,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastUsedAt,
+		&i.ApiKeyID,
+	)
+	return i, err
+}
+
+const createSessionForUser = `-- name: CreateSessionForUser :one
 INSERT INTO sessions (user_id, expires_at, ip_address, user_agent)
 VALUES ($1, $2, $3, $4)
 RETURNING id, user_id, expires_at, ip_address, user_agent, created_at, updated_at, last_used_at, api_key_id
 `
 
-type CreateSessionParams struct {
+type CreateSessionForUserParams struct {
 	UserID    *uuid.UUID `json:"user_id"`
 	ExpiresAt time.Time  `json:"expires_at"`
 	IpAddress *string    `json:"ip_address"`
 	UserAgent *string    `json:"user_agent"`
 }
 
-func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
-	row := q.db.QueryRow(ctx, createSession,
+func (q *Queries) CreateSessionForUser(ctx context.Context, arg CreateSessionForUserParams) (Session, error) {
+	row := q.db.QueryRow(ctx, createSessionForUser,
 		arg.UserID,
 		arg.ExpiresAt,
 		arg.IpAddress,

@@ -1,5 +1,10 @@
--- name: CreateSession :one
+-- name: CreateSessionForUser :one
 INSERT INTO sessions (user_id, expires_at, ip_address, user_agent)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+
+-- name: CreateSessionForAPIKey :one
+INSERT INTO sessions (api_key_id, expires_at, ip_address, user_agent)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
 

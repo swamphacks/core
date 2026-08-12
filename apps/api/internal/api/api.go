@@ -120,7 +120,7 @@ func Run() {
 	mw := mw.NewMiddleware(userRepo, db, logger, config)
 
 	// Routes registrations
-	authService := auth.NewService(userRepo, accountRepo, sessionRepo, txm, httpClient, logger, &config.Auth)
+	authService := auth.NewService(userRepo, accountRepo, sessionRepo, apiKeysRepo, txm, httpClient, logger, &config.Auth)
 	authHandler := auth.NewHandler(authService, config, logger)
 	auth.RegisterRoutes(authHandler, huma.NewGroup(api, "/auth"), mw, config)
 

@@ -42,6 +42,20 @@ func (r *ApiKeysRepository) GetApiKeyByID(
 	return &apiKey, nil
 }
 
+func (r *ApiKeysRepository) GetApiKeyBySecret(
+	ctx context.Context,
+	secretHash string,
+) (*sqlc.GetApiKeyBySecretRow, error) {
+	apiKey, err := r.db.Query.GetApiKeyBySecret(ctx, secretHash)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrApiKeyNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &apiKey, nil
+}
+
 func (r *ApiKeysRepository) CreateApiKey(
 	ctx context.Context,
 	params sqlc.CreateApiKeyParams,
