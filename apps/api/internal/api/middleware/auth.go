@@ -180,7 +180,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		user, err := m.db.Query.GetActiveSessionUserInfo(r.Context(), sessionID)
+		session, err := m.db.Query.GetActiveSessionByID(r.Context(), sessionID)
 		if err != nil && errors.Is(err, sql.ErrNoRows) {
 			m.logger.Info().Msg("Session is no longer valid or does not exist.")
 			response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized"))
@@ -191,29 +191,46 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		// TODO: I don't think we need UserContext here, just return sqlc.User directly
-		userContext := UserContext{
-			UserID:                     user.UserID,
-			Name:                       user.Name,
-			Email:                      user.Email,
-			PreferredEmail:             user.PreferredEmail,
-			Image:                      user.Image,
-			Onboarded:                  user.Onboarded,
-			Role:                       user.Role,
-			EmailConsent:               user.EmailConsent,
-			Rfid:                       user.Rfid,
-			CheckedInAt:                user.CheckedInAt,
-			HasSeeNewApplicationStatus: user.HasSeenNewApplicationStatus,
-		}
-
 		sessionContext := SessionContext{
 			SessionID: sessionID,
 		}
+		ctx := context.WithValue(r.Context(), SessionContextKey, &sessionContext)
 
-		m.checkLastUsedAt(w, r, sessionID, user.LastUsedAt)
+		if session.UserID != nil { // User
+			user, err := m.db.Query.GetActiveSessionUserInfo(r.Context(), sessionID)
+			if err != nil {
+				m.logger.Err(err).Msg("Something went wrong getting active session user info.")
+				response.SendError(w, http.StatusInternalServerError, response.NewError("internal_err", "Something went horrible wrong!"))
+				return
+			}
 
-		ctx := context.WithValue(r.Context(), UserContextKey, &userContext)
-		ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
+			// TODO: I don't think we need UserContext here, just return sqlc.User directly
+			userContext := UserContext{
+				UserID:                     user.ID,
+				Name:                       user.Name,
+				Email:                      user.Email,
+				PreferredEmail:             user.PreferredEmail,
+				Image:                      user.Image,
+				Onboarded:                  user.Onboarded,
+				Role:                       user.Role,
+				EmailConsent:               user.EmailConsent,
+				Rfid:                       user.Rfid,
+				CheckedInAt:                user.CheckedInAt,
+				HasSeeNewApplicationStatus: user.HasSeenNewApplicationStatus,
+			}
+			ctx = context.WithValue(ctx, UserContextKey, &userContext)
+			ctx = context.WithValue(ctx, RoleContextKey, &userContext.Role)
+		} else { // API Key
+			apiKeyRole, err := m.db.Query.GetActiveSessionAPIKeyInfo(r.Context(), sessionID)
+			if err != nil {
+				m.logger.Err(err).Msg("Something went wrong getting active session API key info.")
+				response.SendError(w, http.StatusInternalServerError, response.NewError("internal_err", "Something went horrible wrong!"))
+				return
+			}
+			ctx = context.WithValue(ctx, RoleContextKey, &apiKeyRole)
+		}
+
+		m.checkLastUsedAt(w, r, sessionID, session.LastUsedAt)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -222,21 +239,22 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 func (m *AuthMiddleware) RequireRoles(roles []sqlc.Role) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// get user from context
-			userCtx, ok := r.Context().Value(UserContextKey).(*UserContext)
+			// get role from context
+			roleCtx, ok := r.Context().Value(RoleContextKey).(*sqlc.Role)
 			if !ok {
-				m.logger.Warn().Msg("No user context found.")
+				m.logger.Warn().Msg("No role context found.")
 				response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized."))
 				return
 			}
+			role := *roleCtx
 
-			if userCtx.Role == sqlc.RoleAdmin {
+			if role == sqlc.RoleAdmin {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			if !slices.Contains(roles, userCtx.Role) {
-				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions (eventRole: %s)", r.URL.Path, string(userCtx.Role))
+			if !slices.Contains(roles, role) {
+				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions (eventRole: %s)", r.URL.Path, string(role))
 				response.SendError(w, http.StatusForbidden, response.NewError("forbidden", "You are forbidden from this resource."))
 				return
 			}
