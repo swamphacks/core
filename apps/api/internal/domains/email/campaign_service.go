@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
-	"github.com/google/uuid"
 )
 
 var (
@@ -38,6 +38,14 @@ var recipientStatuses = map[string][]string{
 	"accepted_applicants":   {"accepted", "confirmed"},
 	"rejected_applicants":   {"rejected"},
 	"waitlisted_applicants": {"waitlisted"},
+}
+
+// recipientRoles maps a role-based recipient_type to the user roles it covers.
+// Roles live on the users table globally, so these groups are not hackathon-scoped.
+var recipientRoles = map[string][]string{
+	"admins":   {"admin"},
+	"staff":    {"staff"},
+	"visitors": {"visitor"},
 }
 
 // EmailCampaignService owns business rules for saved email campaigns.
@@ -177,15 +185,21 @@ func (s *EmailCampaignService) resolveRecipients(ctx context.Context, campaign *
 	emails := []string{}
 
 	for _, rt := range campaign.RecipientTypes {
-		statuses, ok := recipientStatuses[string(rt)]
-		if !ok {
+		var groupEmails []string
+		var err error
+
+		switch {
+		case recipientStatuses[string(rt)] != nil:
+			groupEmails, err = s.emailCampaignRepo.GetApplicantContactEmailsByStatus(ctx, sqlc.GetApplicantContactEmailsByStatusParams{
+				HackathonID: campaign.HackathonID,
+				Statuses:    recipientStatuses[string(rt)],
+			})
+		case recipientRoles[string(rt)] != nil:
+			groupEmails, err = s.emailCampaignRepo.GetUserContactEmailsByRoles(ctx, recipientRoles[string(rt)])
+		default:
 			return nil, fmt.Errorf("%w: %s", ErrUnsupportedRecipientType, rt)
 		}
 
-		groupEmails, err := s.emailCampaignRepo.GetApplicantContactEmailsByStatus(ctx, sqlc.GetApplicantContactEmailsByStatusParams{
-			HackathonID: campaign.HackathonID,
-			Statuses:    statuses,
-		})
 		if err != nil {
 			return nil, err
 		}

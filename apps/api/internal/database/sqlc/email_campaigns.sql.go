@@ -167,6 +167,39 @@ func (q *Queries) GetEmailCampaignByID(ctx context.Context, arg GetEmailCampaign
 	return i, err
 }
 
+const getUserContactEmailsByRoles = `-- name: GetUserContactEmailsByRoles :many
+SELECT
+    (CASE
+        WHEN u.preferred_email IS NOT NULL AND u.preferred_email != '' THEN u.preferred_email
+        ELSE u.email
+    END)::text AS contact_email
+FROM users u
+WHERE u.role = ANY($1::text[]::user_role[])
+    AND NOT u.is_fake
+`
+
+// Resolves a role-based recipient group (admins, staff, visitors) to contact emails.
+// The service passes the roles that map to a recipient_type (e.g. 'admin' for admins).
+func (q *Queries) GetUserContactEmailsByRoles(ctx context.Context, roles []string) ([]string, error) {
+	rows, err := q.db.Query(ctx, getUserContactEmailsByRoles, roles)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var contact_email string
+		if err := rows.Scan(&contact_email); err != nil {
+			return nil, err
+		}
+		items = append(items, contact_email)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEmailCampaigns = `-- name: ListEmailCampaigns :many
 SELECT id, hackathon_id, title, description, subject, body, format, recipient_types, status, scheduled_at, sent_at, last_error, created_by_user_id, updated_by_user_id, created_at, updated_at
 FROM email_campaigns

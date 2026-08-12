@@ -95,3 +95,10 @@ func (r *EmailCampaignRepository) GetApplicantContactEmailsByStatus(
 ) ([]string, error) {
 	return r.db.Query.GetApplicantContactEmailsByStatus(ctx, params)
 }
+
+func (r *EmailCampaignRepository) GetUserContactEmailsByRoles(
+	ctx context.Context,
+	roles []string,
+) ([]string, error) {
+	return r.db.Query.GetUserContactEmailsByRoles(ctx, roles)
+}

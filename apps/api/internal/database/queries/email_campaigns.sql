@@ -119,3 +119,15 @@ WHERE a.hackathon_id = @hackathon_id
     AND a.status = ANY(sqlc.arg(statuses)::text[]::application_status[])
     AND NOT u.is_fake
     AND NOT a.is_fake;
+
+-- name: GetUserContactEmailsByRoles :many
+-- Resolves a role-based recipient group (admins, staff, visitors) to contact emails.
+-- The service passes the roles that map to a recipient_type (e.g. 'admin' for admins).
+SELECT
+    (CASE
+        WHEN u.preferred_email IS NOT NULL AND u.preferred_email != '' THEN u.preferred_email
+        ELSE u.email
+    END)::text AS contact_email
+FROM users u
+WHERE u.role = ANY(sqlc.arg(roles)::text[]::user_role[])
+    AND NOT u.is_fake;
