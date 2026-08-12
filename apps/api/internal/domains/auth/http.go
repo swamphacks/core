@@ -51,6 +51,18 @@ func RegisterRoutes(authHandler *handler, group huma.API, mw *middleware.Middlew
 		Middlewares: huma.Middlewares{mw.Auth.RawHTTPMiddlewareHuma},
 		Errors:      []int{http.StatusInternalServerError, http.StatusNotImplemented, http.StatusBadRequest, http.StatusUnauthorized},
 	}, authHandler.handleOAuthCallback)
+
+	// TODO: create middleware for API keys
+	huma.Register(group, huma.Operation{
+		OperationID: "create-session",
+		Method:      http.MethodPost,
+		Summary:     "Create session for API Key",
+		Description: "Creates a session for an API Key.",
+		Tags:        []string{"Auth"},
+		Path:        "/sessions",
+		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Errors:      []int{http.StatusUnauthorized, http.StatusInternalServerError},
+	}, authHandler.handleCreateSession)
 }
 
 type handler struct {
@@ -208,4 +220,15 @@ func ensureLeadingSlash(s string) string {
 func isURL(s string) bool {
 	u, err := url.Parse(s)
 	return err == nil && u.Scheme != "" && u.Host != ""
+}
+
+type CreateSessionOutput struct {
+	SetCookie   []http.Cookie `header:"Set-Cookie"`
+	Status      int
+}
+
+func (h *handler) handleCreateSession(ctx context.Context, input *struct {
+	UserAgent string `header:"User-Agent" doc:"Client user agent"`
+}) (*CreateSessionOutput, error) {
+	return nil, nil
 }
