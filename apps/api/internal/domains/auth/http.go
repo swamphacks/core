@@ -61,7 +61,7 @@ func RegisterRoutes(authHandler *handler, group huma.API, mw *middleware.Middlew
 		Description: "Creates a session for an API Key.",
 		Tags:        []string{"Auth"},
 		Path:        "/sessions",
-		Middlewares: huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Middlewares: huma.Middlewares{mw.Auth.RawHTTPMiddlewareHuma},
 		Errors:      []int{http.StatusUnauthorized, http.StatusInternalServerError},
 	}, authHandler.handleCreateSession)
 }
@@ -277,7 +277,7 @@ func parseBearerToken(value string) (string, error) {
 	const prefix = "Bearer "
 
 	if !strings.HasPrefix(value, prefix) {
-		return "", huma.Error401Unauthorized("invalid authorization header")
+		return "", huma.Error401Unauthorized("authorization header must start with 'Bearer '")
 	}
 
 	token := strings.TrimSpace(strings.TrimPrefix(value, prefix))
