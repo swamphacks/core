@@ -7,9 +7,6 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
-// See https://attilaolah.eu/2014/09/10/json-and-struct-composition-in-go/
-type omit *struct{}
-
 type ListApiKeysOutput struct {
 	Body []sqlc.ListApiKeysRow
 }

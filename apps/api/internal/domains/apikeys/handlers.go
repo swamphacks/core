@@ -77,8 +77,7 @@ func (h *handler) deleteApiKey(
 		return nil, huma.Error400BadRequest("Invalid API Key ID")
 	}
 
-	h.apiKeysService.DeleteApiKeyByID(ctx, apiKeyID)
-	if err != nil {
+	if err := h.apiKeysService.DeleteApiKeyByID(ctx, apiKeyID); err != nil {
 		return nil, apiKeyHTTPError(err, "Failed to delete API Key")
 	}
 
