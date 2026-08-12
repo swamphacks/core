@@ -92,11 +92,47 @@ func (q *Queries) DeleteExpiredSession(ctx context.Context) error {
 	return err
 }
 
+const getActiveSessionAPIKeyInfo = `-- name: GetActiveSessionAPIKeyInfo :one
+SELECT aks.role
+FROM sessions s
+JOIN api_keys aks ON s.api_key_id = aks.id
+WHERE s.id = $1
+    AND (s.expires_at > NOW())
+LIMIT 1
+`
+
+func (q *Queries) GetActiveSessionAPIKeyInfo(ctx context.Context, id uuid.UUID) (Role, error) {
+	row := q.db.QueryRow(ctx, getActiveSessionAPIKeyInfo, id)
+	var role Role
+	err := row.Scan(&role)
+	return role, err
+}
+
+const getActiveSessionByID = `-- name: GetActiveSessionByID :one
+SELECT
+  user_id,
+  last_used_at
+FROM sessions
+WHERE id = $1
+  AND expires_at > NOW()
+`
+
+type GetActiveSessionByIDRow struct {
+	UserID     *uuid.UUID `json:"user_id"`
+	LastUsedAt time.Time  `json:"last_used_at"`
+}
+
+func (q *Queries) GetActiveSessionByID(ctx context.Context, id uuid.UUID) (GetActiveSessionByIDRow, error) {
+	row := q.db.QueryRow(ctx, getActiveSessionByID, id)
+	var i GetActiveSessionByIDRow
+	err := row.Scan(&i.UserID, &i.LastUsedAt)
+	return i, err
+}
+
 const getActiveSessionUserInfo = `-- name: GetActiveSessionUserInfo :one
-SELECT u.id AS user_id, u.name, u.email, u.preferred_email,
+SELECT u.id, u.name, u.email, u.preferred_email,
   u.onboarded, u.image, u.role, u.email_consent,
-  u.checked_in_at, u.rfid, u.has_seen_new_application_status,
-  s.last_used_at
+  u.checked_in_at, u.rfid, u.has_seen_new_application_status
 FROM sessions s
 JOIN users u ON s.user_id = u.id
 WHERE s.id = $1
@@ -105,7 +141,7 @@ LIMIT 1
 `
 
 type GetActiveSessionUserInfoRow struct {
-	UserID                      uuid.UUID  `json:"user_id"`
+	ID                          uuid.UUID  `json:"id"`
 	Name                        string     `json:"name"`
 	Email                       *string    `json:"email"`
 	PreferredEmail              *string    `json:"preferred_email"`
@@ -116,14 +152,13 @@ type GetActiveSessionUserInfoRow struct {
 	CheckedInAt                 *time.Time `json:"checked_in_at"`
 	Rfid                        *string    `json:"rfid"`
 	HasSeenNewApplicationStatus *bool      `json:"has_seen_new_application_status"`
-	LastUsedAt                  time.Time  `json:"last_used_at"`
 }
 
 func (q *Queries) GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error) {
 	row := q.db.QueryRow(ctx, getActiveSessionUserInfo, id)
 	var i GetActiveSessionUserInfoRow
 	err := row.Scan(
-		&i.UserID,
+		&i.ID,
 		&i.Name,
 		&i.Email,
 		&i.PreferredEmail,
@@ -134,7 +169,6 @@ func (q *Queries) GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (G
 		&i.CheckedInAt,
 		&i.Rfid,
 		&i.HasSeenNewApplicationStatus,
-		&i.LastUsedAt,
 	)
 	return i, err
 }
