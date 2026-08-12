@@ -88,3 +88,10 @@ func (r *EmailCampaignRepository) UpdateEmailCampaignStatus(
 	}
 	return &campaign, nil
 }
+
+func (r *EmailCampaignRepository) GetApplicantContactEmailsByStatus(
+	ctx context.Context,
+	params sqlc.GetApplicantContactEmailsByStatusParams,
+) ([]string, error) {
+	return r.db.Query.GetApplicantContactEmailsByStatus(ctx, params)
+}

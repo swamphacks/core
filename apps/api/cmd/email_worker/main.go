@@ -56,8 +56,10 @@ func main() {
 	emailWorker := workers.NewEmailWorker(emailService, logger)
 
 	mux := asynq.NewServeMux()
-
+	
+	mux.HandleFunc(tasks.TypeSendTextEmail, emailWorker.HandleSendTextEmailTask)
 	mux.HandleFunc(tasks.TypeSendHtmlEmail, emailWorker.HandleSendHtmlEmailTask)
+	mux.HandleFunc(tasks.TypeSendRawHtmlEmail, emailWorker.HandleSendRawHtmlEmailTask)
 
 	wd, err := os.Getwd()
 	if err != nil {

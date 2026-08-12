@@ -134,7 +134,7 @@ func Run() {
 	emailHandler := email.NewHandler(emailService, logger)
 	email.RegisterRoutes(emailHandler, huma.NewGroup(api, "/email"), mw)
 
-	emailCampaignService := email.NewEmailCampaignService(emailCampaignRepo, logger)
+	emailCampaignService := email.NewEmailCampaignService(emailCampaignRepo, emailService, logger)
 	emailCampaignHandler := email.NewCampaignHandler(emailCampaignService, logger)
 	email.RegisterCampaignRoutes(emailCampaignHandler, huma.NewGroup(api, "/email"), mw)
 

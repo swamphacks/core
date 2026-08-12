@@ -103,3 +103,19 @@ SET
 WHERE id = @id::uuid
     AND hackathon_id = @hackathon_id
 RETURNING *;
+
+-- name: GetApplicantContactEmailsByStatus :many
+-- Resolves an applicant recipient group to contact emails for a hackathon.
+-- The service passes the application statuses that map to a recipient_type
+-- (e.g. 'accepted' for accepted_applicants).
+SELECT
+    (CASE
+        WHEN u.preferred_email IS NOT NULL AND u.preferred_email != '' THEN u.preferred_email
+        ELSE u.email
+    END)::text AS contact_email
+FROM applications a
+JOIN users u ON u.id = a.user_id
+WHERE a.hackathon_id = @hackathon_id
+    AND a.status = ANY(sqlc.arg(statuses)::text[]::application_status[])
+    AND NOT u.is_fake
+    AND NOT a.is_fake;

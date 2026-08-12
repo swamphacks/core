@@ -15,7 +15,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (name, email, image)
 VALUES ($1, $2, $3)
-RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status
+RETURNING id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status, is_fake
 `
 
 type CreateUserParams struct {
@@ -43,6 +43,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.RoleAssignedAt,
 		&i.Role,
 		&i.HasSeenNewApplicationStatus,
+		&i.IsFake,
 	)
 	return i, err
 }
@@ -58,7 +59,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status FROM users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status, is_fake FROM users
 WHERE email = $1
 `
 
@@ -81,12 +82,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email *string) (User, erro
 		&i.RoleAssignedAt,
 		&i.Role,
 		&i.HasSeenNewApplicationStatus,
+		&i.IsFake,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status FROM users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status, is_fake FROM users
 WHERE id = $1
 `
 
@@ -109,12 +111,13 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.RoleAssignedAt,
 		&i.Role,
 		&i.HasSeenNewApplicationStatus,
+		&i.IsFake,
 	)
 	return i, err
 }
 
 const getUserByRFID = `-- name: GetUserByRFID :one
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status FROM users
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status, is_fake FROM users
 WHERE rfid = $1
 `
 
@@ -137,6 +140,7 @@ func (q *Queries) GetUserByRFID(ctx context.Context, rfid *string) (User, error)
 		&i.RoleAssignedAt,
 		&i.Role,
 		&i.HasSeenNewApplicationStatus,
+		&i.IsFake,
 	)
 	return i, err
 }
@@ -174,7 +178,7 @@ func (q *Queries) GetUserEmailInfoById(ctx context.Context, id uuid.UUID) (GetUs
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status
+SELECT id, name, email, email_verified, onboarded, image, created_at, updated_at, preferred_email, email_consent, checked_in_at, rfid, role_assigned_at, role, has_seen_new_application_status, is_fake
 FROM users
 WHERE LOWER(name) LIKE LOWER('%' || COALESCE($1, '') || '%')
    OR LOWER(email) LIKE LOWER('%' || COALESCE($1, '') || '%')
@@ -213,6 +217,7 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]User, err
 			&i.RoleAssignedAt,
 			&i.Role,
 			&i.HasSeenNewApplicationStatus,
+			&i.IsFake,
 		); err != nil {
 			return nil, err
 		}

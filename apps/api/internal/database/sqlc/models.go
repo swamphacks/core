@@ -438,6 +438,7 @@ type Application struct {
 	HackathonID string            `json:"hackathon_id"`
 	IsEarly     bool              `json:"is_early"`
 	ID          uuid.UUID         `json:"id"`
+	IsFake      bool              `json:"is_fake"`
 }
 
 type ApplicationAutoDecisionRequest struct {
@@ -596,6 +597,7 @@ type User struct {
 	RoleAssignedAt              *time.Time `json:"role_assigned_at"`
 	Role                        UserRole   `json:"role"`
 	HasSeenNewApplicationStatus *bool      `json:"has_seen_new_application_status"`
+	IsFake                      bool       `json:"is_fake"`
 }
 
 type UserRedemption struct {
