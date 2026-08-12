@@ -12,14 +12,16 @@ import (
 )
 
 type EmailWorker struct {
-	emailService *email.EmailService
-	logger       zerolog.Logger
+	emailService         *email.EmailService
+	emailCampaignService *email.EmailCampaignService
+	logger               zerolog.Logger
 }
 
-func NewEmailWorker(emailService *email.EmailService, logger zerolog.Logger) *EmailWorker {
+func NewEmailWorker(emailService *email.EmailService, emailCampaignService *email.EmailCampaignService, logger zerolog.Logger) *EmailWorker {
 	return &EmailWorker{
-		emailService: emailService,
-		logger:       logger.With().Str("worker", "EmailWorker").Logger(),
+		emailService:         emailService,
+		emailCampaignService: emailCampaignService,
+		logger:               logger.With().Str("worker", "EmailWorker").Logger(),
 	}
 }
 
@@ -61,6 +63,19 @@ func (w *EmailWorker) HandleSendRawHtmlEmailTask(ctx context.Context, t *asynq.T
 	if err := w.emailService.SendRawHtmlEmail(p.To, p.Subject, p.Body); err != nil {
 		w.logger.Err(err).Msg("Failed to send raw HTML email from worker")
 		return err
+	}
+	return nil
+}
+
+// HandleSweepScheduledCampaignsTask runs the periodic scheduled-send sweep.
+func (w *EmailWorker) HandleSweepScheduledCampaignsTask(ctx context.Context, t *asynq.Task) error {
+	sent, err := w.emailCampaignService.SendDueScheduledCampaigns(ctx)
+	if err != nil {
+		w.logger.Err(err).Msg("Scheduled campaign sweep failed")
+		return err
+	}
+	if sent > 0 {
+		w.logger.Info().Int("campaigns", sent).Msg("Dispatched scheduled campaigns")
 	}
 	return nil
 }

@@ -23,8 +23,11 @@ type campaignStore interface {
 	UpdateEmailCampaign(ctx context.Context, params sqlc.UpdateEmailCampaignParams) (*sqlc.EmailCampaign, error)
 	UpdateEmailCampaignStatus(ctx context.Context, params sqlc.UpdateEmailCampaignStatusParams) (*sqlc.EmailCampaign, error)
 	DeleteEmailCampaign(ctx context.Context, params sqlc.DeleteEmailCampaignParams) error
+	ClaimCampaignForSending(ctx context.Context, params sqlc.ClaimCampaignForSendingParams) (*sqlc.EmailCampaign, error)
+	ListDueScheduledCampaigns(ctx context.Context) ([]sqlc.EmailCampaign, error)
 	GetApplicantContactEmailsByStatus(ctx context.Context, params sqlc.GetApplicantContactEmailsByStatusParams) ([]string, error)
 	GetUserContactEmailsByRoles(ctx context.Context, roles []string) ([]string, error)
+	GetInterestSubscriberEmails(ctx context.Context, hackathonID string) ([]string, error)
 }
 
 // campaignMailer is the send side EmailCampaignService needs.
@@ -69,6 +72,17 @@ var recipientRoles = map[string][]string{
 	"staff":    {"staff"},
 	"visitors": {"visitor"},
 }
+
+// recipientTypeInterestSubscribers reads from the public interest form rather
+// than from users or applications, so it gets its own branch.
+const recipientTypeInterestSubscribers = "interest_subscribers"
+
+// claimableSendStatuses are the states a campaign can be claimed for sending from.
+var claimableSendStatuses = []string{"draft", "scheduled"}
+
+// scheduledSendGrace is how late a scheduled campaign may be and still go out.
+// Beyond this it is failed instead, so an outage cannot trigger a surprise blast.
+const scheduledSendGrace = 2 * time.Hour
 
 // EmailCampaignService owns business rules for saved email campaigns.
 type EmailCampaignService struct {
@@ -247,6 +261,8 @@ func (s *EmailCampaignService) resolveRecipients(ctx context.Context, campaign *
 			})
 		case recipientRoles[string(rt)] != nil:
 			groupEmails, err = s.emailCampaignRepo.GetUserContactEmailsByRoles(ctx, recipientRoles[string(rt)])
+		case string(rt) == recipientTypeInterestSubscribers:
+			groupEmails, err = s.emailCampaignRepo.GetInterestSubscriberEmails(ctx, campaign.HackathonID)
 		default:
 			return nil, fmt.Errorf("%w: %s", ErrUnsupportedRecipientType, rt)
 		}
@@ -287,8 +303,9 @@ func (s *EmailCampaignService) enqueueCampaignEmails(campaign *sqlc.EmailCampaig
 	return nil
 }
 
-// SendCampaign loads a campaign, resolves its audience, enqueues the emails,
-// and drives status: draft/scheduled -> sending -> sent (or failed).
+// SendCampaign sends a campaign on an admin's behalf.
+// The campaign is claimed atomically, so a double-click or two concurrent
+// requests cannot both dispatch it.
 func (s *EmailCampaignService) SendCampaign(
 	ctx context.Context,
 	campaignID uuid.UUID,
@@ -315,28 +332,36 @@ func (s *EmailCampaignService) SendCampaign(
 		return nil, ErrEmailCampaignNoRecipients
 	}
 
-	// Mark sending first, so a crash mid-send doesn't leave it looking like a draft.
-	if _, err := s.emailCampaignRepo.UpdateEmailCampaignStatus(ctx, sqlc.UpdateEmailCampaignStatusParams{
-		Status:                  sqlc.EmailCampaignStatusSending,
-		UpdatedByUserIDDoUpdate: true,
-		UpdatedByUserID:         actorUserID,
+	// Claim before dispatching: this is the only write that can race, and losing
+	// it means someone else already started this send.
+	claimed, err := s.emailCampaignRepo.ClaimCampaignForSending(ctx, sqlc.ClaimCampaignForSendingParams{
 		ID:                      campaignID,
 		HackathonID:             hackathonID,
-	}); err != nil {
+		FromStatuses:            claimableSendStatuses,
+		UpdatedByUserIDDoUpdate: true,
+		UpdatedByUserID:         actorUserID,
+	})
+	if errors.Is(err, repository.ErrEmailCampaignNotClaimable) {
+		return nil, ErrEmailCampaignCannotSend
+	}
+	if err != nil {
 		return nil, err
 	}
 
+	return s.dispatchClaimedCampaign(ctx, claimed, recipients, &actorUserID)
+}
+
+// dispatchClaimedCampaign enqueues the mail for a campaign already moved into
+// "sending", then records the outcome. Both the admin path and the scheduler
+// share it so the status bookkeeping lives in exactly one place.
+func (s *EmailCampaignService) dispatchClaimedCampaign(
+	ctx context.Context,
+	campaign *sqlc.EmailCampaign,
+	recipients []string,
+	actorUserID *uuid.UUID,
+) (*sqlc.EmailCampaign, error) {
 	if sendErr := s.enqueueCampaignEmails(campaign, recipients); sendErr != nil {
-		errMsg := sendErr.Error()
-		if _, uerr := s.emailCampaignRepo.UpdateEmailCampaignStatus(ctx, sqlc.UpdateEmailCampaignStatusParams{
-			Status:                  sqlc.EmailCampaignStatusFailed,
-			LastErrorDoUpdate:       true,
-			LastError:               &errMsg,
-			UpdatedByUserIDDoUpdate: true,
-			UpdatedByUserID:         actorUserID,
-			ID:                      campaignID,
-			HackathonID:             hackathonID,
-		}); uerr != nil {
+		if _, uerr := s.markCampaignFailed(ctx, campaign, sendErr.Error(), actorUserID); uerr != nil {
 			s.logger.Err(uerr).Msg("Failed to mark campaign as failed")
 		}
 		return nil, sendErr
@@ -347,14 +372,120 @@ func (s *EmailCampaignService) SendCampaign(
 		Status:                  sqlc.EmailCampaignStatusSent,
 		SentAtDoUpdate:          true,
 		SentAt:                  &now,
-		UpdatedByUserIDDoUpdate: true,
-		UpdatedByUserID:         actorUserID,
-		ID:                      campaignID,
-		HackathonID:             hackathonID,
+		UpdatedByUserIDDoUpdate: actorUserID != nil,
+		UpdatedByUserID:         derefUserID(actorUserID),
+		ID:                      campaign.ID,
+		HackathonID:             campaign.HackathonID,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	return sent, nil
+}
+
+// markCampaignFailed records a failure and the reason on the campaign row.
+func (s *EmailCampaignService) markCampaignFailed(
+	ctx context.Context,
+	campaign *sqlc.EmailCampaign,
+	reason string,
+	actorUserID *uuid.UUID,
+) (*sqlc.EmailCampaign, error) {
+	return s.emailCampaignRepo.UpdateEmailCampaignStatus(ctx, sqlc.UpdateEmailCampaignStatusParams{
+		Status:                  sqlc.EmailCampaignStatusFailed,
+		LastErrorDoUpdate:       true,
+		LastError:               &reason,
+		UpdatedByUserIDDoUpdate: actorUserID != nil,
+		UpdatedByUserID:         derefUserID(actorUserID),
+		ID:                      campaign.ID,
+		HackathonID:             campaign.HackathonID,
+	})
+}
+
+// derefUserID keeps the generated params happy for scheduler-driven sends,
+// which have no acting user; the paired DoUpdate flag is false in that case.
+func derefUserID(id *uuid.UUID) uuid.UUID {
+	if id == nil {
+		return uuid.UUID{}
+	}
+	return *id
+}
+
+// SendDueScheduledCampaigns is the scheduler sweep: it finds campaigns whose
+// send time has arrived and dispatches each one. It returns the number sent.
+//
+// One campaign failing never aborts the sweep, otherwise a single bad campaign
+// would block every later one indefinitely.
+func (s *EmailCampaignService) SendDueScheduledCampaigns(ctx context.Context) (int, error) {
+	due, err := s.emailCampaignRepo.ListDueScheduledCampaigns(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	sentCount := 0
+	for i := range due {
+		campaign := due[i]
+		if err := s.sendScheduledCampaign(ctx, &campaign); err != nil {
+			s.logger.Err(err).
+				Str("campaignID", campaign.ID.String()).
+				Str("hackathonID", campaign.HackathonID).
+				Msg("Failed to send scheduled campaign")
+			continue
+		}
+		sentCount++
+	}
+
+	return sentCount, nil
+}
+
+// sendScheduledCampaign handles one due campaign: it drops campaigns that are
+// too far past their slot, resolves recipients, claims the row, then dispatches.
+func (s *EmailCampaignService) sendScheduledCampaign(ctx context.Context, campaign *sqlc.EmailCampaign) error {
+	if campaign.ScheduledAt == nil {
+		return nil
+	}
+
+	// A long outage must not trigger a surprise blast hours after the fact.
+	if lateness := time.Since(*campaign.ScheduledAt); lateness > scheduledSendGrace {
+		reason := fmt.Sprintf("missed its scheduled send by %s", lateness.Round(time.Minute))
+		if _, err := s.markCampaignFailed(ctx, campaign, reason, nil); err != nil {
+			return err
+		}
+		s.logger.Warn().
+			Str("campaignID", campaign.ID.String()).
+			Dur("lateBy", lateness).
+			Msg("Scheduled campaign expired past its grace window")
+		return nil
+	}
+
+	recipients, err := s.resolveRecipients(ctx, campaign)
+	if err != nil {
+		if _, ferr := s.markCampaignFailed(ctx, campaign, err.Error(), nil); ferr != nil {
+			s.logger.Err(ferr).Msg("Failed to mark campaign as failed")
+		}
+		return err
+	}
+	if len(recipients) == 0 {
+		if _, ferr := s.markCampaignFailed(ctx, campaign, ErrEmailCampaignNoRecipients.Error(), nil); ferr != nil {
+			s.logger.Err(ferr).Msg("Failed to mark campaign as failed")
+		}
+		return ErrEmailCampaignNoRecipients
+	}
+
+	// Claiming is what makes an overlapping tick harmless: only one wins the row.
+	claimed, err := s.emailCampaignRepo.ClaimCampaignForSending(ctx, sqlc.ClaimCampaignForSendingParams{
+		ID:           campaign.ID,
+		HackathonID:  campaign.HackathonID,
+		FromStatuses: []string{"scheduled"},
+	})
+	if errors.Is(err, repository.ErrEmailCampaignNotClaimable) {
+		// Another tick already picked it up; nothing to do and nothing wrong.
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = s.dispatchClaimedCampaign(ctx, claimed, recipients, nil)
+	return err
 }

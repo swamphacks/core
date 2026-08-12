@@ -137,3 +137,35 @@ WHERE u.role = ANY(sqlc.arg(roles)::text[]::user_role[])
 DELETE FROM email_campaigns
 WHERE id = @id::uuid
     AND hackathon_id = @hackathon_id;
+
+-- name: ClaimCampaignForSending :one
+-- Atomically moves a campaign into 'sending', but only from a state that is still
+-- claimable. Two concurrent callers cannot both win: the loser matches no row.
+UPDATE email_campaigns
+SET
+    status = 'sending'::email_campaign_status,
+    updated_by_user_id =
+        CASE WHEN @updated_by_user_id_do_update::boolean
+        THEN @updated_by_user_id::uuid
+        ELSE updated_by_user_id END
+WHERE id = @id::uuid
+    AND hackathon_id = @hackathon_id
+    AND status = ANY(sqlc.arg(from_statuses)::text[]::email_campaign_status[])
+RETURNING *;
+
+-- name: ListDueScheduledCampaigns :many
+-- Scheduled campaigns whose send time has arrived, oldest first.
+-- Not hackathon-scoped: the sweep runs across every event.
+SELECT *
+FROM email_campaigns
+WHERE status = 'scheduled'::email_campaign_status
+    AND scheduled_at IS NOT NULL
+    AND scheduled_at <= now()
+ORDER BY scheduled_at ASC;
+
+-- name: GetInterestSubscriberEmails :many
+-- Resolves the interest_subscribers recipient group for a hackathon.
+-- These addresses are collected by the public interest form, not tied to a user.
+SELECT email
+FROM interest_submissions
+WHERE hackathon_id = @hackathon_id;

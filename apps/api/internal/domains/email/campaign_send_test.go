@@ -4,22 +4,28 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
+	"github.com/swamphacks/core/apps/api/internal/database/repository"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
 // fakeCampaignStore is an in-memory campaignStore. Only the methods SendCampaign
 // exercises carry behaviour; the rest exist to satisfy the interface.
 type fakeCampaignStore struct {
-	campaign        *sqlc.EmailCampaign
-	getErr          error
-	applicantEmails []string
-	roleEmails      []string
-	resolveErr      error
-	statusCalls     []sqlc.UpdateEmailCampaignStatusParams
-	deleted         bool
+	campaign         *sqlc.EmailCampaign
+	getErr           error
+	applicantEmails  []string
+	roleEmails       []string
+	resolveErr       error
+	statusCalls      []sqlc.UpdateEmailCampaignStatusParams
+	deleted          bool
+	dueCampaigns     []sqlc.EmailCampaign
+	claimErr         error
+	claimCalls       int
+	subscriberEmails []string
 }
 
 func (f *fakeCampaignStore) GetEmailCampaignByID(ctx context.Context, params sqlc.GetEmailCampaignByIDParams) (*sqlc.EmailCampaign, error) {
@@ -47,6 +53,24 @@ func (f *fakeCampaignStore) UpdateEmailCampaignStatus(ctx context.Context, param
 func (f *fakeCampaignStore) DeleteEmailCampaign(ctx context.Context, params sqlc.DeleteEmailCampaignParams) error {
 	f.deleted = true
 	return nil
+}
+
+func (f *fakeCampaignStore) ClaimCampaignForSending(ctx context.Context, params sqlc.ClaimCampaignForSendingParams) (*sqlc.EmailCampaign, error) {
+	f.claimCalls++
+	if f.claimErr != nil {
+		return nil, f.claimErr
+	}
+	claimed := *f.campaign
+	claimed.Status = sqlc.EmailCampaignStatusSending
+	return &claimed, nil
+}
+
+func (f *fakeCampaignStore) ListDueScheduledCampaigns(ctx context.Context) ([]sqlc.EmailCampaign, error) {
+	return f.dueCampaigns, nil
+}
+
+func (f *fakeCampaignStore) GetInterestSubscriberEmails(ctx context.Context, hackathonID string) ([]string, error) {
+	return f.subscriberEmails, f.resolveErr
 }
 
 func (f *fakeCampaignStore) CreateEmailCampaign(ctx context.Context, params sqlc.CreateEmailCampaignParams) (*sqlc.EmailCampaign, error) {
@@ -128,16 +152,17 @@ func TestSendCampaignMarksSendingBeforeSent(t *testing.T) {
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	if len(store.statusCalls) != 2 {
-		t.Fatalf("expected 2 status updates, got %d", len(store.statusCalls))
+	// The move into "sending" is the atomic claim, not a plain status update.
+	if store.claimCalls != 1 {
+		t.Fatalf("expected the campaign to be claimed exactly once, got %d", store.claimCalls)
 	}
-	if store.statusCalls[0].Status != sqlc.EmailCampaignStatusSending {
-		t.Fatalf("expected first update to be sending, got %s", store.statusCalls[0].Status)
+	if len(store.statusCalls) != 1 {
+		t.Fatalf("expected 1 status update after the claim, got %d", len(store.statusCalls))
 	}
-	if store.statusCalls[1].Status != sqlc.EmailCampaignStatusSent {
-		t.Fatalf("expected second update to be sent, got %s", store.statusCalls[1].Status)
+	if store.statusCalls[0].Status != sqlc.EmailCampaignStatusSent {
+		t.Fatalf("expected final status sent, got %s", store.statusCalls[0].Status)
 	}
-	if store.statusCalls[1].SentAt == nil {
+	if store.statusCalls[0].SentAt == nil {
 		t.Fatal("expected sent_at to be set when marking sent")
 	}
 }
@@ -203,7 +228,7 @@ func TestSendCampaignFailsWhenNoRecipientsResolve(t *testing.T) {
 }
 
 func TestSendCampaignRejectsUnsupportedRecipientType(t *testing.T) {
-	campaign := newTestCampaign(sqlc.EmailCampaignStatusDraft, sqlc.EmailCampaignFormatText, "interest_subscribers")
+	campaign := newTestCampaign(sqlc.EmailCampaignStatusDraft, sqlc.EmailCampaignFormatText, "attendees_not_a_real_group")
 	store := &fakeCampaignStore{campaign: campaign}
 
 	_, err := newTestService(store, &fakeMailer{}).SendCampaign(context.Background(), campaign.ID, campaign.HackathonID, uuid.New())
@@ -222,10 +247,13 @@ func TestSendCampaignMarksFailedWhenQueueingFails(t *testing.T) {
 		t.Fatalf("expected the queue error to surface, got %v", err)
 	}
 
-	if len(store.statusCalls) != 2 {
-		t.Fatalf("expected sending then failed, got %d updates", len(store.statusCalls))
+	if store.claimCalls != 1 {
+		t.Fatalf("expected the campaign to be claimed before dispatch, got %d claims", store.claimCalls)
 	}
-	last := store.statusCalls[1]
+	if len(store.statusCalls) != 1 {
+		t.Fatalf("expected a single failed update after the claim, got %d", len(store.statusCalls))
+	}
+	last := store.statusCalls[0]
 	if last.Status != sqlc.EmailCampaignStatusFailed {
 		t.Fatalf("expected final status failed, got %s", last.Status)
 	}
@@ -271,5 +299,109 @@ func TestDeleteCampaignAllowsDraftAndFailed(t *testing.T) {
 		if !store.deleted {
 			t.Fatalf("status %s: expected the campaign to be deleted", status)
 		}
+	}
+}
+
+func scheduledAt(d time.Duration) *time.Time {
+	t := time.Now().Add(d)
+	return &t
+}
+
+func TestSweepSendsDueScheduledCampaign(t *testing.T) {
+	campaign := newTestCampaign(sqlc.EmailCampaignStatusScheduled, sqlc.EmailCampaignFormatText, "accepted_applicants")
+	campaign.ScheduledAt = scheduledAt(-5 * time.Minute)
+	store := &fakeCampaignStore{
+		campaign:        campaign,
+		dueCampaigns:    []sqlc.EmailCampaign{*campaign},
+		applicantEmails: []string{"a@ufl.edu", "b@ufl.edu"},
+	}
+	mailer := &fakeMailer{}
+
+	sent, err := newTestService(store, mailer).SendDueScheduledCampaigns(context.Background())
+	if err != nil {
+		t.Fatalf("expected sweep to succeed, got %v", err)
+	}
+	if sent != 1 {
+		t.Fatalf("expected 1 campaign sent, got %d", sent)
+	}
+	if len(mailer.textRecipients) != 2 {
+		t.Fatalf("expected 2 queued emails, got %v", mailer.textRecipients)
+	}
+}
+
+func TestSweepFailsCampaignPastGraceWindow(t *testing.T) {
+	campaign := newTestCampaign(sqlc.EmailCampaignStatusScheduled, sqlc.EmailCampaignFormatText, "accepted_applicants")
+	campaign.ScheduledAt = scheduledAt(-6 * time.Hour)
+	store := &fakeCampaignStore{
+		campaign:        campaign,
+		dueCampaigns:    []sqlc.EmailCampaign{*campaign},
+		applicantEmails: []string{"a@ufl.edu"},
+	}
+	mailer := &fakeMailer{}
+
+	sent, err := newTestService(store, mailer).SendDueScheduledCampaigns(context.Background())
+	if err != nil {
+		t.Fatalf("expected sweep to succeed, got %v", err)
+	}
+	if sent != 1 {
+		t.Fatalf("an expired campaign should be handled, not error: got %d", sent)
+	}
+	if len(mailer.textRecipients) != 0 {
+		t.Fatalf("expired campaign must not send mail, got %v", mailer.textRecipients)
+	}
+	if store.claimCalls != 0 {
+		t.Fatal("expired campaign must never be claimed")
+	}
+	if len(store.statusCalls) != 1 || store.statusCalls[0].Status != sqlc.EmailCampaignStatusFailed {
+		t.Fatalf("expected the campaign to be marked failed, got %+v", store.statusCalls)
+	}
+	if store.statusCalls[0].LastError == nil {
+		t.Fatal("expected last_error to explain the missed schedule")
+	}
+}
+
+func TestSweepSkipsCampaignClaimedByAnotherTick(t *testing.T) {
+	campaign := newTestCampaign(sqlc.EmailCampaignStatusScheduled, sqlc.EmailCampaignFormatText, "accepted_applicants")
+	campaign.ScheduledAt = scheduledAt(-1 * time.Minute)
+	store := &fakeCampaignStore{
+		campaign:        campaign,
+		dueCampaigns:    []sqlc.EmailCampaign{*campaign},
+		applicantEmails: []string{"a@ufl.edu"},
+		claimErr:        repository.ErrEmailCampaignNotClaimable,
+	}
+	mailer := &fakeMailer{}
+
+	if _, err := newTestService(store, mailer).SendDueScheduledCampaigns(context.Background()); err != nil {
+		t.Fatalf("losing the claim race is not an error, got %v", err)
+	}
+	if len(mailer.textRecipients) != 0 {
+		t.Fatalf("a campaign claimed elsewhere must not be sent again, got %v", mailer.textRecipients)
+	}
+}
+
+func TestSendCampaignSurfacesLostClaimAsCannotSend(t *testing.T) {
+	campaign := newTestCampaign(sqlc.EmailCampaignStatusDraft, sqlc.EmailCampaignFormatText, "accepted_applicants")
+	store := &fakeCampaignStore{
+		campaign:        campaign,
+		applicantEmails: []string{"a@ufl.edu"},
+		claimErr:        repository.ErrEmailCampaignNotClaimable,
+	}
+
+	_, err := newTestService(store, &fakeMailer{}).SendCampaign(context.Background(), campaign.ID, campaign.HackathonID, uuid.New())
+	if !errors.Is(err, ErrEmailCampaignCannotSend) {
+		t.Fatalf("expected %v, got %v", ErrEmailCampaignCannotSend, err)
+	}
+}
+
+func TestSendCampaignResolvesInterestSubscribers(t *testing.T) {
+	campaign := newTestCampaign(sqlc.EmailCampaignStatusDraft, sqlc.EmailCampaignFormatText, "interest_subscribers")
+	store := &fakeCampaignStore{campaign: campaign, subscriberEmails: []string{"curious@gmail.com", "maybe@gmail.com"}}
+	mailer := &fakeMailer{}
+
+	if _, err := newTestService(store, mailer).SendCampaign(context.Background(), campaign.ID, campaign.HackathonID, uuid.New()); err != nil {
+		t.Fatalf("expected success, got %v", err)
+	}
+	if len(mailer.textRecipients) != 2 {
+		t.Fatalf("expected 2 subscriber emails, got %v", mailer.textRecipients)
 	}
 }

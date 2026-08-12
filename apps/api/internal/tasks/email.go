@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	TypeSendTextEmail    = "textemail:send"
-	TypeSendHtmlEmail    = "htmlemail:send"
-	TypeSendRawHtmlEmail = "rawhtmlemail:send"
+	TypeSendTextEmail           = "textemail:send"
+	TypeSendHtmlEmail           = "htmlemail:send"
+	TypeSendRawHtmlEmail        = "rawhtmlemail:send"
+	TypeSweepScheduledCampaigns = "emailcampaign:sweep_scheduled"
 )
 
 type SendTextEmailPayload struct {
@@ -56,4 +57,10 @@ func NewTaskSendRawHtmlEmail(payload SendRawHtmlEmailPayload) (*asynq.Task, erro
 	}
 
 	return asynq.NewTask(TypeSendRawHtmlEmail, data), nil
+}
+
+// NewTaskSweepScheduledCampaigns builds the periodic sweep task. It carries no
+// payload: the due campaigns are whatever the database says at run time.
+func NewTaskSweepScheduledCampaigns() *asynq.Task {
+	return asynq.NewTask(TypeSweepScheduledCampaigns, nil)
 }

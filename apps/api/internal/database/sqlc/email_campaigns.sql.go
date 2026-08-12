@@ -12,6 +12,60 @@ import (
 	"github.com/google/uuid"
 )
 
+const claimCampaignForSending = `-- name: ClaimCampaignForSending :one
+UPDATE email_campaigns
+SET
+    status = 'sending'::email_campaign_status,
+    updated_by_user_id =
+        CASE WHEN $1::boolean
+        THEN $2::uuid
+        ELSE updated_by_user_id END
+WHERE id = $3::uuid
+    AND hackathon_id = $4
+    AND status = ANY($5::text[]::email_campaign_status[])
+RETURNING id, hackathon_id, title, description, subject, body, format, recipient_types, status, scheduled_at, sent_at, last_error, created_by_user_id, updated_by_user_id, created_at, updated_at
+`
+
+type ClaimCampaignForSendingParams struct {
+	UpdatedByUserIDDoUpdate bool      `json:"updated_by_user_id_do_update"`
+	UpdatedByUserID         uuid.UUID `json:"updated_by_user_id"`
+	ID                      uuid.UUID `json:"id"`
+	HackathonID             string    `json:"hackathon_id"`
+	FromStatuses            []string  `json:"from_statuses"`
+}
+
+// Atomically moves a campaign into 'sending', but only from a state that is still
+// claimable. Two concurrent callers cannot both win: the loser matches no row.
+func (q *Queries) ClaimCampaignForSending(ctx context.Context, arg ClaimCampaignForSendingParams) (EmailCampaign, error) {
+	row := q.db.QueryRow(ctx, claimCampaignForSending,
+		arg.UpdatedByUserIDDoUpdate,
+		arg.UpdatedByUserID,
+		arg.ID,
+		arg.HackathonID,
+		arg.FromStatuses,
+	)
+	var i EmailCampaign
+	err := row.Scan(
+		&i.ID,
+		&i.HackathonID,
+		&i.Title,
+		&i.Description,
+		&i.Subject,
+		&i.Body,
+		&i.Format,
+		&i.RecipientTypes,
+		&i.Status,
+		&i.ScheduledAt,
+		&i.SentAt,
+		&i.LastError,
+		&i.CreatedByUserID,
+		&i.UpdatedByUserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createEmailCampaign = `-- name: CreateEmailCampaign :one
 INSERT INTO email_campaigns (
     hackathon_id,
@@ -187,6 +241,34 @@ func (q *Queries) GetEmailCampaignByID(ctx context.Context, arg GetEmailCampaign
 	return i, err
 }
 
+const getInterestSubscriberEmails = `-- name: GetInterestSubscriberEmails :many
+SELECT email
+FROM interest_submissions
+WHERE hackathon_id = $1
+`
+
+// Resolves the interest_subscribers recipient group for a hackathon.
+// These addresses are collected by the public interest form, not tied to a user.
+func (q *Queries) GetInterestSubscriberEmails(ctx context.Context, hackathonID string) ([]string, error) {
+	rows, err := q.db.Query(ctx, getInterestSubscriberEmails, hackathonID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var email string
+		if err := rows.Scan(&email); err != nil {
+			return nil, err
+		}
+		items = append(items, email)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserContactEmailsByRoles = `-- name: GetUserContactEmailsByRoles :many
 SELECT
     (CASE
@@ -213,6 +295,54 @@ func (q *Queries) GetUserContactEmailsByRoles(ctx context.Context, roles []strin
 			return nil, err
 		}
 		items = append(items, contact_email)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDueScheduledCampaigns = `-- name: ListDueScheduledCampaigns :many
+SELECT id, hackathon_id, title, description, subject, body, format, recipient_types, status, scheduled_at, sent_at, last_error, created_by_user_id, updated_by_user_id, created_at, updated_at
+FROM email_campaigns
+WHERE status = 'scheduled'::email_campaign_status
+    AND scheduled_at IS NOT NULL
+    AND scheduled_at <= now()
+ORDER BY scheduled_at ASC
+`
+
+// Scheduled campaigns whose send time has arrived, oldest first.
+// Not hackathon-scoped: the sweep runs across every event.
+func (q *Queries) ListDueScheduledCampaigns(ctx context.Context) ([]EmailCampaign, error) {
+	rows, err := q.db.Query(ctx, listDueScheduledCampaigns)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []EmailCampaign{}
+	for rows.Next() {
+		var i EmailCampaign
+		if err := rows.Scan(
+			&i.ID,
+			&i.HackathonID,
+			&i.Title,
+			&i.Description,
+			&i.Subject,
+			&i.Body,
+			&i.Format,
+			&i.RecipientTypes,
+			&i.Status,
+			&i.ScheduledAt,
+			&i.SentAt,
+			&i.LastError,
+			&i.CreatedByUserID,
+			&i.UpdatedByUserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
