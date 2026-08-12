@@ -1,6 +1,7 @@
 package apikeys
 
 import (
+	"strings"
 	"time"
 
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
@@ -9,25 +10,38 @@ import (
 // See https://attilaolah.eu/2014/09/10/json-and-struct-composition-in-go/
 type omit *struct{}
 
-type ApiKeyResponse struct {
-	*sqlc.ApiKey
-	SecretHash omit `json:"secret_hash,omitempty"`
+type ListApiKeysOutput struct {
+	Body []sqlc.ListApiKeysRow
 }
 
-type ListApiKeysOutput struct {
-	Body []ApiKeyResponse
+type GetApiKeyOutput struct {
+	Body *sqlc.GetApiKeyByIdRow
 }
 
 type CreateApiKeyRequest struct {
 	Name        string     `json:"name" minLength:"1"`
-	Description string     `json:"description" minLength:"1"`
-	Role        *sqlc.Role `json:"role"`
+	Description *string    `json:"description,omitempty" minLength:"1"`
+	Role        sqlc.Role  `json:"role"`
 	ExpiresAt   *time.Time `json:"expiresAt,omitempty"`
 }
 
-type CreateApiKeyOutput struct {
-	*ApiKeyResponse
+func (r *CreateApiKeyRequest) Validate() error {
+	if strings.TrimSpace(r.Name) == "" {
+		return ErrApiKeyNameRequired
+	}
+	if r.Description != nil && strings.TrimSpace(*r.Description) == "" {
+		return ErrApiKeyDescriptionRequired
+	}
+	return nil
+}
+
+type CreateApiKeyResponse struct {
+	*sqlc.CreateApiKeyRow
 	Secret string `json:"secret"`
+}
+
+type CreateApiKeyOutput struct {
+	Body *CreateApiKeyResponse
 }
 
 type DeleteApiKeyOutput struct {
