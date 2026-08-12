@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 20px;
+  padding-top: 250px;
   color: #d8b286;
   font-family: "Jersey 20", cursive;
   margin-bottom: 170px;
@@ -16,23 +16,35 @@
   font-size: 40px;
 }
 
+.tracks-body-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.track-gator {
+  margin-top: 20px;
+  height: 230px;
+}
+
 .track-container {
+  display: flex;
   margin: 0 10px;
   max-width: 400px;
   flex-direction: column;
+  gap: 5px;
 }
-/* .track-container {
-  position: absolute;
-} */
 
 .track-header {
   margin-left: 5px;
-  /* position: relative; */
   background: none;
   border: none;
   outline: none;
   font-size: 1.3rem !important;
   color: #d8b286;
+  /* color: #e8dbcc; */
   text-align: left;
 }
 
@@ -41,9 +53,19 @@
 }
 
 .track {
+  position: relative;
   display: flex;
   align-items: center;
-  min-height: 55px;
+  min-height: 50px;
+  cursor: pointer !important;
+}
+
+.track-title {
+  width: 70%;
+}
+
+.track:hover {
+  text-decoration: underline;
 }
 
 .track-description {
@@ -52,40 +74,59 @@
 }
 
 .track-icon {
-  width: 50px;
+  width: 45px;
+  height: 50px;
 }
 
-/* .track-items-container {
-  display: flex;
-}
-
-.track-icons-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.track-names-container {
+.tracks-modal-container {
+  z-index: 1000;
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  justify-content: center;
-} */
+  font-family: "Jersey 20", cursive;
+  width: 100%;
+  transition: min-height 200ms ease;
+}
+
+.ReactModal__Body--open {
+  overflow: hidden;
+  padding-right: 8px;
+}
+
+.modal-track {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  font-size: 23px;
+  color: #e8dbcc;
+}
+
+.modal-track-description {
+  color: #e8dbcc;
+  font-size: 20px;
+}
+
 
 @media (min-width: 768px) {
   .tracks-container {
     display: flex;
     align-items: first baseline;
     width: 900px;
+    padding-top: 30px;
   }
 
   .track-container {
     margin: 0 10px;
     max-width: 700px;
     flex-direction: column;
+    gap: 10px;
   }
 
   .track-header {
-    font-size: 1.6rem !important;
+    font-size: 1.5rem !important;
+  }
+
+  .tracks-body-container {
+    flex-direction: row;
   }
 }

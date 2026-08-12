@@ -230,7 +230,7 @@
   font-family: 'Pixelify Sans', monospace;
   color: #d8b286;
   font-size: 2.0rem;
-  line-height: 0.78;
+  line-height: 0.9;
   font-weight: 700;
   text-shadow:
     1px 1px 0 #4a2410,
@@ -251,6 +251,10 @@
   font-size: 2.4rem;
   line-height: 0.78;
   -webkit-text-stroke: 0.5px #7c573c; */
+}
+
+.location {
+  margin-top: 10px !important;
 }
 
 .menu-container {
@@ -322,6 +326,11 @@
     0 1px #7e5d4c,
     0 -1px #7e5d4c;
   font-size: 1.5rem;
+  user-select: none;
+}
+
+.icon-list img {
+  user-select: none;
 }
 
 .submenu-links-container span{
@@ -331,6 +340,7 @@
 
 .submenu-link {
   text-decoration: underline !important;
+  user-select: none;
 }
 
 .submenu-link:hover {

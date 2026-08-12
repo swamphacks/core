@@ -13,6 +13,7 @@
   font-family: 'Pixelify Sans', monospace;
   text-align: center;
   font-size: 40px;
+  margin-left: 20px;
 }
 
 .sponsors-vegetation {
@@ -51,9 +52,14 @@
 .water {
   position: relative;
   display: block;
-  height: 600px;
+  height: 500px;
   width: 100%;
-  background-color: #0f4444;
+  background-color: #306271;
+  /* background-image: url("/assets/water.png"); */
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-size: 50% 15%;
 }
 
 .fish-school {

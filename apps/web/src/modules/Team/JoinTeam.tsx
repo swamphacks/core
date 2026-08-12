@@ -6,16 +6,35 @@ import { useTeamActions } from "./hooks/useTeamActions";
 import { HTTPError } from "ky";
 import { toast } from "react-toastify";
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 interface JoinTeamProps {
   inviteId: string;
 }
 
 export default function JoinTeam({ inviteId }: JoinTeamProps) {
-  const { data: team, isPending } = useTeamByInviteId(inviteId);
+  const { data: team, error, isPending, isError } = useTeamByInviteId(inviteId);
   const members = useTeamMembers(team?.id);
   const { joinTeam } = useTeamActions();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function checkError() {
+      if (error instanceof HTTPError) {
+        toast.error((await error.response.json()).detail);
+      }
+    }
+
+    checkError();
+  }, [error]);
+
+  if (isError) {
+    return (
+      <div className="w-full h-full sm:max-w-180 mx-auto font-figtree p-2 relative flex justify-center items-center pb-50">
+        <p>Error loading team</p>
+      </div>
+    );
+  }
 
   if (isPending || members.isPending) {
     return (

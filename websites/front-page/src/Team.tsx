@@ -3,7 +3,7 @@ import "./Team.css";
 import woodenSign from "./assets/WoodenSign.png";
 import tent from "./assets/Tent.png";
 import tent2 from "./assets/Tent2.png";
-import fire from "./assets/Fire.png";
+import fire from "./assets/Fire.gif";
 
 export default function Team() {
   return (
