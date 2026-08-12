@@ -142,7 +142,7 @@ func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oaut
 		}
 		// create session
 		session, err = txSessionRepo.Create(ctx, sqlc.CreateSessionParams{
-			UserID:    user.ID,
+			UserID:    &user.ID,
 			ExpiresAt: time.Now().AddDate(0, 1, 0),
 			IpAddress: ipAddress,
 			UserAgent: userAgent,
@@ -163,7 +163,7 @@ func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oaut
 
 func (s *AuthService) createSessionForExistingUser(ctx context.Context, userID uuid.UUID, ipAddress, userAgent *string) (*sqlc.Session, error) {
 	return s.sessionRepo.Create(ctx, sqlc.CreateSessionParams{
-		UserID:    userID,
+		UserID:    &userID,
 		ExpiresAt: time.Now().AddDate(0, 1, 0),
 		IpAddress: ipAddress,
 		UserAgent: userAgent,

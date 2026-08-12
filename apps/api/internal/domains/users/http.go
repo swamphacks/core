@@ -437,7 +437,7 @@ func (h *handler) handleGetUsers(ctx context.Context, input *struct {
 type AssignRoleRequest struct {
 	Email  *string       `json:"email"`
 	UserID *string       `json:"userID"`
-	Role   sqlc.UserRole `json:"role"`
+	Role   sqlc.Role `json:"role"`
 }
 
 type AssignRoleOutput struct {

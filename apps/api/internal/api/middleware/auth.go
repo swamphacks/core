@@ -26,7 +26,7 @@ type ctxKey string
 // Use this variable to retrieve the user object later from context!
 const UserContextKey ctxKey = "user"
 const SessionContextKey ctxKey = "session"
-const UserRoleContextKey ctxKey = "eventRole"
+const RoleContextKey ctxKey = "eventRole"
 
 type AuthMiddleware struct {
 	db       *database.DB
@@ -57,7 +57,7 @@ type UserContext struct {
 	Image *string `json:"image" example:"https://cdn.example.com/avatar.png"`
 
 	// Role assigned to the user
-	Role sqlc.UserRole `json:"role" enum:"admin,staff,attendee,applicant,visitor"`
+	Role sqlc.Role `json:"role" enum:"admin,staff,attendee,applicant,visitor"`
 
 	// Whether the user agreed to receive emails
 	EmailConsent bool `json:"emailConsent" example:"false"`
@@ -104,7 +104,7 @@ func (m *AuthMiddleware) RequireAuthHuma(ctx huma.Context, next func(huma.Contex
 }
 
 // TODO: remove this extra layer and use RequireRole directly
-func (m *AuthMiddleware) RequireRoleHuma(roles []sqlc.UserRole) func(ctx huma.Context, next func(huma.Context)) {
+func (m *AuthMiddleware) RequireRoleHuma(roles []sqlc.Role) func(ctx huma.Context, next func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		r, w := humachi.Unwrap(ctx)
 
@@ -117,7 +117,7 @@ func (m *AuthMiddleware) RequireRoleHuma(roles []sqlc.UserRole) func(ctx huma.Co
 func (m *AuthMiddleware) RequireAdminHuma(ctx huma.Context, next func(huma.Context)) {
 	r, w := humachi.Unwrap(ctx)
 
-	mwHandler := m.RequireRoles([]sqlc.UserRole{sqlc.UserRoleAdmin})
+	mwHandler := m.RequireRoles([]sqlc.Role{sqlc.RoleAdmin})
 
 	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
 		next(huma.WithContext(ctx, newR.Context()))
@@ -127,7 +127,7 @@ func (m *AuthMiddleware) RequireAdminHuma(ctx huma.Context, next func(huma.Conte
 func (m *AuthMiddleware) RequireStaffHuma(ctx huma.Context, next func(huma.Context)) {
 	r, w := humachi.Unwrap(ctx)
 
-	mwHandler := m.RequireRoles([]sqlc.UserRole{sqlc.UserRoleAdmin, sqlc.UserRoleStaff})
+	mwHandler := m.RequireRoles([]sqlc.Role{sqlc.RoleAdmin, sqlc.RoleStaff})
 
 	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
 		next(huma.WithContext(ctx, newR.Context()))
@@ -219,7 +219,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 	})
 }
 
-func (m *AuthMiddleware) RequireRoles(roles []sqlc.UserRole) func(http.Handler) http.Handler {
+func (m *AuthMiddleware) RequireRoles(roles []sqlc.Role) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// get user from context
@@ -230,7 +230,7 @@ func (m *AuthMiddleware) RequireRoles(roles []sqlc.UserRole) func(http.Handler) 
 				return
 			}
 
-			if userCtx.Role == sqlc.UserRoleAdmin {
+			if userCtx.Role == sqlc.RoleAdmin {
 				next.ServeHTTP(w, r)
 				return
 			}
