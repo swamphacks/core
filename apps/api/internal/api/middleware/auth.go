@@ -26,7 +26,6 @@ type ctxKey string
 // Use this variable to retrieve the user object later from context!
 const UserContextKey ctxKey = "user"
 const SessionContextKey ctxKey = "session"
-const SessionTypeContextKey ctxKey = "sessionType"
 const RoleContextKey ctxKey = "eventRole"
 
 type AuthMiddleware struct {
@@ -71,7 +70,8 @@ type UserContext struct {
 }
 
 type SessionContext struct {
-	SessionID uuid.UUID
+	SessionID   uuid.UUID
+	SessionType SessionType
 }
 
 type SessionType string
@@ -198,17 +198,18 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		sessionContext := SessionContext{
-			SessionID: sessionID,
-		}
-		ctx := context.WithValue(r.Context(), SessionContextKey, &sessionContext)
-
+		var ctx context.Context
 		if session.UserID != nil { // User
 			user, err := m.db.Query.GetActiveSessionUserInfo(r.Context(), sessionID)
 			if err != nil {
 				m.logger.Err(err).Msg("Something went wrong getting active session user info.")
 				response.SendError(w, http.StatusInternalServerError, response.NewError("internal_err", "Something went horrible wrong!"))
 				return
+			}
+
+			sessionContext := SessionContext{
+				SessionID:   sessionID,
+				SessionType: SessionTypeUser,
 			}
 
 			// TODO: I don't think we need UserContext here, just return sqlc.User directly
@@ -225,9 +226,9 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 				CheckedInAt:                user.CheckedInAt,
 				HasSeeNewApplicationStatus: user.HasSeenNewApplicationStatus,
 			}
+			ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
 			ctx = context.WithValue(ctx, UserContextKey, &userContext)
 			ctx = context.WithValue(ctx, RoleContextKey, &userContext.Role)
-			ctx = context.WithValue(ctx, SessionTypeContextKey, SessionTypeUser)
 		} else { // API Key
 			apiKeyRole, err := m.db.Query.GetActiveSessionAPIKeyInfo(r.Context(), sessionID)
 			if err != nil {
@@ -235,8 +236,14 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 				response.SendError(w, http.StatusInternalServerError, response.NewError("internal_err", "Something went horrible wrong!"))
 				return
 			}
+
+			sessionContext := SessionContext{
+				SessionID:   sessionID,
+				SessionType: SessionTypeAPIKey,
+			}
+
+			ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
 			ctx = context.WithValue(ctx, RoleContextKey, &apiKeyRole)
-			ctx = context.WithValue(ctx, SessionTypeContextKey, SessionTypeAPIKey)
 		}
 
 		m.checkLastUsedAt(w, r, sessionID, session.LastUsedAt)
