@@ -8,10 +8,30 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
+
+// campaignStore is the data access EmailCampaignService needs.
+// *repository.EmailCampaignRepository satisfies it in production; tests use a fake.
+type campaignStore interface {
+	CreateEmailCampaign(ctx context.Context, params sqlc.CreateEmailCampaignParams) (*sqlc.EmailCampaign, error)
+	GetEmailCampaignByID(ctx context.Context, params sqlc.GetEmailCampaignByIDParams) (*sqlc.EmailCampaign, error)
+	ListEmailCampaigns(ctx context.Context, hackathonID string) ([]sqlc.EmailCampaign, error)
+	UpdateEmailCampaign(ctx context.Context, params sqlc.UpdateEmailCampaignParams) (*sqlc.EmailCampaign, error)
+	UpdateEmailCampaignStatus(ctx context.Context, params sqlc.UpdateEmailCampaignStatusParams) (*sqlc.EmailCampaign, error)
+	GetApplicantContactEmailsByStatus(ctx context.Context, params sqlc.GetApplicantContactEmailsByStatusParams) ([]string, error)
+	GetUserContactEmailsByRoles(ctx context.Context, roles []string) ([]string, error)
+}
+
+// campaignMailer is the send side EmailCampaignService needs.
+// *EmailService satisfies it in production; tests use a fake.
+type campaignMailer interface {
+	QueueSendTextEmail(to []string, subject string, body string) (*asynq.TaskInfo, error)
+	QueueSendRawHtmlEmail(to []string, subject string, body string) (*asynq.TaskInfo, error)
+}
 
 var (
 	//Reuses repository-level "not found" error
@@ -50,16 +70,16 @@ var recipientRoles = map[string][]string{
 
 // EmailCampaignService owns business rules for saved email campaigns.
 type EmailCampaignService struct {
-	emailCampaignRepo *repository.EmailCampaignRepository
-	emailService      *EmailService
+	emailCampaignRepo campaignStore
+	emailService      campaignMailer
 	logger            zerolog.Logger
 }
 
 // NewEmailCampaignService creates the service and stores its dependencies.
 // This will eventually be called from api.go when wiring the app together.
 func NewEmailCampaignService(
-	emailCampaignRepo *repository.EmailCampaignRepository,
-	emailService *EmailService,
+	emailCampaignRepo campaignStore,
+	emailService campaignMailer,
 	logger zerolog.Logger,
 ) *EmailCampaignService {
 	return &EmailCampaignService{
