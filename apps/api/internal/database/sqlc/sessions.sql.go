@@ -93,7 +93,7 @@ func (q *Queries) DeleteExpiredSession(ctx context.Context) error {
 }
 
 const getActiveSessionAPIKeyInfo = `-- name: GetActiveSessionAPIKeyInfo :one
-SELECT aks.role
+SELECT aks.role, aks.expires_at
 FROM sessions s
 JOIN api_keys aks ON s.api_key_id = aks.id
 WHERE s.id = $1
@@ -101,11 +101,16 @@ WHERE s.id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetActiveSessionAPIKeyInfo(ctx context.Context, id uuid.UUID) (Role, error) {
+type GetActiveSessionAPIKeyInfoRow struct {
+	Role      Role       `json:"role"`
+	ExpiresAt *time.Time `json:"expires_at"`
+}
+
+func (q *Queries) GetActiveSessionAPIKeyInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionAPIKeyInfoRow, error) {
 	row := q.db.QueryRow(ctx, getActiveSessionAPIKeyInfo, id)
-	var role Role
-	err := row.Scan(&role)
-	return role, err
+	var i GetActiveSessionAPIKeyInfoRow
+	err := row.Scan(&i.Role, &i.ExpiresAt)
+	return i, err
 }
 
 const getActiveSessionByID = `-- name: GetActiveSessionByID :one

@@ -198,7 +198,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		var ctx context.Context
+		ctx := r.Context()
 		if session.UserID != nil { // User
 			user, err := m.db.Query.GetActiveSessionUserInfo(r.Context(), sessionID)
 			if err != nil {
@@ -229,8 +229,9 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
 			ctx = context.WithValue(ctx, UserContextKey, &userContext)
 			ctx = context.WithValue(ctx, RoleContextKey, &userContext.Role)
+			m.checkLastUsedAt(w, r, sessionID, session.LastUsedAt, nil)
 		} else { // API Key
-			apiKeyRole, err := m.db.Query.GetActiveSessionAPIKeyInfo(r.Context(), sessionID)
+			apiKey, err := m.db.Query.GetActiveSessionAPIKeyInfo(r.Context(), sessionID)
 			if err != nil {
 				m.logger.Err(err).Msg("Something went wrong getting active session API key info.")
 				response.SendError(w, http.StatusInternalServerError, response.NewError("internal_err", "Something went horrible wrong!"))
@@ -243,10 +244,9 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			}
 
 			ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
-			ctx = context.WithValue(ctx, RoleContextKey, &apiKeyRole)
+			ctx = context.WithValue(ctx, RoleContextKey, &apiKey.Role)
+			m.checkLastUsedAt(w, r, sessionID, session.LastUsedAt, apiKey.ExpiresAt)
 		}
-
-		m.checkLastUsedAt(w, r, sessionID, session.LastUsedAt)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -282,7 +282,7 @@ func (m *AuthMiddleware) RequireRoles(roles []sqlc.Role) func(http.Handler) http
 
 // If lastUsedAt is more than a day ago from now, update using TouchSession (rolling session expiration)
 // Also make sure to reflect on the cookie!
-func (m *AuthMiddleware) checkLastUsedAt(w http.ResponseWriter, r *http.Request, sessionID uuid.UUID, lastUsedAt time.Time) {
+func (m *AuthMiddleware) checkLastUsedAt(w http.ResponseWriter, r *http.Request, sessionID uuid.UUID, lastUsedAt time.Time, maxExpiresAt *time.Time) {
 
 	// Was last used within a day, do not update
 	if lastUsedAt.After(time.Now().Add(-24 * time.Hour)) {
@@ -290,6 +290,10 @@ func (m *AuthMiddleware) checkLastUsedAt(w http.ResponseWriter, r *http.Request,
 	}
 
 	newExpiration := time.Now().AddDate(0, 1, 0) // In 30 days
+	if maxExpiresAt != nil && maxExpiresAt.Before(newExpiration) {
+		newExpiration = *maxExpiresAt
+	}
+
 	err := m.db.Query.TouchSession(r.Context(), sqlc.TouchSessionParams{
 		ID:        sessionID,
 		ExpiresAt: newExpiration,

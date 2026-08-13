@@ -44,7 +44,7 @@ WHERE s.id = $1
 LIMIT 1;
 
 -- name: GetActiveSessionAPIKeyInfo :one
-SELECT aks.role
+SELECT aks.role, aks.expires_at
 FROM sessions s
 JOIN api_keys aks ON s.api_key_id = aks.id
 WHERE s.id = $1
