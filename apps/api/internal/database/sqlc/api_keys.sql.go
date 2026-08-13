@@ -147,6 +147,7 @@ SELECT
     created_at,
     expires_at
 FROM api_keys
+ORDER BY created_at DESC
 `
 
 type ListApiKeysRow struct {

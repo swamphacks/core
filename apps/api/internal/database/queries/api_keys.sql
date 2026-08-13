@@ -6,7 +6,8 @@ SELECT
     role,
     created_at,
     expires_at
-FROM api_keys;
+FROM api_keys
+ORDER BY created_at DESC;
 
 -- name: GetApiKeyById :one
 SELECT
