@@ -165,6 +165,35 @@ func (s *EmailService) QueueSendTextEmail(to []string, subject string, body stri
 	return info, nil
 }
 
+func (s *EmailService) QueueSendRawHtmlEmail(to []string, subject string, body string) (*asynq.TaskInfo, error) {
+	task, err := tasks.NewTaskSendRawHtmlEmail(tasks.SendRawHtmlEmailPayload{
+		To:      to,
+		Subject: subject,
+		Body:    body,
+	})
+
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to create SendRawHtmlEmail task")
+		return nil, err
+	}
+
+	info, err := s.taskQueue.Enqueue(task, asynq.Queue("email"))
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to queue SendRawHtmlEmail task")
+		return nil, err
+	}
+
+	return info, nil
+}
+
+func (s *EmailService) SendTextEmail(to []string, subject string, body string) error {
+	if err := s.SESClient.SendEmail(to, "noreply@swamphacks.com", subject, body); err != nil {
+		s.logger.Err(err).Msg("Failed to send text email")
+		return err
+	}
+	return nil
+}
+
 // SendHtmlEmail
 //
 //	  templateData: a struct holding the data which should replace {{}} tags inside of an html template.
@@ -192,6 +221,14 @@ func (s *EmailService) SendHtmlEmail(recipient string, subject string, templateD
 	}
 	s.logger.Info().Str("Template", templateFilePath).Msg("Sent email")
 
+	return nil
+}
+
+func (s *EmailService) SendRawHtmlEmail(to []string, subject string, body string) error {
+	if err := s.SESClient.SendHTMLEmail(to, "noreply@swamphacks.com", subject, body); err != nil {
+		s.logger.Err(err).Msg("Failed to send raw HTML email")
+		return err
+	}
 	return nil
 }
 

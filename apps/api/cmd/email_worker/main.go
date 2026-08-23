@@ -48,16 +48,21 @@ func main() {
 
 	hackathonRepo := repository.NewHackathonRepository(db)
 	userRepo := repository.NewUserRepository(db)
+	emailCampaignRepo := repository.NewEmailCampaignRepository(db)
 
 	// Create ses client
 	sesClient := emailutils.NewSESClient(cfg.AWS.AccessKey, cfg.AWS.AccessKeySecret, cfg.AWS.Region, logger)
 
 	emailService := email.NewEmailService(hackathonRepo, userRepo, taskQueueClient, sesClient, nil, logger, cfg)
-	emailWorker := workers.NewEmailWorker(emailService, logger)
+	emailCampaignService := email.NewEmailCampaignService(emailCampaignRepo, emailService, logger)
+	emailWorker := workers.NewEmailWorker(emailService, emailCampaignService, logger)
 
 	mux := asynq.NewServeMux()
 
+	mux.HandleFunc(tasks.TypeSendTextEmail, emailWorker.HandleSendTextEmailTask)
 	mux.HandleFunc(tasks.TypeSendHtmlEmail, emailWorker.HandleSendHtmlEmailTask)
+	mux.HandleFunc(tasks.TypeSendRawHtmlEmail, emailWorker.HandleSendRawHtmlEmailTask)
+	mux.HandleFunc(tasks.TypeSweepScheduledCampaigns, emailWorker.HandleSweepScheduledCampaignsTask)
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -65,6 +70,17 @@ func main() {
 	}
 
 	logger.Info().Str("Working dir", wd).Msg("Starting email worker")
+
+	// The scheduler enqueues the sweep task on an interval; the server below
+	// consumes it like any other task, so scheduled sends share the same queue.
+	scheduler := asynq.NewScheduler(redisOpt, &asynq.SchedulerOpts{})
+	if _, err := scheduler.Register("@every 1m", tasks.NewTaskSweepScheduledCampaigns(), asynq.Queue("email")); err != nil {
+		log.Fatalf("Failed to register scheduled campaign sweep: %v", err)
+	}
+	if err := scheduler.Start(); err != nil {
+		log.Fatalf("Failed to start scheduler: %v", err)
+	}
+	defer scheduler.Shutdown()
 
 	if err := srv.Run(mux); err != nil {
 		log.Fatalf("Failed to run email worker")

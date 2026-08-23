@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	ErrEmailCampaignNotFound = errors.New("email campaign not found")
+	ErrEmailCampaignNotFound     = errors.New("email campaign not found")
+	ErrEmailCampaignNotClaimable = errors.New("email campaign is no longer claimable for sending")
 )
 
 type EmailCampaignRepository struct {
@@ -87,4 +88,62 @@ func (r *EmailCampaignRepository) UpdateEmailCampaignStatus(
 		return nil, err
 	}
 	return &campaign, nil
+}
+
+func (r *EmailCampaignRepository) GetApplicantContactEmailsByStatus(
+	ctx context.Context,
+	params sqlc.GetApplicantContactEmailsByStatusParams,
+) ([]string, error) {
+	return r.db.Query.GetApplicantContactEmailsByStatus(ctx, params)
+}
+
+func (r *EmailCampaignRepository) GetUserContactEmailsByRoles(
+	ctx context.Context,
+	roles []string,
+) ([]string, error) {
+	return r.db.Query.GetUserContactEmailsByRoles(ctx, roles)
+}
+
+func (r *EmailCampaignRepository) DeleteEmailCampaign(
+	ctx context.Context,
+	params sqlc.DeleteEmailCampaignParams,
+) error {
+	rows, err := r.db.Query.DeleteEmailCampaign(ctx, params)
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrEmailCampaignNotFound
+	}
+	return nil
+}
+
+// ClaimCampaignForSending atomically moves a campaign into "sending".
+// A campaign that is no longer in a claimable state matches no row, which we
+// surface as ErrEmailCampaignNotClaimable rather than a generic not-found.
+func (r *EmailCampaignRepository) ClaimCampaignForSending(
+	ctx context.Context,
+	params sqlc.ClaimCampaignForSendingParams,
+) (*sqlc.EmailCampaign, error) {
+	campaign, err := r.db.Query.ClaimCampaignForSending(ctx, params)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrEmailCampaignNotClaimable
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &campaign, nil
+}
+
+func (r *EmailCampaignRepository) ListDueScheduledCampaigns(
+	ctx context.Context,
+) ([]sqlc.EmailCampaign, error) {
+	return r.db.Query.ListDueScheduledCampaigns(ctx)
+}
+
+func (r *EmailCampaignRepository) GetInterestSubscriberEmails(
+	ctx context.Context,
+	hackathonID string,
+) ([]string, error) {
+	return r.db.Query.GetInterestSubscriberEmails(ctx, hackathonID)
 }

@@ -41,3 +41,6 @@ venv
 
 .env.dev.discord
 uv.lock
+
+# Personal docs
+CLAUDE.local.md
