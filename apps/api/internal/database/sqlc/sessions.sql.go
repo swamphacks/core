@@ -12,21 +12,56 @@ import (
 	"github.com/google/uuid"
 )
 
-const createSession = `-- name: CreateSession :one
-INSERT INTO sessions (user_id, expires_at, ip_address, user_agent)
+const createSessionForAPIKey = `-- name: CreateSessionForAPIKey :one
+INSERT INTO sessions (api_key_id, expires_at, ip_address, user_agent)
 VALUES ($1, $2, $3, $4)
-RETURNING id, user_id, expires_at, ip_address, user_agent, created_at, updated_at, last_used_at
+RETURNING id, user_id, expires_at, ip_address, user_agent, created_at, updated_at, last_used_at, api_key_id
 `
 
-type CreateSessionParams struct {
-	UserID    uuid.UUID `json:"user_id"`
-	ExpiresAt time.Time `json:"expires_at"`
-	IpAddress *string   `json:"ip_address"`
-	UserAgent *string   `json:"user_agent"`
+type CreateSessionForAPIKeyParams struct {
+	ApiKeyID  *uuid.UUID `json:"api_key_id"`
+	ExpiresAt time.Time  `json:"expires_at"`
+	IpAddress *string    `json:"ip_address"`
+	UserAgent *string    `json:"user_agent"`
 }
 
-func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
-	row := q.db.QueryRow(ctx, createSession,
+func (q *Queries) CreateSessionForAPIKey(ctx context.Context, arg CreateSessionForAPIKeyParams) (Session, error) {
+	row := q.db.QueryRow(ctx, createSessionForAPIKey,
+		arg.ApiKeyID,
+		arg.ExpiresAt,
+		arg.IpAddress,
+		arg.UserAgent,
+	)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.ExpiresAt,
+		&i.IpAddress,
+		&i.UserAgent,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastUsedAt,
+		&i.ApiKeyID,
+	)
+	return i, err
+}
+
+const createSessionForUser = `-- name: CreateSessionForUser :one
+INSERT INTO sessions (user_id, expires_at, ip_address, user_agent)
+VALUES ($1, $2, $3, $4)
+RETURNING id, user_id, expires_at, ip_address, user_agent, created_at, updated_at, last_used_at, api_key_id
+`
+
+type CreateSessionForUserParams struct {
+	UserID    *uuid.UUID `json:"user_id"`
+	ExpiresAt time.Time  `json:"expires_at"`
+	IpAddress *string    `json:"ip_address"`
+	UserAgent *string    `json:"user_agent"`
+}
+
+func (q *Queries) CreateSessionForUser(ctx context.Context, arg CreateSessionForUserParams) (Session, error) {
+	row := q.db.QueryRow(ctx, createSessionForUser,
 		arg.UserID,
 		arg.ExpiresAt,
 		arg.IpAddress,
@@ -42,6 +77,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.LastUsedAt,
+		&i.ApiKeyID,
 	)
 	return i, err
 }
@@ -56,11 +92,52 @@ func (q *Queries) DeleteExpiredSession(ctx context.Context) error {
 	return err
 }
 
+const getActiveSessionAPIKeyInfo = `-- name: GetActiveSessionAPIKeyInfo :one
+SELECT aks.role, aks.expires_at
+FROM sessions s
+JOIN api_keys aks ON s.api_key_id = aks.id
+WHERE s.id = $1
+    AND (s.expires_at > NOW())
+LIMIT 1
+`
+
+type GetActiveSessionAPIKeyInfoRow struct {
+	Role      Role       `json:"role"`
+	ExpiresAt *time.Time `json:"expires_at"`
+}
+
+func (q *Queries) GetActiveSessionAPIKeyInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionAPIKeyInfoRow, error) {
+	row := q.db.QueryRow(ctx, getActiveSessionAPIKeyInfo, id)
+	var i GetActiveSessionAPIKeyInfoRow
+	err := row.Scan(&i.Role, &i.ExpiresAt)
+	return i, err
+}
+
+const getActiveSessionByID = `-- name: GetActiveSessionByID :one
+SELECT
+  user_id,
+  last_used_at
+FROM sessions
+WHERE id = $1
+  AND expires_at > NOW()
+`
+
+type GetActiveSessionByIDRow struct {
+	UserID     *uuid.UUID `json:"user_id"`
+	LastUsedAt time.Time  `json:"last_used_at"`
+}
+
+func (q *Queries) GetActiveSessionByID(ctx context.Context, id uuid.UUID) (GetActiveSessionByIDRow, error) {
+	row := q.db.QueryRow(ctx, getActiveSessionByID, id)
+	var i GetActiveSessionByIDRow
+	err := row.Scan(&i.UserID, &i.LastUsedAt)
+	return i, err
+}
+
 const getActiveSessionUserInfo = `-- name: GetActiveSessionUserInfo :one
-SELECT u.id AS user_id, u.name, u.email, u.preferred_email,
+SELECT u.id, u.name, u.email, u.preferred_email,
   u.onboarded, u.image, u.role, u.email_consent,
-  u.checked_in_at, u.rfid, u.has_seen_new_application_status,
-  s.last_used_at
+  u.checked_in_at, u.rfid, u.has_seen_new_application_status
 FROM sessions s
 JOIN users u ON s.user_id = u.id
 WHERE s.id = $1
@@ -69,25 +146,24 @@ LIMIT 1
 `
 
 type GetActiveSessionUserInfoRow struct {
-	UserID                      uuid.UUID  `json:"user_id"`
+	ID                          uuid.UUID  `json:"id"`
 	Name                        string     `json:"name"`
 	Email                       *string    `json:"email"`
 	PreferredEmail              *string    `json:"preferred_email"`
 	Onboarded                   bool       `json:"onboarded"`
 	Image                       *string    `json:"image"`
-	Role                        UserRole   `json:"role"`
+	Role                        Role       `json:"role"`
 	EmailConsent                bool       `json:"email_consent"`
 	CheckedInAt                 *time.Time `json:"checked_in_at"`
 	Rfid                        *string    `json:"rfid"`
 	HasSeenNewApplicationStatus *bool      `json:"has_seen_new_application_status"`
-	LastUsedAt                  time.Time  `json:"last_used_at"`
 }
 
 func (q *Queries) GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (GetActiveSessionUserInfoRow, error) {
 	row := q.db.QueryRow(ctx, getActiveSessionUserInfo, id)
 	var i GetActiveSessionUserInfoRow
 	err := row.Scan(
-		&i.UserID,
+		&i.ID,
 		&i.Name,
 		&i.Email,
 		&i.PreferredEmail,
@@ -98,13 +174,12 @@ func (q *Queries) GetActiveSessionUserInfo(ctx context.Context, id uuid.UUID) (G
 		&i.CheckedInAt,
 		&i.Rfid,
 		&i.HasSeenNewApplicationStatus,
-		&i.LastUsedAt,
 	)
 	return i, err
 }
 
 const getSessionByID = `-- name: GetSessionByID :one
-SELECT id, user_id, expires_at, ip_address, user_agent, created_at, updated_at, last_used_at FROM sessions
+SELECT id, user_id, expires_at, ip_address, user_agent, created_at, updated_at, last_used_at, api_key_id FROM sessions
 WHERE id = $1
 `
 
@@ -120,16 +195,17 @@ func (q *Queries) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, er
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.LastUsedAt,
+		&i.ApiKeyID,
 	)
 	return i, err
 }
 
 const getSessionsByUserID = `-- name: GetSessionsByUserID :many
-SELECT id, user_id, expires_at, ip_address, user_agent, created_at, updated_at, last_used_at FROM sessions
+SELECT id, user_id, expires_at, ip_address, user_agent, created_at, updated_at, last_used_at, api_key_id FROM sessions
 WHERE user_id = $1
 `
 
-func (q *Queries) GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]Session, error) {
+func (q *Queries) GetSessionsByUserID(ctx context.Context, userID *uuid.UUID) ([]Session, error) {
 	rows, err := q.db.Query(ctx, getSessionsByUserID, userID)
 	if err != nil {
 		return nil, err
@@ -147,6 +223,7 @@ func (q *Queries) GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.LastUsedAt,
+			&i.ApiKeyID,
 		); err != nil {
 			return nil, err
 		}

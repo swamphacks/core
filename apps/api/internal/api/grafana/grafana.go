@@ -29,7 +29,7 @@ func RegisterRoutes(grafanaHandler *handler, mw *middleware.Middleware, router *
 	grafanaProxy := httputil.NewSingleHostReverseProxy(grafanaURL)
 
 	handler := mw.Auth.RequireAuth(
-		mw.Auth.RequireRoles([]sqlc.UserRole{sqlc.UserRoleAdmin})(
+		mw.Auth.RequireRoles([]sqlc.Role{sqlc.RoleAdmin})(
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// Set header to mark identity for Grafana
 				if userCtx, ok := r.Context().Value(auth.UserContextKey).(*auth.UserContext); ok {

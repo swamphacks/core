@@ -30,8 +30,13 @@ func (r *SessionRepository) NewTx(tx pgx.Tx) *SessionRepository {
 	}
 }
 
-func (r *SessionRepository) Create(ctx context.Context, params sqlc.CreateSessionParams) (*sqlc.Session, error) {
-	session, err := r.db.Query.CreateSession(ctx, params)
+func (r *SessionRepository) CreateForUser(ctx context.Context, params sqlc.CreateSessionForUserParams) (*sqlc.Session, error) {
+	session, err := r.db.Query.CreateSessionForUser(ctx, params)
+	return &session, err
+}
+
+func (r *SessionRepository) CreateForAPIKey(ctx context.Context, params sqlc.CreateSessionForAPIKeyParams) (*sqlc.Session, error) {
+	session, err := r.db.Query.CreateSessionForAPIKey(ctx, params)
 	return &session, err
 }
 

@@ -279,6 +279,51 @@ func (ns NullEmailRecipientType) Value() (driver.Value, error) {
 	return string(ns.EmailRecipientType), nil
 }
 
+type Role string
+
+const (
+	RoleAdmin     Role = "admin"
+	RoleStaff     Role = "staff"
+	RoleAttendee  Role = "attendee"
+	RoleApplicant Role = "applicant"
+	RoleVisitor   Role = "visitor"
+)
+
+func (e *Role) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Role(s)
+	case string:
+		*e = Role(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Role: %T", src)
+	}
+	return nil
+}
+
+type NullRole struct {
+	Role  Role `json:"role"`
+	Valid bool `json:"valid"` // Valid is true if Role is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRole) Scan(value interface{}) error {
+	if value == nil {
+		ns.Role, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.Role.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRole) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.Role), nil
+}
+
 type TeamInvitationStatus string
 
 const (
@@ -366,51 +411,6 @@ func (ns NullTeamJoinRequestStatus) Value() (driver.Value, error) {
 	return string(ns.TeamJoinRequestStatus), nil
 }
 
-type UserRole string
-
-const (
-	UserRoleAdmin     UserRole = "admin"
-	UserRoleStaff     UserRole = "staff"
-	UserRoleAttendee  UserRole = "attendee"
-	UserRoleApplicant UserRole = "applicant"
-	UserRoleVisitor   UserRole = "visitor"
-)
-
-func (e *UserRole) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = UserRole(s)
-	case string:
-		*e = UserRole(s)
-	default:
-		return fmt.Errorf("unsupported scan type for UserRole: %T", src)
-	}
-	return nil
-}
-
-type NullUserRole struct {
-	UserRole UserRole `json:"user_role"`
-	Valid    bool     `json:"valid"` // Valid is true if UserRole is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullUserRole) Scan(value interface{}) error {
-	if value == nil {
-		ns.UserRole, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.UserRole.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullUserRole) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.UserRole), nil
-}
-
 type Account struct {
 	ID                    uuid.UUID  `json:"id"`
 	UserID                uuid.UUID  `json:"user_id"`
@@ -425,6 +425,16 @@ type Account struct {
 	Scope                 *string    `json:"scope"`
 	CreatedAt             time.Time  `json:"created_at"`
 	UpdatedAt             time.Time  `json:"updated_at"`
+}
+
+type ApiKey struct {
+	ID          uuid.UUID  `json:"id"`
+	Name        string     `json:"name"`
+	Description *string    `json:"description"`
+	Role        Role       `json:"role"`
+	CreatedAt   time.Time  `json:"created_at"`
+	ExpiresAt   *time.Time `json:"expires_at"`
+	SecretHash  string     `json:"secret_hash"`
 }
 
 type Application struct {
@@ -536,14 +546,15 @@ type Redeemable struct {
 }
 
 type Session struct {
-	ID         uuid.UUID `json:"id"`
-	UserID     uuid.UUID `json:"user_id"`
-	ExpiresAt  time.Time `json:"expires_at"`
-	IpAddress  *string   `json:"ip_address"`
-	UserAgent  *string   `json:"user_agent"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
-	LastUsedAt time.Time `json:"last_used_at"`
+	ID         uuid.UUID  `json:"id"`
+	UserID     *uuid.UUID `json:"user_id"`
+	ExpiresAt  time.Time  `json:"expires_at"`
+	IpAddress  *string    `json:"ip_address"`
+	UserAgent  *string    `json:"user_agent"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
+	LastUsedAt time.Time  `json:"last_used_at"`
+	ApiKeyID   *uuid.UUID `json:"api_key_id"`
 }
 
 type Team struct {
@@ -595,7 +606,7 @@ type User struct {
 	CheckedInAt                 *time.Time `json:"checked_in_at"`
 	Rfid                        *string    `json:"rfid"`
 	RoleAssignedAt              *time.Time `json:"role_assigned_at"`
-	Role                        UserRole   `json:"role"`
+	Role                        Role       `json:"role"`
 	HasSeenNewApplicationStatus *bool      `json:"has_seen_new_application_status"`
 	IsFake                      bool       `json:"is_fake"`
 }

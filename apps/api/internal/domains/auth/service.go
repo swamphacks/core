@@ -16,6 +16,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
+	"github.com/swamphacks/core/apps/api/internal/domains/apikeys"
 	"github.com/swamphacks/core/apps/api/internal/oauth"
 )
 
@@ -25,12 +26,14 @@ var (
 	ErrFetchUserFailed           = errors.New("failed to fetch user info")
 	ErrFetchSessionContextFailed = errors.New("failed to fetch session context")
 	ErrInvalidateSessionFailed   = errors.New("failed to invalidate the session")
+	ErrApiKeyNotFound            = errors.New("no api key found for secret")
 )
 
 type AuthService struct {
 	userRepo    *repository.UserRepository
 	accountRepo *repository.AccountRepository
 	sessionRepo *repository.SessionRepository
+	apiKeysRepo *repository.ApiKeysRepository
 	txm         *database.TransactionManager
 	httpClient  *http.Client
 	logger      zerolog.Logger
@@ -38,7 +41,7 @@ type AuthService struct {
 }
 
 func NewService(
-	userRepo *repository.UserRepository, accountRepo *repository.AccountRepository, sessionRepo *repository.SessionRepository,
+	userRepo *repository.UserRepository, accountRepo *repository.AccountRepository, sessionRepo *repository.SessionRepository, apiKeysRepo *repository.ApiKeysRepository,
 	txm *database.TransactionManager, httpClient *http.Client,
 	logger zerolog.Logger, authConfig *config.AuthConfig,
 ) *AuthService {
@@ -46,6 +49,7 @@ func NewService(
 		userRepo:    userRepo,
 		accountRepo: accountRepo,
 		sessionRepo: sessionRepo,
+		apiKeysRepo: apiKeysRepo,
 		txm:         txm,
 		httpClient:  httpClient,
 		authConfig:  authConfig,
@@ -141,8 +145,8 @@ func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oaut
 			return err
 		}
 		// create session
-		session, err = txSessionRepo.Create(ctx, sqlc.CreateSessionParams{
-			UserID:    user.ID,
+		session, err = txSessionRepo.CreateForUser(ctx, sqlc.CreateSessionForUserParams{
+			UserID:    &user.ID,
 			ExpiresAt: time.Now().AddDate(0, 1, 0),
 			IpAddress: ipAddress,
 			UserAgent: userAgent,
@@ -162,8 +166,8 @@ func (s *AuthService) registerNewDiscordUser(ctx context.Context, userInfo *oaut
 }
 
 func (s *AuthService) createSessionForExistingUser(ctx context.Context, userID uuid.UUID, ipAddress, userAgent *string) (*sqlc.Session, error) {
-	return s.sessionRepo.Create(ctx, sqlc.CreateSessionParams{
-		UserID:    userID,
+	return s.sessionRepo.CreateForUser(ctx, sqlc.CreateSessionForUserParams{
+		UserID:    &userID,
 		ExpiresAt: time.Now().AddDate(0, 1, 0),
 		IpAddress: ipAddress,
 		UserAgent: userAgent,
@@ -173,4 +177,28 @@ func (s *AuthService) createSessionForExistingUser(ctx context.Context, userID u
 func expiresAt(duration time.Duration) *time.Time {
 	expiredAtTime := time.Now().Add(duration)
 	return &expiredAtTime
+}
+
+func (s *AuthService) AuthenticateAPIKey(ctx context.Context, apiKeySecret string, ipAddress, userAgent *string) (*sqlc.Session, error) {
+	// Get API Key
+	apiKeySecretHash := apikeys.HashAPIKeySecret(apiKeySecret)
+	apiKey, err := s.apiKeysRepo.GetApiKeyBySecret(ctx, apiKeySecretHash)
+	if errors.Is(err, repository.ErrApiKeyNotFound) {
+		return nil, ErrApiKeyNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	expiresAt := time.Now().AddDate(0, 1, 0)
+	if apiKey.ExpiresAt != nil && apiKey.ExpiresAt.Before(expiresAt) {
+		expiresAt = *apiKey.ExpiresAt
+	}
+
+	return s.sessionRepo.CreateForAPIKey(ctx, sqlc.CreateSessionForAPIKeyParams{
+		ApiKeyID:  &apiKey.ID,
+		ExpiresAt: expiresAt,
+		IpAddress: ipAddress,
+		UserAgent: userAgent,
+	})
 }

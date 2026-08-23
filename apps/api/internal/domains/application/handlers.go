@@ -795,7 +795,7 @@ func (h *handler) handleWithdrawApplication(ctx context.Context, input *struct{}
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	if userCtx.Role != sqlc.UserRoleApplicant {
+	if userCtx.Role != sqlc.RoleApplicant {
 		return nil, huma.Error400BadRequest("Not an applicant")
 	}
 
@@ -819,7 +819,7 @@ func (h *handler) handleConfirmAttendance(ctx context.Context, input *struct{}) 
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	if userCtx.Role != sqlc.UserRoleApplicant {
+	if userCtx.Role != sqlc.RoleApplicant {
 		return nil, huma.Error400BadRequest("Not an applicant")
 	}
 
@@ -888,7 +888,7 @@ func (h *handler) handleConfirmAttendance(ctx context.Context, input *struct{}) 
 // 		return nil, huma.Error400BadRequest("Invalid applicationId")
 // 	}
 
-// 	if userCtx.Role != sqlc.UserRoleStaff && userCtx.Role != sqlc.UserRoleAdmin && userCtx.UserID != applicationId {
+// 	if userCtx.Role != sqlc.RoleStaff && userCtx.Role != sqlc.RoleAdmin && userCtx.UserID != applicationId {
 // 		return nil, huma.Error400BadRequest("You are not allowed to see other ppls resumes :(")
 // 	}
 
