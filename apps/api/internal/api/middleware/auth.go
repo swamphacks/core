@@ -26,7 +26,7 @@ type ctxKey string
 // Use this variable to retrieve the user object later from context!
 const UserContextKey ctxKey = "user"
 const SessionContextKey ctxKey = "session"
-const UserRoleContextKey ctxKey = "eventRole"
+const RoleContextKey ctxKey = "eventRole"
 
 type AuthMiddleware struct {
 	db       *database.DB
@@ -57,7 +57,7 @@ type UserContext struct {
 	Image *string `json:"image" example:"https://cdn.example.com/avatar.png"`
 
 	// Role assigned to the user
-	Role sqlc.UserRole `json:"role" enum:"admin,staff,attendee,applicant,visitor"`
+	Role sqlc.Role `json:"role" enum:"admin,staff,attendee,applicant,visitor"`
 
 	// Whether the user agreed to receive emails
 	EmailConsent bool `json:"emailConsent" example:"false"`
@@ -70,8 +70,15 @@ type UserContext struct {
 }
 
 type SessionContext struct {
-	SessionID uuid.UUID
+	SessionID   uuid.UUID
+	SessionType SessionType
 }
+
+type SessionType string
+const (
+    SessionTypeUser SessionType   = "user"
+    SessionTypeAPIKey SessionType = "api-key"
+)
 
 func NewAuthMiddleware(userRepo *repository.UserRepository, db *database.DB, logger zerolog.Logger, cfg *config.Config) *AuthMiddleware {
 	return &AuthMiddleware{
@@ -104,7 +111,7 @@ func (m *AuthMiddleware) RequireAuthHuma(ctx huma.Context, next func(huma.Contex
 }
 
 // TODO: remove this extra layer and use RequireRole directly
-func (m *AuthMiddleware) RequireRoleHuma(roles []sqlc.UserRole) func(ctx huma.Context, next func(huma.Context)) {
+func (m *AuthMiddleware) RequireRoleHuma(roles []sqlc.Role) func(ctx huma.Context, next func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		r, w := humachi.Unwrap(ctx)
 
@@ -117,7 +124,7 @@ func (m *AuthMiddleware) RequireRoleHuma(roles []sqlc.UserRole) func(ctx huma.Co
 func (m *AuthMiddleware) RequireAdminHuma(ctx huma.Context, next func(huma.Context)) {
 	r, w := humachi.Unwrap(ctx)
 
-	mwHandler := m.RequireRoles([]sqlc.UserRole{sqlc.UserRoleAdmin})
+	mwHandler := m.RequireRoles([]sqlc.Role{sqlc.RoleAdmin})
 
 	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
 		next(huma.WithContext(ctx, newR.Context()))
@@ -127,7 +134,7 @@ func (m *AuthMiddleware) RequireAdminHuma(ctx huma.Context, next func(huma.Conte
 func (m *AuthMiddleware) RequireStaffHuma(ctx huma.Context, next func(huma.Context)) {
 	r, w := humachi.Unwrap(ctx)
 
-	mwHandler := m.RequireRoles([]sqlc.UserRole{sqlc.UserRoleAdmin, sqlc.UserRoleStaff})
+	mwHandler := m.RequireRoles([]sqlc.Role{sqlc.RoleAdmin, sqlc.RoleStaff})
 
 	mwHandler(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
 		next(huma.WithContext(ctx, newR.Context()))
@@ -180,7 +187,7 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		user, err := m.db.Query.GetActiveSessionUserInfo(r.Context(), sessionID)
+		session, err := m.db.Query.GetActiveSessionByID(r.Context(), sessionID)
 		if err != nil && errors.Is(err, sql.ErrNoRows) {
 			m.logger.Info().Msg("Session is no longer valid or does not exist.")
 			response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized"))
@@ -191,52 +198,79 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		// TODO: I don't think we need UserContext here, just return sqlc.User directly
-		userContext := UserContext{
-			UserID:                     user.UserID,
-			Name:                       user.Name,
-			Email:                      user.Email,
-			PreferredEmail:             user.PreferredEmail,
-			Image:                      user.Image,
-			Onboarded:                  user.Onboarded,
-			Role:                       user.Role,
-			EmailConsent:               user.EmailConsent,
-			Rfid:                       user.Rfid,
-			CheckedInAt:                user.CheckedInAt,
-			HasSeeNewApplicationStatus: user.HasSeenNewApplicationStatus,
+		ctx := r.Context()
+		if session.UserID != nil { // User
+			user, err := m.db.Query.GetActiveSessionUserInfo(r.Context(), sessionID)
+			if err != nil {
+				m.logger.Err(err).Msg("Something went wrong getting active session user info.")
+				response.SendError(w, http.StatusInternalServerError, response.NewError("internal_err", "Something went horrible wrong!"))
+				return
+			}
+
+			sessionContext := SessionContext{
+				SessionID:   sessionID,
+				SessionType: SessionTypeUser,
+			}
+
+			// TODO: I don't think we need UserContext here, just return sqlc.User directly
+			userContext := UserContext{
+				UserID:                     user.ID,
+				Name:                       user.Name,
+				Email:                      user.Email,
+				PreferredEmail:             user.PreferredEmail,
+				Image:                      user.Image,
+				Onboarded:                  user.Onboarded,
+				Role:                       user.Role,
+				EmailConsent:               user.EmailConsent,
+				Rfid:                       user.Rfid,
+				CheckedInAt:                user.CheckedInAt,
+				HasSeeNewApplicationStatus: user.HasSeenNewApplicationStatus,
+			}
+			ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
+			ctx = context.WithValue(ctx, UserContextKey, &userContext)
+			ctx = context.WithValue(ctx, RoleContextKey, &userContext.Role)
+			m.checkLastUsedAt(w, r, sessionID, session.LastUsedAt, nil)
+		} else { // API Key
+			apiKey, err := m.db.Query.GetActiveSessionAPIKeyInfo(r.Context(), sessionID)
+			if err != nil {
+				m.logger.Err(err).Msg("Something went wrong getting active session API key info.")
+				response.SendError(w, http.StatusInternalServerError, response.NewError("internal_err", "Something went horrible wrong!"))
+				return
+			}
+
+			sessionContext := SessionContext{
+				SessionID:   sessionID,
+				SessionType: SessionTypeAPIKey,
+			}
+
+			ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
+			ctx = context.WithValue(ctx, RoleContextKey, &apiKey.Role)
+			m.checkLastUsedAt(w, r, sessionID, session.LastUsedAt, apiKey.ExpiresAt)
 		}
-
-		sessionContext := SessionContext{
-			SessionID: sessionID,
-		}
-
-		m.checkLastUsedAt(w, r, sessionID, user.LastUsedAt)
-
-		ctx := context.WithValue(r.Context(), UserContextKey, &userContext)
-		ctx = context.WithValue(ctx, SessionContextKey, &sessionContext)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func (m *AuthMiddleware) RequireRoles(roles []sqlc.UserRole) func(http.Handler) http.Handler {
+func (m *AuthMiddleware) RequireRoles(roles []sqlc.Role) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// get user from context
-			userCtx, ok := r.Context().Value(UserContextKey).(*UserContext)
+			// get role from context
+			roleCtx, ok := r.Context().Value(RoleContextKey).(*sqlc.Role)
 			if !ok {
-				m.logger.Warn().Msg("No user context found.")
+				m.logger.Warn().Msg("No role context found.")
 				response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized."))
 				return
 			}
+			role := *roleCtx
 
-			if userCtx.Role == sqlc.UserRoleAdmin {
+			if role == sqlc.RoleAdmin {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			if !slices.Contains(roles, userCtx.Role) {
-				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions (eventRole: %s)", r.URL.Path, string(userCtx.Role))
+			if !slices.Contains(roles, role) {
+				m.logger.Warn().Msgf("User tried to access %s with insufficient permissions (eventRole: %s)", r.URL.Path, string(role))
 				response.SendError(w, http.StatusForbidden, response.NewError("forbidden", "You are forbidden from this resource."))
 				return
 			}
@@ -248,7 +282,7 @@ func (m *AuthMiddleware) RequireRoles(roles []sqlc.UserRole) func(http.Handler) 
 
 // If lastUsedAt is more than a day ago from now, update using TouchSession (rolling session expiration)
 // Also make sure to reflect on the cookie!
-func (m *AuthMiddleware) checkLastUsedAt(w http.ResponseWriter, r *http.Request, sessionID uuid.UUID, lastUsedAt time.Time) {
+func (m *AuthMiddleware) checkLastUsedAt(w http.ResponseWriter, r *http.Request, sessionID uuid.UUID, lastUsedAt time.Time, maxExpiresAt *time.Time) {
 
 	// Was last used within a day, do not update
 	if lastUsedAt.After(time.Now().Add(-24 * time.Hour)) {
@@ -256,6 +290,10 @@ func (m *AuthMiddleware) checkLastUsedAt(w http.ResponseWriter, r *http.Request,
 	}
 
 	newExpiration := time.Now().AddDate(0, 1, 0) // In 30 days
+	if maxExpiresAt != nil && maxExpiresAt.Before(newExpiration) {
+		newExpiration = *maxExpiresAt
+	}
+
 	err := m.db.Query.TouchSession(r.Context(), sqlc.TouchSessionParams{
 		ID:        sessionID,
 		ExpiresAt: newExpiration,

@@ -1,11 +1,24 @@
--- name: CreateSession :one
+-- name: CreateSessionForUser :one
 INSERT INTO sessions (user_id, expires_at, ip_address, user_agent)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+
+-- name: CreateSessionForAPIKey :one
+INSERT INTO sessions (api_key_id, expires_at, ip_address, user_agent)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetSessionByID :one
 SELECT * FROM sessions
 WHERE id = $1;
+
+-- name: GetActiveSessionByID :one
+SELECT
+  user_id,
+  last_used_at
+FROM sessions
+WHERE id = $1
+  AND expires_at > NOW();
 
 -- name: GetSessionsByUserID :many
 SELECT * FROM sessions
@@ -21,12 +34,19 @@ DELETE FROM sessions
 WHERE expires_at < NOW();
 
 -- name: GetActiveSessionUserInfo :one
-SELECT u.id AS user_id, u.name, u.email, u.preferred_email,
+SELECT u.id, u.name, u.email, u.preferred_email,
   u.onboarded, u.image, u.role, u.email_consent,
-  u.checked_in_at, u.rfid, u.has_seen_new_application_status,
-  s.last_used_at
+  u.checked_in_at, u.rfid, u.has_seen_new_application_status
 FROM sessions s
 JOIN users u ON s.user_id = u.id
+WHERE s.id = $1
+    AND (s.expires_at > NOW())
+LIMIT 1;
+
+-- name: GetActiveSessionAPIKeyInfo :one
+SELECT aks.role, aks.expires_at
+FROM sessions s
+JOIN api_keys aks ON s.api_key_id = aks.id
 WHERE s.id = $1
     AND (s.expires_at > NOW())
 LIMIT 1;

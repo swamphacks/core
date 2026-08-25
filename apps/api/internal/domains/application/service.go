@@ -232,7 +232,7 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 
 		err = txDB.Query.UpdateRole(ctx, sqlc.UpdateRoleParams{
 			UserID: userID,
-			Role:   sqlc.UserRoleApplicant,
+			Role:   sqlc.RoleApplicant,
 		})
 		if err != nil {
 			s.logger.Err(err).Msg("submit application assign role fail")
@@ -446,7 +446,7 @@ func (s *ApplicationService) WithdrawApplication(ctx context.Context, userID uui
 		return txDB.Query.UpdateRole(ctx,
 			sqlc.UpdateRoleParams{
 				UserID: userID,
-				Role:   sqlc.UserRoleApplicant,
+				Role:   sqlc.RoleApplicant,
 			},
 		)
 	})
@@ -486,7 +486,7 @@ func (s *ApplicationService) ConfirmAttendance(ctx context.Context, userID uuid.
 		return txDB.Query.UpdateRole(ctx,
 			sqlc.UpdateRoleParams{
 				UserID: userID,
-				Role:   sqlc.UserRoleAttendee,
+				Role:   sqlc.RoleAttendee,
 			},
 		)
 	})
@@ -767,14 +767,14 @@ func (s *ApplicationService) GetReviewById(ctx context.Context, reviewId uuid.UU
 	return &review, resumeRequest, nil
 }
 
-func (s *ApplicationService) SaveApplicationReview(ctx context.Context, req SaveReviewRequestDto, reviewerId uuid.UUID, reviewerRole sqlc.UserRole) error {
+func (s *ApplicationService) SaveApplicationReview(ctx context.Context, req SaveReviewRequestDto, reviewerId uuid.UUID, reviewerRole sqlc.Role) error {
 	// Log everything for debug
 	s.logger.Debug().Str("ReviewerId", reviewerId.String()).
 		Str("ApplicantId", req.ApplicationId.String()).
 		Int32("Passion Rating", int32(req.PassionRating)).
 		Int32("Experiene Rating", int32(req.ExperienceRating)).Msg("Saving app review.")
 
-	if reviewerRole == sqlc.UserRoleStaff {
+	if reviewerRole == sqlc.RoleStaff {
 		reviewerIds, err := s.db.Query.ListApplicationReviewersById(ctx, req.ApplicationId)
 		if err != nil {
 			s.logger.Err(err).
@@ -894,7 +894,7 @@ func (s *ApplicationService) GetAllAutoDecisionRequests(ctx context.Context) ([]
 	return requests, nil
 }
 
-func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request CreateAutoDecisionRequestDto, reviewerId uuid.UUID, reviewerRole sqlc.UserRole) (*sqlc.ApplicationAutoDecisionRequest, error) {
+func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request CreateAutoDecisionRequestDto, reviewerId uuid.UUID, reviewerRole sqlc.Role) (*sqlc.ApplicationAutoDecisionRequest, error) {
 	hackathon, err := s.db.Query.GetHackathon(ctx)
 
 	if err != nil {
@@ -913,7 +913,7 @@ func (s *ApplicationService) RequestAutoDecision(ctx context.Context, request Cr
 		Justification:     request.Justification,
 	}
 
-	if reviewerRole == sqlc.UserRoleAdmin {
+	if reviewerRole == sqlc.RoleAdmin {
 		approved := true
 		params.Approved = &approved
 		params.DecidedBy = &reviewerId
