@@ -33,8 +33,14 @@ export async function _getUser(): Promise<AuthUserResponse> {
       return await handleError(res);
     }
 
+    const user = await res.json();
+
+    if (user.email === "") {
+      delete user.email;
+    }
+
     // Attempt to parse response in AuthUserResponse schema
-    const userContext = userContextSchema.safeParse(await res.json());
+    const userContext = userContextSchema.safeParse(user);
     if (!userContext.success) {
       console.error("userContext parsing failed: ", userContext.error);
       return {

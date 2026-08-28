@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const userContextSchema = z.object({
   userId: z.uuid(),
-  email: z.email(),
+  email: z.email().optional(),
   preferredEmail: z.email().nullable().optional(),
   name: z.string(),
   onboarded: z.boolean(),

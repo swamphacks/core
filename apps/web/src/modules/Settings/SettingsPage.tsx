@@ -157,7 +157,7 @@ export function SettingsPage({ logout, user }: SettingsPageProps) {
                       <TextField
                         label="Account Email"
                         type="email"
-                        defaultValue={user?.email}
+                        defaultValue={user?.email ? user.email : "N/A"}
                         placeholder="Ex: albert.gator@ufl.edu"
                         validationBehavior="aria"
                         isDisabled
