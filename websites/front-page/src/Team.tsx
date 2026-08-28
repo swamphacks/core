@@ -32,6 +32,9 @@ import Ayushi from "./assets/headshots/Ayushi_Srivastava_cropped.jpg";
 import Kaiden from "./assets/headshots/Kaiden_Joy_cropped.jpg";
 import Ivette from "./assets/headshots/Ivette_S_Hernandez_cropped.jpg";
 import Will from "./assets/headshots/William_Chi_cropped.jpg";
+import Blanchard from "./assets/headshots/blanchard.jpg";
+import Robert from "./assets/headshots/robert.webp";
+import Elle from "./assets/headshots/elle.jpg";
 
 // import bat1 from "./assets/bat_without_sign1.png";
 // import bat2 from "./assets/bat_without_sign2.png";
@@ -246,6 +249,30 @@ const teamMembers = [
     isExec: false,
     img: Will,
   },
+  {
+    name: "Dr. Jeremiah Blanchard",
+    linkedin: "https://www.linkedin.com/in/jeremiahblanchard/",
+    role: "Advisors",
+    isExec: false,
+    img: Blanchard,
+    isAdvisor: true,
+  },
+  {
+    name: "Robert Conde",
+    linkedin: "https://www.linkedin.com/in/rcond/",
+    role: "Advisors",
+    isExec: false,
+    img: Robert,
+    isAdvisor: true,
+  },
+  {
+    name: "Elle Strauss",
+    linkedin: "https://www.linkedin.com/in/ellestrauss/",
+    role: "Advisors",
+    isExec: false,
+    img: Elle,
+    isAdvisor: true,
+  },
 ];
 
 const groupedMembers = [
@@ -271,6 +298,10 @@ const groupedMembers = [
     role: "Marketing",
     members: teamMembers.filter((member) => member.role === "Marketing"),
   },
+  {
+    role: "Advisors",
+    members: teamMembers.filter((member) => member.role === "Advisors"),
+  },
 ];
 
 type TeamMember = (typeof teamMembers)[number];
@@ -291,6 +322,12 @@ const TeamMemberCard = memo(function TeamMemberCard({
       />
       <p className="team-member-name">
         {member.name}
+        {member.name === "Dr. Jeremiah Blanchard" &&
+          " (Computer Engineering, Faculty Advisor)"}
+        <p>
+          {member.name === "Robert Conde" &&
+            " (Computer Engineering, Staff Advisor)"}
+        </p>
         {member.isExec && " (Executive)"}
       </p>
     </a>

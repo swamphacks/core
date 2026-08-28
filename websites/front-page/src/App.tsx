@@ -222,6 +222,14 @@ function Landing() {
           >
             Mentor Application
           </a>
+
+          <a
+            className="submenu-link"
+            href="https://swamphack.notion.site/54a3b41de22f8324afa9814483091664"
+            target="_blank"
+          >
+            Judges Interest Form
+          </a>
         </div>
 
         <section className="icon-list">

@@ -190,7 +190,7 @@
 
 .team-member-image {
     width: 100%;
-    max-width: 180px;
+    max-width: 200px;
     aspect-ratio: 1 / 1;
     object-fit: cover;
     border-radius: 10px;
@@ -212,7 +212,7 @@
 
 @media (min-width: 768px) {
     .team-role-members {
-        max-width: 800px;
+        max-width: 900px;
         grid-template-columns: repeat(5, 1fr);
     }
 
