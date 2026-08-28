@@ -116,6 +116,11 @@ UPDATE applications
 SET status = 'under_review'
 WHERE status = 'submitted';
 
+-- name: MarkEarlySubmittedApplicationsAsUnderReview :exec
+UPDATE applications 
+SET status = 'under_review'
+WHERE status = 'submitted' AND is_early = TRUE;
+
 -- name: WaitlistAcceptedApplications :exec
 UPDATE applications
 SET waitlist_join_time = COALESCE(waitlist_join_time, NOW()),

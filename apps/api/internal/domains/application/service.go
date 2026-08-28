@@ -515,7 +515,7 @@ func (s *ApplicationService) UpdateApplicationReviewStatusForHackathon(ctx conte
 		}
 
 		if started {
-			err = txDB.Query.MarkSubmittedApplicationsAsUnderReview(ctx)
+			err = txDB.Query.MarkEarlySubmittedApplicationsAsUnderReview(ctx)
 		} else {
 			err = txDB.Query.ResetApplicationsToSubmitted(ctx)
 		}

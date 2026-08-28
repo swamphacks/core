@@ -182,6 +182,7 @@ type PublicHackathon struct {
 	StartTime               time.Time  `json:"startTime"`
 	EndTime                 time.Time  `json:"endTime"`
 	Banner                  *string    `json:"banner"`
+	ReviewStarted           bool       `json:"reviewStarted"`
 }
 
 type GetHackathonOutput struct {
@@ -214,6 +215,7 @@ func (h *handler) handleGetHackathon(ctx context.Context, input *struct{}) (*Get
 		StartTime:               hackathon.StartTime,
 		EndTime:                 hackathon.EndTime,
 		Banner:                  hackathon.Banner,
+		ReviewStarted:           hackathon.ApplicationReviewStarted,
 	}}, nil
 }
 

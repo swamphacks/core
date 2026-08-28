@@ -303,6 +303,17 @@ func (q *Queries) ListUnderReviewApplicationIds(ctx context.Context, hackathonID
 	return items, nil
 }
 
+const markEarlySubmittedApplicationsAsUnderReview = `-- name: MarkEarlySubmittedApplicationsAsUnderReview :exec
+UPDATE applications 
+SET status = 'under_review'
+WHERE status = 'submitted' AND is_early = TRUE
+`
+
+func (q *Queries) MarkEarlySubmittedApplicationsAsUnderReview(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, markEarlySubmittedApplicationsAsUnderReview)
+	return err
+}
+
 const markSubmittedApplicationsAsUnderReview = `-- name: MarkSubmittedApplicationsAsUnderReview :exec
 UPDATE applications 
 SET status = 'under_review'

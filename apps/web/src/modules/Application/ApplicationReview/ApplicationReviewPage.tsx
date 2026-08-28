@@ -21,10 +21,10 @@ import { Select } from "@/components/ui/Select";
 import TablerSearch from "~icons/tabler/search";
 import { useDebounce } from "@uidotdev/usehooks";
 import AutoDecisionRequestList from "@/modules/Application/ApplicationReview/AutoDecisionRequestList";
-import type { Hackathon } from "@/modules/Hackathon/hooks/useHackathon";
+import type { StaffHackathon } from "@/modules/Hackathon/hooks/useHackathon";
 
 interface ApplicationReviewPageProps {
-  hackathon: Hackathon;
+  hackathon: StaffHackathon;
   user: UserContext;
 }
 
