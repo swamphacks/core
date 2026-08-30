@@ -1,6 +1,17 @@
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Menu, MenuItem } from "@/components/ui/Menu";
+import { Modal } from "@/components/ui/Modal";
+import { MenuTrigger } from "react-aria-components";
+import TablerDots from "~icons/tabler/dots-vertical";
+import { campaignMenuItemClasses } from "./menuStyles";
+import {
+  useDeleteEmailCampaign,
+  useUnscheduleEmailCampaign,
+} from "./hooks/useEmailCampaigns";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/utils/cn";
+import { useState } from "react";
 import { format } from "date-fns";
 import type { CampaignStatus, EmailCampaign } from "./hooks/useEmailCampaigns";
 
@@ -26,15 +37,25 @@ function formatDay(value: string) {
 
 interface CampaignCardProps {
   campaign: EmailCampaign;
+  hackathonId: string;
   isSelected: boolean;
   onSelect: (campaign: EmailCampaign) => void;
+  onReschedule: (campaign: EmailCampaign) => void;
 }
 
 export function CampaignCard({
   campaign,
+  hackathonId,
   isSelected,
   onSelect,
+  onReschedule,
 }: CampaignCardProps) {
+  const unscheduleCampaign = useUnscheduleEmailCampaign(hackathonId);
+  const deleteCampaign = useDeleteEmailCampaign(hackathonId);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  // Matches the API: sent and sending campaigns stay on the record.
+  const canDelete = campaign.status !== "sent" && campaign.status !== "sending";
   return (
     <Card
       role="button"
@@ -64,6 +85,93 @@ export function CampaignCard({
           >
             {STATUS_LABELS[campaign.status]}
           </Badge>
+        </div>
+
+        {/* The whole card is clickable, so keep menu interactions from opening it. */}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          role="presentation"
+          className="-mt-3 -mr-3.5 shrink-0"
+        >
+          <MenuTrigger>
+            <Button
+              variant="unstyled"
+              size="auto"
+              aria-label={`Actions for ${campaign.title}`}
+              // Not variant="icon": that carries pressed:bg-black/10, and
+              // MenuTrigger holds isPressed for as long as the menu is open, so
+              // the tint never cleared. Own the states explicitly instead.
+              className="cursor-pointer rounded-sm p-0.5 text-zinc-500 not-aria-expanded:hovered:bg-black/[7%] dark:text-zinc-400 dark:not-aria-expanded:hovered:bg-white/10"
+            >
+              <TablerDots className="size-4" />
+            </Button>
+            <Menu
+              placement="bottom end"
+              className="overflow-visible"
+              popoverClassName="duration-75 min-w-[120px]"
+            >
+              {campaign.status === "scheduled" ? (
+                <MenuItem
+                  className={campaignMenuItemClasses}
+                  onAction={() => onReschedule(campaign)}
+                >
+                  Reschedule
+                </MenuItem>
+              ) : null}
+              {campaign.status === "scheduled" ? (
+                <MenuItem
+                  className={campaignMenuItemClasses}
+                  onAction={() => unscheduleCampaign.mutate(campaign.id)}
+                >
+                  Unschedule
+                </MenuItem>
+              ) : null}
+              {canDelete ? (
+                <MenuItem
+                  className={campaignMenuItemClasses}
+                  onAction={() => setConfirmingDelete(true)}
+                >
+                  Delete
+                </MenuItem>
+              ) : null}
+            </Menu>
+          </MenuTrigger>
+
+          <Modal
+            size="md"
+            isOpen={confirmingDelete}
+            onOpenChange={setConfirmingDelete}
+            title="Delete this campaign?"
+          >
+            <div className="flex flex-col gap-4">
+              <p className="text-sm leading-5 text-zinc-700 dark:text-zinc-300">
+                <strong>{campaign.title}</strong> will be permanently removed.
+                This cannot be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onPress={() => setConfirmingDelete(false)}
+                  isDisabled={deleteCampaign.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  isDisabled={deleteCampaign.isPending}
+                  onPress={async () => {
+                    await deleteCampaign.mutateAsync(campaign.id);
+                    setConfirmingDelete(false);
+                  }}
+                >
+                  {deleteCampaign.isPending ? "Deleting..." : "Delete"}
+                </Button>
+              </div>
+            </div>
+          </Modal>
         </div>
       </div>
 

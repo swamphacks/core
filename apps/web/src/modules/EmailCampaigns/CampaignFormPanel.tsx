@@ -1,12 +1,31 @@
 import { Button } from "@/components/ui/Button";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { Menu, MenuItem } from "@/components/ui/Menu";
+import { Modal } from "@/components/ui/Modal";
+import { MenuTrigger } from "react-aria-components";
+import {
+  fromDate,
+  getLocalTimeZone,
+  now,
+  toCalendarDate,
+  toCalendarDateTime,
+  type CalendarDate,
+  type CalendarDateTime,
+} from "@internationalized/date";
+import TablerChevronDown from "~icons/tabler/chevron-down";
+import { format as formatDate } from "date-fns";
 import { Label } from "@/components/ui/Field";
 import { cn } from "@/utils/cn";
 import { MultiSelect } from "@/components/ui/MultiSelect";
 import { TextField } from "@/components/ui/TextField";
 import TablerChevronLeft from "~icons/tabler/chevron-left";
 import { useState } from "react";
+import { campaignMenuItemClasses } from "./menuStyles";
 import {
   useCreateEmailCampaign,
+  useScheduleEmailCampaign,
+  useSendEmailCampaign,
+  useUnscheduleEmailCampaign,
   useUpdateEmailCampaign,
   type CampaignFormat,
   type EmailCampaign,
@@ -35,12 +54,14 @@ const READ_ONLY_REASON: Partial<Record<EmailCampaign["status"], string>> = {
 interface CampaignFormPanelProps {
   hackathonId: string;
   campaign: EmailCampaign | null;
+  openScheduleOnMount?: boolean;
   onClose: () => void;
 }
 
 export function CampaignFormPanel({
   hackathonId,
   campaign,
+  openScheduleOnMount = false,
   onClose,
 }: CampaignFormPanelProps) {
   const isEdit = campaign !== null;
@@ -62,9 +83,39 @@ export function CampaignFormPanel({
 
   const createCampaign = useCreateEmailCampaign(hackathonId);
   const updateCampaign = useUpdateEmailCampaign(hackathonId);
+  const sendCampaign = useSendEmailCampaign(hackathonId);
+  const scheduleCampaign = useScheduleEmailCampaign(hackathonId);
+  const unscheduleCampaign = useUnscheduleEmailCampaign(hackathonId);
 
-  const isSaving = createCampaign.isPending || updateCampaign.isPending;
-  const saveError = createCampaign.error ?? updateCampaign.error;
+  const [confirmingSend, setConfirmingSend] = useState(false);
+  const [scheduling, setScheduling] = useState(openScheduleOnMount);
+
+  // survives unscheduling (the API reads a null scheduledAt as "leave it alone"),
+  // so a draft can still be carrying a stale timestamp.
+  const [scheduleAt, setScheduleAt] = useState<CalendarDateTime | null>(
+    campaign?.status === "scheduled" && campaign.scheduled_at
+      ? toCalendarDateTime(
+          fromDate(new Date(campaign.scheduled_at), getLocalTimeZone()),
+        )
+      : null,
+  );
+
+  const scheduleIsPast =
+    scheduleAt !== null &&
+    scheduleAt.toDate(getLocalTimeZone()).getTime() <= Date.now();
+
+  const isSaving =
+    createCampaign.isPending ||
+    updateCampaign.isPending ||
+    sendCampaign.isPending ||
+    scheduleCampaign.isPending ||
+    unscheduleCampaign.isPending;
+  const saveError =
+    createCampaign.error ??
+    updateCampaign.error ??
+    sendCampaign.error ??
+    scheduleCampaign.error ??
+    unscheduleCampaign.error;
 
   // The API rejects blank values, so mirror its requirements before sending.
   const canSave =
@@ -75,8 +126,9 @@ export function CampaignFormPanel({
     subject.trim() !== "" &&
     body.trim() !== "";
 
-  async function handleSave() {
-    if (formatValue === null) return;
+  /** Creates or updates, returning the stored campaign so send/schedule can chain off it. */
+  async function persistCampaign() {
+    if (formatValue === null) return null;
 
     const payload = {
       title: title.trim(),
@@ -88,13 +140,43 @@ export function CampaignFormPanel({
     };
 
     if (isEdit) {
-      await updateCampaign.mutateAsync({
+      return updateCampaign.mutateAsync({
         campaignId: campaign.id,
         data: payload,
       });
-    } else {
-      await createCampaign.mutateAsync(payload);
     }
+    return createCampaign.mutateAsync(payload);
+  }
+
+  async function handleSaveDraft() {
+    if (await persistCampaign()) onClose();
+  }
+
+  // Send always saves first: a new campaign has no id yet, and an edited one
+  // must go out with what is on screen rather than what was last stored.
+  async function handleSendNow() {
+    const stored = await persistCampaign();
+    if (!stored) return;
+    await sendCampaign.mutateAsync(stored.id);
+    setConfirmingSend(false);
+    onClose();
+  }
+
+  async function handleUnschedule() {
+    if (!campaign) return;
+    await unscheduleCampaign.mutateAsync(campaign.id);
+    onClose();
+  }
+
+  async function handleSchedule() {
+    if (!scheduleAt || scheduleIsPast) return;
+    const stored = await persistCampaign();
+    if (!stored) return;
+    await scheduleCampaign.mutateAsync({
+      campaignId: stored.id,
+      scheduledAt: scheduleAt.toDate(getLocalTimeZone()).toISOString(),
+    });
+    setScheduling(false);
     onClose();
   }
 
@@ -146,6 +228,7 @@ export function CampaignFormPanel({
         onChange={setDescription}
         isDisabled={isReadOnly}
         placeholder="Internal optional note for organizers"
+        description="The title and description above are internal only, never sent to recipients."
       />
 
       {/* Everything below this line is delivered to recipients. */}
@@ -177,7 +260,6 @@ export function CampaignFormPanel({
         onChange={setSubject}
         isDisabled={isReadOnly}
         placeholder="What recipients see in their inbox"
-        description="Shown to recipients. The title above is only for organizers."
       />
 
       <div className="flex flex-col gap-0.5">
@@ -256,17 +338,238 @@ export function CampaignFormPanel({
         </p>
       )}
 
-      <div className={cn("flex gap-2 pb-6", isReadOnly && "hidden")}>
-        <Button
-          variant="primary"
-          size="auto"
-          className="h-[26px] rounded-[4px] bg-[#2b7fff] px-[18px] text-xs leading-4 font-medium"
-          onPress={handleSave}
-          isDisabled={!canSave || isSaving}
+      {campaign?.status === "scheduled" && campaign.scheduled_at && (
+        <div className="flex flex-col gap-2 rounded-[4px] border border-[#d08700] bg-[#fef9c2] px-3 py-2">
+          <p className="text-sm leading-5 text-[#d08700]">
+            Scheduled to send{" "}
+            {formatDate(
+              new Date(campaign.scheduled_at),
+              "EEEE, MMMM d 'at' h:mm a",
+            )}
+            .
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="unstyled"
+              size="auto"
+              onPress={() => setScheduling(true)}
+              isDisabled={isSaving}
+              className="h-[26px] cursor-pointer rounded-[4px] border border-[#d08700] px-3 text-xs leading-4 font-medium text-[#d08700]"
+            >
+              Reschedule
+            </Button>
+            <Button
+              variant="unstyled"
+              size="auto"
+              onPress={handleUnschedule}
+              isDisabled={isSaving}
+              className="h-[26px] cursor-pointer rounded-[4px] border border-[#d08700] bg-[#d08700] px-3 text-xs leading-4 font-medium text-white"
+            >
+              {unscheduleCampaign.isPending ? "Unscheduling..." : "Unschedule"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div
+        className={cn("flex items-center gap-2 pb-6", isReadOnly && "hidden")}
+      >
+        {/* Figma 878:95 — one 26px pill, label and chevron sharing the fill. */}
+        <div
+          className={cn(
+            "inline-flex h-[26px] items-center rounded-[4px] bg-[#2b7fff]",
+            (!canSave || isSaving) && "opacity-50",
+          )}
         >
-          {isSaving ? "Saving..." : isEdit ? "Update" : "Save Draft"}
+          <Button
+            variant="unstyled"
+            size="auto"
+            onPress={() => setConfirmingSend(true)}
+            isDisabled={!canSave || isSaving}
+            className="h-full cursor-pointer rounded-l-[4px] pr-1 pl-3 text-xs leading-4 font-medium text-white"
+          >
+            {isSaving ? "Working..." : "Send"}
+          </Button>
+
+          <MenuTrigger>
+            <Button
+              variant="unstyled"
+              size="auto"
+              aria-label="More send options"
+              isDisabled={!canSave || isSaving}
+              className="h-full cursor-pointer rounded-r-[4px] pr-2.5 pl-1 text-white"
+            >
+              <TablerChevronDown className="size-2.5" />
+            </Button>
+            <Menu
+              placement="bottom start"
+              className="overflow-visible"
+              popoverClassName="duration-75"
+            >
+              <MenuItem
+                className={campaignMenuItemClasses}
+                onAction={() => setScheduling(true)}
+              >
+                Schedule for later
+              </MenuItem>
+            </Menu>
+          </MenuTrigger>
+        </div>
+
+        {/* Saving without sending is the low-stakes action, so it stays neutral. */}
+        <Button
+          variant="unstyled"
+          size="auto"
+          onPress={handleSaveDraft}
+          isDisabled={!canSave || isSaving}
+          className={cn(
+            "h-[26px] cursor-pointer rounded-[4px] border border-zinc-300 bg-zinc-200 px-3 text-xs leading-4 font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700",
+            (!canSave || isSaving) && "opacity-50",
+          )}
+        >
+          Save for later
         </Button>
       </div>
+
+      {/* Sending is irreversible, so name the audience before it goes out. */}
+      <Modal
+        size="md"
+        isOpen={confirmingSend}
+        onOpenChange={setConfirmingSend}
+        title="Send this campaign?"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-sm leading-5 text-zinc-700 dark:text-zinc-300">
+            This emails everyone in{" "}
+            <strong>
+              {recipients
+                .map(
+                  (r) =>
+                    RECIPIENT_OPTIONS.find((o) => o.value === r)?.label ?? r,
+                )
+                .join(", ")}
+            </strong>{" "}
+            immediately. It cannot be undone or recalled.
+          </p>
+          <p className="text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+            Subject: {subject.trim() || "(none)"}
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={() => setConfirmingSend(false)}
+              isDisabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onPress={handleSendNow}
+              isDisabled={isSaving}
+            >
+              {isSaving ? "Sending..." : "Send now"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* The API accepts past times, so only offer future ones. */}
+      <Modal
+        size="md"
+        isOpen={scheduling}
+        onOpenChange={setScheduling}
+        title="Schedule this campaign"
+      >
+        <div className="flex flex-col gap-4">
+          {/* Date and time are one CalendarDateTime underneath, edited separately. */}
+          <DatePicker
+            label="Date"
+            value={scheduleAt ? toCalendarDate(scheduleAt) : null}
+            onChange={(date: CalendarDate | null) => {
+              if (!date) return setScheduleAt(null);
+              setScheduleAt(
+                scheduleAt
+                  ? scheduleAt.set({
+                      year: date.year,
+                      month: date.month,
+                      day: date.day,
+                    })
+                  : toCalendarDateTime(date).set({ hour: 9, minute: 0 }),
+              );
+            }}
+            minValue={toCalendarDate(now(getLocalTimeZone()))}
+          />
+
+          <div className="flex flex-col gap-1">
+            <Label className="text-sm leading-5 font-normal text-zinc-600 dark:text-zinc-400">
+              Time
+            </Label>
+            <input
+              type="time"
+              value={
+                scheduleAt
+                  ? `${String(scheduleAt.hour).padStart(2, "0")}:${String(scheduleAt.minute).padStart(2, "0")}`
+                  : ""
+              }
+              onChange={(e) => {
+                const [hour, minute] = e.target.value.split(":").map(Number);
+                if (Number.isNaN(hour) || Number.isNaN(minute)) return;
+                const base =
+                  scheduleAt ?? toCalendarDateTime(now(getLocalTimeZone()));
+                setScheduleAt(base.set({ hour, minute, second: 0 }));
+              }}
+              className="bg-input-bg border-input-border text-text-main w-fit rounded-sm border px-2.5 py-2 text-sm leading-5 outline-0"
+            />
+          </div>
+
+          <p
+            className={cn(
+              "text-sm leading-5",
+              scheduleIsPast
+                ? "text-red-600"
+                : "text-zinc-600 dark:text-zinc-400",
+            )}
+          >
+            {!scheduleAt
+              ? "Pick a date and time."
+              : scheduleIsPast
+                ? `${formatDate(scheduleAt.toDate(getLocalTimeZone()), "EEEE, MMMM d 'at' h:mm a")} is in the past. Pick a future time.`
+                : `Sends ${formatDate(scheduleAt.toDate(getLocalTimeZone()), "EEEE, MMMM d 'at' h:mm a")}`}
+          </p>
+
+          {/* The panel is behind the modal, so failures have to surface here. */}
+          {saveError && (
+            <p className="text-sm leading-5 text-red-600">
+              {saveError instanceof Error && saveError.message
+                ? saveError.message
+                : "Could not schedule. Try again."}
+            </p>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={() => setScheduling(false)}
+              isDisabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onPress={handleSchedule}
+              isDisabled={
+                isSaving || scheduleAt === null || scheduleIsPast || !canSave
+              }
+            >
+              {isSaving ? "Scheduling..." : "Schedule"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

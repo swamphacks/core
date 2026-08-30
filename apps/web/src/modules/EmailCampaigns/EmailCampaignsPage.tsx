@@ -24,6 +24,20 @@ export default function EmailCampaignsPage() {
   const [selected, setSelected] = useState<EmailCampaign | "new" | null>(null);
   const isPanelOpen = selected !== null;
 
+  // Set when the panel is opened from the card's Reschedule action, so it can
+  // land straight on the date picker instead of the form.
+  const [openScheduleOnMount, setOpenScheduleOnMount] = useState(false);
+
+  function openCampaign(campaign: EmailCampaign) {
+    setOpenScheduleOnMount(false);
+    setSelected(campaign);
+  }
+
+  function rescheduleCampaign(campaign: EmailCampaign) {
+    setOpenScheduleOnMount(true);
+    setSelected(campaign);
+  }
+
   if (hackathonPending || (hackathonId && isPending)) {
     return (
       <div className="flex justify-center p-12">
@@ -58,10 +72,14 @@ export default function EmailCampaignsPage() {
               <Button
                 variant="primary"
                 size="auto"
-                className="h-[26px] shrink-0 rounded-[4px] bg-[#2b7fff] px-[18px] text-xs leading-4 font-medium"
-                onPress={() => setSelected("new")}
+                className="h-[26px] w-[112px] shrink-0 justify-between rounded-[4px] bg-[#2b7fff] px-3 text-xs leading-4 font-medium"
+                onPress={() => {
+                  setOpenScheduleOnMount(false);
+                  setSelected("new");
+                }}
               >
-                Create Email&nbsp;&nbsp;&nbsp;&nbsp;+
+                <span>Create Email</span>
+                <span aria-hidden>+</span>
               </Button>
             </div>
           </header>
@@ -83,8 +101,10 @@ export default function EmailCampaignsPage() {
               <CampaignCard
                 key={campaign.id}
                 campaign={campaign}
+                hackathonId={hackathonId}
                 isSelected={selected !== "new" && selected?.id === campaign.id}
-                onSelect={setSelected}
+                onSelect={openCampaign}
+                onReschedule={rescheduleCampaign}
               />
             ))}
           </div>
@@ -114,6 +134,7 @@ export default function EmailCampaignsPage() {
               key={selected === "new" ? "new" : selected.id}
               hackathonId={hackathonId}
               campaign={selected === "new" ? null : selected}
+              openScheduleOnMount={openScheduleOnMount}
               onClose={() => setSelected(null)}
             />
           )}

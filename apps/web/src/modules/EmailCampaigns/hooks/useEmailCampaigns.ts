@@ -159,6 +159,69 @@ export function useSendEmailCampaign(hackathonId: string) {
 }
 
 /**
+ * Moves a campaign to scheduled. The API only checks scheduledAt is present, not
+ * that it is in the future, so the caller must not offer past times: the sweep
+ * would either fire immediately or fail the campaign for missing its window.
+ */
+export function useScheduleEmailCampaign(hackathonId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      campaignId,
+      scheduledAt,
+    }: {
+      campaignId: string;
+      scheduledAt: string;
+    }) =>
+      api
+        .patch<EmailCampaign>(`email/campaigns/${campaignId}/status`, {
+          searchParams: { hackathonId },
+          json: { status: "scheduled", scheduledAt },
+        })
+        .json(),
+    onSuccess: (campaign) => {
+      queryClient.invalidateQueries({
+        queryKey: campaignKeys.all(hackathonId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: campaignKeys.detail(hackathonId, campaign.id),
+      });
+    },
+  });
+}
+
+/**
+ * Takes a campaign back out of the send queue. The sweep only picks up rows with
+ * status 'scheduled', so moving to draft is what actually cancels it; scheduledAt
+ * is cleared too, or the card keeps advertising a date that no longer applies.
+ *
+ * This races the sweep: if the campaign was already claimed this minute it will
+ * send anyway, so callers must trust the refetched status over their own optimism.
+ */
+export function useUnscheduleEmailCampaign(hackathonId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (campaignId: string) =>
+      api
+        .patch<EmailCampaign>(`email/campaigns/${campaignId}/status`, {
+          searchParams: { hackathonId },
+          json: { status: "draft", scheduledAt: null },
+        })
+        .json(),
+    onSuccess: (campaign) => {
+      queryClient.invalidateQueries({
+        queryKey: campaignKeys.all(hackathonId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: campaignKeys.detail(hackathonId, campaign.id),
+      });
+    },
+  });
+}
+
+/**
  * Responds 200 with an empty body, so never call .json() here — it would throw.
  * Only draft, scheduled, and failed are deletable; sent and sending reject 400.
  */
