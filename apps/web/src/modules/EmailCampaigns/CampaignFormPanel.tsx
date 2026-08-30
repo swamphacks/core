@@ -24,6 +24,14 @@ const RECIPIENT_OPTIONS: { value: RecipientType; label: string }[] = [
   { value: "interest_subscribers", label: "Interest Subscribers" },
 ];
 
+/** Why a campaign can no longer be edited, matching the API's canEditCampaign. */
+const READ_ONLY_REASON: Partial<Record<EmailCampaign["status"], string>> = {
+  sending: "This campaign is being sent right now, so it cannot be changed.",
+  sent: "This campaign has already been sent. Sent campaigns are kept as a record and cannot be edited.",
+  failed:
+    "This campaign failed to send and can no longer be edited. Delete it and create a new one.",
+};
+
 interface CampaignFormPanelProps {
   hackathonId: string;
   campaign: EmailCampaign | null;
@@ -36,6 +44,10 @@ export function CampaignFormPanel({
   onClose,
 }: CampaignFormPanelProps) {
   const isEdit = campaign !== null;
+  const isReadOnly =
+    campaign !== null &&
+    campaign.status !== "draft" &&
+    campaign.status !== "scheduled";
 
   const [recipients, setRecipients] = useState<RecipientType[]>(
     campaign?.recipient_types ?? [],
@@ -56,6 +68,7 @@ export function CampaignFormPanel({
 
   // The API rejects blank values, so mirror its requirements before sending.
   const canSave =
+    !isReadOnly &&
     recipients.length > 0 &&
     formatValue !== null &&
     title.trim() !== "" &&
@@ -97,8 +110,22 @@ export function CampaignFormPanel({
       </button>
 
       <h2 className="text-2xl leading-8 font-medium text-zinc-900 dark:text-zinc-50">
-        {isEdit ? "Edit an Email Campaign" : "Create an Email Campaign"}
+        {isReadOnly
+          ? "Email Campaign"
+          : isEdit
+            ? "Edit an Email Campaign"
+            : "Create an Email Campaign"}
       </h2>
+
+      {isReadOnly && campaign && (
+        <p className="rounded-[4px] border border-zinc-300 bg-zinc-200/60 px-3 py-2 text-sm leading-5 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300">
+          {READ_ONLY_REASON[campaign.status] ??
+            "This campaign cannot be edited."}
+          {campaign.status === "failed" && campaign.last_error
+            ? ` Reason: ${campaign.last_error}.`
+            : null}
+        </p>
+      )}
 
       <TextField
         label="Campaign Title"
@@ -107,6 +134,7 @@ export function CampaignFormPanel({
         type="text"
         value={title}
         onChange={setTitle}
+        isDisabled={isReadOnly}
         placeholder="Internal name, e.g. Welcome to SwampHacks XII"
       />
 
@@ -116,22 +144,29 @@ export function CampaignFormPanel({
         type="text"
         value={description}
         onChange={setDescription}
+        isDisabled={isReadOnly}
         placeholder="Internal optional note for organizers"
       />
 
       {/* Everything below this line is delivered to recipients. */}
       <div className="my-2 border-t border-zinc-300 dark:border-zinc-600" />
 
-      <MultiSelect
-        name="recipientTypes"
-        label="Email Recipients"
-        isRequired
-        options={RECIPIENT_OPTIONS}
-        value={RECIPIENT_OPTIONS.filter((o) => recipients.includes(o.value))}
-        onChange={(selected) =>
-          setRecipients(selected.map((o) => o.value as RecipientType))
-        }
-      />
+      {/* MultiSelect has no disabled prop, so lock it from the outside. */}
+      <div
+        aria-disabled={isReadOnly}
+        className={cn(isReadOnly && "pointer-events-none opacity-60")}
+      >
+        <MultiSelect
+          name="recipientTypes"
+          label="Email Recipients"
+          isRequired
+          options={RECIPIENT_OPTIONS}
+          value={RECIPIENT_OPTIONS.filter((o) => recipients.includes(o.value))}
+          onChange={(selected) =>
+            setRecipients(selected.map((o) => o.value as RecipientType))
+          }
+        />
+      </div>
 
       <TextField
         label="Email Subject"
@@ -140,6 +175,7 @@ export function CampaignFormPanel({
         type="text"
         value={subject}
         onChange={setSubject}
+        isDisabled={isReadOnly}
         placeholder="What recipients see in their inbox"
         description="Shown to recipients. The title above is only for organizers."
       />
@@ -169,6 +205,7 @@ export function CampaignFormPanel({
               type="button"
               role="radio"
               aria-checked={formatValue === option.value}
+              disabled={isReadOnly}
               onClick={() => setFormatValue(option.value)}
               className={cn(
                 "cursor-pointer rounded-[3px] px-3 py-1 text-sm leading-5 transition-colors",
@@ -193,6 +230,7 @@ export function CampaignFormPanel({
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
+          readOnly={isReadOnly}
           rows={14}
           style={{ height: 349 }}
           placeholder={
@@ -202,17 +240,23 @@ export function CampaignFormPanel({
                 ? "Email contents"
                 : "Choose a format above to start writing"
           }
-          className="bg-input-bg text-text-main w-full resize-y rounded-[4px] border border-zinc-300 px-[13px] py-3 text-sm leading-5 outline-0 dark:border-zinc-700"
+          className={cn(
+            "bg-input-bg text-text-main w-full resize-y rounded-[4px] border border-zinc-300 px-[13px] py-3 text-sm leading-5 outline-0 dark:border-zinc-700",
+            isReadOnly &&
+              "cursor-not-allowed resize-none bg-zinc-200/50 text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400",
+          )}
         />
       </div>
 
       {saveError && (
         <p className="text-sm text-red-600">
-          Could not save. Check the fields and try again.
+          {saveError instanceof Error && saveError.message
+            ? saveError.message
+            : "Could not save. Check the fields and try again."}
         </p>
       )}
 
-      <div className="flex gap-2 pb-6">
+      <div className={cn("flex gap-2 pb-6", isReadOnly && "hidden")}>
         <Button
           variant="primary"
           size="auto"
