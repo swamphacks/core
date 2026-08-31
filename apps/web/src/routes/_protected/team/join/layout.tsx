@@ -30,7 +30,7 @@ function RouteComponent() {
     );
   }
 
-  if (data.status === "submitted") {
+  if (data.status === "submitted" || data.status === "under_review") {
     return <Outlet />;
   }
 }
