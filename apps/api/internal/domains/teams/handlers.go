@@ -91,7 +91,7 @@ func (h *handler) handleGetTeamByInvitationId(ctx context.Context, input *struct
 	team, err := h.teamService.GetTeamByInvitationId(ctx, input.InviteId)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Fail to get team")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &GetTeamByInvitationIdOutput{Body: TeamDto{
