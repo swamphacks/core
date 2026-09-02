@@ -43,3 +43,96 @@ footer p {
   text-decoration: underline;
   color: rgb(161, 161, 161) !important;
 }
+
+.butterfly-trail {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  z-index: 25;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.butterfly {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 12px;
+  height: 10px;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.butterfly-body {
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 2px;
+  height: 7px;
+  background: #5d3926;
+  box-shadow: 0 -2px 0 #d6b568;
+  image-rendering: pixelated;
+}
+
+.butterfly::before,
+.butterfly::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  width: 6px;
+  height: 7px;
+  background: #d99a67;
+  image-rendering: pixelated;
+  animation: butterfly-wing 300ms steps(2, end) infinite alternate;
+}
+
+.butterfly::before {
+  right: 6px;
+  clip-path: polygon(100% 15%, 35% 0, 0 45%, 35% 100%, 100% 75%);
+  transform-origin: right center;
+}
+
+.butterfly::after {
+  left: 6px;
+  clip-path: polygon(0 15%, 65% 0, 100% 45%, 65% 100%, 0 75%);
+  transform-origin: left center;
+}
+
+.butterfly:nth-child(2n)::before,
+.butterfly:nth-child(2n)::after {
+  background: #e4bc73;
+}
+
+.butterfly:nth-child(3n)::before,
+.butterfly:nth-child(3n)::after {
+  background: #c98886;
+}
+
+.butterfly:nth-child(2) {
+  scale: 0.86;
+}
+
+.butterfly:nth-child(4) {
+  scale: 0.72;
+}
+
+.butterfly:nth-child(5) {
+  scale: 0.62;
+}
+
+@keyframes butterfly-wing {
+  from {
+    scale: 1 1;
+  }
+
+  to {
+    scale: 0.35 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .butterfly::before,
+  .butterfly::after {
+    animation: none;
+  }
+}

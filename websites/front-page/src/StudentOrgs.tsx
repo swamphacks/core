@@ -1,46 +1,41 @@
 import "./StudentOrgs.css";
-import UFSIT from "./assets/clubs/UFSIT.svg";
-import CSU from "./assets/clubs/CSU.svg";
-import CSK from "./assets/clubs/CSK.svg";
+
+import Bat1 from "./assets/bat_without_sign1.png";
+import Bat2 from "./assets/bat_without_sign2.png";
+import Bat3 from "./assets/bat_without_sign3.png";
+
+const bats = [
+  { src: Bat1, top: "78px", left: "3%" },
+  { src: Bat2, top: "225px", left: "16%" },
+  { src: Bat3, top: "135px", left: "29%" },
+  { src: Bat1, top: "185px", left: "70%" },
+  { src: Bat2, top: "65px", left: "84%" },
+  { src: Bat3, top: "265px", left: "93%" },
+];
 
 export default function StudentOrgs() {
   return (
     <div id="studentorgs" className="studentorgs-container">
       <h1 className="studentorgs-header">Student Orgs</h1>
+      <p className="studentorgs-coming-soon">Coming soon...</p>
 
-      <div className="background">
-        <div className="layer vegetation"></div>
-        <div className="layer layer-canopy"></div>
-        <div className="layer trees-back1"></div>
-        <div className="layer trees-back2"></div>
-        <div className="layer foreground1"></div>
+      <div className="studentorgs-background" aria-hidden="true">
+        <div className="studentorgs-trees"></div>
       </div>
 
-      <div className="bat-container">
-        <img
-          className="bat"
-          src={UFSIT}
-          style={{
-            top: "100px",
-            left: "10%",
-          }}
-        />
-        <img
-          className="bat"
-          src={CSU}
-          style={{
-            top: "200px",
-            left: "20%",
-          }}
-        />
-        <img
-          className="bat"
-          src={CSK}
-          style={{
-            top: "100px",
-            left: "50%",
-          }}
-        />
+      <div className="bat-container" aria-hidden="true">
+        {bats.map((bat, index) => (
+          <img
+            className="bat"
+            src={bat.src}
+            alt=""
+            key={index}
+            style={{
+              top: bat.top,
+              left: bat.left,
+            }}
+          />
+        ))}
       </div>
     </div>
   );

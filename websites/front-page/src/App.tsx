@@ -3,17 +3,23 @@ import "./Landing.css";
 import "./fireflies.sass";
 import swamphacksIcon from "./assets/shxii-icon-transparent.png";
 import Modal from "react-modal";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent,
+} from "react";
 import About from "./About";
 import Sponsors from "./Sponsors";
 import Tracks from "./Tracks";
-// import StudentOrgs from "./StudentOrgs";
+import StudentOrgs from "./StudentOrgs";
 import Team from "./Team";
 import FAQ from "./Faq";
 import Insta from "./assets/insta.svg";
 import Discord from "./assets/discord.svg";
 // import Github from "./assets/github.svg";
 import CountdownCorner from "./Countdown";
+import "./Buttons.css";
 
 Modal.setAppElement("#root");
 
@@ -46,7 +52,13 @@ function App() {
           zIndex: 10000,
           opacity: showBadge ? 1 : 0,
           visibility: showBadge ? "visible" : "hidden",
-          transition: "opacity 0.2s ease, visibility 0.2s ease",
+          transform: showBadge
+            ? "translateY(0) scaleY(1)"
+            : "translateY(-8px) scaleY(0)",
+          transformOrigin: "top center",
+          transition:
+            "transform 0.6s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.3s ease, visibility 0.6s",
+          willChange: "transform, opacity",
           pointerEvents: showBadge ? "auto" : "none",
         }}
         href="https://mlh.io/na?utm_source=na-hackathon&utm_medium=TrustBadge&utm_campaign=2026-season&utm_content=white"
@@ -66,10 +78,11 @@ function App() {
       />
 
       <Landing />
+      <ButterflyTrail />
       <About />
       <Tracks />
       <Sponsors />
-      {/* <StudentOrgs /> */}
+      <StudentOrgs />
       <Team />
       <FAQ />
 
@@ -87,11 +100,111 @@ function App() {
   );
 }
 
+function ButterflyTrail() {
+  const trailRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let animationFrame = 0;
+
+    const horizontalPositions = [0.12, 0.31, 0.68, 0.84, 0.49];
+    const verticalPositions = [0.12, 0.34, 0.55, 0.72, 0.88];
+
+    const updateRegion = () => {
+      const trail = trailRef.current;
+      const about = document.getElementById("about");
+      const sponsors = document.getElementById("sponsors");
+
+      if (!trail || !about || !sponsors) return;
+
+      const top = about.offsetTop;
+      const height = Math.max(sponsors.offsetTop - top, 1);
+
+      trail.style.top = `${top}px`;
+      trail.style.height = `${height}px`;
+    };
+
+    const animate = (time: number) => {
+      const trail = trailRef.current;
+
+      if (trail) {
+        const butterflies =
+          trail.querySelectorAll<HTMLElement>(".butterfly");
+        const width = trail.clientWidth;
+        const height = trail.clientHeight;
+
+        butterflies.forEach((butterfly, index) => {
+          const horizontalPosition =
+            width * horizontalPositions[index] +
+            Math.sin(time / (980 + index * 130) + index * 1.8) * 34 +
+            Math.cos(time / (570 + index * 80) + index) * 8;
+
+          const verticalPosition =
+            height * verticalPositions[index] +
+            Math.sin(time / (1250 + index * 140) + index) * 42 +
+            Math.cos(time / (760 + index * 90) + index * 1.4) * 15;
+
+          const angle =
+            Math.sin(time / 700 + index * 1.4) * 8;
+
+          butterfly.style.transform =
+            `translate3d(${horizontalPosition}px, ` +
+            `${verticalPosition}px, 0) rotate(${angle}deg)`;
+        });
+      }
+
+      animationFrame = window.requestAnimationFrame(animate);
+    };
+
+    updateRegion();
+    window.addEventListener("resize", updateRegion);
+    animationFrame = window.requestAnimationFrame(animate);
+
+    return () => {
+      window.removeEventListener("resize", updateRegion);
+      window.cancelAnimationFrame(animationFrame);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={trailRef}
+      className="butterfly-trail"
+      aria-hidden="true"
+    >
+      {Array.from({ length: 5 }).map((_, index) => (
+        <span className="butterfly" key={index}>
+          <span className="butterfly-body" />
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function Landing() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const handleParallax = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") return;
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+    const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+
+    event.currentTarget.style.setProperty("--scene-x", `${x * 26}px`);
+    event.currentTarget.style.setProperty("--scene-y", `${y * 16}px`);
+  };
+
+  const resetParallax = (event: PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.style.setProperty("--scene-x", "0px");
+    event.currentTarget.style.setProperty("--scene-y", "0px");
+  };
+
   return (
-    <div className="container">
+    <div
+      className="container"
+      onPointerMove={handleParallax}
+      onPointerLeave={resetParallax}
+    >
       <div className="hamburger-menu" onClick={() => setIsMobileMenuOpen(true)}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -114,7 +227,7 @@ function Landing() {
         className={`hamburger-menu-content-container ${isMobileMenuOpen ? "open" : ""}`}
       >
         <button
-          className="menu-close-btn nes-btn is-error"
+          className="menu-close-btn pixel-button pixel-button--danger"
           onClick={() => setIsMobileMenuOpen(false)}
         >
           X
@@ -124,35 +237,35 @@ function Landing() {
             <img src={swamphacksIcon} className="menu-icon-image" />
           </div>
           <a
-            className="hamburger-menu-link nes-btn is-primary"
+            className="hamburger-menu-link pixel-button"
             href="#about"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             About
           </a>
           <a
-            className="hamburger-menu-link nes-btn is-primary"
+            className="hamburger-menu-link pixel-button"
             href="#tracks"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Tracks
           </a>
           <a
-            className="hamburger-menu-link nes-btn is-primary"
+            className="hamburger-menu-link pixel-button"
             href="#sponsors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Sponsors
           </a>
           <a
-            className="hamburger-menu-link nes-btn is-primary"
+            className="hamburger-menu-link pixel-button"
             href="#team"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Team
           </a>
           <a
-            className="hamburger-menu-link nes-btn is-primary"
+            className="hamburger-menu-link pixel-button"
             href="#faq"
             onClick={() => setIsMobileMenuOpen(false)}
           >
@@ -189,7 +302,7 @@ function Landing() {
           <div>
             <img src={swamphacksIcon} className="icon-image" />
           </div>
-          <h1 className="title">SwampHacks XII</h1>
+          <h1 className="title" tabIndex={0}>SwampHacks XII</h1>
           <div className="subheader">
             <p className="date">Oct 16 - 18, 2026</p>
             <p className="location">Reitz Union</p>
@@ -198,7 +311,7 @@ function Landing() {
 
         <div className="menu-container">
           <a
-            className="nes-btn is-primary register-button"
+            className="pixel-button register-button"
             href="https://app.swamphacks.com/application"
             target="_blank"
           >
@@ -206,7 +319,7 @@ function Landing() {
           </a>
 
           <a
-            className="nes-btn is-primary sponsor-button"
+            className="pixel-button sponsor-button"
             href="mailto:sponsors@swamphacks.com"
             target="_blank"
           >

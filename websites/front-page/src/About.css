@@ -10,14 +10,21 @@
 .about-header {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     font-size: 20px;
+    width: min(1040px, calc(100% - 48px));
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
 }
 
 .about-header h1 {
     /* text-align: left; */
     font-family: 'Pixelify Sans', monospace;
     /* font-size: 40px; */
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .about-summary-container {
@@ -79,10 +86,22 @@
 
 .carousel-track {
     display: flex;
+    width: max-content;
     align-items: center;
     gap: 10px;
-    transition: transform 0.3s ease-in-out;
+    animation: carousel-scroll 32s linear infinite;
     will-change: transform;
+}
+
+.carousel-set {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.carousel-window:hover .carousel-track,
+.carousel-window:focus-within .carousel-track {
+    animation-play-state: paused;
 }
 
 .hackathon-picture {
@@ -155,7 +174,13 @@
 }
 
 .image-modal {
+    display: block;
     width: 100%;
+    max-height: 68vh;
+    object-fit: contain;
+    border: 3px solid #b98762;
+    border-radius: 2px;
+    box-shadow: 5px 5px 0 #1d130d;
 }
 
 @media (min-width: 768px) {
@@ -164,7 +189,7 @@
         flex-direction: row;
         align-items: first baseline;
         justify-content: center;
-        width: 900px;
+        width: min(1040px, calc(100% - 48px));
     }
 
     .about-header {
@@ -203,5 +228,21 @@
 
     .carousel-window {
         width: 600px;
+    }
+}
+
+@keyframes carousel-scroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(calc(-50% - 5px));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .carousel-track {
+        animation-play-state: paused;
     }
 }

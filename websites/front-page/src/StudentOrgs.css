@@ -1,91 +1,160 @@
 .studentorgs-container {
-  /* position: relative; */
-  padding-top: 20px;
+  position: relative;
+  width: 100%;
+  min-height: 680px;
+  margin-top: 0;
+  padding-top: 34px;
+  overflow: visible;
   color: #ddc8af;
+  background-color: #191f07;
   font-family: "Jersey 20", cursive;
-  margin-bottom: 580px;
+  box-sizing: border-box;
+  isolation: isolate;
+  z-index: 6;
+}
+
+.studentorgs-container::before {
+  content: "";
+  position: absolute;
+  top: -72px;
+  left: 0;
+  width: 100%;
+  height: 96px;
+  z-index: 30;
+  opacity: 1;
+  pointer-events: none;
+  background-image:
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png"),
+    url("/assets/vegetation.png");
+  background-repeat: repeat-x;
+  background-position: center bottom;
+  background-size: auto 100%;
+  image-rendering: pixelated;
+  filter: brightness(0.42) saturate(0.75) contrast(1.35);
 }
 
 .studentorgs-header {
   position: relative;
   display: block;
-  text-align: center;
-  font-family: 'Pixelify Sans', monospace;
-  font-size: 40px;
+  width: min(1040px, calc(100% - 48px));
   margin: 0 auto;
-  z-index: 50;
+  z-index: 20;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 40px;
+  text-align: left;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
 }
 
-.trees-back1 {
-  height: 38%;
-  image-rendering: pixelated;
-  background: url('/assets/trees.png') repeat-x bottom;
-  background-size: auto 95%;
-  background-position-x: -450px;
-  filter: brightness(0.35) saturate(0.5);
-  z-index: 1;
+.studentorgs-coming-soon {
+  position: relative;
+  z-index: 20;
+  margin: 120px auto 0;
+  color: #ddc8af;
+  font-family: "Jersey 20", cursive;
+  font-size: 28px;
+  text-align: center;
+  width: min(1040px, calc(100% - 48px));
+  box-sizing: border-box;
 }
 
-.trees-back2 {
-  top: -7%;
-  height: 40%;
-  image-rendering: pixelated;
-  background: url('/assets/trees.png') repeat-x bottom;
-  background-size: auto 85%;
-  background-position-x: 210px;
-  filter: brightness(0.30) saturate(0.4);
-  z-index: 2;
+.studentorgs-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.vegetation {
-  top: -17%;
-  height: 15%;
-  image-rendering: pixelated;
-  background: url('/assets/vegetation.png') repeat-x bottom;
-  background-size: auto 100%;
-  background-position-x: 500px;
-  z-index: 3;
-}
-
-.canopy {
-  top: -3%;
-  height: 35%;
-  image-rendering: pixelated;
-  background: url('/assets/canopy.png') repeat-x top;
-  background-size: auto 100%;
-  z-index: 5;
-}
-
-.foreground1 {
-  bottom: 60%;
-  height: 20%;
+.studentorgs-trees {
+  position: absolute;
+  top: -50px;
+  left: 0;
   width: 100%;
-  image-rendering: pixelated;
-  background: url('/assets/grass.png') repeat-x bottom;
+  height: 500px;
+  background-image: url("/assets/testbg.png");
+  background-repeat: repeat-x;
+  background-position: bottom;
   background-size: auto 100%;
-  z-index: -1;
+  image-rendering: pixelated;
+  filter: brightness(0.35) saturate(0.5);
 }
 
 .bat-container {
   position: relative;
+  z-index: 10;
+  width: min(900px, calc(100% - 48px));
+  height: 430px;
+  margin: 0 auto;
 }
 
 .bat {
-  /* width: 250px; */
-  width: 150px;
   position: absolute;
-  z-index: 10;
-  filter: brightness(0.70) saturate(0.7);
+  width: 88px;
   z-index: 4;
+  filter:
+    brightness(0.88)
+    saturate(0.82)
+    drop-shadow(0 4px 3px rgba(0, 0, 0, 0.45));
+  animation: studentorg-bat-float 4.8s ease-in-out infinite;
+  will-change: transform;
 }
 
-@media (min-width: 768px) {
+.bat:nth-child(2) {
+  animation-delay: -1.1s;
+  animation-duration: 5.3s;
+}
+
+.bat:nth-child(3) {
+  animation-delay: -2.4s;
+  animation-duration: 4.5s;
+}
+
+.bat:nth-child(4) {
+  animation-delay: -3.2s;
+  animation-duration: 5.7s;
+}
+
+.bat:nth-child(5) {
+  animation-delay: -0.7s;
+  animation-duration: 5s;
+}
+
+@keyframes studentorg-bat-float {
+  0%,
+  100% {
+    transform: translate3d(-3px, 1px, 0) rotate(-1deg);
+  }
+
+  50% {
+    transform: translate3d(4px, -7px, 0) rotate(1deg);
+  }
+}
+
+@media (max-width: 767px) {
+  .studentorgs-container {
+    min-height: 570px;
+    margin-top: 0;
+    padding-top: 28px;
+  }
+
   .studentorgs-header {
-    width: 900px;
-    text-align: left;
+    font-size: 34px;
+    text-align: center;
   }
 
   .bat {
-    width: 150px;
+    width: 62px;
   }
 }

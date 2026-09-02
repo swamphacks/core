@@ -1,4 +1,6 @@
 .container {
+  --scene-x: 0px;
+  --scene-y: 0px;
   height: 105vh;
   position: relative;
   inset: 0;
@@ -67,15 +69,29 @@
 
 .menu {
   display: none;
-  position: absolute;
-  font-family: 'Pixelify Sans', monospace;
-  color: #ddc8af;
-  font-size: 26px;
-  z-index: 5 !important;
-  width: 650px;
-  margin: 0 auto;
-  gap: 30px;
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  z-index: 9999;
+  width: max-content;
+  max-width: calc(100% - 260px);
+  min-height: 58px;
   align-items: center;
+  gap: clamp(18px, 2vw, 30px);
+  padding: 7px 22px 7px 12px;
+  margin: 0;
+  font-family: 'Pixelify Sans', monospace;
+  font-size: clamp(20px, 1.5vw, 24px);
+  color: #ddc8af;
+  background: rgba(18, 27, 9, 0.68);
+  border: 1px solid rgba(221, 200, 175, 0.25);
+  border-radius: 999px;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.28),
+    inset 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transform: translateX(-50%);
 }
 
 a {
@@ -87,7 +103,9 @@ a:hover {
 }
 
 .menu-icon-image {
-  width: 70px;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
 }
 
 /* .container::before {
@@ -108,7 +126,10 @@ a:hover {
   position: absolute !important;
   width: 100%;
   height: 100%;
-  /* overflow: hidden; */
+  perspective: 1200px;
+  perspective-origin: center;
+  transform: scale(1.025);
+  transform-style: preserve-3d;
 }
 
 .layer {
@@ -116,6 +137,8 @@ a:hover {
   left: 0;
   width: 100%;
   pointer-events: none;
+  transition: transform 180ms ease-out;
+  will-change: transform;
 }
 
 .layer-sky {
@@ -139,6 +162,11 @@ a:hover {
   image-rendering: pixelated;
   background: url('/assets/trees.png') repeat-x bottom;
   background-size: auto 100%;
+  transform: translate3d(
+    calc(var(--scene-x) * -0.3),
+    calc(var(--scene-y) * -0.25),
+    0
+  ) scale(1.025);
   z-index: 2;
 }
 
@@ -181,6 +209,11 @@ a:hover {
   image-rendering: pixelated;
   background: url('/assets/vegetation.png') repeat-x bottom;
   background-size: auto 100%;
+  transform: translate3d(
+    calc(var(--scene-x) * -0.55),
+    calc(var(--scene-y) * -0.4),
+    25px
+  ) scale(1.035);
   z-index: 3;
 }
 
@@ -190,6 +223,11 @@ a:hover {
   image-rendering: pixelated;
   background: url('/assets/foreground.png') repeat-x bottom;
   background-size: auto 100%;
+  transform: translate3d(
+    calc(var(--scene-x) * -0.8),
+    calc(var(--scene-y) * -0.6),
+    45px
+  ) scale(1.045);
   z-index: 4;
 }
 
@@ -199,6 +237,11 @@ a:hover {
   image-rendering: pixelated;
   background: url('/assets/canopy.png') repeat-x top;
   background-size: auto 100%;
+  transform: translate3d(
+    calc(var(--scene-x) * -0.7),
+    calc(var(--scene-y) * -0.5),
+    40px
+  ) scale(1.04);
   z-index: 5;
 }
 
@@ -223,7 +266,7 @@ a:hover {
   z-index: 4;
 }
 
-.container > * {
+.container > :not(.menu):not(.hamburger-menu):not(.hamburger-menu-content-container) {
   position: relative;
   z-index: 1;
 }
@@ -271,6 +314,140 @@ a:hover {
     4px 4px 0 #4a2410,
     5px 5px 0 #4a2410,
     6px 6px 0 rgba(0,0,0,0.4);
+}
+
+.title {
+  cursor: default;
+  isolation: isolate;
+  transition:
+    color 260ms ease,
+    filter 260ms ease,
+    text-shadow 260ms ease;
+}
+
+.title::before,
+.title::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff6a8;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 7px rgba(217, 255, 116, 0.9);
+  transition: opacity 220ms ease;
+  will-change: transform, opacity;
+}
+
+.title::before {
+  top: 20%;
+  left: 8%;
+  box-shadow:
+    38px -17px 0 #f7e987,
+    92px 34px 0 #d9ff74,
+    168px -11px 0 #fff6a8,
+    238px 31px 0 #d9ff74,
+    305px -13px 0 #fff6a8;
+}
+
+.title::after {
+  right: 9%;
+  bottom: 18%;
+  box-shadow:
+    -42px 20px 0 #d9ff74,
+    -112px -25px 0 #fff6a8,
+    -190px 17px 0 #f7e987,
+    -265px -19px 0 #d9ff74;
+}
+
+.title:hover,
+.title:active,
+.title:focus-visible {
+  color: #fff1bd;
+  filter: brightness(1.12);
+  text-shadow:
+    0 0 5px rgba(244, 255, 151, 0.8),
+    0 0 15px rgba(199, 255, 104, 0.42),
+    1px 1px 0 #4a2410,
+    2px 2px 0 #4a2410,
+    3px 3px 0 #4a2410,
+    4px 4px 0 #4a2410,
+    5px 5px 0 #4a2410,
+    6px 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.title:hover::before,
+.title:hover::after,
+.title:active::before,
+.title:active::after,
+.title:focus-visible::before,
+.title:focus-visible::after {
+  opacity: 1;
+  animation: title-fireflies-left 4.8s ease-in-out infinite;
+}
+
+.title:hover::after,
+.title:active::after,
+.title:focus-visible::after {
+  animation-name: title-fireflies-right;
+  animation-duration: 5.4s;
+  animation-delay: -1.7s;
+}
+
+@keyframes title-fireflies-left {
+  0% {
+    transform: translate3d(-8px, 5px, 0) rotate(-4deg);
+    opacity: 0.45;
+  }
+
+  25% {
+    transform: translate3d(7px, -12px, 0) rotate(3deg);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate3d(15px, 3px, 0) rotate(7deg);
+    opacity: 0.65;
+  }
+
+  75% {
+    transform: translate3d(1px, 12px, 0) rotate(-2deg);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: translate3d(-8px, 5px, 0) rotate(-4deg);
+    opacity: 0.45;
+  }
+}
+
+@keyframes title-fireflies-right {
+  0% {
+    transform: translate3d(9px, -4px, 0) rotate(4deg);
+    opacity: 0.55;
+  }
+
+  25% {
+    transform: translate3d(-5px, 11px, 0) rotate(-5deg);
+    opacity: 0.85;
+  }
+
+  50% {
+    transform: translate3d(-15px, -2px, 0) rotate(-8deg);
+    opacity: 1;
+  }
+
+  75% {
+    transform: translate3d(3px, -13px, 0) rotate(2deg);
+    opacity: 0.62;
+  }
+
+  100% {
+    transform: translate3d(9px, -4px, 0) rotate(4deg);
+    opacity: 0.55;
+  }
 }
 
 .badge {
@@ -455,8 +632,7 @@ a:hover {
 }
 
 .ReactModal__Content {
-  width: 95%;
-  padding: 10px !important;
+  animation: modal-enter 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .tabs button {
@@ -492,10 +668,16 @@ a:hover {
 
 .modal-close-btn {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  padding: 0 8px;
-  /* opacity: 5%; */
+  top: 0;
+  right: 0;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  place-items: center;
+  border-radius: 2px;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .faq-container {
@@ -581,5 +763,17 @@ a:hover {
   50% {
     transform: translate(-50%, -50%) translateY(-0.15rem) rotate(-15deg)
       scale(1.06);
+  }
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 8px));
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
   }
 }

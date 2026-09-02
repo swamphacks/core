@@ -132,7 +132,7 @@ export default function FAQ() {
                     onClick={() => toggle(sectionIndex, questionIndex)}
                   >
                     <button
-                      className={`faq-question ${isOpen ? "open" : ""}`}
+                      className={`faq-question pixel-button ${isOpen ? "open" : ""}`}
                       aria-expanded={isOpen}
                     >
                       {faqItem.q}
@@ -157,7 +157,7 @@ export default function FAQ() {
       </div>
 
       <a
-        className="nes-btn is-primary register-button-2"
+        className="pixel-button register-button-2"
         href="https://app.swamphacks.com/application"
         target="_blank"
       >

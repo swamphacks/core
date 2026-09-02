@@ -1,35 +1,276 @@
 .countdown-corner {
-  position: fixed;   /* pins to the viewport instead of the page, so it ignores scroll */
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;     /* stay above other page content */
-
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 1000;
   display: flex;
+  min-width: 230px;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  align-items: stretch;
+  gap: 9px;
+  padding: 12px 14px 11px;
+  box-sizing: border-box;
+  color: #f8e6cc;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(61, 34, 23, 0.96),
+      rgba(35, 20, 14, 0.98)
+    );
+  border: 2px solid rgba(189, 132, 91, 0.48);
+  border-radius: 9px;
+  box-shadow:
+    0 5px 0 rgba(14, 10, 5, 0.72),
+    0 12px 28px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 226, 184, 0.09),
+    0 0 18px rgba(211, 240, 111, 0.07);
+  image-rendering: pixelated;
+}
 
-  min-width: 180px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: #2a170f;
-  color: #fdecec;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-  font-family: system-ui, -apple-system, sans-serif;
+.countdown-corner::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(234, 190, 145, 0.1);
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+.countdown-fireflies {
+  position: absolute;
+  inset: -18px;
+  z-index: 2;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.countdown-firefly {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #efff9b;
+  box-shadow:
+    0 0 4px #dfff72,
+    0 0 9px rgba(210, 255, 98, 0.55);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: countdown-firefly-drift 4.6s ease-in-out infinite;
+}
+
+.countdown-firefly:nth-child(1) {
+  top: 18%;
+  left: 4%;
+  animation-delay: -0.8s;
+}
+
+.countdown-firefly:nth-child(2) {
+  top: 4%;
+  left: 62%;
+  animation-delay: -2.7s;
+  animation-duration: 5.2s;
+}
+
+.countdown-firefly:nth-child(3) {
+  top: 72%;
+  left: 94%;
+  animation-delay: -1.5s;
+  animation-duration: 4.2s;
+}
+
+.countdown-firefly:nth-child(4) {
+  top: 92%;
+  left: 31%;
+  animation-delay: -3.4s;
+  animation-duration: 5.6s;
+}
+
+.countdown-firefly:nth-child(5) {
+  top: 42%;
+  left: 82%;
+  animation-delay: -4.1s;
+  animation-duration: 4.9s;
+}
+
+@keyframes countdown-firefly-drift {
+  0% {
+    transform: translate3d(-5px, 4px, 0);
+    opacity: 0.18;
+  }
+
+  25% {
+    transform: translate3d(3px, -7px, 0);
+    opacity: 0.9;
+  }
+
+  55% {
+    transform: translate3d(8px, 1px, 0);
+    opacity: 0.4;
+  }
+
+  78% {
+    transform: translate3d(-2px, 7px, 0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(-5px, 4px, 0);
+    opacity: 0.18;
+  }
+}
+
+.countdown-butterfly {
+  position: absolute;
+  top: -10px;
+  left: -9px;
+  z-index: 3;
+  width: 22px;
+  height: 16px;
+  pointer-events: none;
+  transform: rotate(-12deg);
+  image-rendering: pixelated;
+}
+
+.countdown-butterfly__body {
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  z-index: 2;
+  width: 3px;
+  height: 10px;
+  background: #4b2d20;
+  box-shadow:
+    0 -2px 0 #d8b66d,
+    0 9px 0 #2b1a13;
+}
+
+.countdown-butterfly::before,
+.countdown-butterfly::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  width: 11px;
+  height: 12px;
+  background:
+    linear-gradient(
+      135deg,
+      #e0a36f 0 38%,
+      #bd6f62 38% 68%,
+      #6f3d38 68% 100%
+    );
+  filter: drop-shadow(0 2px 0 rgba(36, 20, 14, 0.72));
+  animation: countdown-butterfly-flap 620ms ease-in-out infinite alternate;
+}
+
+.countdown-butterfly::before {
+  right: 11px;
+  clip-path: polygon(100% 18%, 45% 0, 0 35%, 25% 100%, 100% 72%);
+  transform-origin: right center;
+}
+
+.countdown-butterfly::after {
+  left: 11px;
+  clip-path: polygon(0 18%, 55% 0, 100% 35%, 75% 100%, 0 72%);
+  transform-origin: left center;
+  animation-delay: -70ms;
+}
+
+@keyframes countdown-butterfly-flap {
+  from {
+    transform: scaleX(1) translateY(0);
+    filter:
+      brightness(1)
+      drop-shadow(0 2px 0 rgba(36, 20, 14, 0.72));
+  }
+
+  to {
+    transform: scaleX(0.3) translateY(1px);
+    filter:
+      brightness(1.12)
+      drop-shadow(0 1px 0 rgba(36, 20, 14, 0.72));
+  }
 }
 
 .countdown-corner__label {
-  font-size: 11px;
+  position: relative;
+  color: #cba98c;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.11em;
+  text-align: center;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #b89c94;
-  font-family: 'Pixelify Sans', monospace;
 }
 
 .countdown-corner__digits {
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    minmax(32px, 1fr) auto
+    minmax(32px, 1fr) auto
+    minmax(32px, 1fr) auto
+    minmax(32px, 1fr);
+  align-items: start;
+  gap: 4px;
+  font-family: "Pixelify Sans", monospace;
+}
+
+.countdown-corner__unit {
   display: flex;
-  gap: 8px;
-  font-family: 'Pixelify Sans', monospace;
-  font-size: 18px;
-  font-weight: 600;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.countdown-corner__unit strong {
+  color: #fff1d9;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 0.9;
+  text-shadow: 0 2px 0 rgba(62, 31, 18, 0.9);
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-corner__unit small {
+  color: #a9826d;
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.countdown-corner__separator {
+  color: #9f725b;
+  font-size: 16px;
+  line-height: 0.9;
+  animation: countdown-pulse 1s steps(2, end) infinite;
+}
+
+@keyframes countdown-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (max-width: 600px) {
+  .countdown-corner {
+    right: 12px;
+    bottom: 12px;
+    min-width: 196px;
+    padding: 10px 11px 9px;
+  }
+
+  .countdown-corner__unit strong {
+    font-size: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .countdown-corner__separator,
+  .countdown-firefly,
+  .countdown-butterfly::before,
+  .countdown-butterfly::after {
+    animation: none;
+  }
 }

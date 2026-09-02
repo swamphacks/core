@@ -1,0 +1,107 @@
+:root {
+  --button-bg: #975b40;
+  --button-bg-hover: #a86649;
+  --button-text: #fff2d4;
+  --button-border: rgba(221, 200, 175, 0.52);
+  --button-active-bg: #ddc8af;
+  --button-active-text: #2f1f0c;
+  --button-shadow: #4a2b1d;
+}
+
+.pixel-button {
+  box-sizing: border-box;
+  border: 2px solid var(--button-border);
+  border-radius: 6px;
+  color: var(--button-text);
+  background: var(--button-bg);
+  box-shadow: 0 4px 0 var(--button-shadow);
+  cursor: pointer;
+  font-family: "Jersey 20", cursive;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.045em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease;
+}
+
+.pixel-button:hover {
+  color: #fff8e8;
+  background: var(--button-bg-hover);
+  border-color: rgba(238, 211, 180, 0.78);
+  box-shadow:
+    0 5px 0 var(--button-shadow),
+    0 0 14px rgba(221, 200, 175, 0.1);
+  transform: translateY(-1px);
+}
+
+.pixel-button:active {
+  box-shadow: 0 1px 0 var(--button-shadow);
+  transform: translateY(3px);
+}
+
+.pixel-button:focus-visible {
+  outline: 3px solid rgba(238, 211, 180, 0.52);
+  outline-offset: 3px;
+}
+
+.pixel-button.team-tab.is-active {
+  color: var(--button-active-text);
+  background: var(--button-active-bg);
+  border-color: #f0dac0;
+}
+
+.pixel-button--danger {
+  color: #fff0dd;
+  background: #713e32;
+  border-color: rgba(232, 174, 145, 0.58);
+  box-shadow: 0 3px 0 #3d211b;
+}
+
+.pixel-button--danger:hover {
+  background: #864a3b;
+  box-shadow: 0 4px 0 #3d211b;
+}
+
+.pixel-button.faq-question {
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 4px;
+  color: #e2d9ce;
+  background: transparent;
+  box-shadow: none;
+  font-size: 1.2rem;
+  text-align: left;
+  text-transform: none;
+}
+
+.pixel-button.faq-question:hover,
+.pixel-button.faq-question.open {
+  color: #fff2d4;
+  background: rgba(221, 200, 175, 0.08);
+  box-shadow: none;
+  transform: none;
+}
+
+.pixel-button.register-button,
+.pixel-button.sponsor-button,
+.pixel-button.register-button-2 {
+  border-color: rgba(221, 200, 175, 0.62);
+  color: #fff2d4;
+  background: #975b40;
+}
+
+.pixel-button.menu-close-btn,
+.pixel-button.modal-close-btn {
+  display: grid;
+  padding: 0;
+  place-items: center;
+  line-height: 1;
+}

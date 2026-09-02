@@ -1,6 +1,5 @@
 import { memo, useState } from "react";
 import "./Team.css";
-import "./StudentOrgs.css";
 
 import Abby from "./assets/headshots/Abigail_Moore_cropped.jpg";
 import Chris from "./assets/headshots/Christian_Cardenas_cropped.jpg";
@@ -313,23 +312,31 @@ const TeamMemberCard = memo(function TeamMemberCard({
   member: TeamMember;
   compact: boolean;
 }) {
+  const detail =
+    member.name === "Dr. Jeremiah Blanchard"
+      ? "Computer Engineering · Faculty Advisor"
+      : member.name === "Robert Conde"
+        ? "Computer Engineering · Staff Advisor"
+        : member.isExec
+          ? "Executive"
+          : null;
+
   return (
-    <a className="team-member-card" href={member.linkedin} target="_blank">
+    <a
+      className="team-member-card"
+      href={member.linkedin}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
       <img
         className={`team-member-image ${compact ? "is-compact" : ""}`.trim()}
         src={member.img}
         alt={member.name}
       />
-      <p className="team-member-name">
-        {member.name}
-        {member.name === "Dr. Jeremiah Blanchard" &&
-          " (Computer Engineering, Faculty Advisor)"}
-        <p>
-          {member.name === "Robert Conde" &&
-            " (Computer Engineering, Staff Advisor)"}
-        </p>
-        {member.isExec && " (Executive)"}
-      </p>
+      <span className="team-member-caption">
+        <span className="team-member-name">{member.name}</span>
+        {detail && <span className="team-member-detail">{detail}</span>}
+      </span>
     </a>
   );
 });
@@ -345,53 +352,6 @@ export default function Team() {
 
   return (
     <div id="team" className="team-container">
-      <div className="background5">
-        {/* <div className="layer vegetation"></div>
-        <div className="layer canopy"></div>
-        <div className="layer trees-back1"></div>
-        <div className="layer foreground1"></div>
-
-        <img
-          className="bat"
-          src={bat1}
-          style={{
-            left: "10%",
-          }}
-        />
-        <img
-          className="bat"
-          src={bat2}
-          style={{
-            top: "15%",
-            right: "10%",
-          }}
-        />
-        <img
-          className="bat"
-          src={bat3}
-          style={{
-            top: "-12%",
-            right: "15%",
-          }}
-        />
-        <img
-          className="bat"
-          src={bat2}
-          style={{
-            top: "-12%",
-            left: "30%",
-          }}
-        />
-
-        <img
-          className="bat"
-          src={bat3}
-          style={{
-            left: "15%",
-            bottom: "80%",
-          }}
-        /> */}
-      </div>
       <h1 className="team-header">Meet the XII Team!</h1>
 
       <div className="team-area">
@@ -407,7 +367,7 @@ export default function Team() {
                   role="tab"
                   aria-selected={isActive}
                   aria-controls={`team-panel-${index}`}
-                  className={`team-tab ${isActive ? "is-active" : ""}`.trim()}
+                  className={`team-tab pixel-button ${isActive ? "is-active" : ""}`.trim()}
                   onClick={() => handleTabSelect(index)}
                 >
                   {group.role}

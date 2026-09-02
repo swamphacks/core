@@ -12,25 +12,52 @@
 
 .sponsors-header {
   font-family: 'Pixelify Sans', monospace;
-  text-align: center;
+  text-align: left;
   font-size: 40px;
-  margin-left: 20px;
+  margin-left: auto;
   margin-top: 30px;
+    width: min(1040px, calc(100% - 48px));
+    margin-right: auto;
+    box-sizing: border-box;
 }
 
 .sponsors-vegetation {
-  bottom: 0%;
-  height: 100px;
+  position: relative;
+  width: 100%;
+  height: 120px;
+  margin-bottom: -34px;
   image-rendering: pixelated;
   background: url('/assets/vegetation.png') repeat-x bottom;
   background-size: auto 100%;
-  z-index: 3;
-  width: 100%;
+  z-index: 4;
 }
 
 .boat {
+  display: block;
   width: 150px;
   image-rendering: pixelated;
+}
+
+.boat-reflection {
+  position: absolute;
+  top: calc(100% - 3px);
+  left: 0;
+  opacity: 0.2;
+  pointer-events: none;
+  filter: saturate(0.5) brightness(0.65);
+  transform: scaleY(-0.82);
+  transform-origin: center;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.72),
+    transparent 88%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.72),
+    transparent 88%
+  );
+  animation: reflection-ripple 3.4s ease-in-out infinite;
 }
 
 .boat-outer-container {
@@ -38,6 +65,12 @@
   right: 0;
   top: -50px;
   z-index: 10;
+  animation: boat-drift 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.fish-path--right .fish {
+  scale: -1 1;
 }
 
 .boat-container {
@@ -53,32 +86,125 @@
 
 .water {
   position: relative;
-  height: 400px;
-  width: 100%;
   display: block;
   justify-content: center;
-  background: linear-gradient(#306271, rgb(11, 53, 53));
+  width: 100%;
+  height: 400px;
+  padding-top: 34px;
+  overflow: visible;
+  background: linear-gradient(
+    to bottom,
+    #3c8795 0%,
+    #246f7d 45%,
+    #155763 100%
+  );
+  image-rendering: pixelated;
 }
 
-.fish-school {
-  opacity: 15%;
+
+.water-texture {
   position: absolute;
   inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url('/assets/water-texture.png');
+  background-position: 0 0;
+  background-size: 780px auto;
+  background-repeat: repeat;
+  opacity: 0.16;
+  filter: saturate(0.65) contrast(0.82);
+  mix-blend-mode: screen;
+  image-rendering: pixelated;
+  animation: water-texture-drift 40s linear infinite;
+}
+
+.water::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 64px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(8, 22, 13, 0.72),
+      rgba(23, 65, 62, 0.2) 55%,
+      transparent
+    );
+  z-index: 1;
+}
+
+.water::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 120px;
+  pointer-events: none;
+  background: url('/assets/vegetation.png') repeat-x top;
+  background-size: auto 100%;
+  image-rendering: pixelated;
+  opacity: 0.3;
+  filter: saturate(0.72) brightness(0.82);
+  transform: scaleY(-1);
+  transform-origin: center;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.92),
+    transparent 96%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.92),
+    transparent 96%
+  );
+  z-index: 1;
+}
+
+
+.fish-school {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   overflow: hidden;
+  opacity: 0.28;
   pointer-events: none;
 }
 
-.fish {
+.fish-path {
   position: absolute;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  pointer-events: none;
+  will-change: translate;
+}
+
+.fish-path--right {
+  left: -90px;
+  animation-name: fish-swim-right;
+}
+
+.fish-path--left {
+  right: -90px;
+  animation-name: fish-swim-left;
+}
+
+.fish {
+  display: block;
   image-rendering: pixelated;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.20));
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
 }
 
 .sponsors-coming-soon {
   font-size: 30px;
   margin-top: 50px;
   text-align: center;
-  width: 900px;
+  width: min(1040px, calc(100% - 48px));
 }
 
 @media (min-width: 768px) {
@@ -91,7 +217,7 @@
   .sponsors-header {
     height: fit-content;
     text-align: left;
-    width: 900px;  
+    width: min(1040px, calc(100% - 48px));  
   }
 
   .sponsors-header {
@@ -118,4 +244,136 @@
 .sponsors {
   max-width: 600px;
   z-index: 100;
+}
+
+.boat-container::before,
+.boat-container::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 23%;
+  width: 8px;
+  height: 8px;
+  z-index: 3;
+  background: rgba(224, 220, 207, 0.88);
+  box-shadow:
+    8px -8px 0 rgba(190, 192, 184, 0.72),
+    2px -18px 0 rgba(157, 164, 158, 0.55);
+  image-rendering: pixelated;
+  pointer-events: none;
+  animation: ship-smoke 2.4s steps(5, end) infinite;
+}
+
+.boat-container::after {
+  animation-delay: 1.2s;
+}
+
+@keyframes boat-drift {
+  0%,
+  100% {
+    transform: translateX(0) translateY(0) rotate(-0.3deg);
+  }
+
+  50% {
+    transform: translateX(-18px) translateY(4px) rotate(0.5deg);
+  }
+}
+
+@keyframes ship-smoke {
+  0% {
+    opacity: 0;
+    transform: translate(0, 4px) scale(0.65);
+  }
+
+  20% {
+    opacity: 0.75;
+  }
+
+  70% {
+    opacity: 0.35;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-16px, -34px) scale(1.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boat-outer-container,
+  .boat-container::before,
+  .boat-container::after {
+    animation: none;
+  }
+}
+
+
+@keyframes fish-swim-right {
+  from {
+    translate: 0 0;
+  }
+
+  25% {
+    translate: calc(25vw + 45px) -4px;
+  }
+
+  50% {
+    translate: calc(50vw + 90px) 3px;
+  }
+
+  75% {
+    translate: calc(75vw + 135px) -3px;
+  }
+
+  to {
+    translate: calc(100vw + 180px) 0;
+  }
+}
+
+@keyframes fish-swim-left {
+  from {
+    translate: 0 0;
+  }
+
+  25% {
+    translate: calc(-25vw - 45px) -4px;
+  }
+
+  50% {
+    translate: calc(-50vw - 90px) 3px;
+  }
+
+  75% {
+    translate: calc(-75vw - 135px) -3px;
+  }
+
+  to {
+    translate: calc(-100vw - 180px) 0;
+  }
+}
+
+
+
+@keyframes reflection-ripple {
+  0%,
+  100% {
+    transform: scaleY(-0.82) skewX(-1deg);
+    opacity: 0.18;
+  }
+
+  50% {
+    transform: scaleY(-0.78) skewX(1deg);
+    opacity: 0.23;
+  }
+}
+
+
+@keyframes water-texture-drift {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 780px 0;
+  }
 }

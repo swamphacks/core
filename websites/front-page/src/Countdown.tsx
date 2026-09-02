@@ -49,12 +49,35 @@ export default function CountdownCorner({
 
   return (
     <div className="countdown-corner">
+      <span className="countdown-butterfly" aria-hidden="true">
+        <span className="countdown-butterfly__body" />
+      </span>
+      <span className="countdown-fireflies" aria-hidden="true">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <span className="countdown-firefly" key={index} />
+        ))}
+      </span>
       <span className="countdown-corner__label">{label}</span>
       <div className="countdown-corner__digits">
-        <span>{pad(timeLeft.days)}d</span>
-        <span>{pad(timeLeft.hours)}h</span>
-        <span>{pad(timeLeft.minutes)}m</span>
-        <span>{pad(timeLeft.seconds)}s</span>
+        <span className="countdown-corner__unit">
+          <strong>{pad(timeLeft.days)}</strong>
+          <small>days</small>
+        </span>
+        <span className="countdown-corner__separator">:</span>
+        <span className="countdown-corner__unit">
+          <strong>{pad(timeLeft.hours)}</strong>
+          <small>hrs</small>
+        </span>
+        <span className="countdown-corner__separator">:</span>
+        <span className="countdown-corner__unit">
+          <strong>{pad(timeLeft.minutes)}</strong>
+          <small>min</small>
+        </span>
+        <span className="countdown-corner__separator">:</span>
+        <span className="countdown-corner__unit">
+          <strong>{pad(timeLeft.seconds)}</strong>
+          <small>sec</small>
+        </span>
       </div>
     </div>
   );
