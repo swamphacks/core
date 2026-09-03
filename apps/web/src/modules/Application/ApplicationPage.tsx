@@ -108,9 +108,8 @@ function Accepted({ name }: AcceptedProps) {
       <div className="my-3 flex flex-col gap-2">
         <p>You've been accepted to hack in SwampHacks XII!</p>
         <p>
-          Please confirm your attendance by January 2nd. Failure to do so means
-          you are giving up your spot, and we will admit someone from a
-          waitlist.
+          Please confirm your attendance by *TODO*. Failure to do so means you
+          are giving up your spot, and we will admit someone from a waitlist.
         </p>
         <p>
           If you're no longer able to attend, please withdraw your application
@@ -156,27 +155,27 @@ function Rejected({ name }: RejectedProps) {
         <ol className="flex flex-col gap-2">
           <li>
             1. <strong>Join the Waitlist</strong>: We may have openings
-            available closer to the event. You can join the waitlist in the{" "}
-            <a className="underline" href="https://app.swamphacks.com/">
-              SwampHacks Portal
-            </a>{" "}
-            or by signing up in person on the day of check-in if space allows.
-            The waitlist operates on a first-come, first-served basis.
+            available closer to the event. You can join the waitlist by signing
+            up in person on the day of check-in if space allows. The waitlist
+            operates on a first-come, first-served basis.
           </li>
           <li>
             2. <strong>Mentor</strong>: Share your knowledge and guide hackers
             through their projects.{" "}
-            <a className="underline" href="https://swamphacks.com/mentor">
+            <a
+              className="underline"
+              href="https://swamphack.notion.site/3973b41de22f80b788ced816145e0a2d"
+            >
               Sign up to be a mentor here
             </a>
             .
           </li>
           <li>
-            3. <strong>Volunteer</strong>: Help us run the event smoothly.{" "}
-            <a className="underline" href="https://swamphacks.com/volunteer">
-              Sign up to volunteer here
-            </a>
-            .
+            3. <strong>Volunteer</strong>: Help us run the event smoothly. More
+            details will come out as we get closer. See our{" "}
+            <a href="https://www.instagram.com/ufswamphacks/">Instagram</a> or{" "}
+            <a href="https://discord.com/invite/NfRPv9JtAG">Discord server</a>{" "}
+            for all updates.
           </li>
         </ol>
 
