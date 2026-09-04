@@ -205,7 +205,7 @@ export default function InformationPage({
         title: "Early Applications Deadline",
         description: `Submit your application by ${earlyApplicationDeadlineFormatted} to be considered an early applicant!`,
         icon: "calendar",
-        completed: false,
+        completed: true,
       },
       {
         date: applicationClose.toLocaleDateString("en-US", {

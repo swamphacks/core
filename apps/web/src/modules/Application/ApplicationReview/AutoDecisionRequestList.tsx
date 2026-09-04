@@ -183,7 +183,7 @@ export default function AutoDecisionRequestList({
                 size="sm"
                 onClick={() =>
                   updateRequest.mutateAsync({
-                    requestId: row.id,
+                    requestId: row.original.id,
                     approved: true,
                   })
                 }
@@ -197,7 +197,7 @@ export default function AutoDecisionRequestList({
                 variant="danger"
                 onClick={() =>
                   updateRequest.mutateAsync({
-                    requestId: row.id,
+                    requestId: row.original.id,
                     approved: false,
                   })
                 }
