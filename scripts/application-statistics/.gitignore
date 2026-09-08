@@ -1,0 +1,10 @@
+# Applicant data
+*.csv
+*.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/

@@ -1,0 +1,7 @@
+[project]
+name = "application-statistics"
+version = "0.1.0"
+description = "Generate statistics from SwampHacks applications CSV"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
