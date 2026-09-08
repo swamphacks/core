@@ -543,7 +543,7 @@ SET
     justification = CASE WHEN $3::boolean THEN $4 ELSE justification END,
     approved = CASE WHEN $5::boolean THEN $6 ELSE approved END,
     decided_by = CASE WHEN $7::boolean THEN $8 ELSE decided_by END
-WHERE id = $9 AND reviewer_id = $10
+WHERE id = $9
 `
 
 type UpdateAutoDecisionRequestParams struct {
@@ -556,7 +556,6 @@ type UpdateAutoDecisionRequestParams struct {
 	ApprovedByDoUpdate        bool        `json:"approved_by_do_update"`
 	DecidedBy                 *uuid.UUID  `json:"decided_by"`
 	ID                        uuid.UUID   `json:"id"`
-	ReviewerID                uuid.UUID   `json:"reviewer_id"`
 }
 
 func (q *Queries) UpdateAutoDecisionRequest(ctx context.Context, arg UpdateAutoDecisionRequestParams) error {
@@ -570,7 +569,6 @@ func (q *Queries) UpdateAutoDecisionRequest(ctx context.Context, arg UpdateAutoD
 		arg.ApprovedByDoUpdate,
 		arg.DecidedBy,
 		arg.ID,
-		arg.ReviewerID,
 	)
 	return err
 }

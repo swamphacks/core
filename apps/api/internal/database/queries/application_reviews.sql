@@ -141,7 +141,7 @@ SET
     justification = CASE WHEN @justification_do_update::boolean THEN @justification ELSE justification END,
     approved = CASE WHEN @approved_do_update::boolean THEN @approved ELSE approved END,
     decided_by = CASE WHEN @approved_by_do_update::boolean THEN @decided_by ELSE decided_by END
-WHERE id = @id AND reviewer_id = @reviewer_id;
+WHERE id = @id;
 
 -- name: DeleteAllAutoDecisionRequests :exec
 DELETE FROM application_auto_decision_requests;
