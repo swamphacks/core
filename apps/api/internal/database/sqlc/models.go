@@ -505,27 +505,26 @@ type EmailCampaign struct {
 }
 
 type Hackathon struct {
-	ID                             string     `json:"id"`
-	Name                           string     `json:"name"`
-	Description                    *string    `json:"description"`
-	Location                       *string    `json:"location"`
-	LocationUrl                    *string    `json:"location_url"`
-	MaxAttendees                   *int32     `json:"max_attendees"`
-	ApplicationOpen                time.Time  `json:"application_open"`
-	ApplicationClose               time.Time  `json:"application_close"`
-	RsvpDeadline                   *time.Time `json:"rsvp_deadline"`
-	DecisionRelease                *time.Time `json:"decision_release"`
-	StartTime                      time.Time  `json:"start_time"`
-	EndTime                        time.Time  `json:"end_time"`
-	IsActive                       bool       `json:"is_active"`
-	CreatedAt                      time.Time  `json:"created_at"`
-	UpdatedAt                      time.Time  `json:"updated_at"`
-	Banner                         *string    `json:"banner"`
-	ApplicationReviewStarted       bool       `json:"application_review_started"`
-	AcceptEarlyApplications        bool       `json:"accept_early_applications"`
-	EarlyApplicationOpen           *time.Time `json:"early_application_open"`
-	EarlyApplicationClose          *time.Time `json:"early_application_close"`
-	AttendanceConfirmationDeadline *time.Time `json:"attendance_confirmation_deadline"`
+	ID                       string     `json:"id"`
+	Name                     string     `json:"name"`
+	Description              *string    `json:"description"`
+	Location                 *string    `json:"location"`
+	LocationUrl              *string    `json:"location_url"`
+	MaxAttendees             *int32     `json:"max_attendees"`
+	ApplicationOpen          time.Time  `json:"application_open"`
+	ApplicationClose         time.Time  `json:"application_close"`
+	RsvpDeadline             *time.Time `json:"rsvp_deadline"`
+	DecisionRelease          *time.Time `json:"decision_release"`
+	StartTime                time.Time  `json:"start_time"`
+	EndTime                  time.Time  `json:"end_time"`
+	IsActive                 bool       `json:"is_active"`
+	CreatedAt                time.Time  `json:"created_at"`
+	UpdatedAt                time.Time  `json:"updated_at"`
+	Banner                   *string    `json:"banner"`
+	ApplicationReviewStarted bool       `json:"application_review_started"`
+	AcceptEarlyApplications  bool       `json:"accept_early_applications"`
+	EarlyApplicationOpen     *time.Time `json:"early_application_open"`
+	EarlyApplicationClose    *time.Time `json:"early_application_close"`
 }
 
 type InterestSubmission struct {
