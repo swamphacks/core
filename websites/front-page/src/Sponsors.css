@@ -543,3 +543,65 @@
     drop-shadow(0 3px 5px rgba(5, 20, 23, 0.3));
   opacity: 0.95;
 }
+
+/* Hide sponsor tier labels */
+.sponsor-tier__label {
+  display: none;
+}
+
+/* Add breathing room between logo rows */
+.sponsor-tiers {
+  gap: 42px;
+  margin-top: 28px;
+}
+
+/* Enlarge every sponsor logo */
+.sponsor-card img {
+  width: auto;
+  max-width: 260px;
+  max-height: 82px;
+}
+
+/* Keep formerly-small sponsors larger but proportional */
+.sponsor-card--small img {
+  width: auto;
+  max-width: 190px;
+  max-height: 62px;
+}
+
+/* Expand the lake section */
+.water {
+  min-height: 620px;
+  padding-bottom: 70px;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card img {
+    max-width: 170px;
+    max-height: 60px;
+  }
+
+  .sponsor-card--small img {
+    max-width: 135px;
+    max-height: 48px;
+  }
+
+  .water {
+    min-height: 540px;
+    padding-bottom: 55px;
+  }
+}
+
+/* Reduce small sponsor logos */
+.sponsor-card--small img {
+  width: auto;
+  max-width: 145px;
+  max-height: 46px;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card--small img {
+    max-width: 110px;
+    max-height: 38px;
+  }
+}
