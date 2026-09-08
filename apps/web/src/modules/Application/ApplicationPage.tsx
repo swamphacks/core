@@ -53,7 +53,7 @@ export default function ApplicationPage({
   const name = applicationResponses["firstName"];
 
   if (application.data.status === "accepted") {
-    return <Accepted name={name} />;
+    return <Accepted name={name} rspvDeadline={hackathon.rsvpDeadline} />;
   }
 
   if (application.data.status === "rejected") {
@@ -82,9 +82,10 @@ export default function ApplicationPage({
 
 interface AcceptedProps {
   name: string;
+  rspvDeadline: string | null;
 }
 
-function Accepted({ name }: AcceptedProps) {
+function Accepted({ name, rspvDeadline }: AcceptedProps) {
   const { confirmAttendance, withdrawApplication } = useApplicationActions();
 
   const handleConfirmAttendance = async () => {
@@ -108,8 +109,18 @@ function Accepted({ name }: AcceptedProps) {
       <div className="my-3 flex flex-col gap-2">
         <p>You've been accepted to hack in SwampHacks XII!</p>
         <p>
-          Please confirm your attendance by *TODO*. Failure to do so means you
-          are giving up your spot, and we will admit someone from a waitlist.
+          Please confirm your attendance by{" "}
+          {new Date(rspvDeadline!).toLocaleString("en-US", {
+            timeZone: "America/New_York",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          }) + " ET"}
+          . Failure to do so means you are giving up your spot, and we will
+          admit someone from a waitlist.
         </p>
         <p>
           If you're no longer able to attend, please withdraw your application
