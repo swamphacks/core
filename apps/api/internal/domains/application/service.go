@@ -462,6 +462,18 @@ func (s *ApplicationService) ConfirmAttendance(ctx context.Context, userID uuid.
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txDB := s.db.NewTX(tx)
 
+		hackathon, err := s.db.Query.GetHackathon(ctx)
+
+		if err != nil {
+			s.logger.Err(err).Msg("ConfirmAttendance fail, unable to retrieve hackathon")
+			return err
+		}
+
+		now := time.Now()
+		if hackathon.RsvpDeadline != nil && now.After(*hackathon.RsvpDeadline) {
+			return errors.New("Attendance confirmation deadline has passed")
+		}
+
 		application, err := s.db.Query.GetApplicationByUserId(ctx, userID)
 
 		if err != nil {

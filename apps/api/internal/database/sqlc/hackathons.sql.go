@@ -36,7 +36,7 @@ INSERT INTO hackathons (
     coalesce($15, NULL::TIMESTAMPTZ),
     coalesce($16, false)
 ) 
-RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, is_active, created_at, updated_at, banner, application_review_started, accept_early_applications, early_application_open, early_application_close
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, is_active, created_at, updated_at, banner, application_review_started, accept_early_applications, early_application_open, early_application_close, attendance_confirmation_deadline
 `
 
 type CreateHackathonParams struct {
@@ -99,6 +99,7 @@ func (q *Queries) CreateHackathon(ctx context.Context, arg CreateHackathonParams
 		&i.AcceptEarlyApplications,
 		&i.EarlyApplicationOpen,
 		&i.EarlyApplicationClose,
+		&i.AttendanceConfirmationDeadline,
 	)
 	return i, err
 }
@@ -185,7 +186,7 @@ func (q *Queries) GetAttendeesWithDiscord(ctx context.Context) ([]GetAttendeesWi
 }
 
 const getHackathon = `-- name: GetHackathon :one
-SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, is_active, created_at, updated_at, banner, application_review_started, accept_early_applications, early_application_open, early_application_close FROM hackathons WHERE is_active = true
+SELECT id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, is_active, created_at, updated_at, banner, application_review_started, accept_early_applications, early_application_open, early_application_close, attendance_confirmation_deadline FROM hackathons WHERE is_active = true
 `
 
 func (q *Queries) GetHackathon(ctx context.Context) (Hackathon, error) {
@@ -212,6 +213,7 @@ func (q *Queries) GetHackathon(ctx context.Context) (Hackathon, error) {
 		&i.AcceptEarlyApplications,
 		&i.EarlyApplicationOpen,
 		&i.EarlyApplicationClose,
+		&i.AttendanceConfirmationDeadline,
 	)
 	return i, err
 }
@@ -276,7 +278,7 @@ SET
     application_review_started = CASE WHEN $25::boolean THEN $26 ELSE application_review_started END,
     updated_at = NOW()
 WHERE is_active = true
-RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, is_active, created_at, updated_at, banner, application_review_started, accept_early_applications, early_application_open, early_application_close
+RETURNING id, name, description, location, location_url, max_attendees, application_open, application_close, rsvp_deadline, decision_release, start_time, end_time, is_active, created_at, updated_at, banner, application_review_started, accept_early_applications, early_application_open, early_application_close, attendance_confirmation_deadline
 `
 
 type UpdateHackathonParams struct {
