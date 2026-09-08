@@ -3,6 +3,61 @@ import "./Sponsors.css";
 import boat from "./assets/boat.png";
 // import rod from "./assets/frod.png";
 import fish from "./assets/fish.png";
+import FifthThird from "./assets/sponsors/fifth-third.png";
+import UF from "./assets/sponsors/uf.png";
+import CapitalOne from "./assets/sponsors/capital-one.svg";
+import BNY from "./assets/sponsors/bny.svg";
+import Roblox from "./assets/sponsors/roblox.svg";
+import PureButtons from "./assets/sponsors/purebuttons.webp";
+
+type Sponsor = {
+  name: string;
+  logo: string | null;
+  textMark: string | null;
+  url: string;
+};
+
+const mediumSponsors: Sponsor[] = [
+  {
+    name: "Capital One",
+    logo: CapitalOne,
+    textMark: null,
+    url: "https://www.capitalone.com/",
+  },
+  {
+    name: "Fifth Third Bank",
+    logo: FifthThird,
+    textMark: null,
+    url: "https://www.53.com/",
+  },
+  {
+    name: "BNY",
+    logo: BNY,
+    textMark: null,
+    url: "https://www.bny.com/",
+  },
+  {
+    name: "UF Center for Experiential Learning",
+    logo: UF,
+    textMark: null,
+    url: "https://career.ufl.edu/",
+  },
+];
+
+const smallSponsors: Sponsor[] = [
+  {
+    name: "Roblox",
+    logo: Roblox,
+    textMark: null,
+    url: "https://www.roblox.com/",
+  },
+  {
+    name: "PureButtons",
+    logo: PureButtons,
+    textMark: null,
+    url: "https://www.purebuttons.com/",
+  },
+];
 // import SponsorsImg from "./assets/Sponsors.png";
 // import SponsorsSvg from "./assets/Sponsors.svg";
 
@@ -153,7 +208,58 @@ export default function Sponsors() {
           }}
         >
           <h1 className="sponsors-header">Sponsors</h1>
-          <p className="sponsors-coming-soon">Coming soon...</p>
+
+          <div className="sponsor-tiers">
+            <section className="sponsor-tier">
+              <h2 className="sponsor-tier__label">Medium Sponsors</h2>
+              <div className="sponsor-grid sponsor-grid--medium">
+                {mediumSponsors.map((sponsor) => (
+                  <a
+                    className="sponsor-card sponsor-card--medium"
+                    href={sponsor.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={sponsor.name}
+                    key={sponsor.name}
+                  >
+                    {sponsor.logo && (
+                      <img src={sponsor.logo} alt={sponsor.name} />
+                    )}
+                    {sponsor.textMark && (
+                      <span className="sponsor-card__mark">
+                        {sponsor.textMark}
+                      </span>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </section>
+
+            <section className="sponsor-tier">
+              <h2 className="sponsor-tier__label">Small Sponsors</h2>
+              <div className="sponsor-grid sponsor-grid--small">
+                {smallSponsors.map((sponsor) => (
+                  <a
+                    className="sponsor-card sponsor-card--small"
+                    href={sponsor.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={sponsor.name}
+                    key={sponsor.name}
+                  >
+                    {sponsor.logo && (
+                      <img src={sponsor.logo} alt={sponsor.name} />
+                    )}
+                    {sponsor.textMark && (
+                      <span className="sponsor-card__mark">
+                        {sponsor.textMark}
+                      </span>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </section>
+          </div>
         </div>
 
         <div className="fish-school" aria-hidden="true">
