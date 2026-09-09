@@ -171,11 +171,13 @@ function Rejected({ name }: RejectedProps) {
             .
           </li>
           <li>
-            3. <strong>Volunteer</strong>: Help us run the event smoothly. More
-            details will come out as we get closer. See our{" "}
-            <a href="https://www.instagram.com/ufswamphacks/">Instagram</a> or{" "}
-            <a href="https://discord.com/invite/NfRPv9JtAG">Discord server</a>{" "}
-            for all updates.
+            3. <strong>Volunteer</strong>: Help us run the event smoothly.{" "}
+            <a
+              className="underline"
+              href="https://swamphack.notion.site/3ae3b41de22f806ba9d5cb3f8ec65bed"
+            >
+              Sign up to volunteer here
+            </a>
           </li>
         </ol>
 
