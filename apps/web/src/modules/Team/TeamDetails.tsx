@@ -17,9 +17,11 @@ import { Input } from "@/components/ui/Field";
 export default function TeamDetails({
   team,
   user,
+  readonly = false,
 }: {
   user: UserContext;
   team: NonNullable<ReturnType<typeof useMyTeam>["data"]>;
+  readonly?: boolean;
 }) {
   const { deleteTeam, leaveTeam, kickMember } = useTeamActions();
   const isOwner = team.ownerId === user.userId;
@@ -81,42 +83,46 @@ export default function TeamDetails({
     <div className="mt-3 space-y-2 rounded-md border border-border/70 p-3">
       <div className="flex justify-between">
         <p className="font-medium text-text-main">Your team</p>
-        {isOwner && (
-          <div className="space-x-2">
-            <DialogTrigger onOpenChange={(isOpen) => console.log(isOpen)}>
-              <Button className="h-8" size="sm">
-                <TablerPlus />
-                Invite
-              </Button>
+        {!readonly && (
+          <>
+            {isOwner && (
+              <div className="space-x-2">
+                <DialogTrigger onOpenChange={(isOpen) => console.log(isOpen)}>
+                  <Button className="h-8" size="sm">
+                    <TablerPlus />
+                    Invite
+                  </Button>
 
-              <Modal size="md" isDismissible>
-                <InvitationModal teamId={team.id} />
-              </Modal>
-            </DialogTrigger>
+                  <Modal size="md" isDismissible>
+                    <InvitationModal teamId={team.id} />
+                  </Modal>
+                </DialogTrigger>
 
-            <Button
-              onClick={handleDeleteTeam}
-              className="h-8"
-              variant="secondary"
-              size="sm"
-            >
-              <TablerTrash />
-              Delete
-            </Button>
-          </div>
-        )}
-        {!isOwner && (
-          <div>
-            <Button
-              onClick={handleLeaveTeam}
-              className="h-8"
-              size="sm"
-              variant="secondary"
-            >
-              <TablerLogout />
-              Leave
-            </Button>
-          </div>
+                <Button
+                  onClick={handleDeleteTeam}
+                  className="h-8"
+                  variant="secondary"
+                  size="sm"
+                >
+                  <TablerTrash />
+                  Delete
+                </Button>
+              </div>
+            )}
+            {!isOwner && (
+              <div>
+                <Button
+                  onClick={handleLeaveTeam}
+                  className="h-8"
+                  size="sm"
+                  variant="secondary"
+                >
+                  <TablerLogout />
+                  Leave
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
       <p className="text-text-secondary">
@@ -141,7 +147,7 @@ export default function TeamDetails({
                   <p className="truncate w-50">{member.name}</p>
                 </div>
 
-                {isOwner && member.id != user.userId && (
+                {!readonly && isOwner && member.id != user.userId && (
                   <Button
                     onClick={() => handleKickMember(member.id)}
                     className="h-8"

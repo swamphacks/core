@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/Card";
+import { useMyTeam } from "@/modules/Team/hooks/useMyTeam";
+import TeamDetails from "@/modules/Team/TeamDetails";
 import { createFileRoute } from "@tanstack/react-router";
 import { Heading, Link } from "react-aria-components";
 import QRCode from "react-qr-code";
@@ -13,6 +15,7 @@ const generateIdentifyIntent = (userId: string): string => {
 
 function RouteComponent() {
   const { user } = Route.useRouteContext();
+  const { data: myTeam, isPending } = useMyTeam();
 
   const identificationIntentString = generateIdentifyIntent(user.userId);
   const hackerGuideUrl =
@@ -151,6 +154,13 @@ function RouteComponent() {
           </section>
         </div>
       </div>
+
+      {!isPending && myTeam && (
+        <>
+          <hr className="my-2 border-slate-200 dark:border-slate-800" />
+          <TeamDetails team={myTeam} user={user} readonly />
+        </>
+      )}
     </main>
   );
 }
