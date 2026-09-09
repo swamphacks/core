@@ -317,21 +317,21 @@ function Landing() {
           >
             Apply
           </a>
-
-          <a
-            className="pixel-button sponsor-button"
-            href="mailto:sponsors@swamphacks.com"
-            target="_blank"
-          >
-            Sponsor SH XII
-          </a>
         </div>
 
         <div className="submenu-container">
           <a
             className="submenu-link"
+            href="mailto:sponsors@swamphacks.com"
+          >
+            Sponsor SH XII
+          </a>
+
+          <a
+            className="submenu-link"
             href="https://swamphack.notion.site/3973b41de22f80b788ced816145e0a2d"
             target="_blank"
+            rel="noopener noreferrer"
           >
             Mentor Application
           </a>
@@ -340,8 +340,18 @@ function Landing() {
             className="submenu-link"
             href="https://swamphack.notion.site/54a3b41de22f8324afa9814483091664"
             target="_blank"
+            rel="noopener noreferrer"
           >
             Judges Interest Form
+          </a>
+
+          <a
+            className="submenu-link"
+            href="https://swamphack.notion.site/3ae3b41de22f806ba9d5cb3f8ec65bed?pvs=105"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Volunteer Form
           </a>
         </div>
 

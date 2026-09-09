@@ -777,3 +777,97 @@ a:hover {
     transform: translate(-50%, -50%);
   }
 }
+
+
+/* Secondary application links */
+.submenu-container {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(330px, calc(100vw - 40px));
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.submenu-link {
+  display: flex;
+  min-height: 46px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border: 2px solid rgba(221, 200, 175, 0.62);
+  border-radius: 5px;
+  color: #ece4da !important;
+  background: #975b40;
+  box-shadow: 0 4px 0 rgba(74, 36, 16, 0.72);
+  font-family: "Jersey 20", cursive;
+  font-size: 1.15rem !important;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none !important;
+  transition:
+    transform 150ms ease,
+    filter 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.submenu-link:hover {
+  color: #fff2d4 !important;
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 rgba(74, 36, 16, 0.72);
+}
+
+.submenu-link:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(74, 36, 16, 0.72);
+}
+
+/* Compact secondary application links */
+.submenu-container {
+  width: min(290px, calc(100vw - 40px));
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.submenu-link {
+  min-height: 36px;
+  padding: 5px 7px;
+  border: 2px solid rgba(221, 200, 175, 0.72);
+  border-radius: 4px;
+  color: #f2e5d3 !important;
+  background: rgba(112, 65, 45, 0.92);
+  box-shadow:
+    0 3px 0 rgba(48, 25, 16, 0.8),
+    inset 0 1px 0 rgba(255, 239, 215, 0.12);
+  font-size: 0.98rem !important;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+.submenu-link:hover {
+  color: #fff7e8 !important;
+  background: rgba(139, 81, 56, 0.97);
+  box-shadow:
+    0 4px 0 rgba(48, 25, 16, 0.82),
+    0 5px 10px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+.submenu-link:active {
+  box-shadow: 0 1px 0 rgba(48, 25, 16, 0.82);
+  transform: translateY(2px);
+}
+
+/* Add breathing room around application buttons */
+.submenu-container {
+  column-gap: 10px;
+  row-gap: 11px;
+  margin-top: 18px;
+  margin-bottom: 24px;
+}
+
+.icon-list {
+  margin-top: 8px;
+}
+
