@@ -8,7 +8,7 @@ import UF from "./assets/sponsors/uf.png";
 import CapitalOne from "./assets/sponsors/capital-one.svg";
 import BNY from "./assets/sponsors/bny.svg";
 import Roblox from "./assets/sponsors/roblox.svg";
-import PureButtons from "./assets/sponsors/purebuttons.webp";
+import PureButtons from "./assets/sponsors/pure-buttons.svg";
 
 type Sponsor = {
   name: string;
