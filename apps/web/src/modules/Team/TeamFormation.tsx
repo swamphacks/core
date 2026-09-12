@@ -13,7 +13,13 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Field";
 
-export default function TeamFormation({ user }: { user: UserContext }) {
+export default function TeamFormation({
+  user,
+  accepted,
+}: {
+  user: UserContext;
+  accepted: boolean;
+}) {
   const [teamName, setTeamName] = useState("");
   const { createTeam } = useTeamActions();
   const { data: myTeam, isPending } = useMyTeam();
@@ -39,17 +45,19 @@ export default function TeamFormation({ user }: { user: UserContext }) {
     <div className="border-t-1 border-border pt-3">
       <div className="flex items-center gap-2">
         <TablerUsersGroup />
-        <p>Team Formation</p>
+        <p>{accepted ? "Team" : "Team Formation"}</p>
       </div>
 
-      <p className="text-text-secondary mt-2">
-        Form a team now to increase your team's chances of being accepted
-        together. Although we try our best to keep teams together, we may be
-        unable to do so.
-      </p>
+      {!accepted && (
+        <p className="text-text-secondary mt-2">
+          Form a team now to increase your team's chances of being accepted
+          together. Although we try our best to keep teams together, we may be
+          unable to do so.
+        </p>
+      )}
 
       {!isPending && myTeam ? (
-        <TeamDetails team={myTeam} user={user} />
+        <TeamDetails team={myTeam} user={user} accepted={accepted} />
       ) : (
         <>
           <div className="flex flex-col w-fit">
