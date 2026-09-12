@@ -7,30 +7,11 @@ FROM teams
 WHERE id = @id;
 
 -- name: GetTeamMembers :many
-SELECT tm.user_id, users.image, users.name FROM team_members tm
+SELECT tm.user_id, users.image, users.name, users.role, applications.status AS application_status FROM team_members tm
 JOIN users ON users.id = tm.user_id
+LEFT JOIN applications ON applications.user_id = tm.user_id
 WHERE tm.team_id = @team_id
 ORDER BY users.name ASC;
-
--- name: GetTeamDetails :one
-SELECT 
-    t.*, 
-    COALESCE(
-        json_agg(
-            json_build_object(
-                'id', tm.user_id,
-                'name', users.name,
-                'image', users.image
-                -- 'joinedAt', tm.joined_at
-            )
-        ) FILTER (WHERE tm.user_id IS NOT NULL),
-        '[]'
-    )::jsonb AS members
-FROM teams t
-LEFT JOIN team_members tm ON tm.team_id = t.id
-LEFT JOIN users ON users.id = tm.user_id
-WHERE t.id = @id
-GROUP BY t.id;
 
 -- name: GetTeamByUserId :one
 SELECT

@@ -200,7 +200,7 @@ export function ApplicationForm({
           </a>
         </p>
         <div className="mt-5">
-          <TeamFormation user={user} />
+          <TeamFormation user={user} accepted={false} />
         </div>
       </div>
     );

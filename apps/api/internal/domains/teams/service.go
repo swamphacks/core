@@ -71,6 +71,20 @@ func (s *TeamService) CreateTeam(ctx context.Context, name string, userID uuid.U
 	return &newTeam, nil
 }
 
+func (s *TeamService) GetTeamById(ctx context.Context, id uuid.UUID) (*sqlc.Team, error) {
+	team, err := s.db.Query.GetTeamById(ctx, id)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNoTeamFound
+		}
+		s.logger.Err(err).Msg("GetTeamById fail")
+		return nil, ErrGetTeam
+	}
+
+	return &team, nil
+}
+
 func (s *TeamService) GetTeamByUserId(ctx context.Context, userID uuid.UUID) (*sqlc.GetTeamByUserIdRow, error) {
 	team, err := s.db.Query.GetTeamByUserId(ctx, userID)
 
@@ -108,17 +122,6 @@ func (s *TeamService) GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]s
 	}
 
 	return members, nil
-}
-
-func (s *TeamService) GetTeamDetails(ctx context.Context, teamID uuid.UUID) (*sqlc.GetTeamDetailsRow, error) {
-	teamDetails, err := s.db.Query.GetTeamDetails(ctx, teamID)
-
-	if err != nil {
-		s.logger.Err(err).Msg("GetTeam fail")
-		return nil, ErrGetTeamDetails
-	}
-
-	return &teamDetails, nil
 }
 
 func (s *TeamService) JoinTeam(ctx context.Context, userID, teamID uuid.UUID) error {

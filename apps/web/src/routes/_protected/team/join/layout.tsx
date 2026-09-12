@@ -30,7 +30,24 @@ function RouteComponent() {
     );
   }
 
-  if (data.status === "submitted" || data.status === "under_review") {
+  if (data.status === "accepted") {
+    return (
+      <div className="w-full h-full sm:max-w-180 mx-auto font-figtree p-2 relative flex justify-center items-center pb-50">
+        <div>
+          <p>You must confirm your acceptance before joining a team.</p>
+          <Link to="/application">
+            <Button className="mt-2">Confirm Now!</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    data.status === "confirmed" ||
+    data.status === "submitted" ||
+    data.status === "under_review"
+  ) {
     return <Outlet />;
   }
 }
