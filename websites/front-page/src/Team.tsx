@@ -19,6 +19,8 @@ import Oliver from "./assets/headshots/Oliver_Jen_cropped.png";
 import Lara from "./assets/headshots/Lara_Afont_cropped.jpg";
 import Nam from "./assets/headshots/Nam_Tran_cropped.png";
 import Maria from "./assets/headshots/Maria_Davis_cropped.jpg";
+
+import MariaGaitan from "./assets/headshots/Maria_Gaitan_cropped.jpg";
 import Christopher from "./assets/headshots/Christopher_Silva_cropped.jpg";
 import Matilde from "./assets/headshots/Matilde_Gillia_cropped.jpg";
 import Kian from "./assets/headshots/Kian_Hidalgo_cropped.jpg";
@@ -228,6 +230,13 @@ const teamMembers = [
     img: Ayushi,
   },
   {
+    name: "Maria Gaitan",
+    linkedin: "https://www.linkedin.com/in/maria-gaitan-411430239/",
+    role: "Marketing",
+    isExec: false,
+    img: MariaGaitan,
+  },
+  {
     name: "Kaiden Joy",
     linkedin: "https://www.linkedin.com/in/kaiden-joy-934a84261/",
     role: "Finance",
@@ -302,6 +311,7 @@ const groupedMembers = [
     members: teamMembers.filter((member) => member.role === "Advisors"),
   },
 ];
+
 
 type TeamMember = (typeof teamMembers)[number];
 
@@ -389,7 +399,7 @@ export default function Team() {
                 >
                   <h2 className="team-role-title">{group.role}</h2>
 
-                  <div className="team-role-members">
+                    <div className="team-role-members">
                     {group.members.map((member) => (
                       <TeamMemberCard
                         key={`${group.role}-${member.name}`}
