@@ -87,6 +87,16 @@ services:
       retries: 5
       start_period: 5s
 
+  # Local SES emulator for end-to-end email testing.
+  # Set AWS_ENDPOINT_URL=http://localstack:4566 in apps/api/.env.dev to use it.
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=ses
+
   # loki:
   #   image: grafana/loki:3.7.1
   #   container_name: loki
