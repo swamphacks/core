@@ -4,6 +4,7 @@ import TablerClipboardCheck from "~icons/tabler/clipboard-check";
 import TablerFileText from "~icons/tabler/file-text";
 import TablerChartBarPopular from "~icons/tabler/chart-bar-popular";
 import TablerSearch from "~icons/tabler/search";
+import TablerMail from "~icons/tabler/mail";
 
 interface AdminNavbaPropsProps {
   pathname: string;
@@ -15,6 +16,7 @@ export default function AdminNavbaProps({ pathname }: AdminNavbaPropsProps) {
     pathname,
   );
   const applicationSearchActive = /^\/application-search\/?$/.test(pathname);
+  const emailCampaignsActive = /^\/email-campaigns\/?$/.test(pathname);
 
   const commonNavLinks = (
     <>
@@ -52,6 +54,12 @@ export default function AdminNavbaProps({ pathname }: AdminNavbaPropsProps) {
           active={applicationSearchActive}
         />
       </NavLink>
+      <NavLink
+        label="Email Campaigns"
+        href="/email-campaigns"
+        leftSection={<TablerMail className="w-5 aspect-square" />}
+        active={emailCampaignsActive}
+      />
     </>
   );
   return commonNavLinks;
