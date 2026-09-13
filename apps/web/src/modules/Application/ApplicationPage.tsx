@@ -68,6 +68,32 @@ export default function ApplicationPage({
     return <Withdrawn name={name} />;
   }
 
+  const now = new Date();
+  const applicationOpen = new Date(hackathon.applicationOpen);
+  const applicationClose = new Date(hackathon.applicationClose);
+
+  let isApplicationOpen;
+  if (hackathon.acceptEarlyApplications) {
+    const earlyApplicationOpen = new Date(hackathon.earlyApplicationOpen!);
+    const earlyApplicationClose = new Date(hackathon.earlyApplicationClose!);
+    isApplicationOpen =
+      (now >= earlyApplicationOpen && now <= earlyApplicationClose) ||
+      (now >= applicationOpen && now <= applicationClose);
+  } else {
+    isApplicationOpen = now >= applicationOpen && now <= applicationClose;
+  }
+
+  if (!isApplicationOpen) {
+    return (
+      <div className="max-w-xs mx-auto h-full flex flex-col justify-center items-center gap-8 text-text-secondary">
+        <div className="flex flex-row items-center justify-center gap-2">
+          <TablerAlertCircle />
+          <p>Applications are currently closed.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ErrorBoundary FallbackComponent={Fallback}>
       <ApplicationForm
