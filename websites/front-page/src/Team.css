@@ -247,3 +247,43 @@
         font-size: 25px;
     }
 }
+
+/* Equal, left-aligned team cards */
+.team-role-members {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+  justify-content: start;
+  gap: 18px;
+  width: 100%;
+}
+
+.team-member-card {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+}
+
+.team-member-image,
+.team-member-image.is-compact {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.team-member-caption {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  min-height: 68px;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .team-role-members {
+    grid-template-columns: repeat(5, minmax(0, 190px));
+    justify-content: start;
+  }
+}

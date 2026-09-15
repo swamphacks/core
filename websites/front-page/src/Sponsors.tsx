@@ -8,7 +8,7 @@ import UF from "./assets/sponsors/uf.png";
 import CapitalOne from "./assets/sponsors/capital-one.svg";
 import BNY from "./assets/sponsors/bny.svg";
 import Roblox from "./assets/sponsors/roblox.svg";
-import PureButtons from "./assets/sponsors/purebuttons.webp";
+import PureButtons from "./assets/sponsors/pure-buttons.svg";
 
 type Sponsor = {
   name: string;
@@ -119,15 +119,12 @@ export default function Sponsors() {
 
       if (distance < avoidanceRadius && distance > 0) {
         const strength = 1 - distance / avoidanceRadius;
-        const fleeX =
-          (differenceX / distance) * strength * maximumDistance;
-        const fleeY =
-          (differenceY / distance) * strength * maximumDistance;
+        const fleeX = (differenceX / distance) * strength * maximumDistance;
+        const fleeY = (differenceY / distance) * strength * maximumDistance;
 
         const angle = Math.max(-10, Math.min(10, fleeY * 0.08));
 
-        fishElement.style.transform =
-          `translate3d(${fleeX}px, ${fleeY}px, 0) rotate(${angle}deg)`;
+        fishElement.style.transform = `translate3d(${fleeX}px, ${fleeY}px, 0) rotate(${angle}deg)`;
       } else {
         fishElement.style.transform = "translate3d(0, 0, 0) rotate(0deg)";
       }
