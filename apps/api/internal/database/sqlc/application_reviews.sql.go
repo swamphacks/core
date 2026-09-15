@@ -244,6 +244,60 @@ func (q *Queries) ListAutoDecisionRequests(ctx context.Context) ([]ListAutoDecis
 	return items, nil
 }
 
+const listRegularReviewsByReviewerId = `-- name: ListRegularReviewsByReviewerId :many
+SELECT 
+    ar.id, ar.application_id, ar.reviewer_id, ar.experience_rating, ar.passion_rating, ar.notes, ar.updated_by, ar.created_at, ar.updated_at,
+    applications.user_id
+FROM application_reviews ar
+JOIN applications ON applications.id = ar.application_id AND applications.is_early = false
+WHERE reviewer_id = $1
+ORDER BY application_id ASC
+`
+
+type ListRegularReviewsByReviewerIdRow struct {
+	ID               uuid.UUID  `json:"id"`
+	ApplicationID    uuid.UUID  `json:"application_id"`
+	ReviewerID       uuid.UUID  `json:"reviewer_id"`
+	ExperienceRating *int32     `json:"experience_rating"`
+	PassionRating    *int32     `json:"passion_rating"`
+	Notes            *string    `json:"notes"`
+	UpdatedBy        *uuid.UUID `json:"updated_by"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
+	UserID           uuid.UUID  `json:"user_id"`
+}
+
+func (q *Queries) ListRegularReviewsByReviewerId(ctx context.Context, reviewerID uuid.UUID) ([]ListRegularReviewsByReviewerIdRow, error) {
+	rows, err := q.db.Query(ctx, listRegularReviewsByReviewerId, reviewerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListRegularReviewsByReviewerIdRow{}
+	for rows.Next() {
+		var i ListRegularReviewsByReviewerIdRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ApplicationID,
+			&i.ReviewerID,
+			&i.ExperienceRating,
+			&i.PassionRating,
+			&i.Notes,
+			&i.UpdatedBy,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listReviewersAndProgress = `-- name: ListReviewersAndProgress :many
 SELECT
     reviewer.id,
@@ -256,6 +310,7 @@ SELECT
 FROM application_reviews AS ar
 LEFT JOIN users AS reviewer
   ON reviewer.id = ar.reviewer_id
+JOIN applications ON applications.id = ar.application_id AND applications.is_early = false
 GROUP BY
   reviewer.id
 `

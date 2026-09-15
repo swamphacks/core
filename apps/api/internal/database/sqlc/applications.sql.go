@@ -277,6 +277,32 @@ func (q *Queries) ListApplicationsUnderReviewWithTeamIds(ctx context.Context) ([
 	return items, nil
 }
 
+const listRegularUnderReviewApplicationIds = `-- name: ListRegularUnderReviewApplicationIds :many
+SELECT id FROM applications
+WHERE status = 'under_review' AND hackathon_id = $1 AND is_early = false
+ORDER BY id ASC
+`
+
+func (q *Queries) ListRegularUnderReviewApplicationIds(ctx context.Context, hackathonID string) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listRegularUnderReviewApplicationIds, hackathonID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUnderReviewApplicationIds = `-- name: ListUnderReviewApplicationIds :many
 SELECT id FROM applications
 WHERE status = 'under_review' AND hackathon_id = $1
@@ -311,6 +337,17 @@ WHERE status = 'submitted' AND is_early = TRUE
 
 func (q *Queries) MarkEarlySubmittedApplicationsAsUnderReview(ctx context.Context) error {
 	_, err := q.db.Exec(ctx, markEarlySubmittedApplicationsAsUnderReview)
+	return err
+}
+
+const markRegularSubmittedApplicationsAsUnderReview = `-- name: MarkRegularSubmittedApplicationsAsUnderReview :exec
+UPDATE applications 
+SET status = 'under_review'
+WHERE status = 'submitted' AND is_early = FALSE
+`
+
+func (q *Queries) MarkRegularSubmittedApplicationsAsUnderReview(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, markRegularSubmittedApplicationsAsUnderReview)
 	return err
 }
 

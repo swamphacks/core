@@ -88,6 +88,11 @@ SELECT id FROM applications
 WHERE status = 'under_review' AND hackathon_id = @hackathon_id
 ORDER BY id ASC;
 
+-- name: ListRegularUnderReviewApplicationIds :many
+SELECT id FROM applications
+WHERE status = 'under_review' AND hackathon_id = @hackathon_id AND is_early = false
+ORDER BY id ASC;
+
 -- name: ListApplicationsUnderReviewWithTeamIds :many
 SELECT 
     a.user_id,
@@ -115,6 +120,11 @@ WHERE id = ANY(@ids::uuid[]);
 UPDATE applications 
 SET status = 'under_review'
 WHERE status = 'submitted';
+
+-- name: MarkRegularSubmittedApplicationsAsUnderReview :exec
+UPDATE applications 
+SET status = 'under_review'
+WHERE status = 'submitted' AND is_early = FALSE;
 
 -- name: MarkEarlySubmittedApplicationsAsUnderReview :exec
 UPDATE applications 

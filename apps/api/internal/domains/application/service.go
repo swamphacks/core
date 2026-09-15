@@ -527,7 +527,7 @@ func (s *ApplicationService) UpdateApplicationReviewStatusForHackathon(ctx conte
 		}
 
 		if started {
-			err = txDB.Query.MarkEarlySubmittedApplicationsAsUnderReview(ctx)
+			err = txDB.Query.MarkRegularSubmittedApplicationsAsUnderReview(ctx)
 		} else {
 			err = txDB.Query.ResetApplicationsToSubmitted(ctx)
 		}
@@ -583,7 +583,7 @@ func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, 
 		}
 	}
 
-	availableApplications, err := s.db.Query.ListUnderReviewApplicationIds(ctx, hackathon.ID)
+	availableApplications, err := s.db.Query.ListRegularUnderReviewApplicationIds(ctx, hackathon.ID)
 	if err != nil {
 		return ErrGetApplicationsUnderReview
 	}
@@ -739,8 +739,8 @@ const (
 	ApplicationReviewStatusCompleted  ApplicationReviewStatus = "completed"
 )
 
-func (s *ApplicationService) GetReviewsForReviewer(ctx context.Context, reviewerId uuid.UUID) ([]sqlc.ListReviewsByReviewerIdRow, error) {
-	reviews, err := s.db.Query.ListReviewsByReviewerId(ctx, reviewerId)
+func (s *ApplicationService) GetReviewsForReviewer(ctx context.Context, reviewerId uuid.UUID) ([]sqlc.ListRegularReviewsByReviewerIdRow, error) {
+	reviews, err := s.db.Query.ListRegularReviewsByReviewerId(ctx, reviewerId)
 
 	if err != nil {
 		s.logger.Err(err).Msg("get assigned applications and progress fail because get applications by reviewer failed")

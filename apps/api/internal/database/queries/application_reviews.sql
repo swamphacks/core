@@ -16,6 +16,15 @@ JOIN applications ON applications.id = ar.application_id
 WHERE reviewer_id = @reviewer_id
 ORDER BY application_id ASC;
 
+-- name: ListRegularReviewsByReviewerId :many
+SELECT 
+    ar.*,
+    applications.user_id
+FROM application_reviews ar
+JOIN applications ON applications.id = ar.application_id AND applications.is_early = false
+WHERE reviewer_id = @reviewer_id
+ORDER BY application_id ASC;
+
 -- name: ListApplicationReviewersById :many
 SELECT reviewer_id FROM application_reviews
 WHERE application_id = @application_id;
@@ -32,6 +41,7 @@ SELECT
 FROM application_reviews AS ar
 LEFT JOIN users AS reviewer
   ON reviewer.id = ar.reviewer_id
+JOIN applications ON applications.id = ar.application_id AND applications.is_early = false
 GROUP BY
   reviewer.id;
 
