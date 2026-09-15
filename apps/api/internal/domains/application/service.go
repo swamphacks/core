@@ -684,19 +684,19 @@ func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, 
 	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txDB := s.db.NewTX(tx)
 
-		err = txDB.Query.DeleteAllApplicationReviews(ctx)
+		// err = txDB.Query.DeleteAllApplicationReviews(ctx)
 
-		if err != nil {
-			s.logger.Err(err).Msg("unable to reset all application reviews before assigning")
-			return ErrAssignReviewers
-		}
+		// if err != nil {
+		// 	s.logger.Err(err).Msg("unable to reset all application reviews before assigning")
+		// 	return ErrAssignReviewers
+		// }
 
-		err = txDB.Query.DeleteAllAutoDecisionRequests(ctx)
+		// err = txDB.Query.DeleteAllAutoDecisionRequests(ctx)
 
-		if err != nil {
-			s.logger.Err(err).Msg("unable to delete all decision requests before assigning")
-			return ErrAssignReviewers
-		}
+		// if err != nil {
+		// 	s.logger.Err(err).Msg("unable to delete all decision requests before assigning")
+		// 	return ErrAssignReviewers
+		// }
 
 		for _, allocation := range finalAllocations {
 			if len(allocation.AssignedApplicationIDs) == 0 {
