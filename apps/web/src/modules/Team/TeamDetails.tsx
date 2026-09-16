@@ -4,7 +4,12 @@ import type { useMyTeam } from "./hooks/useMyTeam";
 import { HTTPError } from "ky";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/Button";
-import { DialogTrigger } from "react-aria-components";
+import {
+  DialogTrigger,
+  Focusable,
+  Tooltip,
+  TooltipTrigger,
+} from "react-aria-components";
 import TablerPlus from "~icons/tabler/user-plus";
 import { Modal } from "@/components/ui/Modal";
 import TablerTrash from "~icons/tabler/trash";
@@ -12,20 +17,31 @@ import { useTeamInvitation } from "./hooks/useTeamInvite";
 import { useState } from "react";
 import TablerLink from "~icons/tabler/link";
 import TablerLogout from "~icons/tabler/logout";
+import TablerShieldCheck from "~icons/tabler/shield-check";
+import TablerShieldQuestion from "~icons/tabler/shield-question";
+import TablerShieldX from "~icons/tabler/shield-x";
 import { Input } from "@/components/ui/Field";
 
 export default function TeamDetails({
   team,
   user,
-  readonly = false,
+  accepted,
 }: {
   user: UserContext;
   team: NonNullable<ReturnType<typeof useMyTeam>["data"]>;
-  readonly?: boolean;
+  accepted: boolean;
 }) {
   const { deleteTeam, leaveTeam, kickMember } = useTeamActions();
   const isOwner = team.ownerId === user.userId;
-  const members = team.members ?? [];
+  const members = [...(team.members ?? [])].sort((a, b) => {
+    const priority: Record<string, number> = {
+      confirmed: 0,
+      accepted: 1,
+      not_accepted: 2,
+    };
+
+    return (priority[a.status] ?? 3) - (priority[b.status] ?? 3);
+  });
 
   const handleDeleteTeam = () => {
     const confirmed = window.confirm("Are you sure you want to delete team?");
@@ -83,46 +99,42 @@ export default function TeamDetails({
     <div className="mt-3 space-y-2 rounded-md border border-border/70 p-3">
       <div className="flex justify-between">
         <p className="font-medium text-text-main">Your team</p>
-        {!readonly && (
-          <>
-            {isOwner && (
-              <div className="space-x-2">
-                <DialogTrigger onOpenChange={(isOpen) => console.log(isOpen)}>
-                  <Button className="h-8" size="sm">
-                    <TablerPlus />
-                    Invite
-                  </Button>
+        {isOwner && (
+          <div className="space-x-2">
+            <DialogTrigger onOpenChange={(isOpen) => console.log(isOpen)}>
+              <Button className="h-8" size="sm">
+                <TablerPlus />
+                Invite
+              </Button>
 
-                  <Modal size="md" isDismissible>
-                    <InvitationModal teamId={team.id} />
-                  </Modal>
-                </DialogTrigger>
+              <Modal size="md" isDismissible>
+                <InvitationModal teamId={team.id} />
+              </Modal>
+            </DialogTrigger>
 
-                <Button
-                  onClick={handleDeleteTeam}
-                  className="h-8"
-                  variant="secondary"
-                  size="sm"
-                >
-                  <TablerTrash />
-                  Delete
-                </Button>
-              </div>
-            )}
-            {!isOwner && (
-              <div>
-                <Button
-                  onClick={handleLeaveTeam}
-                  className="h-8"
-                  size="sm"
-                  variant="secondary"
-                >
-                  <TablerLogout />
-                  Leave
-                </Button>
-              </div>
-            )}
-          </>
+            <Button
+              onClick={handleDeleteTeam}
+              className="h-8"
+              variant="secondary"
+              size="sm"
+            >
+              <TablerTrash />
+              Delete
+            </Button>
+          </div>
+        )}
+        {!isOwner && (
+          <div>
+            <Button
+              onClick={handleLeaveTeam}
+              className="h-8"
+              size="sm"
+              variant="secondary"
+            >
+              <TablerLogout />
+              Leave
+            </Button>
+          </div>
         )}
       </div>
       <p className="text-text-secondary">
@@ -138,16 +150,9 @@ export default function TeamDetails({
                 key={member.id}
                 className="flex gap-2 items-center mt-2 justify-between"
               >
-                <div className="flex gap-2 items-center">
-                  <img
-                    src={member.image!}
-                    alt={"user avatar"}
-                    className="size-8 rounded-full object-cover"
-                  />
-                  <p className="truncate w-50">{member.name}</p>
-                </div>
+                <TeamMember member={member} accepted={accepted} />
 
-                {!readonly && isOwner && member.id != user.userId && (
+                {isOwner && member.id != user.userId && (
                   <Button
                     onClick={() => handleKickMember(member.id)}
                     className="h-8"
@@ -163,6 +168,57 @@ export default function TeamDetails({
         ) : (
           <p className="mt-1 text-sm text-text-secondary">No members yet.</p>
         )}
+      </div>
+    </div>
+  );
+}
+
+function TeamMember({
+  member,
+  accepted,
+}: {
+  member: NonNullable<
+    NonNullable<ReturnType<typeof useMyTeam>["data"]>["members"]
+  >[number];
+  accepted: boolean;
+}) {
+  const getIconForStatus = (status: string) => {
+    let icon, tooltip;
+    if (status === "confirmed") {
+      icon = <TablerShieldCheck className="text-green-500" />;
+      tooltip = "Confirmed their attendance 😎";
+    } else if (status === "accepted") {
+      icon = <TablerShieldQuestion className="text-blue-500" />;
+      tooltip = "Accepted, but has not yet confirmed 🙃";
+    } else {
+      icon = <TablerShieldX />;
+      tooltip = "Not yet accepted 🥲";
+    }
+
+    return (
+      <TooltipTrigger delay={250} closeDelay={250}>
+        <Focusable>{icon}</Focusable>
+        <Tooltip
+          offset={5}
+          className="bg-surface border-input-border border-2 py-1 px-2 rounded-md"
+        >
+          {tooltip}
+        </Tooltip>
+      </TooltipTrigger>
+    );
+  };
+
+  return (
+    <div className="flex gap-2 items-center">
+      <img
+        src={member.image!}
+        alt={"user avatar"}
+        className="size-8 rounded-full object-cover"
+      />
+      <div className="flex w-50 items-center gap-1">
+        <p className="min-w-0 truncate">{member.name}</p>
+
+        {accepted && getIconForStatus(member.status)}
       </div>
     </div>
   );
