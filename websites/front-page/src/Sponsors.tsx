@@ -9,6 +9,9 @@ import CapitalOne from "./assets/sponsors/capital-one.svg";
 import BNY from "./assets/sponsors/bny.svg";
 import Roblox from "./assets/sponsors/roblox.svg";
 import PureButtons from "./assets/sponsors/pure-buttons.svg";
+import UFCise from "./assets/sponsors/uf-cise-white.png";
+import CpeLab from "./assets/sponsors/cpe-lab.png";
+import DeepSpace from "./assets/sponsors/deepspace.png";
 
 type Sponsor = {
   name: string;
@@ -42,6 +45,18 @@ const mediumSponsors: Sponsor[] = [
     textMark: null,
     url: "https://career.ufl.edu/",
   },
+  {
+    name: "UF Computer & Information Science & Engineering",
+    logo: UFCise,
+    textMark: null,
+    url: "https://cise.ufl.edu/",
+  },
+  {
+    name: "UF CpE Lab",
+    logo: CpeLab,
+    textMark: null,
+    url: "https://eed.eng.ufl.edu/",
+  },
 ];
 
 const smallSponsors: Sponsor[] = [
@@ -56,6 +71,12 @@ const smallSponsors: Sponsor[] = [
     logo: PureButtons,
     textMark: null,
     url: "https://www.purebuttons.com/",
+  },
+  {
+    name: "DeepSpace",
+    logo: DeepSpace,
+    textMark: null,
+    url: "#sponsors",
   },
 ];
 // import SponsorsImg from "./assets/Sponsors.png";

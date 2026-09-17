@@ -64,11 +64,11 @@
 }
 
 .sponsor-grid--medium {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .sponsor-grid--small {
-  grid-template-columns: repeat(2, minmax(0, 180px));
+  grid-template-columns: repeat(3, minmax(0, 180px));
 }
 
 .sponsor-card {
@@ -687,5 +687,95 @@
   .sponsor-card[aria-label="PureButtons"] img {
     max-width: 135px;
     max-height: 50px;
+  }
+}
+/* New sponsor logos only */.sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img {
+  width: 140%;
+  max-width: 460px;
+  max-height: 130px;
+  flex-shrink: 0;
+}
+.sponsor-card[aria-label="UF CpE Lab"] img {
+  width: 100%;
+  max-width: 330px;
+  max-height: 86px;
+}
+
+.sponsor-card[aria-label="DeepSpace"] img {
+  width: 82px;
+  height: 82px;
+  max-width: 82px;
+  max-height: 82px;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img,
+  .sponsor-card[aria-label="UF CpE Lab"] img {
+    max-height: 58px;
+  }
+
+  .sponsor-card[aria-label="DeepSpace"] img {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+/* Fifth Third size adjustment */
+.sponsor-card[aria-label="Fifth Third Bank"] img {
+  width: auto;
+  height: 125px;
+  max-width: 290px;
+  max-height: 125px;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card[aria-label="Fifth Third Bank"] img {
+    height: 88px;
+    max-height: 88px;
+  }
+}
+/* Equal UF sponsor sizing */
+.sponsor-card[aria-label="UF Center for Experiential Learning"] img,
+.sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img,
+.sponsor-card[aria-label="UF CpE Lab"] img {
+  width: auto;
+  height: 110px;
+  max-width: 115%;
+  max-height: 110px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card[aria-label="UF Center for Experiential Learning"] img,
+  .sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img,
+  .sponsor-card[aria-label="UF CpE Lab"] img {
+    height: 78px;
+    max-height: 78px;
+  }
+}
+/* Slightly larger CISE logo */
+.sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img {
+  height: 124px;
+  max-height: 124px;
+  max-width: 125%;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img {
+    height: 86px;
+    max-height: 86px;
+  }
+}
+/* Additional southern lake space */
+.sponsors-container .water {
+  min-height: 740px;
+  padding-bottom: 140px;
+}
+
+@media (max-width: 760px) {
+  .sponsors-container .water {
+    min-height: 630px;
+    padding-bottom: 105px;
   }
 }
