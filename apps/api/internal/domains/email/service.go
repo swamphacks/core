@@ -206,12 +206,14 @@ func (s *EmailService) SendHtmlEmail(recipient string, subject string, templateD
 
 	template, err := template.ParseFiles(templateFilePath)
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to parse email template for recipient")
+		s.logger.Err(err).Str("Template", templateFilePath).Msg("Failed to parse email template for recipient")
+		return err
 	}
 
 	err = template.Execute(&body, templateData)
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to inject template variables for recipient '%s'.")
+		s.logger.Err(err).Str("Template", templateFilePath).Msg("Failed to inject template variables for recipient")
+		return err
 	}
 
 	err = s.SESClient.SendHTMLEmail([]string{recipient}, "SwampHacks <contact@swamphacks.com>", subject, body.String())
