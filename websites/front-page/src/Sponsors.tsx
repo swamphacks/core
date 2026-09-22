@@ -76,7 +76,7 @@ const smallSponsors: Sponsor[] = [
     name: "DeepSpace",
     logo: DeepSpace,
     textMark: null,
-    url: "#sponsors",
+    url: "https://deep.space/",
   },
 ];
 // import SponsorsImg from "./assets/Sponsors.png";
