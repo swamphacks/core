@@ -191,10 +191,16 @@ function Rejected({ name }: RejectedProps) {
 
         <ol className="flex flex-col gap-2">
           <li>
-            1. <strong>Join the Waitlist</strong>: We may have openings
+            {/* 1. <strong>Join the Waitlist</strong>: We may have openings
             available closer to the event. You can join the waitlist by signing
             up in person on the day of check-in if space allows. The waitlist
-            operates on a first-come, first-served basis.
+            operates on a first-come, first-served basis. */}
+            1. Join the waitlist: Our waitlist will be coming out soon, and
+            you'll receive more information when they do. You will be able to
+            join the waitlist through this page when it becomes available. You
+            can also join the waitlist by signing up in person on the day of
+            check-in if space allows. The waitlist operates on a first-come,
+            first-served basis.
           </li>
           <li>
             2. <strong>Mentor</strong>: Share your knowledge and guide hackers
