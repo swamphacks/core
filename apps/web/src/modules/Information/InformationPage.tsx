@@ -215,7 +215,7 @@ export default function InformationPage({
         title: "All Applications Deadline",
         description: `All applications are due by ${applicationCloseDateFormatted}.`,
         icon: "calendar",
-        completed: false,
+        completed: true,
       },
     ];
   } else {
@@ -244,15 +244,15 @@ export default function InformationPage({
   timeline = [
     ...timeline,
     {
-      date: "TBD",
+      date: "September 23",
       title: "Decisions Released",
       description:
         "Decision letters will be emailed to you in late September. You will either be accepted, waitlisted, or rejected.",
       icon: "calendar",
-      completed: false,
+      completed: true,
     },
     {
-      date: "TBD",
+      date: "October 5",
       title: "Confirmation Due",
       description:
         "If accepted, you must confirm your attendance for SwampHacks XII through the hacker portal.",
