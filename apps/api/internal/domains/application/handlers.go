@@ -61,16 +61,22 @@ func (h *handler) handleGetMyApplication(ctx context.Context, input *struct{}) (
 		return nil, huma.Error500InternalServerError("Application is null")
 	}
 
+	deadline, err := h.applicationService.GetApplicationConfirmationDeadline(ctx, application.ID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to retrieve confirmation deadline")
+	}
+
 	return &GetMyApplicationOutput{Body: MyApplicationResponseDto{
-		ID:          application.ID,
-		UserID:      application.UserID,
-		Status:      string(application.Status),
-		Application: application.Application,
-		CreatedAt:   application.CreatedAt,
-		SavedAt:     application.SavedAt,
-		UpdatedAt:   application.UpdatedAt,
-		SubmittedAt: application.SubmittedAt,
-		HackathonID: application.HackathonID,
+		RsvpDeadline: deadline,
+		ID:           application.ID,
+		UserID:       application.UserID,
+		Status:       string(application.Status),
+		Application:  application.Application,
+		CreatedAt:    application.CreatedAt,
+		SavedAt:      application.SavedAt,
+		UpdatedAt:    application.UpdatedAt,
+		SubmittedAt:  application.SubmittedAt,
+		HackathonID:  application.HackathonID,
 	}}, nil
 }
 
@@ -845,7 +851,13 @@ func (h *handler) handleConfirmAttendance(ctx context.Context, input *struct{}) 
 	err := h.applicationService.ConfirmAttendance(ctx, userCtx.UserID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+		if errors.Is(err, ErrConfirmationDeadlinePassed) {
+			return nil, huma.Error409Conflict(ErrConfirmationDeadlinePassed.Error())
+		}
+		if errors.Is(err, ErrConfirmationNotAccepted) {
+			return nil, huma.Error409Conflict(ErrConfirmationNotAccepted.Error())
+		}
+		return nil, huma.Error500InternalServerError("Unable to confirm attendance")
 	}
 
 	return &ConfirmAttendanceOutput{Status: http.StatusOK}, nil

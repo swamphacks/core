@@ -141,6 +141,288 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 		}
 	})
 
+	t.Run("leave is repeatable and rejoin gets a new position", func(t *testing.T) {
+		id := newApplicant(t, "rejected", "applicant")
+		if err := service.JoinAdmissionWaitlist(ctx, id); err != nil {
+			t.Fatal(err)
+		}
+		exec("UPDATE waitlist SET created_at = now() - interval '1 day' WHERE user_id = $1", id)
+		for i := 0; i < 2; i++ {
+			if err := service.LeaveAdmissionWaitlist(ctx, id); err != nil {
+				t.Fatal(err)
+			}
+		}
+		assertState(t, id, "rejected", "applicant")
+		var count int
+		if err := pool.QueryRow(ctx, "SELECT count(*) FROM waitlist WHERE user_id=$1", id).Scan(&count); err != nil {
+			t.Fatal(err)
+		}
+		if count != 0 {
+			t.Fatal("leaving retained a queue entry")
+		}
+		if err := service.JoinAdmissionWaitlist(ctx, id); err != nil {
+			t.Fatal(err)
+		}
+		var recent bool
+		if err := pool.QueryRow(ctx, `
+            SELECT created_at > now() - interval '1 minute'
+            FROM waitlist WHERE user_id=$1
+        `, id).Scan(&recent); err != nil {
+			t.Fatal(err)
+		}
+		if !recent {
+			t.Fatal("rejoin retained the old queue position")
+		}
+	})
+
+	t.Run("leave cannot cancel an accepted offer", func(t *testing.T) {
+		id := newApplicant(t, "accepted", "applicant")
+		if err := service.LeaveAdmissionWaitlist(ctx, id); !errors.Is(err, ErrLeaveWaitlistEligibility) {
+			t.Fatalf("expected eligibility error, got %v", err)
+		}
+		assertState(t, id, "accepted", "applicant")
+	})
+
+	t.Run("dispatch preserves order and reserves capacity", func(t *testing.T) {
+		first := newApplicant(t, "rejected", "applicant")
+		second := newApplicant(t, "rejected", "applicant")
+		for _, id := range []uuid.UUID{first, second} {
+			exec("UPDATE users SET email=$2 WHERE id=$1", id, id.String()+"@example.test")
+			if err := service.JoinAdmissionWaitlist(ctx, id); err != nil {
+				t.Fatal(err)
+			}
+		}
+		exec("UPDATE waitlist SET created_at=now()-interval '1 day' WHERE user_id=$1", first)
+		exec("UPDATE hackathons SET max_attendees=1 WHERE id=$1", hackathonID)
+		now := time.Now().UTC()
+		exec(`
+            INSERT INTO waitlist_dispatch_policies
+              (hackathon_id, enabled, invitations_open_at, online_join_closes_at,
+               in_person_opens_at, invitations_close_at)
+            VALUES ($1, true, $2, $3, $4, $5)
+        `, hackathonID, now.Add(-time.Hour), now.Add(time.Hour),
+			now.Add(2*time.Hour), now.Add(3*time.Hour))
+		defer exec("DELETE FROM waitlist_dispatch_policies WHERE hackathon_id=$1", hackathonID)
+
+		result, err := service.DispatchAdmissionWaitlist(ctx, now)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result.Offered != 1 {
+			t.Fatalf("offered %d, want 1", result.Offered)
+		}
+		assertState(t, first, "accepted", "applicant")
+		assertState(t, second, "waitlisted", "applicant")
+		result, err = service.DispatchAdmissionWaitlist(ctx, now.Add(time.Minute))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result.Offered != 0 {
+			t.Fatal("dispatcher overbooked the event")
+		}
+
+		var count int
+		if err := pool.QueryRow(ctx, `
+            SELECT count(*) FROM waitlist_invitation_outbox o
+            JOIN applications a ON a.id=o.application_id
+            WHERE a.hackathon_id=$1
+        `, hackathonID).Scan(&count); err != nil {
+			t.Fatal(err)
+		}
+		if count != 1 {
+			t.Fatalf("outbox contains %d invitations, want 1", count)
+		}
+
+		failed, err := service.DeliverAdmissionWaitlistInvitations(
+			ctx, func(context.Context, string, string, time.Time) error {
+				return errors.New("fake rate limit")
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if failed.Failed != 1 || failed.Sent != 0 {
+			t.Fatalf("unexpected failed-delivery result: %+v", failed)
+		}
+		exec(`
+            UPDATE waitlist_invitation_outbox o SET next_attempt_at=now()
+            FROM applications a
+            WHERE o.application_id=a.id AND a.hackathon_id=$1
+        `, hackathonID)
+
+		calls := 0
+		delivered, err := service.DeliverAdmissionWaitlistInvitations(
+			ctx, func(_ context.Context, recipient, name string, deadline time.Time) error {
+				calls++
+				if recipient != first.String()+"@example.test" {
+					t.Errorf("unexpected recipient: %s", recipient)
+				}
+				remaining := time.Until(deadline)
+				if remaining < 48*time.Hour-time.Minute || remaining > 48*time.Hour {
+					t.Errorf("invalid confirmation window: %v", remaining)
+				}
+				return nil
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if delivered.Sent != 1 || calls != 1 {
+			t.Fatalf("unexpected delivery: %+v, calls=%d", delivered, calls)
+		}
+
+		_, err = service.DeliverAdmissionWaitlistInvitations(
+			ctx, func(context.Context, string, string, time.Time) error {
+				t.Error("already sent invitation was sent again")
+				return nil
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Closing invitations must preserve an already sent confirmation window.
+		closedSweep, err := service.DispatchAdmissionWaitlist(ctx, now.Add(3*time.Hour))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if closedSweep.Expired != 0 || closedSweep.Offered != 0 {
+			t.Fatalf("closure changed a sent offer: %+v", closedSweep)
+		}
+		assertState(t, first, "accepted", "applicant")
+
+		exec(`
+            UPDATE application_waitlist_offers o
+            SET offered_at=now()-interval '3 days',
+                confirmation_deadline=now()-interval '1 day'
+            FROM applications a
+            WHERE o.application_id=a.id AND a.user_id=$1
+        `, first)
+
+		result, err = service.DispatchAdmissionWaitlist(ctx, time.Now().UTC())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result.Expired != 1 || result.Offered != 1 {
+			t.Fatalf("expiration did not advance the queue: %+v", result)
+		}
+		assertState(t, first, "withdrawn", "applicant")
+		assertState(t, second, "accepted", "applicant")
+
+		// A pending invitation must never be sent after the delivery window closes.
+		exec(`
+            UPDATE waitlist_dispatch_policies
+            SET invitations_open_at=now()-interval '4 hours',
+                online_join_closes_at=now()-interval '3 hours',
+                in_person_opens_at=now()-interval '2 hours',
+                invitations_close_at=now()-interval '1 hour'
+            WHERE hackathon_id=$1
+        `, hackathonID)
+		closedDelivery, err := service.DeliverAdmissionWaitlistInvitations(
+			ctx, func(context.Context, string, string, time.Time) error {
+				t.Error("invitation sent after closure")
+				return nil
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if closedDelivery.Sent != 0 {
+			t.Fatalf("sent after closure: %+v", closedDelivery)
+		}
+		assertState(t, second, "withdrawn", "applicant")
+		var cancelled bool
+		if err := pool.QueryRow(ctx, `
+            SELECT o.cancelled_at IS NOT NULL
+            FROM waitlist_invitation_outbox o
+            JOIN applications a ON a.id=o.application_id
+            WHERE a.user_id=$1 AND a.hackathon_id=$2
+        `, second, hackathonID).Scan(&cancelled); err != nil {
+			t.Fatal(err)
+		}
+		if !cancelled {
+			t.Fatal("closed invitation remained pending")
+		}
+
+	})
+
+	t.Run("in-person priority and concurrent dispatch preserve capacity", func(t *testing.T) {
+		online := newApplicant(t, "rejected", "applicant")
+		present := newApplicant(t, "rejected", "applicant")
+		admin := newApplicant(t, "started", "admin")
+		for _, id := range []uuid.UUID{online, present} {
+			exec("UPDATE users SET email=$2 WHERE id=$1", id, id.String()+"@example.test")
+			if err := service.JoinAdmissionWaitlist(ctx, id); err != nil {
+				t.Fatal(err)
+			}
+		}
+		exec("UPDATE waitlist SET created_at=now()-interval '1 day' WHERE user_id=$1", online)
+		exec("UPDATE hackathons SET max_attendees=1 WHERE id=$1", hackathonID)
+
+		now := time.Now().UTC()
+		exec(`
+            INSERT INTO waitlist_dispatch_policies
+              (hackathon_id, enabled, invitations_open_at, online_join_closes_at,
+               in_person_opens_at, invitations_close_at)
+            VALUES ($1, true, $2, $3, $4, $5)
+        `, hackathonID, now.Add(-3*time.Hour), now.Add(-2*time.Hour),
+			now.Add(-time.Hour), now.Add(time.Hour))
+		defer exec("DELETE FROM waitlist_dispatch_policies WHERE hackathon_id=$1", hackathonID)
+
+		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, online, now); !errors.Is(err, ErrInPersonWaitlistPermission) {
+			t.Fatalf("non-admin arrival recording: %v", err)
+		}
+		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, admin, now.Add(-2*time.Hour)); !errors.Is(err, ErrInPersonWaitlistClosed) {
+			t.Fatalf("early arrival recording: %v", err)
+		}
+		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, admin, now); err != nil {
+			t.Fatal(err)
+		}
+		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, admin, now.Add(time.Minute)); err != nil {
+			t.Fatal(err)
+		}
+		var arrival time.Time
+		if err := pool.QueryRow(ctx, `
+            SELECT in_person_joined_at FROM waitlist WHERE user_id=$1
+        `, present).Scan(&arrival); err != nil {
+			t.Fatal(err)
+		}
+		if arrival.Sub(now) > time.Millisecond || now.Sub(arrival) > time.Millisecond {
+			t.Fatal("repeat recording changed arrival time")
+		}
+
+		results := make(chan WaitlistDispatchResult, 8)
+		failures := make(chan error, 8)
+		var wg sync.WaitGroup
+		for i := 0; i < 8; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				result, err := service.DispatchAdmissionWaitlist(ctx, now)
+				if err != nil {
+					failures <- err
+					return
+				}
+				results <- result
+			}()
+		}
+		wg.Wait()
+		close(results)
+		close(failures)
+		for err := range failures {
+			t.Errorf("concurrent dispatch: %v", err)
+		}
+		offered := 0
+		for result := range results {
+			offered += result.Offered
+		}
+		if offered != 1 {
+			t.Fatalf("offered %d spots, want 1", offered)
+		}
+		assertState(t, present, "accepted", "applicant")
+		assertState(t, online, "waitlisted", "applicant")
+	})
+
 	t.Run("join rejects ineligible statuses", func(t *testing.T) {
 		for _, status := range []string{
 			"started", "submitted", "under_review",
@@ -195,6 +477,79 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 				assertState(t, id, status, "applicant")
 			})
 		}
+	})
+
+	t.Run("waitlist offer overrides expired shared deadline", func(t *testing.T) {
+		exec("UPDATE hackathons SET rsvp_deadline = now() - interval '1 day' WHERE id = $1", hackathonID)
+		defer exec("UPDATE hackathons SET rsvp_deadline = now() + interval '1 day' WHERE id = $1", hackathonID)
+
+		id := newApplicant(t, "waitlisted", "applicant")
+		exec("UPDATE applications SET status = 'accepted' WHERE user_id = $1 AND hackathon_id = $2", id, hackathonID)
+
+		var applicationID uuid.UUID
+		var offered, deadline time.Time
+		err := pool.QueryRow(ctx, `
+            SELECT a.id, o.offered_at, o.confirmation_deadline
+            FROM applications a
+            JOIN application_waitlist_offers o ON o.application_id = a.id
+            WHERE a.user_id = $1 AND a.hackathon_id = $2
+        `, id, hackathonID).Scan(&applicationID, &offered, &deadline)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if deadline.Sub(offered) != 48*time.Hour {
+			t.Fatal("offer does not provide exactly 48 hours")
+		}
+
+		exec("UPDATE applications SET status = 'accepted' WHERE id = $1", applicationID)
+		saved, err := service.GetApplicationConfirmationDeadline(ctx, applicationID)
+		if err != nil || saved == nil || !saved.Equal(deadline) {
+			t.Fatalf("repeated acceptance changed deadline: %v", err)
+		}
+		if err := service.ConfirmAttendance(ctx, id); err != nil {
+			t.Fatal(err)
+		}
+		assertState(t, id, "confirmed", "attendee")
+	})
+
+	t.Run("expired waitlist offer cannot confirm", func(t *testing.T) {
+		id := newApplicant(t, "waitlisted", "applicant")
+		exec("UPDATE applications SET status = 'accepted' WHERE user_id = $1 AND hackathon_id = $2", id, hackathonID)
+		exec(`
+            UPDATE application_waitlist_offers
+            SET offered_at = now() - interval '3 days',
+                confirmation_deadline = now() - interval '1 day'
+            WHERE application_id = (
+                SELECT id FROM applications WHERE user_id = $1 AND hackathon_id = $2
+            )
+        `, id, hackathonID)
+		if err := service.ConfirmAttendance(ctx, id); !errors.Is(err, ErrConfirmAttendance) {
+			t.Fatalf("expected expired confirmation error, got %v", err)
+		}
+		assertState(t, id, "accepted", "applicant")
+	})
+
+	t.Run("regular acceptance keeps shared deadline", func(t *testing.T) {
+		exec("UPDATE hackathons SET rsvp_deadline = now() - interval '1 day' WHERE id = $1", hackathonID)
+		defer exec("UPDATE hackathons SET rsvp_deadline = now() + interval '1 day' WHERE id = $1", hackathonID)
+
+		id := newApplicant(t, "under_review", "applicant")
+		exec("UPDATE applications SET status = 'accepted' WHERE user_id = $1 AND hackathon_id = $2", id, hackathonID)
+		var count int
+		if err := pool.QueryRow(ctx, `
+            SELECT count(*) FROM application_waitlist_offers o
+            JOIN applications a ON a.id = o.application_id
+            WHERE a.user_id = $1
+        `, id).Scan(&count); err != nil {
+			t.Fatal(err)
+		}
+		if count != 0 {
+			t.Fatal("regular acceptance unexpectedly received a waitlist offer")
+		}
+		if err := service.ConfirmAttendance(ctx, id); !errors.Is(err, ErrConfirmAttendance) {
+			t.Fatalf("expected shared deadline rejection, got %v", err)
+		}
+		assertState(t, id, "accepted", "applicant")
 	})
 
 	t.Run("confirmation cannot restore withdrawn attendance", func(t *testing.T) {

@@ -450,7 +450,13 @@ func (s *ApplicationService) ConfirmAttendance(ctx context.Context, userID uuid.
 		var deadline *time.Time
 
 		err := tx.QueryRow(ctx, `
-			SELECT a.id, a.status::text, h.rsvp_deadline
+			SELECT a.id, a.status::text,
+                   COALESCE(
+                       (SELECT o.confirmation_deadline
+                        FROM application_waitlist_offers o
+                        WHERE o.application_id = a.id),
+                       h.rsvp_deadline
+                   )
 			FROM applications a
 			JOIN hackathons h ON h.id = a.hackathon_id
 			WHERE a.user_id = $1 AND h.is_active = true
@@ -461,10 +467,10 @@ func (s *ApplicationService) ConfirmAttendance(ctx context.Context, userID uuid.
 		}
 
 		if status != string(sqlc.ApplicationStatusAccepted) {
-			return errors.New("User is not accepted to hack")
+			return ErrConfirmationNotAccepted
 		}
-		if deadline != nil && time.Now().After(*deadline) {
-			return errors.New("Attendance confirmation deadline has passed")
+		if deadline != nil && !time.Now().Before(*deadline) {
+			return ErrConfirmationDeadlinePassed
 		}
 
 		if _, err := tx.Exec(ctx, `
@@ -485,7 +491,7 @@ func (s *ApplicationService) ConfirmAttendance(ctx context.Context, userID uuid.
 
 	if err != nil {
 		s.logger.Err(err).Str("userID", userID.String()).Msg("ConfirmAttendance fail")
-		return ErrConfirmAttendance
+		return errors.Join(ErrConfirmAttendance, err)
 	}
 	return nil
 }

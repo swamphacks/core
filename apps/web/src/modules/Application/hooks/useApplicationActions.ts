@@ -81,5 +81,23 @@ export function useApplicationActions() {
     },
   });
 
-  return { confirmAttendance, withdrawApplication, joinWaitlist };
+  const leaveWaitlist = useMutation({
+    mutationFn: () =>
+      performAction(
+        "post",
+        "application/leave-waitlist",
+        "Failed to leave the waitlist.",
+      ),
+    onSuccess: async () => {
+      toast.success("You have left the waitlist.");
+      await refreshStatus();
+    },
+  });
+
+  return {
+    confirmAttendance,
+    withdrawApplication,
+    joinWaitlist,
+    leaveWaitlist,
+  };
 }

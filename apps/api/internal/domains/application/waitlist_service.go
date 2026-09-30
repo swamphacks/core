@@ -3,12 +3,23 @@ package application
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
 var ErrWaitlistEligibility = errors.New("only rejected applicants can join the waitlist")
+var ErrWaitlistClosed = errors.New("the deadline to join the waitlist was October 15, 2026 at 11:59 PM ET")
+var ErrLeaveWaitlistEligibility = errors.New("only waitlisted applicants can leave the waitlist")
+
+// The full 11:59 PM minute is included.
+var admissionWaitlistClosesAt = time.Date(2026, time.October, 16, 3, 59, 0, 0, time.UTC).Add(time.Minute)
+
+func admissionWaitlistIsOpen(now time.Time) bool {
+	return now.Before(admissionWaitlistClosesAt)
+}
+
 var ErrWithdrawalEligibility = errors.New("only accepted or confirmed applicants can withdraw")
 
 // Lock the active hackathon's application before checking its status.
@@ -38,6 +49,10 @@ func (s *ApplicationService) changeAdmissionStatus(
 		}
 
 		if join {
+			// Repeated joins preserve an existing entry, including after closure.
+			if status == "rejected" && !admissionWaitlistIsOpen(time.Now()) {
+				return ErrWaitlistClosed
+			}
 			if status != "rejected" && status != "waitlisted" {
 				return ErrWaitlistEligibility
 			}
@@ -88,4 +103,38 @@ func (s *ApplicationService) JoinAdmissionWaitlist(
 	ctx context.Context, userID uuid.UUID,
 ) error {
 	return s.changeAdmissionStatus(ctx, userID, true)
+}
+
+// Leaving is serialized with admissions updates using the application row lock.
+func (s *ApplicationService) LeaveAdmissionWaitlist(ctx context.Context, userID uuid.UUID) error {
+	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
+		var applicationID uuid.UUID
+		var hackathonID, status string
+		err := tx.QueryRow(ctx, `
+            SELECT a.id, a.hackathon_id, a.status::text
+            FROM applications a
+            JOIN hackathons h ON h.id = a.hackathon_id
+            WHERE a.user_id = $1 AND h.is_active
+            FOR UPDATE OF a
+        `, userID).Scan(&applicationID, &hackathonID, &status)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrLeaveWaitlistEligibility
+		}
+		if err != nil {
+			return err
+		}
+		if status != "waitlisted" && status != "rejected" {
+			return ErrLeaveWaitlistEligibility
+		}
+		if _, err := tx.Exec(ctx, `
+            DELETE FROM waitlist WHERE hackathon_id = $1 AND user_id = $2
+        `, hackathonID, userID); err != nil {
+			return err
+		}
+		_, err = tx.Exec(ctx, `
+            UPDATE applications SET status = 'rejected', updated_at = now()
+            WHERE id = $1 AND status = 'waitlisted'
+        `, applicationID)
+		return err
+	})
 }

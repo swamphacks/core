@@ -19,6 +19,19 @@ type AdmissionWaitlistOutput struct {
 }
 
 func registerAdmissionWaitlistRoutes(h *handler, group huma.API, mw *middleware.Middleware) {
+	registerInPersonAdmissionWaitlistRoutes(h, group, mw)
+	huma.Register(group, huma.Operation{
+		OperationID:   "leave-admission-waitlist",
+		Method:        http.MethodPost,
+		Path:          "/leave-waitlist",
+		Summary:       "Leave Waitlist",
+		Tags:          []string{"Application"},
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		Errors:        []int{401, 403, 409, 500},
+		DefaultStatus: http.StatusOK,
+	}, h.handleLeaveAdmissionWaitlist)
+
 	huma.Register(group, huma.Operation{
 		OperationID: "join-admission-waitlist",
 		Method:      http.MethodPost,
@@ -49,7 +62,7 @@ func (h *handler) handleJoinAdmissionWaitlist(
 		return nil, huma.Error403Forbidden("Only applicants can join the waitlist")
 	}
 	err := h.applicationService.JoinAdmissionWaitlist(ctx, user.UserID)
-	if errors.Is(err, ErrWaitlistEligibility) {
+	if errors.Is(err, ErrWaitlistEligibility) || errors.Is(err, ErrWaitlistClosed) {
 		return nil, huma.Error409Conflict(err.Error())
 	}
 	if err != nil {
@@ -57,5 +70,25 @@ func (h *handler) handleJoinAdmissionWaitlist(
 	}
 	output := &AdmissionWaitlistOutput{}
 	output.Body.Status = "waitlisted"
+	return output, nil
+}
+
+func (h *handler) handleLeaveAdmissionWaitlist(ctx context.Context, input *struct{}) (*AdmissionWaitlistOutput, error) {
+	user := ctxutils.GetUserFromCtx(ctx)
+	if user == nil {
+		return nil, huma.Error401Unauthorized("Authentication required")
+	}
+	if user.Role != sqlc.RoleApplicant {
+		return nil, huma.Error403Forbidden("Only applicants can leave the waitlist")
+	}
+	err := h.applicationService.LeaveAdmissionWaitlist(ctx, user.UserID)
+	if errors.Is(err, ErrLeaveWaitlistEligibility) {
+		return nil, huma.Error409Conflict(err.Error())
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to leave waitlist")
+	}
+	output := &AdmissionWaitlistOutput{}
+	output.Body.Status = "rejected"
 	return output, nil
 }

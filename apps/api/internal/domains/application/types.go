@@ -32,6 +32,11 @@ var (
 	ErrGetReviewers                = errors.New("fail to get reviewers")
 )
 
+var (
+	ErrConfirmationNotAccepted    = errors.New("only accepted applicants can confirm attendance")
+	ErrConfirmationDeadlinePassed = errors.New("attendance confirmation deadline has passed")
+)
+
 type AppUser struct {
 	ID       uuid.UUID `json:"id"`
 	UserName string    `json:"name"`
@@ -40,15 +45,16 @@ type AppUser struct {
 }
 
 type MyApplicationResponseDto struct {
-	ID          uuid.UUID  `json:"id"`
-	Status      string     `json:"status"`
-	Application []byte     `json:"application"`
-	CreatedAt   time.Time  `json:"createdAt"`
-	SubmittedAt *time.Time `json:"submittedAt" required:"false"`
-	UserID      uuid.UUID  `json:"userId"`
-	UpdatedAt   time.Time  `json:"updatedAt"`
-	SavedAt     time.Time  `json:"savedAt"`
-	HackathonID string     `json:"hackathonId"`
+	RsvpDeadline *time.Time `json:"rsvpDeadline" required:"false"`
+	ID           uuid.UUID  `json:"id"`
+	Status       string     `json:"status"`
+	Application  []byte     `json:"application"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	SubmittedAt  *time.Time `json:"submittedAt" required:"false"`
+	UserID       uuid.UUID  `json:"userId"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
+	SavedAt      time.Time  `json:"savedAt"`
+	HackathonID  string     `json:"hackathonId"`
 }
 
 type ExtendedApplicationResponseDto struct {

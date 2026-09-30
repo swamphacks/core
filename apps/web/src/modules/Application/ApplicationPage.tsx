@@ -39,7 +39,7 @@ export default function ApplicationPage({
         }),
       );
     }
-  }, [user]);
+  }, [user, queryClient]);
 
   if (application.isLoading) {
     return <PageLoading />;
@@ -53,7 +53,12 @@ export default function ApplicationPage({
   const name = applicationResponses["firstName"];
 
   if (application.data.status === "accepted") {
-    return <Accepted name={name} rspvDeadline={hackathon.rsvpDeadline} />;
+    return (
+      <Accepted
+        name={name}
+        rspvDeadline={application.data.rsvpDeadline ?? null}
+      />
+    );
   }
 
   if (application.data.status === "confirmed") {
@@ -138,18 +143,24 @@ function Accepted({ name, rspvDeadline }: AcceptedProps) {
       <div className="my-3 flex flex-col gap-2">
         <p>You've been accepted to hack in SwampHacks XII!</p>
         <p>
-          Please confirm your attendance by{" "}
-          {new Date(rspvDeadline!).toLocaleString("en-US", {
-            timeZone: "America/New_York",
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-            hour12: true,
-          }) + " ET"}
-          . Failure to do so means you are giving up your spot, and we will
-          admit someone from a waitlist.
+          {rspvDeadline ? (
+            <>
+              Please confirm your attendance by{" "}
+              {new Date(rspvDeadline).toLocaleString("en-US", {
+                timeZone: "America/New_York",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              }) + " ET"}
+              . Failure to do so means you are giving up your spot, and we will
+              admit someone from the waitlist.
+            </>
+          ) : (
+            "Please confirm your attendance to reserve your spot."
+          )}
         </p>
         <p>
           If you're no longer able to attend, please withdraw your application
@@ -230,6 +241,7 @@ interface RejectedProps {
 
 function Rejected({ name }: RejectedProps) {
   const { joinWaitlist } = useApplicationActions();
+  const waitlistClosed = Date.now() >= Date.parse("2026-10-16T00:00:00-04:00");
 
   return (
     <div className="w-full sm:max-w-200 mx-auto font-figtree p-2 relative">
@@ -248,11 +260,17 @@ function Rejected({ name }: RejectedProps) {
 
         <Button
           onClick={() => joinWaitlist.mutate()}
-          isDisabled={joinWaitlist.isPending}
+          isDisabled={joinWaitlist.isPending || waitlistClosed}
           className="w-fit"
         >
-          {joinWaitlist.isPending ? "Joining..." : "Join Waitlist"}
+          {waitlistClosed
+            ? "Waitlist Closed"
+            : joinWaitlist.isPending
+              ? "Joining..."
+              : "Join Waitlist"}
         </Button>
+
+        <p>The deadline to join is October 15, 2026 at 11:59 PM ET.</p>
 
         <ol className="flex flex-col gap-2">
           <li>
@@ -299,29 +317,50 @@ interface WaitlistedProps {
 }
 
 function Waitlisted({ name }: WaitlistedProps) {
+  const { leaveWaitlist } = useApplicationActions();
+
+  const handleLeave = () => {
+    if (
+      window.confirm(
+        "Leave the waitlist? You will lose your current place. If you rejoin before the deadline, you will join at the end of the queue.",
+      )
+    ) {
+      leaveWaitlist.mutate();
+    }
+  };
+
   return (
     <div className="w-full sm:max-w-200 mx-auto font-figtree p-2 relative">
       <h1 className="text-2xl">Hi, {name}!</h1>
-
       <div className="my-3 flex flex-col gap-3">
         <p>
-          You are on the <strong>SwampHacks XII waitlist</strong>. Your waitlist
-          status has been saved. Joining the waitlist does not guarantee
-          admission.
+          You are on the <strong>SwampHacks XII waitlist</strong>. Joining does
+          not guarantee admission.
         </p>
-
         <p>
-          If spots open up, we’ll be sending out invitations on a rolling basis
-          leading up to the event. Waitlist decisions are made as space becomes
-          available. Please keep an eye out on your email or the hacker portal
-          for updates!
+          Your place is based on when you joined. If you receive an invitation,
+          you will have 48 hours to confirm your attendance. Keep an eye on your
+          inbox and spam folder.
         </p>
-
+        <Button
+          onClick={handleLeave}
+          isDisabled={leaveWaitlist.isPending}
+          variant="danger"
+          size="md"
+          className="w-[200px] max-w-full min-h-10"
+        >
+          {leaveWaitlist.isPending ? "Leaving..." : "Leave Waitlist"}
+        </Button>
         <p>
-          If you have questions, feel free to reach out on our{" "}
-          <a href="https://discord.com/invite/NfRPv9JtAG">Discord server</a> or
-          email us at{" "}
-          <a href="mailto:contact@swamphacks.com">contact@swamphacks.com</a>
+          If you have questions, reach out on our{" "}
+          <a className="underline" href="https://discord.com/invite/NfRPv9JtAG">
+            Discord server
+          </a>{" "}
+          or email{" "}
+          <a className="underline" href="mailto:contact@swamphacks.com">
+            contact@swamphacks.com
+          </a>
+          .
         </p>
       </div>
     </div>

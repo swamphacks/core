@@ -1,3 +1,4 @@
+import InPersonWaitlistAction from "./InPersonWaitlistAction";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
@@ -141,6 +142,10 @@ export default function ApplicationViewer({
                 status={extendedApplication.data.status}
                 applicationId={extendedApplication.data.id}
                 userId={extendedApplication.data.user.id}
+              />
+              <InPersonWaitlistAction
+                userId={extendedApplication.data.user.id}
+                status={extendedApplication.data.status}
               />
               {extendedApplication.data.review && (
                 <ApplicationReviews
@@ -427,15 +432,11 @@ function ApplicationAutoDecision({
 }
 
 async function updateApplicationFn(applicationId: string, status: string) {
-  try {
-    await api.patch(`application`, {
-      json: { applicationId, status },
-    });
+  await api.patch(`application`, {
+    json: { applicationId, status },
+  });
 
-    return { applicationId, status };
-  } catch (err) {
-    throw err;
-  }
+  return { applicationId, status };
 }
 
 async function updateReviewFn({
@@ -449,25 +450,21 @@ async function updateReviewFn({
   experienceRating: number;
   notes: string;
 }) {
-  try {
-    await api.patch(`application/review`, {
-      json: {
-        id: reviewId,
-        passionRating,
-        experienceRating,
-        notes,
-      },
-    });
-
-    return {
-      reviewId,
+  await api.patch(`application/review`, {
+    json: {
+      id: reviewId,
       passionRating,
       experienceRating,
       notes,
-    };
-  } catch (err) {
-    throw err;
-  }
+    },
+  });
+
+  return {
+    reviewId,
+    passionRating,
+    experienceRating,
+    notes,
+  };
 }
 
 export function useApplicationActionsAdmin(applicationId: string) {
