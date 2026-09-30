@@ -811,14 +811,17 @@ func (h *handler) handleWithdrawApplication(ctx context.Context, input *struct{}
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	if userCtx.Role != sqlc.RoleApplicant {
+	if userCtx.Role != sqlc.RoleApplicant && userCtx.Role != sqlc.RoleAttendee {
 		return nil, huma.Error400BadRequest("Not an applicant")
 	}
 
 	err := h.applicationService.WithdrawApplication(ctx, userCtx.UserID)
 
+	if errors.Is(err, ErrWithdrawalEligibility) {
+		return nil, huma.Error409Conflict(err.Error())
+	}
 	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+		return nil, huma.Error500InternalServerError("Unable to withdraw attendance")
 	}
 
 	return &WithdrawApplicationOutput{Status: http.StatusOK}, nil

@@ -56,6 +56,10 @@ export default function ApplicationPage({
     return <Accepted name={name} rspvDeadline={hackathon.rsvpDeadline} />;
   }
 
+  if (application.data.status === "confirmed") {
+    return <Confirmed name={name} />;
+  }
+
   if (application.data.status === "rejected") {
     return <Rejected name={name} />;
   }
@@ -115,17 +119,16 @@ function Accepted({ name, rspvDeadline }: AcceptedProps) {
   const { confirmAttendance, withdrawApplication } = useApplicationActions();
 
   const handleConfirmAttendance = async () => {
-    await confirmAttendance.mutateAsync();
-    window.location.reload();
+    confirmAttendance.mutate();
   };
 
   const handleWithdrawApplication = async () => {
     const isConfirmed = window.confirm(
-      "Are you sure you want to withdraw your application?",
+      "Withdraw your attendance? This releases your spot at SwampHacks XII.",
     );
 
     if (isConfirmed) {
-      await withdrawApplication.mutateAsync();
+      withdrawApplication.mutate();
     }
   };
 
@@ -155,14 +158,66 @@ function Accepted({ name, rspvDeadline }: AcceptedProps) {
         </p>
       </div>
       <div className="flex flex-col w-fit items-start gap-2">
-        <Button onClick={handleConfirmAttendance}>Confirm Attendance</Button>
+        <Button
+          onClick={handleConfirmAttendance}
+          isDisabled={
+            confirmAttendance.isPending || withdrawApplication.isPending
+          }
+          size="md"
+          className="w-[200px] max-w-full min-h-10"
+        >
+          {confirmAttendance.isPending ? "Confirming..." : "Confirm Attendance"}
+        </Button>
         <Button
           onClick={handleWithdrawApplication}
-          className="max-w-45 py-2 mt-2"
-          variant="secondary"
-          size="sm"
+          isDisabled={
+            confirmAttendance.isPending || withdrawApplication.isPending
+          }
+          size="md"
+          className="w-[200px] max-w-full min-h-10"
+          variant="danger"
         >
-          Withdraw Application
+          {withdrawApplication.isPending
+            ? "Withdrawing..."
+            : "Withdraw Attendance"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function Confirmed({ name }: { name: string }) {
+  const { withdrawApplication } = useApplicationActions();
+
+  const handleWithdraw = () => {
+    if (
+      window.confirm(
+        "Withdraw your attendance? This releases your spot at SwampHacks XII.",
+      )
+    ) {
+      withdrawApplication.mutate();
+    }
+  };
+
+  return (
+    <div className="w-full sm:max-w-200 mx-auto font-figtree p-2 relative">
+      <h1 className="text-2xl">You're confirmed, {name}! 🎉</h1>
+      <div className="my-3 flex flex-col gap-3">
+        <p>Your attendance at SwampHacks XII is confirmed.</p>
+        <p>
+          If you can no longer attend, withdraw your attendance so we can offer
+          your spot to another applicant.
+        </p>
+        <Button
+          onClick={handleWithdraw}
+          isDisabled={withdrawApplication.isPending}
+          size="md"
+          className="w-[200px] max-w-full min-h-10"
+          variant="danger"
+        >
+          {withdrawApplication.isPending
+            ? "Withdrawing..."
+            : "Withdraw Attendance"}
         </Button>
       </div>
     </div>
@@ -174,6 +229,8 @@ interface RejectedProps {
 }
 
 function Rejected({ name }: RejectedProps) {
+  const { joinWaitlist } = useApplicationActions();
+
   return (
     <div className="w-full sm:max-w-200 mx-auto font-figtree p-2 relative">
       <h1 className="text-2xl">Hi, {name}!</h1>
@@ -189,18 +246,20 @@ function Rejected({ name }: RejectedProps) {
           other ways:
         </p>
 
+        <Button
+          onClick={() => joinWaitlist.mutate()}
+          isDisabled={joinWaitlist.isPending}
+          className="w-fit"
+        >
+          {joinWaitlist.isPending ? "Joining..." : "Join Waitlist"}
+        </Button>
+
         <ol className="flex flex-col gap-2">
           <li>
-            {/* 1. <strong>Join the Waitlist</strong>: We may have openings
-            available closer to the event. You can join the waitlist by signing
-            up in person on the day of check-in if space allows. The waitlist
-            operates on a first-come, first-served basis. */}
-            1. <strong>Join the Waitlist</strong>: Our waitlist will be coming
-            out soon, and you'll receive more information when they do. You will
-            be able to join the waitlist through this page when it becomes
-            available. You can also join the waitlist by signing up in person on
-            the day of check-in if space allows. The waitlist operates on a
-            first-come, first-served basis.
+            1. <strong>Join the Waitlist</strong>: We may have openings
+            available closer to the event. Use the Join Waitlist button to join
+            the waitlist. Joining does not guarantee a spot; we will contact you
+            if you are offered admission.
           </li>
           <li>
             2. <strong>Mentor</strong>: Share your knowledge and guide hackers
@@ -246,9 +305,9 @@ function Waitlisted({ name }: WaitlistedProps) {
 
       <div className="my-3 flex flex-col gap-3">
         <p>
-          Thank you for applying to SwampHacks XII! We were very impressed by
-          your application. At this time, we’re placing you on our{" "}
-          <strong>waitlist</strong> due to limited capacity.
+          You are on the <strong>SwampHacks XII waitlist</strong>. Your waitlist
+          status has been saved. Joining the waitlist does not guarantee
+          admission.
         </p>
 
         <p>

@@ -3,6 +3,7 @@ import { hackathonQueryOptions } from "@/modules/Hackathon/hooks/useHackathon";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageLoading } from "@/components/PageLoading";
 import ApplicationPage from "@/modules/Application/ApplicationPage";
+import { useMyApplication } from "@/modules/Application/hooks/useMyApplication";
 
 export const Route = createFileRoute("/_protected/application")({
   component: RouteComponent,
@@ -24,6 +25,47 @@ export const Route = createFileRoute("/_protected/application")({
 function RouteComponent() {
   const { user } = Route.useRouteContext();
   const hackathon = useSuspenseQuery(hackathonQueryOptions());
+  const application = useMyApplication();
+
+  const now = new Date();
+  const applicationOpen = new Date(hackathon.data.applicationOpen);
+  const applicationClose = new Date(hackathon.data.applicationClose);
+
+  let isApplicationOpen;
+  if (hackathon.data.acceptEarlyApplications) {
+    const earlyApplicationOpen = new Date(hackathon.data.earlyApplicationOpen!);
+    const earlyApplicationClose = new Date(
+      hackathon.data.earlyApplicationClose!,
+    );
+    isApplicationOpen =
+      (now >= earlyApplicationOpen && now <= earlyApplicationClose) ||
+      (now >= applicationOpen && now <= applicationClose);
+  } else {
+    isApplicationOpen = now >= applicationOpen && now <= applicationClose;
+  }
+
+  if (application.isLoading) {
+    return <PageLoading />;
+  }
+
+  const hasDecision = [
+    "accepted",
+    "confirmed",
+    "rejected",
+    "waitlisted",
+    "withdrawn",
+  ].includes(application.data?.status ?? "");
+
+  if (!isApplicationOpen && !hasDecision) {
+    return (
+      <div className="max-w-xs mx-auto h-full flex flex-col justify-center items-center gap-8 text-text-secondary">
+        <div className="flex flex-row items-center justify-center gap-2">
+          <TablerAlertCircle />
+          <p>Applications are currently closed.</p>
+        </div>
+      </div>
+    );
+  }
 
   return <ApplicationPage hackathon={hackathon.data} user={user} />;
 }

@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { useApplicationActions } from "@/modules/Application/hooks/useApplicationActions";
 import TeamFormation from "@/modules/Team/TeamFormation";
 import { createFileRoute } from "@tanstack/react-router";
 import { Heading, Link } from "react-aria-components";
@@ -14,6 +16,17 @@ const generateIdentifyIntent = (userId: string): string => {
 
 function RouteComponent() {
   const { user } = Route.useRouteContext();
+  const { withdrawApplication } = useApplicationActions();
+
+  const handleWithdraw = () => {
+    if (
+      window.confirm(
+        "Withdraw your attendance? This releases your spot at SwampHacks XII.",
+      )
+    ) {
+      withdrawApplication.mutate();
+    }
+  };
 
   const identificationIntentString = generateIdentifyIntent(user.userId);
   const hackerGuideUrl =
@@ -66,6 +79,24 @@ function RouteComponent() {
 
         {/* Right Column: Info & Links */}
         <div className="flex-1 flex flex-col gap-8">
+          <section className="space-y-3">
+            <h3 className="text-lg font-bold">Attendance confirmed</h3>
+            <p>
+              If you can no longer attend SwampHacks XII, please release your
+              spot so another hacker can attend.
+            </p>
+            <Button
+              onClick={handleWithdraw}
+              isDisabled={withdrawApplication.isPending}
+              size="md"
+              className="w-[200px] max-w-full min-h-10"
+              variant="danger"
+            >
+              {withdrawApplication.isPending
+                ? "Withdrawing..."
+                : "Withdraw Attendance"}
+            </Button>
+          </section>
           {/* QR Explanation */}
           <section className="space-y-3">
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50">
