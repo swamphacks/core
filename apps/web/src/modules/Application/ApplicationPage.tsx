@@ -50,7 +50,11 @@ export default function ApplicationPage({
   }
 
   const applicationResponses = JSON.parse(atob(application.data.application));
-  const name = applicationResponses["firstName"];
+  const firstName = applicationResponses["firstName"];
+  const name =
+    typeof firstName === "string" && firstName.trim()
+      ? firstName.trim()
+      : "Hacker";
 
   if (application.data.status === "accepted") {
     return (
