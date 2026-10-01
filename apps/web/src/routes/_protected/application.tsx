@@ -1,3 +1,4 @@
+import TablerAlertCircle from "~icons/tabler/alert-circle";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { hackathonQueryOptions } from "@/modules/Hackathon/hooks/useHackathon";
 import { useSuspenseQuery } from "@tanstack/react-query";
