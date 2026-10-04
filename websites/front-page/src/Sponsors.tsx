@@ -231,7 +231,13 @@ export default function Sponsors() {
           <div className="sponsor-tiers">
             <section className="sponsor-tier sponsor-tier--cohost">
               <div className="sponsor-card sponsor-card--cohost">
-                <img src={Vobile} alt="Vobile, SwampHacks co-host" />
+                <a
+                  href={"https://us.vobile.com/"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={Vobile} alt="Vobile, SwampHacks co-host" />
+                </a>
               </div>
             </section>
             <section className="sponsor-tier">
