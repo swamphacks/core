@@ -779,3 +779,43 @@
     padding-bottom: 105px;
   }
 }
+
+/* Vobile co-host placement */
+.sponsor-tier--cohost {
+  align-items: center;
+  gap: 16px;
+}
+
+.sponsor-tier--cohost .sponsor-tier__label {
+  display: block;
+  font-size: 24px;
+  text-align: center;
+}
+
+.sponsor-card--cohost {
+  width: min(100%, 520px);
+  padding: 18px 0;
+}
+
+.sponsor-card--cohost img {
+  width: 100%;
+  height: auto;
+  max-width: 520px;
+  max-height: none;
+  image-rendering: auto;
+}
+
+.sponsors-container .water {
+  height: auto;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card--cohost {
+    width: 85%;
+    padding: 12px 0;
+  }
+
+  .sponsor-tier--cohost .sponsor-tier__label {
+    font-size: 21px;
+  }
+}

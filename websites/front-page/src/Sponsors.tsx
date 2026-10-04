@@ -8,6 +8,7 @@ import UF from "./assets/sponsors/uf.png";
 import CapitalOne from "./assets/sponsors/capital-one.svg";
 import BNY from "./assets/sponsors/bny.svg";
 import Roblox from "./assets/sponsors/roblox.svg";
+import Vobile from "./assets/sponsors/vobile.png";
 import PureButtons from "./assets/sponsors/pure-buttons.svg";
 import UFCise from "./assets/sponsors/uf-cise-white.png";
 import CpeLab from "./assets/sponsors/cpe-lab.png";
@@ -64,7 +65,7 @@ const smallSponsors: Sponsor[] = [
     name: "Roblox",
     logo: Roblox,
     textMark: null,
-    url: "https://www.roblox.com/",
+    url: "https://careers.roblox.com/early-career",
   },
   {
     name: "PureButtons",
@@ -228,6 +229,11 @@ export default function Sponsors() {
           <h1 className="sponsors-header">Sponsors</h1>
 
           <div className="sponsor-tiers">
+            <section className="sponsor-tier sponsor-tier--cohost">
+              <div className="sponsor-card sponsor-card--cohost">
+                <img src={Vobile} alt="Vobile, SwampHacks co-host" />
+              </div>
+            </section>
             <section className="sponsor-tier">
               <h2 className="sponsor-tier__label">Medium Sponsors</h2>
               <div className="sponsor-grid sponsor-grid--medium">
