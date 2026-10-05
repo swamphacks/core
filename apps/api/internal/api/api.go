@@ -22,6 +22,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/domains/auth"
 	"github.com/swamphacks/core/apps/api/internal/domains/email"
 	"github.com/swamphacks/core/apps/api/internal/domains/hackathon"
+	"github.com/swamphacks/core/apps/api/internal/domains/nfc"
 	"github.com/swamphacks/core/apps/api/internal/domains/redeemables"
 	"github.com/swamphacks/core/apps/api/internal/domains/teams"
 	"github.com/swamphacks/core/apps/api/internal/domains/users"
@@ -161,7 +162,7 @@ func Run() {
 	apiKeysService := apikeys.NewService(apiKeysRepo, logger)
 	apiKeysHandler := apikeys.NewHandler(apiKeysService, logger)
 	apikeys.RegisterRoutes(apiKeysHandler, huma.NewGroup(api, "/apikeys"), mw)
-	
+
 	nfcService := nfc.NewService(nfcRepo, logger)
 	nfcHandler := nfc.NewHandler(nfcService, logger)
 	nfc.RegisterRoutes(nfcHandler, huma.NewGroup(api, "/nfc"), mw)
