@@ -134,7 +134,7 @@ func (h *handler) handleGetExtendedApplicationById(ctx context.Context, input *s
 	}
 
 	var autoDecisionRequest *AutoDecisionRequestDto
-	if application.AutoDecisionRequestID != nil && application.RequestedDecision.Valid {
+	if application.AutoDecisionRequestID != nil {
 		var autoDecisionApproved bool
 
 		if application.DecisionApproved == nil {
@@ -146,7 +146,7 @@ func (h *handler) handleGetExtendedApplicationById(ctx context.Context, input *s
 		autoDecisionRequest = &AutoDecisionRequestDto{
 			ID:                   *application.AutoDecisionRequestID,
 			ApplicationID:        application.ID,
-			RequestedDecision:    string(application.RequestedDecision.ApplicationAutoDecisionType),
+			RequestedDecision:    string(*application.RequestedDecision),
 			Justification:        application.DecisionJustification,
 			AutoDecisionApproved: autoDecisionApproved,
 			CreatedAt:            *application.DecisionRequestCreatedAt,
@@ -457,7 +457,7 @@ func (h *handler) handleGetReviewById(ctx context.Context, input *struct {
 	}
 
 	var autoDecisionRequest *AutoDecisionRequestDto
-	if review.DecisionRequestID != nil && review.RequestedDecision.Valid {
+	if review.DecisionRequestID != nil {
 		var autoDecisionApproved bool
 
 		if review.DecisionApproved == nil {
@@ -469,7 +469,7 @@ func (h *handler) handleGetReviewById(ctx context.Context, input *struct {
 		autoDecisionRequest = &AutoDecisionRequestDto{
 			ID:                   *review.DecisionRequestID,
 			ApplicationID:        review.ID,
-			RequestedDecision:    string(review.RequestedDecision.ApplicationAutoDecisionType),
+			RequestedDecision:    string(*review.RequestedDecision),
 			Justification:        review.DecisionJustification,
 			AutoDecisionApproved: autoDecisionApproved,
 			CreatedAt:            *review.DecisionRequestCreatedAt,
