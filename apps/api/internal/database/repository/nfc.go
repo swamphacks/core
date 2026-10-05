@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 
-
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
@@ -17,8 +16,6 @@ func NewNFCRepository(db *database.DB) *NFCRepository {
 		db: db,
 	}
 }
-
-
 
 func (r *NFCRepository) GetMeals(ctx context.Context) ([]sqlc.GetMealsRow, error) {
 	meals, err := r.db.Query.GetMeals(ctx)
@@ -56,7 +53,7 @@ func (r *NFCRepository) TagToWorkshop(ctx context.Context, params sqlc.TagToWork
 	return workshop, nil
 }
 
-func (r *NFCRepository) TagToRedeemable(ctx context.Context, params sqlc.TagToRedeemableParams) (error) {
+func (r *NFCRepository) TagToRedeemable(ctx context.Context, params sqlc.TagToRedeemableParams) error {
 	return r.db.Query.TagToRedeemable(ctx, params)
 }
 
@@ -77,4 +74,3 @@ func (r *NFCRepository) GetWorkshops(ctx context.Context) ([]sqlc.GetWorkshopsRo
 
 	return workshops, nil
 }
-
