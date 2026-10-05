@@ -11,6 +11,7 @@ import (
 )
 
 func RegisterRoutes(applicationHandler *handler, group huma.API, mw *middleware.Middleware) {
+	registerAdmissionWaitlistRoutes(applicationHandler, group, mw)
 	huma.Register(group, huma.Operation{
 		OperationID:   "get-my-application",
 		Method:        http.MethodGet,

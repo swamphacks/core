@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"slices"
 	"time"
 
@@ -96,17 +95,27 @@ func (s *ApplicationService) GetApplicationById(ctx context.Context, id uuid.UUI
 }
 
 func (s *ApplicationService) GetApplicationByUserId(ctx context.Context, userID uuid.UUID) (*sqlc.Application, error) {
-	application, err := s.db.Query.GetApplicationByUserId(ctx, userID)
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, database.ErrApplicationNotFound
-		} else {
-			s.logger.Err(err).Msg("Failed to get application by user id")
-			return nil, ErrGetApplication
-		}
+	var application sqlc.Application
+	err := s.db.Pool.QueryRow(ctx, `
+		SELECT a.user_id, a.status, a.application, a.created_at,
+		       a.saved_at, a.updated_at, a.submitted_at,
+		       a.hackathon_id, a.is_early, a.id, a.is_fake
+		FROM applications a
+		JOIN hackathons h ON h.id = a.hackathon_id
+		WHERE a.user_id = $1 AND h.is_active = true
+	`, userID).Scan(
+		&application.UserID, &application.Status, &application.Application,
+		&application.CreatedAt, &application.SavedAt, &application.UpdatedAt,
+		&application.SubmittedAt, &application.HackathonID,
+		&application.IsEarly, &application.ID, &application.IsFake,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, database.ErrApplicationNotFound
 	}
-
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to get active application by user id")
+		return nil, ErrGetApplication
+	}
 	return &application, nil
 }
 
@@ -431,81 +440,58 @@ func (s *ApplicationService) GetApplicationStatistics(ctx context.Context) (*App
 // }
 
 func (s *ApplicationService) WithdrawApplication(ctx context.Context, userID uuid.UUID) error {
-	// Make atomic
-	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
-		txDB := s.db.NewTX(tx)
-
-		if err := txDB.Query.UpdateApplicationByUserId(ctx, sqlc.UpdateApplicationByUserIdParams{
-			UserID:         userID,
-			StatusDoUpdate: true,
-			Status:         sqlc.ApplicationStatusWithdrawn,
-		}); err != nil {
-			return err
-		}
-
-		return txDB.Query.UpdateRole(ctx,
-			sqlc.UpdateRoleParams{
-				UserID: userID,
-				Role:   sqlc.RoleApplicant,
-			},
-		)
-	})
-	if err != nil {
-		s.logger.Err(err).Str("userID", userID.String()).Msg("WithdrawAttendance fail")
-		return ErrWithdrawApplication
-	}
-	return nil
+	return s.changeAdmissionStatus(ctx, userID, false)
 }
 
 func (s *ApplicationService) ConfirmAttendance(ctx context.Context, userID uuid.UUID) error {
-	// Atomic
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
-		txDB := s.db.NewTX(tx)
+		var applicationID uuid.UUID
+		var status string
+		var deadline *time.Time
 
-		hackathon, err := s.db.Query.GetHackathon(ctx)
-
+		err := tx.QueryRow(ctx, `
+			SELECT a.id, a.status::text,
+                   COALESCE(
+                       (SELECT o.confirmation_deadline
+                        FROM application_waitlist_offers o
+                        WHERE o.application_id = a.id),
+                       h.rsvp_deadline
+                   )
+			FROM applications a
+			JOIN hackathons h ON h.id = a.hackathon_id
+			WHERE a.user_id = $1 AND h.is_active = true
+			FOR UPDATE OF a
+		`, userID).Scan(&applicationID, &status, &deadline)
 		if err != nil {
-			s.logger.Err(err).Msg("ConfirmAttendance fail, unable to retrieve hackathon")
 			return err
 		}
 
-		now := time.Now()
-		if hackathon.RsvpDeadline != nil && now.After(*hackathon.RsvpDeadline) {
-			return errors.New("Attendance confirmation deadline has passed")
+		if status != string(sqlc.ApplicationStatusAccepted) {
+			return ErrConfirmationNotAccepted
+		}
+		if deadline != nil && !time.Now().Before(*deadline) {
+			return ErrConfirmationDeadlinePassed
 		}
 
-		application, err := s.db.Query.GetApplicationByUserId(ctx, userID)
-
-		if err != nil {
-			s.logger.Err(err).Msg("ConfirmAttendance fail, unable to retrieve user application")
+		if _, err := tx.Exec(ctx, `
+			UPDATE applications
+			SET status = 'confirmed', updated_at = now()
+			WHERE id = $1
+		`, applicationID); err != nil {
 			return err
 		}
 
-		if application.Status != sqlc.ApplicationStatusAccepted {
-			err = errors.New("User is not accepted to hack")
-			s.logger.Err(err).Msg(fmt.Sprintf("ConfirmAttendance fail, application is not accepted, status: %s", application.Status))
-			return err
-		}
-
-		if err := txDB.Query.UpdateApplicationByUserId(ctx, sqlc.UpdateApplicationByUserIdParams{
-			UserID:         userID,
-			StatusDoUpdate: true,
-			Status:         sqlc.ApplicationStatusConfirmed,
-		}); err != nil {
-			return err
-		}
-
-		return txDB.Query.UpdateRole(ctx,
-			sqlc.UpdateRoleParams{
-				UserID: userID,
-				Role:   sqlc.RoleAttendee,
-			},
-		)
+		_, err = tx.Exec(ctx, `
+			UPDATE users
+			SET role = 'attendee', updated_at = now()
+			WHERE id = $1 AND role = 'applicant'
+		`, userID)
+		return err
 	})
 
 	if err != nil {
 		s.logger.Err(err).Str("userID", userID.String()).Msg("ConfirmAttendance fail")
-		return ErrConfirmAttendance
+		return errors.Join(ErrConfirmAttendance, err)
 	}
 	return nil
 }
@@ -684,19 +670,19 @@ func (s *ApplicationService) AssignReviewersToApplications(ctx context.Context, 
 	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		txDB := s.db.NewTX(tx)
 
-		err = txDB.Query.DeleteAllApplicationReviews(ctx)
+		// err = txDB.Query.DeleteAllApplicationReviews(ctx)
 
-		if err != nil {
-			s.logger.Err(err).Msg("unable to reset all application reviews before assigning")
-			return ErrAssignReviewers
-		}
+		// if err != nil {
+		// 	s.logger.Err(err).Msg("unable to reset all application reviews before assigning")
+		// 	return ErrAssignReviewers
+		// }
 
-		err = txDB.Query.DeleteAllAutoDecisionRequests(ctx)
+		// err = txDB.Query.DeleteAllAutoDecisionRequests(ctx)
 
-		if err != nil {
-			s.logger.Err(err).Msg("unable to delete all decision requests before assigning")
-			return ErrAssignReviewers
-		}
+		// if err != nil {
+		// 	s.logger.Err(err).Msg("unable to delete all decision requests before assigning")
+		// 	return ErrAssignReviewers
+		// }
 
 		for _, allocation := range finalAllocations {
 			if len(allocation.AssignedApplicationIDs) == 0 {

@@ -100,21 +100,20 @@ func (s *EmailService) QueueWelcomeEmail(ctx context.Context, recipient string, 
 	return nil
 }
 
-func (s *EmailService) QueueWaitlistAcceptanceEmail(recipient string, name string) error {
-	subject := "Congratulations! You're in – confirm in 72 hours to keep your spot in SwampHacks XII"
-	templateEmailFilepath := s.config.EmailTemplateDirectory + "WaitlistAcceptanceEmail.html"
-
-	type emailTemplateData struct {
-		Name string
-	}
-	_, err := s.QueueSendHtmlEmailTask(recipient, subject, emailTemplateData{Name: name}, templateEmailFilepath)
-
+func (s *EmailService) QueueWaitlistAcceptanceEmail(
+	ctx context.Context, userID uuid.UUID, recipient string, name string,
+) error {
+	data, err := s.acceptanceData(ctx, userID, name)
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to send waitlist acceptance email to recipient")
 		return err
 	}
-
-	return nil
+	_, err = s.QueueSendHtmlEmailTask(
+		recipient,
+		"Congratulations! You're in – confirm your SwampHacks XII attendance",
+		data,
+		s.config.EmailTemplateDirectory+"ApplicationAcceptanceWithDeadlineEmail.html",
+	)
+	return err
 }
 
 func (s *EmailService) QueueSendHtmlEmailTask(to string, subject string, templateData interface{}, templateFilePath string) (*asynq.TaskInfo, error) {
@@ -135,11 +134,11 @@ func (s *EmailService) QueueSendHtmlEmailTask(to string, subject string, templat
 	}
 
 	taskInfo, err := s.taskQueue.Enqueue(task, asynq.Queue("email"))
-	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendHtmlEmail task!")
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to queue SendHtmlEmail task")
 		return nil, err
 	}
+	s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued SendHtmlEmail task!")
 
 	return taskInfo, nil
 }
@@ -290,7 +289,7 @@ var (
 )
 
 func (s *EmailService) SendDecisionEmails(ctx context.Context, batRun sqlc.BatRun) error {
-	accepetedEmailTemplatePath := s.config.EmailTemplateDirectory + "ApplicationAcceptedEmail.html"
+	accepetedEmailTemplatePath := s.config.EmailTemplateDirectory + "ApplicationAcceptanceWithDeadlineEmail.html"
 	rejectedEmailTemplatePath := s.config.EmailTemplateDirectory + "ApplicationRejectedEmail.html"
 	acceptedEmailSubject := "Congratulations on being accepted to hack in SwampHacks XII!"
 	rejectedEmailSubject := "Update on Your SwampHacks XII Application"
@@ -305,10 +304,14 @@ func (s *EmailService) SendDecisionEmails(ctx context.Context, batRun sqlc.BatRu
 		if !ok {
 			return ErrFailedToGetContactEmail
 		}
-		type emailTemplateData struct {
-			Name string
+		data, err := s.acceptanceData(ctx, uuid, emailInfo.Name)
+		if err != nil {
+			return err
 		}
-		taskInfo, err := s.QueueSendHtmlEmailTask(contactEmail, acceptedEmailSubject, emailTemplateData{Name: emailInfo.Name}, accepetedEmailTemplatePath)
+		taskInfo, err := s.QueueSendHtmlEmailTask(contactEmail, acceptedEmailSubject, data, accepetedEmailTemplatePath)
+		if err != nil {
+			return err
+		}
 		s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued acceptance email")
 	}
 
