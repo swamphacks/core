@@ -11,19 +11,19 @@ import (
 	"github.com/google/uuid"
 )
 
-const checkinUser = `-- name: checkinUser :one
+const checkinUser = `-- name: CheckinUser :one
 INSERT INTO nfc_tags_user (tag_id, user_id) VALUES
 ($1, $2)
 ON CONFLICT DO NOTHING 
 RETURNING id, tag_id, user_id, created_at, updated_at
 `
 
-type checkinUserParams struct {
+type CheckinUserParams struct {
 	TagID  string     `json:"tag_id"`
 	UserID *uuid.UUID `json:"user_id"`
 }
 
-func (q *Queries) checkinUser(ctx context.Context, arg checkinUserParams) (NfcTagsUser, error) {
+func (q *Queries) CheckinUser(ctx context.Context, arg CheckinUserParams) (NfcTagsUser, error) {
 	row := q.db.QueryRow(ctx, checkinUser, arg.TagID, arg.UserID)
 	var i NfcTagsUser
 	err := row.Scan(
@@ -36,27 +36,27 @@ func (q *Queries) checkinUser(ctx context.Context, arg checkinUserParams) (NfcTa
 	return i, err
 }
 
-const getMeals = `-- name: getMeals :many
+const getMeals = `-- name: GetMeals :many
 SELECT name, id, max_user_amount FROM redeemables
 WHERE type = 'meal'
 Order by name
 `
 
-type getMealsRow struct {
+type GetMealsRow struct {
 	Name          string    `json:"name"`
 	ID            uuid.UUID `json:"id"`
 	MaxUserAmount int32     `json:"max_user_amount"`
 }
 
-func (q *Queries) getMeals(ctx context.Context) ([]getMealsRow, error) {
+func (q *Queries) GetMeals(ctx context.Context) ([]GetMealsRow, error) {
 	rows, err := q.db.Query(ctx, getMeals)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []getMealsRow{}
+	items := []GetMealsRow{}
 	for rows.Next() {
-		var i getMealsRow
+		var i GetMealsRow
 		if err := rows.Scan(&i.Name, &i.ID, &i.MaxUserAmount); err != nil {
 			return nil, err
 		}
@@ -68,26 +68,26 @@ func (q *Queries) getMeals(ctx context.Context) ([]getMealsRow, error) {
 	return items, nil
 }
 
-const getSocials = `-- name: getSocials :many
+const getSocials = `-- name: GetSocials :many
 SELECT title as name, id FROM workshops
 WHERE type = 'social'
 ORDER BY title
 `
 
-type getSocialsRow struct {
+type GetSocialsRow struct {
 	Name string    `json:"name"`
 	ID   uuid.UUID `json:"id"`
 }
 
-func (q *Queries) getSocials(ctx context.Context) ([]getSocialsRow, error) {
+func (q *Queries) GetSocials(ctx context.Context) ([]GetSocialsRow, error) {
 	rows, err := q.db.Query(ctx, getSocials)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []getSocialsRow{}
+	items := []GetSocialsRow{}
 	for rows.Next() {
-		var i getSocialsRow
+		var i GetSocialsRow
 		if err := rows.Scan(&i.Name, &i.ID); err != nil {
 			return nil, err
 		}
@@ -99,27 +99,27 @@ func (q *Queries) getSocials(ctx context.Context) ([]getSocialsRow, error) {
 	return items, nil
 }
 
-const getTshirts = `-- name: getTshirts :many
+const getTshirts = `-- name: GetTshirts :many
 SELECT name, id, max_user_amount FROM redeemables
 where type = 'tshirt'
 Order by name
 `
 
-type getTshirtsRow struct {
+type GetTshirtsRow struct {
 	Name          string    `json:"name"`
 	ID            uuid.UUID `json:"id"`
 	MaxUserAmount int32     `json:"max_user_amount"`
 }
 
-func (q *Queries) getTshirts(ctx context.Context) ([]getTshirtsRow, error) {
+func (q *Queries) GetTshirts(ctx context.Context) ([]GetTshirtsRow, error) {
 	rows, err := q.db.Query(ctx, getTshirts)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []getTshirtsRow{}
+	items := []GetTshirtsRow{}
 	for rows.Next() {
-		var i getTshirtsRow
+		var i GetTshirtsRow
 		if err := rows.Scan(&i.Name, &i.ID, &i.MaxUserAmount); err != nil {
 			return nil, err
 		}
@@ -131,26 +131,26 @@ func (q *Queries) getTshirts(ctx context.Context) ([]getTshirtsRow, error) {
 	return items, nil
 }
 
-const getWorkshops = `-- name: getWorkshops :many
+const getWorkshops = `-- name: GetWorkshops :many
 SELECT title as name, id FROM workshops
 WHERE type = 'workshop'
 ORDER BY title
 `
 
-type getWorkshopsRow struct {
+type GetWorkshopsRow struct {
 	Name string    `json:"name"`
 	ID   uuid.UUID `json:"id"`
 }
 
-func (q *Queries) getWorkshops(ctx context.Context) ([]getWorkshopsRow, error) {
+func (q *Queries) GetWorkshops(ctx context.Context) ([]GetWorkshopsRow, error) {
 	rows, err := q.db.Query(ctx, getWorkshops)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []getWorkshopsRow{}
+	items := []GetWorkshopsRow{}
 	for rows.Next() {
-		var i getWorkshopsRow
+		var i GetWorkshopsRow
 		if err := rows.Scan(&i.Name, &i.ID); err != nil {
 			return nil, err
 		}
@@ -162,32 +162,32 @@ func (q *Queries) getWorkshops(ctx context.Context) ([]getWorkshopsRow, error) {
 	return items, nil
 }
 
-const tagToRedeemable = `-- name: tagToRedeemable :exec
+const tagToRedeemable = `-- name: TagToRedeemable :exec
 INSERT INTO nfc_tags_redeemables (tag_id, redeemable_id) VALUES ($1, $2)
 `
 
-type tagToRedeemableParams struct {
+type TagToRedeemableParams struct {
 	TagID        string    `json:"tag_id"`
 	RedeemableID uuid.UUID `json:"redeemable_id"`
 }
 
-func (q *Queries) tagToRedeemable(ctx context.Context, arg tagToRedeemableParams) error {
+func (q *Queries) TagToRedeemable(ctx context.Context, arg TagToRedeemableParams) error {
 	_, err := q.db.Exec(ctx, tagToRedeemable, arg.TagID, arg.RedeemableID)
 	return err
 }
 
-const tagToWorkshop = `-- name: tagToWorkshop :execrows
+const tagToWorkshop = `-- name: TagToWorkshop :execrows
 INSERT INTO nfc_tags_workshops (tag_id, workshop_id)
 VALUES ($1, $2)
 ON CONFLICT (tag_id, workshop_id) DO NOTHING
 `
 
-type tagToWorkshopParams struct {
+type TagToWorkshopParams struct {
 	TagID      string    `json:"tag_id"`
 	WorkshopID uuid.UUID `json:"workshop_id"`
 }
 
-func (q *Queries) tagToWorkshop(ctx context.Context, arg tagToWorkshopParams) (int64, error) {
+func (q *Queries) TagToWorkshop(ctx context.Context, arg TagToWorkshopParams) (int64, error) {
 	result, err := q.db.Exec(ctx, tagToWorkshop, arg.TagID, arg.WorkshopID)
 	if err != nil {
 		return 0, err

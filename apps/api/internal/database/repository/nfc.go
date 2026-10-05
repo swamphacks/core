@@ -4,7 +4,6 @@ import (
 	"context"
 
 
-	"github.com/google/uuid"
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
@@ -21,8 +20,8 @@ func NewNFCRepository(db *database.DB) *NFCRepository {
 
 
 
-func (r *NFCRepository) GetMeals(ctx context.Context) ([]sqlc.getMealsRow, error) {
-	meals, err := r.db.Query.getMeals(ctx)
+func (r *NFCRepository) GetMeals(ctx context.Context) ([]sqlc.GetMealsRow, error) {
+	meals, err := r.db.Query.GetMeals(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -30,8 +29,8 @@ func (r *NFCRepository) GetMeals(ctx context.Context) ([]sqlc.getMealsRow, error
 	return meals, nil
 }
 
-func (r *NFCRepository) GetTshirts(ctx context.Context) ([]sqlc.getTshirtsRow, error) {
-	tshirts, err := r.db.Query.getTshirts(ctx)
+func (r *NFCRepository) GetTshirts(ctx context.Context) ([]sqlc.GetTshirtsRow, error) {
+	tshirts, err := r.db.Query.GetTshirts(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +38,8 @@ func (r *NFCRepository) GetTshirts(ctx context.Context) ([]sqlc.getTshirtsRow, e
 	return tshirts, nil
 }
 
-func (r *NFCRepository) CheckinUser(ctx context.Context, params sqlc.checkinUserParams) (*sqlc.NfcTagsUser, error) {
-	user, err := r.db.Query.checkinUser(ctx, params)
+func (r *NFCRepository) CheckinUser(ctx context.Context, params sqlc.CheckinUserParams) (*sqlc.NfcTagsUser, error) {
+	user, err := r.db.Query.CheckinUser(ctx, params)
 	if err != nil {
 		return nil, err
 	}
@@ -49,20 +48,20 @@ func (r *NFCRepository) CheckinUser(ctx context.Context, params sqlc.checkinUser
 }
 
 func (r *NFCRepository) TagToWorkshop(ctx context.Context, params sqlc.TagToWorkshopParams) (int64, error) {
-	workshop, err := r.db.Query.tagToWorkshop(ctx, params)
+	workshop, err := r.db.Query.TagToWorkshop(ctx, params)
 	if err != nil {
 		return 0, err
 	}
 
-	return &workshop, nil
+	return workshop, nil
 }
 
 func (r *NFCRepository) TagToRedeemable(ctx context.Context, params sqlc.TagToRedeemableParams) (error) {
-	return r.db.Query.tagToRedeemable(ctx, params)
+	return r.db.Query.TagToRedeemable(ctx, params)
 }
 
-func (r *NFCRepository) GetSocials(ctx context.Context) ([]sqlc.getSocialsRow, error) {
-	socials, err := r.db.Query.getSocials(ctx)
+func (r *NFCRepository) GetSocials(ctx context.Context) ([]sqlc.GetSocialsRow, error) {
+	socials, err := r.db.Query.GetSocials(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -70,8 +69,8 @@ func (r *NFCRepository) GetSocials(ctx context.Context) ([]sqlc.getSocialsRow, e
 	return socials, nil
 }
 
-func (r *NFCRepository) GetWorkshops(ctx context.Context) ([]sqlc.getWorkshopsRow, error) {
-	workshops, err := r.db.Query.getWorkshops(ctx)
+func (r *NFCRepository) GetWorkshops(ctx context.Context) ([]sqlc.GetWorkshopsRow, error) {
+	workshops, err := r.db.Query.GetWorkshops(ctx)
 	if err != nil {
 		return nil, err
 	}
