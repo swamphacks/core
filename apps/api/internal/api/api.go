@@ -116,6 +116,7 @@ func Run() {
 	workshopRepo := repository.NewWorkshopsRepository(db)
 	emailCampaignRepo := repository.NewEmailCampaignRepository(db)
 	apiKeysRepo := repository.NewApiKeysRepository(db)
+	nfcRepo := repository.NewNFCRepository(db)
 
 	mw := mw.NewMiddleware(userRepo, db, logger, config)
 
@@ -160,6 +161,10 @@ func Run() {
 	apiKeysService := apikeys.NewService(apiKeysRepo, logger)
 	apiKeysHandler := apikeys.NewHandler(apiKeysService, logger)
 	apikeys.RegisterRoutes(apiKeysHandler, huma.NewGroup(api, "/apikeys"), mw)
+	
+	nfcService := nfc.NewService(nfcRepo, logger)
+	nfcHandler := nfc.NewHandler(nfcService, logger)
+	nfc.RegisterRoutes(nfcHandler, huma.NewGroup(api, "/nfc"), mw)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "ping",
