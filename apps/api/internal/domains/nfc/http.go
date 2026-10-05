@@ -17,6 +17,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/parse"
 )
 
+
 func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middleware) {
 
 	huma.RegisterRoute(group, huma.Operation{
