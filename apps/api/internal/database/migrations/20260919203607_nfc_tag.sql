@@ -4,35 +4,11 @@
 drop table if exists nfc_tags_user cascade;
 drop table if exists nfc_tags_redeemables cascade;
 drop table if exists nfc_tags_workshops cascade;
-drop table if exists redeemables cascade;
-create table redeemables
-(
-	id uuid default gen_random_uuid() not null primary key,
-	name varchar(255) not null,
-	amount integer not null constraint redeemables_amount_check check (amount >= 0),
-	max_user_amount integer not null constraint redeemables_max_user_amount_check check (max_user_amount >= 1),
-    type text not null constraint redeemables_type_check check (type in ('meal', 'tshirt')),
-	created_at timestamptz default now() not null,
-	updated_at timestamptz default now() not null,
-	hackathon_id text not null references hackathons(id)
-);
 
 
-drop table if exists workshops cascade;
-create table workshops
-(
-	id uuid default gen_random_uuid() not null primary key,
-	title text not null,
-	description text,
-	start_time timestamptz not null,
-	end_time timestamptz not null,
-	num_attendees integer default 0 not null,
-	location text,
-	presenter text,
-    type text not null constraint workshops_type_check check (type in ('workshop', 'social')),
-	created_at timestamptz default now() not null,
-	updated_at timestamptz default now() not null
-);
+ALTER TABLE redeemables ADD COLUMN type text NOT NULL CHECK (type IN ('meal', 'tshirt'));
+
+ALTER TABLE workshops ADD COLUMN type text NOT NULL CHECK (type IN ('workshop', 'social'));
 
 create table nfc_tags_user
 (
@@ -58,7 +34,8 @@ create table nfc_tags_workshops(
     tag_id text not null references nfc_tags_user(tag_id) on delete cascade,
     workshop_id uuid not null references workshops(id) on delete cascade,
     created_at timestamptz default now() not null,
-    updated_at timestamptz default now() not null
+    updated_at timestamptz default now() not null,
+	unique (tag_id, workshop_id)
 );
 -- TRIGGERS
 -- +goose StatementBegin
@@ -68,16 +45,18 @@ declare
     current_amt int;
     max_amt int;
 begin
+    perform 1 from nfc_tags_user where tag_id = new.tag_id for update;
+
     select max_user_amount into max_amt
-    from redeemables
-    where id = new.redeemable_id;
+    from redeemables where id = new.redeemable_id;
 
     select count(*) into current_amt
     from nfc_tags_redeemables
-    where redeemable_id = new.redeemable_id;
+    where redeemable_id = new.redeemable_id
+      and tag_id = new.tag_id;
 
     if current_amt >= max_amt then
-        raise exception 'Hacker reached max registers for this item... max: (%). current: (%)', max_amt, current_amt;
+        raise exception 'Max redeems reached for this item. max: (%), current: (%)', max_amt, current_amt;
     end if;
 
     return new;
@@ -120,3 +99,4 @@ create table workshops
 	updated_at timestamptz default now() not null
 );
 
+drop function if exists check_redeemable_count();
