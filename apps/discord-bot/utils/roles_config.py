@@ -21,7 +21,7 @@ from typing import Optional
 ACCEPTABLE_ROLES: list[str] = ["Moderator", "Mentor (XII)", "Bot", "Staff (XII), Admin,"]
 
 # Roles that can be set as available mentors (can be different from ACCEPTABLE_ROLES)
-ACCEPTABLE_MENTOR_ROLES: list[str] = ["Mentor (XI)"]
+ACCEPTABLE_MENTOR_ROLES: list[str] = ["Mentor (XII)"]
 
 # Optional: Map role names to role IDs for faster lookups
 # If a role ID is None fallback to search by name
