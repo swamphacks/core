@@ -1,9 +1,8 @@
 .studentorgs-container {
   position: relative;
   width: 100%;
-  min-height: 680px;
   margin-top: 0;
-  padding-top: 34px;
+  padding: 34px 0 32px;
   overflow: visible;
   color: #ddc8af;
   background-color: #191f07;
@@ -43,30 +42,89 @@
   filter: brightness(0.42) saturate(0.75) contrast(1.35);
 }
 
-.studentorgs-header {
+.studentorgs-header,
+.studentorgs-layout {
   position: relative;
-  display: block;
-  width: min(1040px, calc(100% - 48px));
-  margin: 0 auto;
   z-index: 20;
-  font-family: "Pixelify Sans", monospace;
-  font-size: 40px;
-  text-align: left;
-    margin-left: auto;
-    margin-right: auto;
-    box-sizing: border-box;
 }
 
-.studentorgs-coming-soon {
-  position: relative;
-  z-index: 20;
-  margin: 120px auto 0;
-  color: #ddc8af;
-  font-family: "Jersey 20", cursive;
-  font-size: 28px;
-  text-align: center;
-  width: min(1040px, calc(100% - 48px));
-  box-sizing: border-box;
+.studentorgs-layout {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 88px;
+  gap: 16px;
+  width: min(1440px, calc(100% - 32px));
+  margin: 28px auto 0;
+}
+
+.studentorgs-layout .studentorgs-partners {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.studentorgs-partner:focus-visible {
+  outline: 2px solid #f1ddc1;
+  outline-offset: 6px;
+}
+
+.studentorgs-partners .sponsor-grid {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  gap: 12px;
+}
+
+/* These partner images include the bat and its organization sign. */
+.studentorgs-partners .studentorgs-partner {
+  --partner-size: min(300px, calc(100% * 0.77));
+  --partner-visible-ratio: 1;
+  min-height: 280px;
+  padding: 6px;
+}
+
+/* Visible artwork width / canvas width, including the bat and sign. */
+.studentorgs-partner[data-partner="CSU"] {
+  --partner-visible-ratio: 0.8814252336; /* 1509 / 1712 */
+}
+
+.studentorgs-partner[data-partner="CSK"] {
+  --partner-visible-ratio: 0.7779772591; /* 1300 / 1671 */
+}
+
+.studentorgs-partner[data-partner="UFSIT"] {
+  --partner-visible-ratio: 0.9007936508; /* 1135 / 1260 */
+}
+
+/* Override sponsor position-specific sizing, including the second-logo cap. */
+.studentorgs-container .studentorgs-partners .sponsor-card.studentorgs-partner img {
+  width: calc(var(--partner-size) / var(--partner-visible-ratio));
+  max-width: none;
+  height: auto;
+  max-height: none;
+  flex-shrink: 0;
+  transform: none;
+  filter: drop-shadow(0 4px 5px rgba(5, 20, 23, 0.25));
+  opacity: 1;
+  image-rendering: pixelated;
+}
+
+@media (max-width: 760px) {
+  .studentorgs-layout {
+    grid-template-columns: 32px minmax(0, 1fr) 32px;
+    gap: 6px;
+    width: calc(100% - 16px);
+  }
+
+  .studentorgs-partners .sponsor-grid {
+    gap: 8px;
+  }
+
+  .studentorgs-partners .studentorgs-partner {
+    --partner-size: min(170px, calc(100% * 0.77));
+    min-height: 0;
+    padding: 6px 4px;
+  }
+
 }
 
 .studentorgs-background {
@@ -91,18 +149,18 @@
   filter: brightness(0.35) saturate(0.5);
 }
 
-.bat-container {
-  position: relative;
-  z-index: 10;
-  width: min(900px, calc(100% - 48px));
-  height: 430px;
-  margin: 0 auto;
+.studentorgs-bats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  pointer-events: none;
 }
 
-.bat {
-  position: absolute;
-  width: 88px;
-  z-index: 4;
+.studentorgs-bat {
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
   filter:
     brightness(0.88)
     saturate(0.82)
@@ -111,24 +169,14 @@
   will-change: transform;
 }
 
-.bat:nth-child(2) {
+.studentorgs-bat:nth-child(2) {
   animation-delay: -1.1s;
   animation-duration: 5.3s;
 }
 
-.bat:nth-child(3) {
+.studentorgs-bat:nth-child(3) {
   animation-delay: -2.4s;
   animation-duration: 4.5s;
-}
-
-.bat:nth-child(4) {
-  animation-delay: -3.2s;
-  animation-duration: 5.7s;
-}
-
-.bat:nth-child(5) {
-  animation-delay: -0.7s;
-  animation-duration: 5s;
 }
 
 @keyframes studentorg-bat-float {
@@ -144,17 +192,8 @@
 
 @media (max-width: 767px) {
   .studentorgs-container {
-    min-height: 570px;
     margin-top: 0;
     padding-top: 28px;
   }
 
-  .studentorgs-header {
-    font-size: 34px;
-    text-align: center;
-  }
-
-  .bat {
-    width: 62px;
-  }
 }
