@@ -20,9 +20,9 @@ const decorativeBats = [Bat1, Bat2, Bat3];
 
 function BatColumn() {
   return (
-    <div className="studentorgs-bats" aria-hidden="true">
+    <div className="bat-container" aria-hidden="true">
       {decorativeBats.map((src) => (
-        <img className="studentorgs-bat" src={src} alt="" key={src} />
+        <img className="bat" src={src} alt="" key={src} />
       ))}
     </div>
   );
