@@ -3,7 +3,10 @@ package nfc
 import (
 	"context"
 	"errors"
+	"fmt"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
@@ -23,7 +26,6 @@ func NewService(nfcRepo *repository.NFCRepository, logger zerolog.Logger) *NfcSe
 }
 
 func (s *NfcService) GetMeals(ctx context.Context) ([]sqlc.GetMealsRow, error) {
-func (s *NfcService) GetMeals(ctx context.Context) ([]sqlc.GetMealsRow, error) {
 	meals, err := s.nfcRepo.GetMeals(ctx)
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to get meals")
@@ -34,7 +36,6 @@ func (s *NfcService) GetMeals(ctx context.Context) ([]sqlc.GetMealsRow, error) {
 }
 
 func (s *NfcService) GetTshirts(ctx context.Context) ([]sqlc.GetTshirtsRow, error) {
-func (s *NfcService) GetTshirts(ctx context.Context) ([]sqlc.GetTshirtsRow, error) {
 	tshirts, err := s.nfcRepo.GetTshirts(ctx)
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to get tshirts")
@@ -44,45 +45,41 @@ func (s *NfcService) GetTshirts(ctx context.Context) ([]sqlc.GetTshirtsRow, erro
 	return tshirts, nil
 }
 
-func (s *NfcService) CheckinUser(ctx context.Context, TagId string, UserID uuid.UUID) (*sqlc.NfcTagsUser, error) {
-	params := sqlc.CheckinUserParams{
-		TagID: TagId,
-		UserID: &UserID,
-	}
-	user, err := s.nfcRepo.CheckinUser(ctx, params)
+func (s *NfcService) CheckinUser(ctx context.Context, tagID string, userID uuid.UUID) (*sqlc.NfcTagsUser, error) {
+	user, err := s.nfcRepo.CheckinUser(ctx, sqlc.CheckinUserParams{
+		TagID:  tagID,
+		UserID: &userID,
+	})
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to check in user")
-		return nil, errors.New("Failed to check in user")
+		if !errors.Is(err, pgx.ErrNoRows) {
+			s.logger.Err(err).Msg("Failed to check in user")
+		}
+		return nil, fmt.Errorf("check in user: %w", err)
 	}
-
 	return user, nil
 }
 
-func (s *NfcService) TagToWorkshop(ctx context.Context, TagId string, WorkshopId uuid.UUID) (int64, error) {
-	params := sqlc.TagToWorkshopParams{
-		TagID: TagId,
-		WorkshopID: WorkshopId,
-	}
-	workshopID, err := s.nfcRepo.TagToWorkshop(ctx, params)
+func (s *NfcService) TagToWorkshop(ctx context.Context, tagID string, workshopID uuid.UUID) (int64, error) {
+	rows, err := s.nfcRepo.TagToWorkshop(ctx, sqlc.TagToWorkshopParams{
+		TagID:      tagID,
+		WorkshopID: workshopID,
+	})
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to tag to workshop")
-		return 0, errors.New("Failed to tag to workshop")
+		return 0, fmt.Errorf("tag to workshop: %w", err)
 	}
-
-	return workshopID, nil
+	return rows, nil
 }
 
-func (s *NfcService) TagToRedeemable(ctx context.Context, TagId string, RedeemableId uuid.UUID) error {
-	params := sqlc.TagToRedeemableParams{
-		TagID: TagId,
-		RedeemableID: RedeemableId,
-	}
-	err := s.nfcRepo.TagToRedeemable(ctx, params)
+func (s *NfcService) TagToRedeemable(ctx context.Context, tagID string, redeemableID uuid.UUID) error {
+	err := s.nfcRepo.TagToRedeemable(ctx, sqlc.TagToRedeemableParams{
+		TagID:        tagID,
+		RedeemableID: redeemableID,
+	})
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to tag to redeemable")
-		return errors.New("Failed to tag to redeemable")
+		return fmt.Errorf("tag to redeemable: %w", err)
 	}
-
 	return nil
 }
 
@@ -104,14 +101,4 @@ func (s *NfcService) GetSocials(ctx context.Context) ([]sqlc.GetSocialsRow, erro
 	}
 
 	return socials, nil
-}
-
-func (s *NfcService) GetWorkshops(ctx context.Context) ([]sqlc.GetWorkshopsRow, error) {
-	workshops, err := s.nfcRepo.GetWorkshops(ctx)
-	if err != nil {
-		s.logger.Err(err).Msg("Failed to get workshops")
-		return nil, errors.New("Failed to get workshops")
-	}
-
-	return workshops, nil
 }

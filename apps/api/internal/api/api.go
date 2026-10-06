@@ -27,7 +27,6 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/domains/teams"
 	"github.com/swamphacks/core/apps/api/internal/domains/users"
 	"github.com/swamphacks/core/apps/api/internal/domains/workshops"
-	"github.com/swamphacks/core/apps/api/internal/domains/nfc"
 	"github.com/swamphacks/core/apps/api/internal/emailutils"
 	"github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/storage"
