@@ -160,7 +160,7 @@ def main():
     users = [generate_user(existing_emails) for _ in range(args.count)]
 
     print("Connecting to database...")
-    conn = psycopg2.connect(args.database_url)
+    conn = psycopg2.connect(dsn=args.database_url)
     try:
         insert_users(conn, users)
         print(f"Inserted {len(users)} fake users into `users`.")
