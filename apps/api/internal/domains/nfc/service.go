@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 
-
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
 	"github.com/swamphacks/core/apps/api/internal/database/repository"
@@ -25,6 +23,7 @@ func NewService(nfcRepo *repository.NFCRepository, logger zerolog.Logger) *NfcSe
 }
 
 func (s *NfcService) GetMeals(ctx context.Context) ([]sqlc.GetMealsRow, error) {
+func (s *NfcService) GetMeals(ctx context.Context) ([]sqlc.GetMealsRow, error) {
 	meals, err := s.nfcRepo.GetMeals(ctx)
 	if err != nil {
 		s.logger.Err(err).Msg("Failed to get meals")
@@ -34,6 +33,7 @@ func (s *NfcService) GetMeals(ctx context.Context) ([]sqlc.GetMealsRow, error) {
 	return meals, nil
 }
 
+func (s *NfcService) GetTshirts(ctx context.Context) ([]sqlc.GetTshirtsRow, error) {
 func (s *NfcService) GetTshirts(ctx context.Context) ([]sqlc.GetTshirtsRow, error) {
 	tshirts, err := s.nfcRepo.GetTshirts(ctx)
 	if err != nil {
@@ -84,6 +84,16 @@ func (s *NfcService) TagToRedeemable(ctx context.Context, TagId string, Redeemab
 	}
 
 	return nil
+}
+
+func (s *NfcService) GetWorkshops(ctx context.Context) ([]sqlc.GetWorkshopsRow, error) {
+	workshops, err := s.nfcRepo.GetWorkshops(ctx)
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to get workshops")
+		return nil, errors.New("Failed to get workshops")
+	}
+
+	return workshops, nil
 }
 
 func (s *NfcService) GetSocials(ctx context.Context) ([]sqlc.GetSocialsRow, error) {

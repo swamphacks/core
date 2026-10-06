@@ -12,13 +12,13 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
-
 func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middleware) {
 
 	huma.Register(group, huma.Operation{
+	huma.Register(group, huma.Operation{
 		OperationID: "GetMeals",
-		Method: http.MethodGet,
-		Summary: "Get all Meals from redeemables table",
+		Method:      http.MethodGet,
+		Summary:     "Get all Meals from redeemables table",
 		Description: "Get all Meals from redeemables table",
 		Tags: []string{"NFC"},
 		Path: "/redeemables/meals",
@@ -26,9 +26,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 	}, nfcHandler.handleGetMeals)
 
 	huma.Register(group, huma.Operation{
+	huma.Register(group, huma.Operation{
 		OperationID: "GetTshirts",
-		Method: http.MethodGet,
-		Summary: "Get all Tshirts from redeemables table",
+		Method:      http.MethodGet,
+		Summary:     "Get all Tshirts from redeemables table",
 		Description: "Get all Tshirts from redeemables table",
 		Tags: []string{"NFC"},
 		Path: "/redeemables/Tshirt",
@@ -36,9 +37,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 	}, nfcHandler.handleGetTshirts)
 
 	huma.Register(group, huma.Operation{
+	huma.Register(group, huma.Operation{
 		OperationID: "CheckinUser",
-		Method: http.MethodPost,
-		Summary: "Checkin user with NFC tag",
+		Method:      http.MethodPost,
+		Summary:     "Checkin user with NFC tag",
 		Description: "Checkin user with NFC tag",
 		Tags: []string{"NFC"},
 		Path: "/checkin/nfc-links",
@@ -46,9 +48,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 	}, nfcHandler.handleCheckinUser)
 
 	huma.Register(group, huma.Operation{
+	huma.Register(group, huma.Operation{
 		OperationID: "TagToWorkshop",
-		Method: http.MethodPost,
-		Summary: "Tag user to workshop with NFC tag",
+		Method:      http.MethodPost,
+		Summary:     "Tag user to workshop with NFC tag",
 		Description: "Tag user to workshop with NFC tag",
 		Tags: []string{"NFC"},
 		Path: "/workshops/tag",
@@ -56,9 +59,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 	}, nfcHandler.handleTagToWorkshop)
 
 	huma.Register(group, huma.Operation{
+	huma.Register(group, huma.Operation{
 		OperationID: "TagToRedeemable",
-		Method: http.MethodPost,
-		Summary: "Tag user to redeemable with NFC tag",
+		Method:      http.MethodPost,
+		Summary:     "Tag user to redeemable with NFC tag",
 		Description: "Tag user to redeemable with NFC tag",
 		Tags: []string{"NFC"},
 		Path: "/redeemables/tag",
@@ -66,9 +70,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 	}, nfcHandler.handleTagToRedeemable)
 
 	huma.Register(group, huma.Operation{
+	huma.Register(group, huma.Operation{
 		OperationID: "GetWorkshops",
-		Method: http.MethodGet,
-		Summary: "Get all workshops",
+		Method:      http.MethodGet,
+		Summary:     "Get all workshops",
 		Description: "Get all workshops",
 		Tags: []string{"NFC"},
 		Path: "/workshops/",
@@ -76,9 +81,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 	}, nfcHandler.handleGetWorkshops)
 
 	huma.Register(group, huma.Operation{
+	huma.Register(group, huma.Operation{
 		OperationID: "GetSocials",
-		Method: http.MethodGet,
-		Summary: "Get all socials",
+		Method:      http.MethodGet,
+		Summary:     "Get all socials",
 		Description: "Get all socials",
 		Tags: []string{"NFC"},
 		Path: "/workshops/socials",
@@ -92,8 +98,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 type handler struct {
 	nfcService *NfcService
 	logger     zerolog.Logger
+	logger     zerolog.Logger
 }
 
+func NewHandler(nfcService *NfcService, logger zerolog.Logger) *handler {
 func NewHandler(nfcService *NfcService, logger zerolog.Logger) *handler {
 	return &handler{
 		nfcService: nfcService,
@@ -103,22 +111,26 @@ func NewHandler(nfcService *NfcService, logger zerolog.Logger) *handler {
 
 type GetMealsOutput struct {
 	Body []sqlc.GetMealsRow `json:"body"`
+	Body []sqlc.GetMealsRow `json:"body"`
 }
 
 type GetTshirtsOutput struct {
+	Body []sqlc.GetTshirtsRow `json:"body"`
 	Body []sqlc.GetTshirtsRow `json:"body"`
 }
 
 type GetWorkshopsOutput struct {
 	Body []sqlc.GetWorkshopsRow `json:"body"`
+	Body []sqlc.GetWorkshopsRow `json:"body"`
 }
 
 type GetSocialsOutput struct {
 	Body []sqlc.GetSocialsRow `json:"body"`
+	Body []sqlc.GetSocialsRow `json:"body"`
 }
 
 type CheckinUserInput struct {
-	TagID string `json:"tag_id"`
+	TagID  string    `json:"tag_id"`
 	UserID uuid.UUID `json:"event_id"`
 }
 
@@ -127,13 +139,13 @@ type CheckinUserOutput struct {
 }
 
 type expectedOutput struct {
-	Res bool `json:"res"`
+	Res bool   `json:"res"`
 	Msg string `json:"msg"`
 	Evidence *string `json:"evidence"`
 }
 
 type TagToWorkshopInput struct {
-	TagID string `json:"tag_id"`
+	TagID      string    `json:"tag_id"`
 	WorkshopID uuid.UUID `json:"workshop_id"`
 }
 
@@ -142,7 +154,7 @@ type TagToWorkshopOutput struct {
 }
 
 type TagToRedeemableInput struct {
-	TagID string `json:"tag_id"`
+	TagID        string    `json:"tag_id"`
 	RedeemableID uuid.UUID `json:"redeemable_id"`
 }
 
@@ -163,6 +175,7 @@ func (h *handler) handleGetMeals(ctx context.Context, input *struct{}) (*GetMeal
 }
 
 func (h *handler) handleGetTshirts(ctx context.Context, input *struct{}) (*GetTshirtsOutput, error) {
+func (h *handler) handleGetTshirts(ctx context.Context, input *struct{}) (*GetTshirtsOutput, error) {
 	tshirts, err := h.nfcService.GetTshirts(ctx)
 	if err != nil {
 		return nil, err
@@ -174,6 +187,7 @@ func (h *handler) handleGetTshirts(ctx context.Context, input *struct{}) (*GetTs
 }
 
 func (h *handler) handleGetWorkshops(ctx context.Context, input *struct{}) (*GetWorkshopsOutput, error) {
+func (h *handler) handleGetWorkshops(ctx context.Context, input *struct{}) (*GetWorkshopsOutput, error) {
 	workshops, err := h.nfcService.GetWorkshops(ctx)
 	if err != nil {
 		return nil, err
@@ -184,6 +198,7 @@ func (h *handler) handleGetWorkshops(ctx context.Context, input *struct{}) (*Get
 	}, nil
 }
 
+func (h *handler) handleGetSocials(ctx context.Context, input *struct{}) (*GetSocialsOutput, error) {
 func (h *handler) handleGetSocials(ctx context.Context, input *struct{}) (*GetSocialsOutput, error) {
 	socials, err := h.nfcService.GetSocials(ctx)
 	if err != nil {
