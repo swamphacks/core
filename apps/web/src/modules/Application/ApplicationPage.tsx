@@ -90,7 +90,12 @@ export default function ApplicationPage({
   }
 
   if (application.data.status === "waitlisted") {
-    return <Waitlisted name={name} />;
+    return (
+      <Waitlisted
+        name={name}
+        dayOf={applicationResponses["registrationType"] === "day-of"}
+      />
+    );
   }
 
   if (application.data.status === "withdrawn") {
@@ -334,9 +339,10 @@ function Rejected({ name }: RejectedProps) {
 
 interface WaitlistedProps {
   name: string;
+  dayOf: boolean;
 }
 
-function Waitlisted({ name }: WaitlistedProps) {
+function Waitlisted({ name, dayOf }: WaitlistedProps) {
   const { leaveWaitlist } = useApplicationActions();
 
   const handleLeave = () => {
@@ -358,9 +364,9 @@ function Waitlisted({ name }: WaitlistedProps) {
           not guarantee admission.
         </p>
         <p>
-          Your place is based on when you joined. If you receive an invitation,
-          you will have 48 hours to confirm your attendance. Keep an eye on your
-          inbox and spam folder.
+          {dayOf
+            ? "Your registration is complete, but your arrival has not been recorded. Go to the day-of standby line at the venue and ask staff to record your arrival. Previously registered hackers take priority. Wait for staff to accept you when space opens."
+            : "Your place is based on when you joined. If you receive an invitation, you will have 48 hours to confirm your attendance. Keep an eye on your inbox and spam folder."}
         </p>
         <Button
           onClick={handleLeave}

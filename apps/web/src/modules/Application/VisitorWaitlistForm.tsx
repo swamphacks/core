@@ -77,7 +77,7 @@ export default function VisitorWaitlistForm() {
       </h1>
       <p className="my-3 text-text-secondary">
         {dayOf
-          ? "Register here, then join the day-of standby line at the venue. Previously registered hackers take priority. Wait for staff to accept you; registration does not guarantee admission."
+          ? "Register here, then check in with staff at the day-of standby line so they can record your arrival. Previously registered hackers take priority. Registration does not guarantee admission."
           : "Submit your information by October 15 at 11:59 PM ET. Joining the waitlist does not guarantee admission. If a spot opens, we will email you with a confirmation deadline."}
       </p>
       {message && (

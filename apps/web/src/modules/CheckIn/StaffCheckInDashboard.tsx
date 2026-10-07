@@ -255,7 +255,7 @@ export default function StaffCheckInDashboard() {
                   </td>
                   <td className="p-3">
                     <div className="flex flex-col gap-2">
-                      {data.hackathonId === "xii" &&
+                      {!hackathonId &&
                         ["waitlisted", "rejected"].includes(row.status) && (
                           <button
                             className={fieldClass}

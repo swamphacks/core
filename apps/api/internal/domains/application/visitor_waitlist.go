@@ -119,10 +119,8 @@ func (s *ApplicationService) SubmitVisitorWaitlist(
 		registrationType := "visitor-waitlist"
 		var arrival *time.Time
 		if dayOf {
-			targetStatus = "waitlist_confirmed"
 			signupSource = "day_of"
 			registrationType = "day-of"
-			arrival = &submittedAt
 		}
 		payload["registrationType"] = registrationType
 		raw, err = json.Marshal(payload)

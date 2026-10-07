@@ -95,7 +95,7 @@ func runVisitorWaitlistIntegration(t *testing.T, dayOf bool) {
 
 	wantMarker, expectedStatus := "visitor-waitlist", "waitlisted"
 	if dayOf {
-		wantMarker, expectedStatus = "day-of", "waitlist_confirmed"
+		wantMarker, expectedStatus = "day-of", "waitlisted"
 		exec(`
             INSERT INTO waitlist_dispatch_policies
                 (hackathon_id,enabled,invitations_open_at,online_join_closes_at,
@@ -182,8 +182,8 @@ func runVisitorWaitlistIntegration(t *testing.T, dayOf bool) {
 					t.Fatal(err)
 				}
 				if dayOf {
-					if source != "day_of" || arrival == nil || !arrival.Equal(saved) {
-						t.Fatal("day-of source or arrival timestamp missing")
+					if source != "day_of" || arrival != nil {
+						t.Fatal("day-of registration must preserve its source without recording arrival")
 					}
 				} else if source != "preregistered" || arrival != nil {
 					t.Fatal("advance registration was recorded as day-of arrival")
