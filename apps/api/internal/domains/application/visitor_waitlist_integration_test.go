@@ -35,6 +35,15 @@ func (*visitorTestStorage) Delete(context.Context, string, string) error {
 func (*visitorTestStorage) Close() error { return nil }
 
 func TestVisitorWaitlistIntegration(t *testing.T) {
+	t.Run("advance", func(t *testing.T) {
+		runVisitorWaitlistIntegration(t, false)
+	})
+	t.Run("day-of", func(t *testing.T) {
+		runVisitorWaitlistIntegration(t, true)
+	})
+}
+
+func runVisitorWaitlistIntegration(t *testing.T, dayOf bool) {
 	const localURL = "postgres://postgres:postgres@127.0.0.1:55432/waitlist_test?sslmode=disable"
 	url := os.Getenv("WAITLIST_TEST_DATABASE_URL")
 	if url == "" {
@@ -43,7 +52,7 @@ func TestVisitorWaitlistIntegration(t *testing.T) {
 	if url != localURL {
 		t.Fatal("requires the dedicated local waitlist_test database")
 	}
-	if !admissionWaitlistIsOpen(time.Now()) {
+	if !dayOf && !admissionWaitlistIsOpen(time.Now()) {
 		t.Skip("visitor registration window has closed")
 	}
 
@@ -83,6 +92,18 @@ func TestVisitorWaitlistIntegration(t *testing.T) {
 		_, _ = pool.Exec(context.Background(),
 			"DELETE FROM hackathons WHERE id=$1", eventID)
 	}()
+
+	wantMarker, expectedStatus := "visitor-waitlist", "waitlisted"
+	if dayOf {
+		wantMarker, expectedStatus = "day-of", "waitlist_confirmed"
+		exec(`
+            INSERT INTO waitlist_dispatch_policies
+                (hackathon_id,enabled,invitations_open_at,online_join_closes_at,
+                in_person_opens_at,invitations_close_at)
+            VALUES ($1,true,now()-interval '3 hours',now()-interval '2 hours',
+                now()-interval '1 hour',now()+interval '1 hour')
+        `, eventID)
+	}
 
 	db := &database.DB{Pool: pool, Query: sqlc.New(pool)}
 	uploadErr := errors.New("test upload failed")
@@ -149,9 +170,25 @@ func TestVisitorWaitlistIntegration(t *testing.T) {
 				`, id, eventID).Scan(&saved, &marker, &email); err != nil {
 					t.Fatal(err)
 				}
-				if marker != "visitor-waitlist" || email != data.PreferredEmail {
+				if marker != wantMarker || email != data.PreferredEmail {
 					t.Fatal("registration metadata or preferred email not saved")
 				}
+				var source string
+				var arrival *time.Time
+				if err := pool.QueryRow(ctx, `
+                    SELECT signup_source,in_person_joined_at
+                    FROM waitlist WHERE user_id=$1 AND hackathon_id=$2
+                `, id, eventID).Scan(&source, &arrival); err != nil {
+					t.Fatal(err)
+				}
+				if dayOf {
+					if source != "day_of" || arrival == nil || !arrival.Equal(saved) {
+						t.Fatal("day-of source or arrival timestamp missing")
+					}
+				} else if source != "preregistered" || arrival != nil {
+					t.Fatal("advance registration was recorded as day-of arrival")
+				}
+
 				again, err := service.SubmitVisitorWaitlist(
 					ctx, data, []byte("%PDF-retry"), id)
 				if err != nil || again == nil || !again.Equal(saved) || store.calls != 1 {
@@ -196,7 +233,7 @@ func TestVisitorWaitlistIntegration(t *testing.T) {
 				}
 				wantStatus := tc.status
 				if !ineligible && !tc.failUpload {
-					wantStatus = "waitlisted"
+					wantStatus = expectedStatus
 				}
 				if status != wantStatus {
 					t.Fatalf("status = %s; want %s", status, wantStatus)

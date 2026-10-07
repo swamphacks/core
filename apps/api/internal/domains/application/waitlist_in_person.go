@@ -9,9 +9,9 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-var ErrInPersonWaitlistEligibility = errors.New("only rejected or waitlisted applicants can join the in-person waitlist")
+var ErrInPersonWaitlistEligibility = errors.New("only rejected, waitlisted, or waitlist-confirmed applicants can join the in-person waitlist")
 var ErrInPersonWaitlistClosed = errors.New("the in-person waitlist is not currently open")
-var ErrInPersonWaitlistPermission = errors.New("an administrator must record in-person arrival")
+var ErrInPersonWaitlistPermission = errors.New("staff must record in-person arrival")
 
 func (s *ApplicationService) RecordInPersonAdmissionWaitlist(
 	ctx context.Context, userID, recordedBy uuid.UUID, now time.Time,
@@ -19,7 +19,7 @@ func (s *ApplicationService) RecordInPersonAdmissionWaitlist(
 	return s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		var admin bool
 		if err := tx.QueryRow(ctx, `
-            SELECT EXISTS (SELECT 1 FROM users WHERE id=$1 AND role='admin')
+            SELECT EXISTS (SELECT 1 FROM users WHERE id=$1 AND role IN ('admin','staff'))
         `, recordedBy).Scan(&admin); err != nil {
 			return err
 		}
@@ -61,7 +61,7 @@ func (s *ApplicationService) RecordInPersonAdmissionWaitlist(
 		if err != nil {
 			return err
 		}
-		if status != "rejected" && status != "waitlisted" {
+		if status != "rejected" && status != "waitlisted" && status != "waitlist_confirmed" {
 			return ErrInPersonWaitlistEligibility
 		}
 
@@ -76,7 +76,7 @@ func (s *ApplicationService) RecordInPersonAdmissionWaitlist(
 			return err
 		}
 		_, err = tx.Exec(ctx, `
-            UPDATE applications SET status='waitlisted', updated_at=now()
+            UPDATE applications SET status='waitlist_confirmed', updated_at=now()
             WHERE id=$1
         `, applicationID)
 		return err

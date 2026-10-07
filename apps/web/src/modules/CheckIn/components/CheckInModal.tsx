@@ -4,7 +4,6 @@ import { CheckInBadge } from "./CheckInBadge";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { useUserEventInfo } from "../hooks/useUserEventInfo";
-import RoleBadge from "@/modules/EventAdmin/RoleBadge";
 import TablerCheck from "~icons/tabler/check";
 import TablerX from "~icons/tabler/x";
 import { toast } from "react-toastify";
@@ -34,7 +33,7 @@ export default function CheckInModal({
   const userInfo = useUserEventInfo(eventId, userId);
   const [rfid, setRfid] = useState<string | null>(null);
 
-  const isLoading = !userInfo;
+  const isLoading = userInfo.isPending;
 
   const isValidForCheckIn =
     userInfo.data &&
@@ -53,9 +52,9 @@ export default function CheckInModal({
     }
 
     try {
-      const res = await api.post(`events/${eventId}/checkin`, {
+      const res = await api.post("hackathon/checkin", {
         json: {
-          user_id: userId,
+          userID: userId,
           rfid: rfid,
         },
       });
@@ -119,7 +118,9 @@ export default function CheckInModal({
 
               <div className="mt-2 flex flex-wrap gap-2">
                 {userInfo.data.event_role && (
-                  <RoleBadge role={userInfo.data.event_role} />
+                  <span className="rounded-md border border-border px-2 py-1 text-xs">
+                    {userInfo.data.event_role}
+                  </span>
                 )}
 
                 <CheckInBadge

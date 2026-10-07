@@ -57,14 +57,15 @@ func (ns NullApplicationAutoDecisionType) Value() (driver.Value, error) {
 type ApplicationStatus string
 
 const (
-	ApplicationStatusStarted     ApplicationStatus = "started"
-	ApplicationStatusSubmitted   ApplicationStatus = "submitted"
-	ApplicationStatusUnderReview ApplicationStatus = "under_review"
-	ApplicationStatusAccepted    ApplicationStatus = "accepted"
-	ApplicationStatusRejected    ApplicationStatus = "rejected"
-	ApplicationStatusWaitlisted  ApplicationStatus = "waitlisted"
-	ApplicationStatusWithdrawn   ApplicationStatus = "withdrawn"
-	ApplicationStatusConfirmed   ApplicationStatus = "confirmed"
+	ApplicationStatusStarted           ApplicationStatus = "started"
+	ApplicationStatusSubmitted         ApplicationStatus = "submitted"
+	ApplicationStatusUnderReview       ApplicationStatus = "under_review"
+	ApplicationStatusAccepted          ApplicationStatus = "accepted"
+	ApplicationStatusRejected          ApplicationStatus = "rejected"
+	ApplicationStatusWaitlisted        ApplicationStatus = "waitlisted"
+	ApplicationStatusWithdrawn         ApplicationStatus = "withdrawn"
+	ApplicationStatusConfirmed         ApplicationStatus = "confirmed"
+	ApplicationStatusWaitlistConfirmed ApplicationStatus = "waitlist_confirmed"
 )
 
 func (e *ApplicationStatus) Scan(src interface{}) error {
@@ -475,6 +476,12 @@ type ApplicationReview struct {
 	UpdatedAt        time.Time  `json:"updated_at"`
 }
 
+type ApplicationWaitlistOffer struct {
+	ApplicationID        uuid.UUID `json:"application_id"`
+	OfferedAt            time.Time `json:"offered_at"`
+	ConfirmationDeadline time.Time `json:"confirmation_deadline"`
+}
+
 type BatRun struct {
 	ID                 uuid.UUID    `json:"id"`
 	AcceptedApplicants []uuid.UUID  `json:"accepted_applicants"`
@@ -618,6 +625,39 @@ type UserRedemption struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 	HackathonID  string    `json:"hackathon_id"`
+}
+
+type Waitlist struct {
+	HackathonID        string     `json:"hackathon_id"`
+	UserID             uuid.UUID  `json:"user_id"`
+	CreatedAt          time.Time  `json:"created_at"`
+	InPersonJoinedAt   *time.Time `json:"in_person_joined_at"`
+	InPersonRecordedBy *uuid.UUID `json:"in_person_recorded_by"`
+	SignupSource       string     `json:"signup_source"`
+}
+
+type WaitlistDispatchPolicy struct {
+	HackathonID        string    `json:"hackathon_id"`
+	Enabled            bool      `json:"enabled"`
+	InvitationsOpenAt  time.Time `json:"invitations_open_at"`
+	OnlineJoinClosesAt time.Time `json:"online_join_closes_at"`
+	InPersonOpensAt    time.Time `json:"in_person_opens_at"`
+	InvitationsCloseAt time.Time `json:"invitations_close_at"`
+}
+
+type WaitlistInvitationOutbox struct {
+	ID                   uuid.UUID  `json:"id"`
+	ApplicationID        uuid.UUID  `json:"application_id"`
+	OfferedAt            time.Time  `json:"offered_at"`
+	ConfirmationDeadline time.Time  `json:"confirmation_deadline"`
+	Recipient            string     `json:"recipient"`
+	FirstName            string     `json:"first_name"`
+	CreatedAt            time.Time  `json:"created_at"`
+	SentAt               *time.Time `json:"sent_at"`
+	CancelledAt          *time.Time `json:"cancelled_at"`
+	Attempts             int32      `json:"attempts"`
+	NextAttemptAt        time.Time  `json:"next_attempt_at"`
+	LastError            *string    `json:"last_error"`
 }
 
 type Workshop struct {

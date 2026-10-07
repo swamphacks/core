@@ -73,6 +73,22 @@ export default function ApplicationPage({
     return <Rejected name={name} />;
   }
 
+  if (application.data.status === "waitlist_confirmed") {
+    return (
+      <div className="w-full sm:max-w-180 mx-auto p-2">
+        <h1 className="text-2xl font-bold">Waitlist confirmed</h1>
+        <p className="mt-3">
+          Your arrival has been recorded. Please remain in the standby line and
+          wait for staff to admit you.
+        </p>
+        <p className="mt-3 text-text-secondary">
+          Previously registered hackers take priority over day-of signups.
+          Admission depends on available capacity.
+        </p>
+      </div>
+    );
+  }
+
   if (application.data.status === "waitlisted") {
     return <Waitlisted name={name} />;
   }

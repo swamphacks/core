@@ -59,6 +59,7 @@ function RouteComponent() {
     "confirmed",
     "rejected",
     "waitlisted",
+    "waitlist_confirmed",
     "withdrawn",
   ].includes(application.data?.status ?? "");
 

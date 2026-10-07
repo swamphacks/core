@@ -22,6 +22,8 @@ type InPersonAdmissionWaitlistInput struct {
 func registerInPersonAdmissionWaitlistRoutes(
 	h *handler, group huma.API, mw *middleware.Middleware,
 ) {
+	registerCheckInDashboardRoutes(h, group, mw)
+	registerStandbyAcceptRoutes(h, group, mw)
 	huma.Register(group, huma.Operation{
 		OperationID: "record-in-person-admission-waitlist",
 		Method:      http.MethodPost,
@@ -29,7 +31,7 @@ func registerInPersonAdmissionWaitlistRoutes(
 		Summary:     "Record In-Person Waitlist Arrival",
 		Tags:        []string{"Application"},
 		Middlewares: huma.Middlewares{
-			mw.Auth.RequireAuthHuma, mw.Auth.RequireAdminHuma,
+			mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma,
 		},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		Errors:        []int{401, 403, 409, 500},
@@ -58,6 +60,6 @@ func (h *handler) handleRecordInPersonAdmissionWaitlist(
 		return nil, huma.Error500InternalServerError("Unable to record in-person arrival")
 	}
 	output := &AdmissionWaitlistOutput{}
-	output.Body.Status = "waitlisted"
+	output.Body.Status = "waitlist_confirmed"
 	return output, nil
 }

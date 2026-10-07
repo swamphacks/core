@@ -24,6 +24,7 @@ var ErrVisitorWaitlistEligibility = errors.New(
 	"only visitors with no completed application can use this form")
 
 func registerVisitorWaitlistRoutes(h *handler, group huma.API, mw *middleware.Middleware) {
+	registerVisitorRegistrationWindowRoutes(h, group, mw)
 	huma.Register(group, huma.Operation{
 		OperationID:   "submit-visitor-waitlist",
 		Method:        http.MethodPost,
@@ -103,6 +104,32 @@ func (s *ApplicationService) SubmitVisitorWaitlist(
 			return ErrGetHackathon
 		}
 
+		dayOf := false
+		if err := tx.QueryRow(ctx, `
+            SELECT EXISTS (
+                SELECT 1 FROM waitlist_dispatch_policies
+                WHERE hackathon_id=$1 AND enabled
+                    AND in_person_opens_at <= $2 AND invitations_close_at > $2
+            )
+        `, activeID, submittedAt).Scan(&dayOf); err != nil {
+			return err
+		}
+		targetStatus := "waitlisted"
+		signupSource := "preregistered"
+		registrationType := "visitor-waitlist"
+		var arrival *time.Time
+		if dayOf {
+			targetStatus = "waitlist_confirmed"
+			signupSource = "day_of"
+			registrationType = "day-of"
+			arrival = &submittedAt
+		}
+		payload["registrationType"] = registrationType
+		raw, err = json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+
 		var id uuid.UUID
 		var status string
 		var existing []byte
@@ -116,10 +143,10 @@ func (s *ApplicationService) SubmitVisitorWaitlist(
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return err
 		}
-		if err == nil && status == "waitlisted" {
+		if err == nil && (status == "waitlisted" || status == "waitlist_confirmed") {
 			var old map[string]any
 			if json.Unmarshal(existing, &old) == nil &&
-				old["registrationType"] == "visitor-waitlist" &&
+				(old["registrationType"] == "visitor-waitlist" || old["registrationType"] == "day-of") &&
 				role == "applicant" && previousSubmission != nil {
 				submittedAt = *previousSubmission
 				return nil
@@ -128,7 +155,7 @@ func (s *ApplicationService) SubmitVisitorWaitlist(
 		if role != "visitor" || (err == nil && status != "started") {
 			return ErrVisitorWaitlistEligibility
 		}
-		if !admissionWaitlistIsOpen(time.Now()) {
+		if !dayOf && !admissionWaitlistIsOpen(submittedAt) {
 			return ErrWaitlistClosed
 		}
 
@@ -148,17 +175,20 @@ func (s *ApplicationService) SubmitVisitorWaitlist(
 			return err
 		}
 		if _, err := tx.Exec(ctx, `
-            UPDATE applications SET status='waitlisted', application=$2,
+            UPDATE applications SET status=$4::application_status, application=$2,
                 submitted_at=$3, saved_at=$3, updated_at=$3
             WHERE id=$1
-        `, id, raw, submittedAt); err != nil {
+        `, id, raw, submittedAt, targetStatus); err != nil {
 			return err
 		}
 
 		if _, err := tx.Exec(ctx, `
-            INSERT INTO waitlist (hackathon_id,user_id) VALUES ($1,$2)
-            ON CONFLICT (hackathon_id,user_id) DO NOTHING
-        `, activeID, userID); err != nil {
+            INSERT INTO waitlist (hackathon_id,user_id,signup_source,in_person_joined_at)
+            VALUES ($1,$2,$3,$4)
+            ON CONFLICT (hackathon_id,user_id) DO UPDATE
+            SET signup_source=EXCLUDED.signup_source,
+                in_person_joined_at=COALESCE(waitlist.in_person_joined_at,EXCLUDED.in_person_joined_at)
+        `, activeID, userID, signupSource, arrival); err != nil {
 			return err
 		}
 

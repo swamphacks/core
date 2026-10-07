@@ -346,53 +346,61 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 
 	})
 
-	t.Run("in-person priority and concurrent dispatch preserve capacity", func(t *testing.T) {
+	t.Run("standby requires staff acceptance and preserves priority", func(t *testing.T) {
 		online := newApplicant(t, "rejected", "applicant")
 		present := newApplicant(t, "rejected", "applicant")
-		admin := newApplicant(t, "started", "admin")
-		for _, id := range []uuid.UUID{online, present} {
-			exec("UPDATE users SET email=$2 WHERE id=$1", id, id.String()+"@example.test")
+		dayOf := newApplicant(t, "rejected", "applicant")
+		staff := newApplicant(t, "started", "staff")
+
+		for _, id := range []uuid.UUID{online, present, dayOf} {
 			if err := service.JoinAdmissionWaitlist(ctx, id); err != nil {
 				t.Fatal(err)
 			}
 		}
-		exec("UPDATE waitlist SET created_at=now()-interval '1 day' WHERE user_id=$1", online)
-		exec("UPDATE hackathons SET max_attendees=1 WHERE id=$1", hackathonID)
+		exec("UPDATE waitlist SET signup_source='day_of' WHERE user_id=$1", dayOf)
 
 		now := time.Now().UTC()
 		exec(`
-            INSERT INTO waitlist_dispatch_policies
-              (hackathon_id, enabled, invitations_open_at, online_join_closes_at,
-               in_person_opens_at, invitations_close_at)
-            VALUES ($1, true, $2, $3, $4, $5)
-        `, hackathonID, now.Add(-3*time.Hour), now.Add(-2*time.Hour),
+			INSERT INTO waitlist_dispatch_policies
+				(hackathon_id,enabled,invitations_open_at,online_join_closes_at,
+				in_person_opens_at,invitations_close_at)
+			VALUES ($1,true,$2,$3,$4,$5)
+		`, hackathonID, now.Add(-3*time.Hour), now.Add(-2*time.Hour),
 			now.Add(-time.Hour), now.Add(time.Hour))
 		defer exec("DELETE FROM waitlist_dispatch_policies WHERE hackathon_id=$1", hackathonID)
 
 		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, online, now); !errors.Is(err, ErrInPersonWaitlistPermission) {
-			t.Fatalf("non-admin arrival recording: %v", err)
+			t.Fatalf("non-staff arrival recording: %v", err)
 		}
-		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, admin, now.Add(-2*time.Hour)); !errors.Is(err, ErrInPersonWaitlistClosed) {
+		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, staff, now.Add(-2*time.Hour)); !errors.Is(err, ErrInPersonWaitlistClosed) {
 			t.Fatalf("early arrival recording: %v", err)
 		}
-		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, admin, now); err != nil {
+
+		// A day-of signup arrives first; preregistered hackers still take priority.
+		if err := service.RecordInPersonAdmissionWaitlist(ctx, dayOf, staff, now.Add(-time.Minute)); err != nil {
 			t.Fatal(err)
 		}
-		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, admin, now.Add(time.Minute)); err != nil {
+		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, staff, now); err != nil {
+			t.Fatal(err)
+		}
+		if err := service.RecordInPersonAdmissionWaitlist(ctx, present, staff, now.Add(time.Minute)); err != nil {
 			t.Fatal(err)
 		}
 		var arrival time.Time
-		if err := pool.QueryRow(ctx, `
-            SELECT in_person_joined_at FROM waitlist WHERE user_id=$1
-        `, present).Scan(&arrival); err != nil {
+		if err := pool.QueryRow(ctx,
+			"SELECT in_person_joined_at FROM waitlist WHERE user_id=$1", present,
+		).Scan(&arrival); err != nil {
 			t.Fatal(err)
 		}
 		if arrival.Sub(now) > time.Millisecond || now.Sub(arrival) > time.Millisecond {
 			t.Fatal("repeat recording changed arrival time")
 		}
+		assertState(t, present, "waitlist_confirmed", "applicant")
+		assertState(t, dayOf, "waitlist_confirmed", "applicant")
 
-		results := make(chan WaitlistDispatchResult, 8)
+		// Concurrent scheduler runs must not automatically admit anyone day-of.
 		failures := make(chan error, 8)
+		results := make(chan WaitlistDispatchResult, 8)
 		var wg sync.WaitGroup
 		for i := 0; i < 8; i++ {
 			wg.Add(1)
@@ -407,20 +415,88 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 			}()
 		}
 		wg.Wait()
-		close(results)
 		close(failures)
+		close(results)
 		for err := range failures {
-			t.Errorf("concurrent dispatch: %v", err)
+			t.Errorf("dispatch: %v", err)
 		}
-		offered := 0
 		for result := range results {
-			offered += result.Offered
+			if result.Offered != 0 {
+				t.Fatalf("automatic day-of offers: %d", result.Offered)
+			}
 		}
-		if offered != 1 {
-			t.Fatalf("offered %d spots, want 1", offered)
+		assertState(t, present, "waitlist_confirmed", "applicant")
+
+		if err := service.acceptStandby(ctx, hackathonID, present, online, now); !errors.Is(err, ErrInPersonWaitlistPermission) {
+			t.Fatalf("non-staff acceptance: %v", err)
+		}
+		if err := service.acceptStandby(ctx, hackathonID, present, staff, now.Add(-2*time.Hour)); !errors.Is(err, errStandbyClosed) {
+			t.Fatalf("acceptance before opening: %v", err)
+		}
+		if err := service.acceptStandby(ctx, hackathonID, dayOf, staff, now); !errors.Is(err, errStandbyPriority) {
+			t.Fatalf("day-of signup bypassed preregistered priority: %v", err)
+		}
+
+		// Two staff requests for the same hacker can only accept them once.
+		acceptResults := make(chan error, 2)
+		for i := 0; i < 2; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				acceptResults <- service.acceptStandby(ctx, hackathonID, present, staff, now)
+			}()
+		}
+		wg.Wait()
+		close(acceptResults)
+		successes := 0
+		for err := range acceptResults {
+			if err == nil {
+				successes++
+				continue
+			}
+			if !errors.Is(err, errStandbyPriority) {
+				t.Errorf("concurrent acceptance: %v", err)
+			}
+		}
+		if successes != 1 {
+			t.Fatalf("successful acceptances=%d; want 1", successes)
 		}
 		assertState(t, present, "accepted", "applicant")
+		assertState(t, dayOf, "waitlist_confirmed", "applicant")
 		assertState(t, online, "waitlisted", "applicant")
+
+		var deadlineExists bool
+		if err := pool.QueryRow(ctx, `
+			SELECT EXISTS(
+				SELECT 1 FROM application_waitlist_offers o
+				JOIN applications a ON a.id=o.application_id
+				WHERE a.user_id=$1 AND a.hackathon_id=$2
+					AND o.confirmation_deadline>o.offered_at
+			)
+		`, present, hackathonID).Scan(&deadlineExists); err != nil {
+			t.Fatal(err)
+		}
+		if !deadlineExists {
+			t.Fatal("manual acceptance did not create confirmation deadline")
+		}
+
+		if err := service.acceptStandby(ctx, hackathonID, dayOf, staff, now); err != nil {
+			t.Fatal(err)
+		}
+		assertState(t, dayOf, "accepted", "applicant")
+		if err := service.acceptStandby(ctx, hackathonID, online, staff, now); !errors.Is(err, errStandbyEmpty) {
+			t.Fatalf("absent hacker was accepted: %v", err)
+		}
+
+		var source string
+		if err := pool.QueryRow(ctx,
+			"SELECT signup_source FROM waitlist WHERE user_id=$1", dayOf,
+		).Scan(&source); err != nil {
+			t.Fatal(err)
+		}
+		if source != "day_of" {
+			t.Fatal("acceptance lost day-of signup provenance")
+		}
 	})
 
 	t.Run("join rejects ineligible statuses", func(t *testing.T) {
