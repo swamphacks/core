@@ -12,6 +12,7 @@ import GatorVR from "./assets/clubs/GatorVR.svg";
 import SPCB from "./assets/clubs/SPCB.svg";
 import SEC from "./assets/clubs/SEC.svg";
 import GatorAI from "./assets/clubs/GatorAI.svg";
+import OSC from "./assets/clubs/OSC.svg";
 
 import Bat1 from "./assets/bat_without_sign1.png";
 import Bat2 from "./assets/bat_without_sign2.png";
@@ -48,6 +49,7 @@ const studentOrgPartners: StudentOrgPartner[] = [
   { name: "SPCB", logo: SPCB, url: "https://www.instagram.com/pcbuildinguf/" },
   { name: "SEC", logo: SEC, url: "https://www.instagram.com/ufsec/" },
   { name: "GatorAI", logo: GatorAI, url: "https://www.instagram.com/uf_gatorai/" },
+  { name: "OSC", logo: OSC, url: "https://www.instagram.com/uf_osc/" },
 ];
 
 export default function StudentOrgs() {
