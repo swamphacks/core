@@ -12,6 +12,7 @@ const tracks = [
   {
     name: "Overall Prize",
     icon: Star,
+    prizeAttribution: "Prize brought to you by Vobile!",
     description:
       "All projects are considered for the Overall Prize. This track recognizes the most outstanding project at SwampHacks XII, regardless of category, based on innovation, technical achievement, impact, and overall execution.",
   },
@@ -24,6 +25,7 @@ const tracks = [
   {
     name: "Artificial Intelligence & Machine Learning",
     icon: Robot,
+    prizeAttribution: "Prize brought to you by DSI!",
     description:
       "Push the boundaries of what's possible. Leverage AI to build projects powered by artificial intelligence, from LLMs and AI agents to computer vision and machine learning that make an impact across any domain.",
   },
@@ -97,6 +99,9 @@ export default function Tracks() {
             >
               <img className="track-icon" src={track.icon} />
               <span className="track-header">{track.name}</span>
+              {track.prizeAttribution && (
+                <p className="track-attribution">{track.prizeAttribution}</p>
+              )}
             </div>
           ))}
         </div>
@@ -119,7 +124,14 @@ export default function Tracks() {
           <div>
             <div className="modal-track">
               <img className="modal-track-icon" src={selectedTrack?.icon} />
-              <p className="track-title">{selectedTrack?.name}</p>
+              <div className="modal-track-heading">
+                <p className="track-title">{selectedTrack?.name}</p>
+                {selectedTrack?.prizeAttribution && (
+                  <p className="modal-track-attribution">
+                    {selectedTrack.prizeAttribution}
+                  </p>
+                )}
+              </div>
             </div>
 
             <p className="modal-track-description">

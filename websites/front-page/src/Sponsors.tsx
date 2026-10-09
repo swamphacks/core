@@ -13,6 +13,9 @@ import PureButtons from "./assets/sponsors/pure-buttons.svg";
 import UFCise from "./assets/sponsors/uf-cise-white.png";
 import CpeLab from "./assets/sponsors/cpe-lab.png";
 import DeepSpace from "./assets/sponsors/deepspace.png";
+import MLH from "./assets/sponsors/MLH_logo.svg";
+import DSI from "./assets/sponsors/DSI_logo.svg";
+import Photon from "./assets/sponsors/Photon.svg";
 
 type Sponsor = {
   name: string;
@@ -79,6 +82,24 @@ const smallSponsors: Sponsor[] = [
     textMark: null,
     url: "https://deep.space/",
   },
+  {
+    name: "MLH",
+    logo: MLH,
+    textMark: null,
+    url: "https://www.mlh.com/",
+  },
+  {
+    name: "DSI",
+    logo: DSI,
+    textMark: null,
+    url: "https://www.instagram.com/uf_dsi/",
+  },
+  {
+    name: "Photon",
+    logo: Photon,
+    textMark: null,
+    url: "https://photon.codes/",
+  }
 ];
 // import SponsorsImg from "./assets/Sponsors.png";
 // import SponsorsSvg from "./assets/Sponsors.svg";
