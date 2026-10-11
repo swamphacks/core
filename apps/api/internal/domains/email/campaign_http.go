@@ -269,10 +269,7 @@ func (h *emailCampaignHandler) handleUpdateCampaign(ctx context.Context, input *
 		params.Body = *input.Body.Body
 	}
 	if input.Body.Format != nil {
-		params.Format = sqlc.NullEmailCampaignFormat{
-			EmailCampaignFormat: *input.Body.Format,
-			Valid:               true,
-		}
+		params.Format = input.Body.Format
 	}
 	if input.Body.RecipientTypes != nil {
 		params.RecipientTypes = *input.Body.RecipientTypes
