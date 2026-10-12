@@ -75,9 +75,10 @@ type SessionContext struct {
 }
 
 type SessionType string
+
 const (
-    SessionTypeUser SessionType   = "user"
-    SessionTypeAPIKey SessionType = "api-key"
+	SessionTypeUser   SessionType = "user"
+	SessionTypeAPIKey SessionType = "api-key"
 )
 
 func NewAuthMiddleware(userRepo *repository.UserRepository, db *database.DB, logger zerolog.Logger, cfg *config.Config) *AuthMiddleware {
@@ -141,6 +142,14 @@ func (m *AuthMiddleware) RequireStaffHuma(ctx huma.Context, next func(huma.Conte
 	})).ServeHTTP(w, r.WithContext(ctx.Context()))
 }
 
+func (m *AuthMiddleware) RequireMobileHuma(ctx huma.Context, next func(huma.Context)) {
+	r, w := humachi.Unwrap(ctx)
+
+	m.RequireMobileAuth(http.HandlerFunc(func(_ http.ResponseWriter, newR *http.Request) {
+		next(huma.WithContext(ctx, newR.Context()))
+	})).ServeHTTP(w, r.WithContext(ctx.Context()))
+}
+
 func (m *AuthMiddleware) RequireMobileAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.logger.Trace().Msg("Incoming mobile request")
@@ -159,7 +168,7 @@ func (m *AuthMiddleware) RequireMobileAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		if parts[0] != "Key" || parts[1] != m.cfg.MobileAuthKey {
+		if m.cfg.MobileAuthKey == "" || parts[0] != "Key" || parts[1] != m.cfg.MobileAuthKey {
 			m.logger.Warn().Msg("Authorization header is not a valid value")
 			response.SendError(w, http.StatusUnauthorized, response.NewError("no_auth", "You are not authorized"))
 			return

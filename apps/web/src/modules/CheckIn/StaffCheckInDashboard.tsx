@@ -2,8 +2,16 @@ import { HTTPError } from "ky";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/ky";
+import { Modal } from "@/components/ui/Modal";
+import QRCode from "react-qr-code";
+import { DialogTrigger } from "react-aria-components";
+import { Sheet } from "@/components/ui/Sheet";
+import ApplicationViewer from "@/modules/Application/ApplicationViewer";
+import useParsedForm from "@/modules/Application/hooks/useParsedForm";
+import { Button } from "@/components/ui/Button";
 
 interface DashboardRow {
+  applicationId: string;
   userId: string;
   name: string;
   email: string;
@@ -57,7 +65,12 @@ function timestamp(value: string | null) {
     : "—";
 }
 
-export default function StaffCheckInDashboard() {
+export default function StaffCheckInDashboard({
+  isAdmin,
+}: {
+  isAdmin: boolean;
+}) {
+  const parsedForm = useParsedForm();
   const [search, setSearch] = useState("");
   const [hackathonId, setHackathonId] = useState("");
   const [status, setStatus] = useState("");
@@ -66,6 +79,9 @@ export default function StaffCheckInDashboard() {
   const [showFilters, setShowFilters] = useState(false);
   const [busyUser, setBusyUser] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
+  const [selectedAttendee, setSelectedAttendee] = useState<DashboardRow | null>(
+    null,
+  );
 
   const dashboard = useQuery({
     queryKey: ["check-in-dashboard", hackathonId, search, status, redeemableId],
@@ -296,6 +312,13 @@ export default function StaffCheckInDashboard() {
                         ? "Day-of"
                         : "Preregistered"}
                     </span>
+                    <button
+                      type="button"
+                      className="block mt-2 text-sm font-medium text-blue-600 underline underline-offset-2 dark:text-blue-400"
+                      onClick={() => setSelectedAttendee(row)}
+                    >
+                      Show QR code
+                    </button>
                     <details className="mt-2 text-text-secondary">
                       <summary className="cursor-pointer text-xs">
                         Details
@@ -329,6 +352,21 @@ export default function StaffCheckInDashboard() {
                     {timestamp(row.standbyArrival)}
                   </td>
                   <td className="p-4 align-top min-w-[190px]">
+                    {isAdmin && (
+                      <DialogTrigger>
+                        <Button variant="secondary" className={actionClass}>
+                          View application
+                        </Button>
+                        <Sheet sheetClassName="w-full sm:w-160 lg:w-200">
+                          {parsedForm && (
+                            <ApplicationViewer
+                              parsedForm={parsedForm}
+                              applicationId={row.applicationId}
+                            />
+                          )}
+                        </Sheet>
+                      </DialogTrigger>
+                    )}
                     {!hackathonId && awaitingArrival(row) && (
                       <button
                         type="button"
@@ -373,6 +411,52 @@ export default function StaffCheckInDashboard() {
           </table>
         </div>
       )}
+
+      <Modal
+        title="Attendee QR code"
+        dialogAriaLabel="Attendee QR code"
+        isOpen={selectedAttendee !== null}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setSelectedAttendee(null);
+        }}
+        size="sm"
+      >
+        {selectedAttendee && (
+          <div className="flex flex-col items-center gap-4">
+            <div className="text-center">
+              <p className="font-semibold">{selectedAttendee.name}</p>
+              <p className="text-sm text-text-secondary break-all">
+                {selectedAttendee.email}
+              </p>
+              <p className="mt-2 text-sm capitalize">
+                Application status:{" "}
+                {selectedAttendee.status.replaceAll("_", " ")}
+              </p>
+            </div>
+            <div className="w-full max-w-64 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+              <QRCode
+                size={224}
+                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                value={`IDENT::${selectedAttendee.userId}`}
+                viewBox="0 0 256 256"
+                bgColor="#FFFFFF"
+                fgColor="#000000"
+                level="H"
+              />
+            </div>
+            <p className="text-center font-mono text-xs text-text-secondary break-all">
+              ID: {selectedAttendee.userId}
+            </p>
+            <button
+              type="button"
+              className={`${actionClass} self-stretch`}
+              onClick={() => setSelectedAttendee(null)}
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </Modal>
     </main>
   );
 }

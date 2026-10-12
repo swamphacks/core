@@ -29,8 +29,17 @@ export default function ApplicationViewer({
 }: ApplicationResponsesProps) {
   const extendedApplication = useExtendedApplication(applicationId);
 
-  if (!extendedApplication.data || extendedApplication.isLoading) {
+  if (!extendedApplication.data && extendedApplication.isLoading) {
     return <p>Loading...</p>;
+  }
+
+  if (!extendedApplication.data) {
+    return (
+      <p>
+        Unable to find user application. This is most likely because the user
+        never submitted an application or their application is incomplete.
+      </p>
+    );
   }
 
   const appFields = extendedApplication.data.application;
@@ -105,6 +114,7 @@ export default function ApplicationViewer({
                 <div className="space-y-1 mt-2">
                   <p>User ID: {extendedApplication.data.user.id}</p>
                   <p>Email: {extendedApplication.data.user.email}</p>
+                  <p>Status: {extendedApplication.data.status}</p>
                 </div>
               </div>
               {Object.entries(parsedForm).map(([sectionLabel, fields]) => (

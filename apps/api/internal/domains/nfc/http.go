@@ -2,13 +2,13 @@ package nfc
 
 import (
 	"context"
-	"net/http"
 	"errors"
+	"net/http"
 
-	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
@@ -21,9 +21,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 		Method:      http.MethodGet,
 		Summary:     "Get all Meals from redeemables table",
 		Description: "Get all Meals from redeemables table",
-		Tags: []string{"NFC"},
-		Path: "/redeemables/meals",
-		Errors: []int{http.StatusInternalServerError, http.StatusNotFound},
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/redeemables/meals",
+		Errors:      []int{http.StatusInternalServerError, http.StatusNotFound},
 	}, nfcHandler.handleGetMeals)
 
 	huma.Register(group, huma.Operation{
@@ -31,9 +32,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 		Method:      http.MethodGet,
 		Summary:     "Get all Tshirts from redeemables table",
 		Description: "Get all Tshirts from redeemables table",
-		Tags: []string{"NFC"},
-		Path: "/redeemables/Tshirt",
-		Errors: []int{http.StatusInternalServerError, http.StatusNotFound},
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/redeemables/Tshirt",
+		Errors:      []int{http.StatusInternalServerError, http.StatusNotFound},
 	}, nfcHandler.handleGetTshirts)
 
 	huma.Register(group, huma.Operation{
@@ -41,9 +43,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 		Method:      http.MethodPost,
 		Summary:     "Checkin user with NFC tag",
 		Description: "Checkin user with NFC tag",
-		Tags: []string{"NFC"},
-		Path: "/checkin/nfc-links",
-		Errors: []int{http.StatusUnprocessableEntity, http.StatusInternalServerError, http.StatusNotFound},
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/checkin/nfc-links",
+		Errors:      []int{http.StatusUnprocessableEntity, http.StatusInternalServerError, http.StatusNotFound},
 	}, nfcHandler.handleCheckinUser)
 
 	huma.Register(group, huma.Operation{
@@ -51,9 +54,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 		Method:      http.MethodPost,
 		Summary:     "Tag user to workshop with NFC tag",
 		Description: "Tag user to workshop with NFC tag",
-		Tags: []string{"NFC"},
-		Path: "/workshops/tag",
-		Errors: []int{http.StatusUnprocessableEntity, http.StatusInternalServerError, http.StatusNotFound},
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/workshops/tag",
+		Errors:      []int{http.StatusUnprocessableEntity, http.StatusInternalServerError, http.StatusNotFound},
 	}, nfcHandler.handleTagToWorkshop)
 
 	huma.Register(group, huma.Operation{
@@ -61,9 +65,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 		Method:      http.MethodPost,
 		Summary:     "Tag user to redeemable with NFC tag",
 		Description: "Tag user to redeemable with NFC tag",
-		Tags: []string{"NFC"},
-		Path: "/redeemables/tag",
-		Errors: []int{http.StatusUnprocessableEntity, http.StatusInternalServerError, http.StatusNotFound},
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/redeemables/tag",
+		Errors:      []int{http.StatusUnprocessableEntity, http.StatusInternalServerError, http.StatusNotFound},
 	}, nfcHandler.handleTagToRedeemable)
 
 	huma.Register(group, huma.Operation{
@@ -71,9 +76,10 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 		Method:      http.MethodGet,
 		Summary:     "Get all workshops",
 		Description: "Get all workshops",
-		Tags: []string{"NFC"},
-		Path: "/workshops",
-		Errors: []int{http.StatusInternalServerError, http.StatusNotFound},
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/workshops",
+		Errors:      []int{http.StatusInternalServerError, http.StatusNotFound},
 	}, nfcHandler.handleGetWorkshops)
 
 	huma.Register(group, huma.Operation{
@@ -81,13 +87,12 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 		Method:      http.MethodGet,
 		Summary:     "Get all socials",
 		Description: "Get all socials",
-		Tags: []string{"NFC"},
-		Path: "/workshops/socials",
-		Errors: []int{ http.StatusInternalServerError, http.StatusNotFound},
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/workshops/socials",
+		Errors:      []int{http.StatusInternalServerError, http.StatusNotFound},
 	}, nfcHandler.handleGetSocials)
 
-
-		
 }
 
 type handler struct {
@@ -130,8 +135,8 @@ type CheckinUserOutput struct {
 }
 
 type ExpectedBody struct {
-	Res bool   `json:"res"`
-	Msg string `json:"msg"`
+	Res      bool    `json:"res"`
+	Msg      string  `json:"msg"`
 	Evidence *string `json:"evidence"`
 }
 
@@ -160,7 +165,6 @@ type TagToRedeemableInput struct {
 type TagToRedeemableOutput struct {
 	Body string `json:"body"`
 }
-
 
 func (h *handler) handleGetMeals(ctx context.Context, input *struct{}) (*GetMealsOutput, error) {
 	meals, err := h.nfcService.GetMeals(ctx)
@@ -215,6 +219,8 @@ func (h *handler) handleTagToRedeemable(ctx context.Context, input *TagToRedeema
 			switch pgErr.Code {
 			case "P0001":
 				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Hacker reached the limit for this item"}}, nil
+			case "P0005":
+				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "No redeemables left in stock"}}, nil
 			case "23503":
 				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Tag has not been checked in"}}, nil
 			}

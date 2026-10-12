@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -21,6 +22,7 @@ type CheckInDashboardInput struct {
 }
 
 type CheckInDashboardRow struct {
+	ApplicationID  uuid.UUID       `json:"applicationId"`
 	UserID         uuid.UUID       `json:"userId"`
 	Name           string          `json:"name"`
 	Email          string          `json:"email"`
@@ -79,16 +81,23 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
 	}
 
 	err = h.applicationService.db.Pool.QueryRow(ctx, `
-		SELECT
-			count(*) FILTER (WHERE a.status::text='confirmed'),
-			count(*) FILTER (WHERE a.status::text='confirmed' AND u.checked_in_at IS NOT NULL),
-			count(*) FILTER (WHERE w.signup_source='day_of'),
-			count(*) FILTER (WHERE a.status::text='waitlist_confirmed')
-		FROM applications a
-		JOIN users u ON u.id=a.user_id
-		LEFT JOIN waitlist w ON w.hackathon_id=a.hackathon_id AND w.user_id=a.user_id
-		WHERE a.hackathon_id=$1 AND NOT a.is_fake AND NOT u.is_fake
-	`, output.Body.HackathonID).Scan(
+    SELECT
+        count(*) FILTER (WHERE a.status::text='confirmed'),
+        count(*) FILTER (WHERE a.status::text='confirmed' AND ci.user_id IS NOT NULL),
+        count(*) FILTER (WHERE w.signup_source='day_of'),
+        count(*) FILTER (WHERE a.status::text='waitlist_confirmed')
+    FROM applications a
+    JOIN users u ON u.id=a.user_id
+    LEFT JOIN LATERAL (
+        SELECT ntu.user_id, ntu.created_at
+        FROM nfc_tags_user ntu
+        WHERE ntu.user_id=u.id
+        ORDER BY ntu.created_at ASC NULLS LAST
+        LIMIT 1
+    ) ci ON true
+    LEFT JOIN waitlist w ON w.hackathon_id=a.hackathon_id AND w.user_id=a.user_id
+    WHERE a.hackathon_id=$1 AND NOT a.is_fake AND NOT u.is_fake
+`, output.Body.HackathonID).Scan(
 		&output.Body.Confirmed, &output.Body.ConfirmedCheckedIn,
 		&output.Body.DayOfSignups, &output.Body.StandbyWaiting,
 	)
@@ -97,39 +106,48 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
 	}
 
 	rows, err := h.applicationService.db.Pool.Query(ctx, `
-		SELECT u.id,
-			COALESCE(NULLIF(trim(concat_ws(' ',a.application->>'firstName',
-				a.application->>'lastName')),''),u.name),
-			COALESCE(NULLIF(u.preferred_email,''),u.email),
-			a.status::text, u.checked_in_at, u.rfid,
-			COALESCE(w.signup_source,'preregistered'),w.in_person_joined_at,
-			COALESCE((
-				SELECT jsonb_agg(jsonb_build_object(
-					'redeemableId',r.id,'name',r.name,'amount',ur.amount
-				) ORDER BY r.name,r.id)
-				FROM user_redemptions ur JOIN redeemables r ON r.id=ur.redeemable_id
-				WHERE ur.user_id=u.id AND ur.hackathon_id=a.hackathon_id
-					AND r.hackathon_id=a.hackathon_id AND ur.amount>0
-			),'[]'::jsonb)
-		FROM applications a JOIN users u ON u.id=a.user_id
-		LEFT JOIN waitlist w ON w.hackathon_id=a.hackathon_id AND w.user_id=a.user_id
-		WHERE a.hackathon_id=$1 AND NOT a.is_fake AND NOT u.is_fake
-			AND ($2='' OR strpos(lower(concat_ws(' ',u.name,
-				a.application->>'firstName',a.application->>'lastName',
-				u.email,u.preferred_email)),lower($2))>0)
-			AND ($3='' OR a.status::text=$3)
-			AND ($4='' OR ($4='yes' AND u.checked_in_at IS NOT NULL)
-				OR ($4='no' AND u.checked_in_at IS NULL))
-			AND ($5::uuid IS NULL OR EXISTS (
-				SELECT 1 FROM user_redemptions ur JOIN redeemables r ON r.id=ur.redeemable_id
-				WHERE ur.user_id=u.id AND ur.hackathon_id=a.hackathon_id
-					AND r.hackathon_id=a.hackathon_id
-					AND ur.redeemable_id=$5 AND ur.amount>0
-			))
-		ORDER BY CASE WHEN a.status::text='waitlist_confirmed' THEN 0 ELSE 1 END,
-			CASE WHEN w.signup_source='day_of' THEN 1 ELSE 0 END,
-			w.in_person_joined_at NULLS LAST,w.created_at NULLS LAST,u.id
-	`, output.Body.HackathonID, input.Search, input.Status, input.CheckedIn, redeemableID)
+    SELECT a.id, u.id,
+        COALESCE(NULLIF(trim(concat_ws(' ',a.application->>'firstName',
+            a.application->>'lastName')),''),u.name),
+        COALESCE(NULLIF(u.preferred_email,''),u.email),
+        a.status::text, ci.created_at, u.rfid,
+        COALESCE(w.signup_source,'preregistered'),w.in_person_joined_at,
+        COALESCE((
+            SELECT jsonb_agg(jsonb_build_object(
+                'redeemableId',r.id,'name',r.name,'amount',ur.amount
+            ) ORDER BY r.name,r.id)
+            FROM user_redemptions ur JOIN redeemables r ON r.id=ur.redeemable_id
+            WHERE ur.user_id=u.id AND ur.hackathon_id=a.hackathon_id
+                AND r.hackathon_id=a.hackathon_id AND ur.amount>0
+        ),'[]'::jsonb)
+    FROM applications a
+    JOIN users u ON u.id=a.user_id
+    LEFT JOIN LATERAL (
+        SELECT ntu.user_id, ntu.created_at
+        FROM nfc_tags_user ntu
+        WHERE ntu.user_id=u.id
+        ORDER BY ntu.created_at ASC NULLS LAST
+        LIMIT 1
+    ) ci ON true
+    LEFT JOIN waitlist w ON w.hackathon_id=a.hackathon_id AND w.user_id=a.user_id
+    WHERE a.hackathon_id=$1 AND NOT a.is_fake AND NOT u.is_fake
+        AND ($2='' OR strpos(lower(concat_ws(' ',u.name,
+            a.application->>'firstName',a.application->>'lastName',
+            u.email,u.preferred_email)),lower($2))>0)
+        AND ($3='' OR a.status::text=$3)
+        AND ($4='' OR ($4='yes' AND ci.user_id IS NOT NULL)
+            OR ($4='no' AND ci.user_id IS NULL))
+        AND ($5::uuid IS NULL OR EXISTS (
+            SELECT 1 FROM user_redemptions ur JOIN redeemables r ON r.id=ur.redeemable_id
+            WHERE ur.user_id=u.id AND ur.hackathon_id=a.hackathon_id
+                AND r.hackathon_id=a.hackathon_id
+                AND ur.redeemable_id=$5 AND ur.amount>0
+        ))
+    ORDER BY CASE WHEN a.status::text='waitlist_confirmed' THEN 0 ELSE 1 END,
+        CASE WHEN w.signup_source='day_of' THEN 1 ELSE 0 END,
+        w.in_person_joined_at NULLS LAST,w.created_at NULLS LAST,u.id
+`, output.Body.HackathonID, input.Search, input.Status, input.CheckedIn, redeemableID)
+
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to load check-in table")
 	}
@@ -137,9 +155,12 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
 	for rows.Next() {
 		var row CheckInDashboardRow
 		var redemptions []byte
-		if err := rows.Scan(&row.UserID, &row.Name, &row.Email, &row.Status,
+		if err := rows.Scan(
+			&row.ApplicationID, &row.UserID, &row.Name, &row.Email, &row.Status,
 			&row.CheckedInAt, &row.RFID, &row.SignupSource, &row.StandbyArrival,
-			&redemptions); err != nil {
+			&redemptions,
+		); err != nil {
+			fmt.Print(err)
 			return nil, huma.Error500InternalServerError("Unable to read check-in table")
 		}
 		row.Redemptions = json.RawMessage(redemptions)
