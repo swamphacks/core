@@ -38,7 +38,7 @@ func (s *ApplicationService) DispatchAdmissionWaitlist(
 		if err != nil {
 			return err
 		}
-		if now.Before(opensAt) {
+		if now.Before(opensAt) || !now.Before(inPersonAt) {
 			return nil
 		}
 		if capacity == nil || *capacity <= 0 {

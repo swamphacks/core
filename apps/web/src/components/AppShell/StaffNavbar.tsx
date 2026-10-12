@@ -20,6 +20,11 @@ export default function StaffNavbar({ pathname }: StaffNavbarProps) {
   const commonNavLinks = (
     <>
       <NavLink
+        label="Check-in Dashboard"
+        href="/check-in"
+        active={pathname.startsWith("/check-in")}
+      />
+      <NavLink
         label="Information"
         href="/information"
         leftSection={<TablerInfoCircle className="w-5 aspect-square" />}

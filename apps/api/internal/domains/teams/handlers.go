@@ -20,8 +20,8 @@ func parseMemberStatus(member *sqlc.GetTeamMembersRow) TeamMemberStatus {
 		return TeamMemberStatusNotAccepted
 	}
 
-	if member.ApplicationStatus != nil {
-		switch *member.ApplicationStatus {
+	if member.ApplicationStatus.Valid {
+		switch member.ApplicationStatus.ApplicationStatus {
 		case sqlc.ApplicationStatusConfirmed:
 			return TeamMemberStatusConfirmed
 		case sqlc.ApplicationStatusAccepted:

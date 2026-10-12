@@ -73,8 +73,29 @@ export default function ApplicationPage({
     return <Rejected name={name} />;
   }
 
+  if (application.data.status === "waitlist_confirmed") {
+    return (
+      <div className="w-full sm:max-w-180 mx-auto p-2">
+        <h1 className="text-2xl font-bold">Waitlist confirmed</h1>
+        <p className="mt-3">
+          Your arrival has been recorded. Please remain in the standby line and
+          wait for staff to admit you.
+        </p>
+        <p className="mt-3 text-text-secondary">
+          Previously registered hackers take priority over day-of signups.
+          Admission depends on available capacity.
+        </p>
+      </div>
+    );
+  }
+
   if (application.data.status === "waitlisted") {
-    return <Waitlisted name={name} />;
+    return (
+      <Waitlisted
+        name={name}
+        dayOf={applicationResponses["registrationType"] === "day-of"}
+      />
+    );
   }
 
   if (application.data.status === "withdrawn") {
@@ -318,9 +339,10 @@ function Rejected({ name }: RejectedProps) {
 
 interface WaitlistedProps {
   name: string;
+  dayOf: boolean;
 }
 
-function Waitlisted({ name }: WaitlistedProps) {
+function Waitlisted({ name, dayOf }: WaitlistedProps) {
   const { leaveWaitlist } = useApplicationActions();
 
   const handleLeave = () => {
@@ -342,9 +364,9 @@ function Waitlisted({ name }: WaitlistedProps) {
           not guarantee admission.
         </p>
         <p>
-          Your place is based on when you joined. If you receive an invitation,
-          you will have 48 hours to confirm your attendance. Keep an eye on your
-          inbox and spam folder.
+          {dayOf
+            ? "Your registration is complete, but your arrival has not been recorded. Go to the day-of standby line at the venue and ask staff to record your arrival. Previously registered hackers take priority. Wait for staff to accept you when space opens."
+            : "Your place is based on when you joined. If you receive an invitation, you will have 48 hours to confirm your attendance. Keep an eye on your inbox and spam folder."}
         </p>
         <Button
           onClick={handleLeave}

@@ -8,7 +8,6 @@ import UF from "./assets/sponsors/uf.png";
 import CapitalOne from "./assets/sponsors/capital-one.svg";
 import BNY from "./assets/sponsors/bny.svg";
 import Roblox from "./assets/sponsors/roblox.svg";
-import Vobile from "./assets/sponsors/vobile.png";
 import PureButtons from "./assets/sponsors/pure-buttons.svg";
 import UFCise from "./assets/sponsors/uf-cise-white.png";
 import CpeLab from "./assets/sponsors/cpe-lab.png";
@@ -68,7 +67,7 @@ const smallSponsors: Sponsor[] = [
     name: "Roblox",
     logo: Roblox,
     textMark: null,
-    url: "https://careers.roblox.com/early-career",
+    url: "https://www.roblox.com/",
   },
   {
     name: "PureButtons",
@@ -99,7 +98,7 @@ const smallSponsors: Sponsor[] = [
     logo: Photon,
     textMark: null,
     url: "https://photon.codes/",
-  }
+  },
 ];
 // import SponsorsImg from "./assets/Sponsors.png";
 // import SponsorsSvg from "./assets/Sponsors.svg";

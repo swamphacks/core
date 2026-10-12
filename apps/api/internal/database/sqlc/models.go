@@ -57,14 +57,15 @@ func (ns NullApplicationAutoDecisionType) Value() (driver.Value, error) {
 type ApplicationStatus string
 
 const (
-	ApplicationStatusStarted     ApplicationStatus = "started"
-	ApplicationStatusSubmitted   ApplicationStatus = "submitted"
-	ApplicationStatusUnderReview ApplicationStatus = "under_review"
-	ApplicationStatusAccepted    ApplicationStatus = "accepted"
-	ApplicationStatusRejected    ApplicationStatus = "rejected"
-	ApplicationStatusWaitlisted  ApplicationStatus = "waitlisted"
-	ApplicationStatusWithdrawn   ApplicationStatus = "withdrawn"
-	ApplicationStatusConfirmed   ApplicationStatus = "confirmed"
+	ApplicationStatusStarted           ApplicationStatus = "started"
+	ApplicationStatusSubmitted         ApplicationStatus = "submitted"
+	ApplicationStatusUnderReview       ApplicationStatus = "under_review"
+	ApplicationStatusAccepted          ApplicationStatus = "accepted"
+	ApplicationStatusRejected          ApplicationStatus = "rejected"
+	ApplicationStatusWaitlisted        ApplicationStatus = "waitlisted"
+	ApplicationStatusWithdrawn         ApplicationStatus = "withdrawn"
+	ApplicationStatusConfirmed         ApplicationStatus = "confirmed"
+	ApplicationStatusWaitlistConfirmed ApplicationStatus = "waitlist_confirmed"
 )
 
 func (e *ApplicationStatus) Scan(src interface{}) error {
@@ -657,6 +658,7 @@ type Waitlist struct {
 	CreatedAt          time.Time  `json:"created_at"`
 	InPersonJoinedAt   *time.Time `json:"in_person_joined_at"`
 	InPersonRecordedBy *uuid.UUID `json:"in_person_recorded_by"`
+	SignupSource       string     `json:"signup_source"`
 }
 
 type WaitlistDispatchPolicy struct {
