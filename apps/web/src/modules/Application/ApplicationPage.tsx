@@ -366,7 +366,7 @@ function Waitlisted({ name, dayOf }: WaitlistedProps) {
         <p>
           {dayOf
             ? "Your registration is complete, but your arrival has not been recorded. Go to the day-of standby line at the venue and ask staff to record your arrival. Previously registered hackers take priority. Wait for staff to accept you when space opens."
-            : "Your place is based on when you joined. If you receive an invitation, you will have 48 hours to confirm your attendance. Keep an eye on your inbox and spam folder."}
+            : "Your place is based on when you joined. If you receive an invitation, you will have 12 hours to confirm your attendance. Keep an eye on your inbox and spam folder."}
         </p>
         <Button
           onClick={handleLeave}

@@ -12,9 +12,6 @@ import PureButtons from "./assets/sponsors/pure-buttons.svg";
 import UFCise from "./assets/sponsors/uf-cise-white.png";
 import CpeLab from "./assets/sponsors/cpe-lab.png";
 import DeepSpace from "./assets/sponsors/deepspace.png";
-import MLH from "./assets/sponsors/MLH_logo.svg";
-import DSI from "./assets/sponsors/DSI_logo.svg";
-import Photon from "./assets/sponsors/Photon.svg";
 
 type Sponsor = {
   name: string;

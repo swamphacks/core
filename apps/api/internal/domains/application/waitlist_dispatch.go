@@ -190,7 +190,7 @@ func (s *ApplicationService) DispatchAdmissionWaitlist(
 			// Use the same clock for the offer and its deadline.
 			if _, err := tx.Exec(ctx, `
                 UPDATE application_waitlist_offers
-                SET offered_at = $2::timestamptz, confirmation_deadline = $2::timestamptz + interval '48 hours'
+                SET offered_at = $2::timestamptz, confirmation_deadline = $2::timestamptz + interval '12 hours'
                 WHERE application_id = $1
             `, c.id, now); err != nil {
 				return err
