@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
 	"github.com/swamphacks/core/apps/api/internal/api/middleware"
-	auth "github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/config"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
@@ -32,7 +31,7 @@ func RegisterRoutes(grafanaHandler *handler, mw *middleware.Middleware, router *
 		mw.Auth.RequireRoles([]sqlc.Role{sqlc.RoleAdmin})(
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// Set header to mark identity for Grafana
-				if userCtx, ok := r.Context().Value(auth.UserContextKey).(*auth.UserContext); ok {
+				if userCtx, ok := r.Context().Value(middleware.UserContextKey).(*middleware.UserContext); ok {
 					r.Header.Set("X-WEBAUTH-USER", userCtx.UserID.String())
 				}
 

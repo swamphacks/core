@@ -192,11 +192,9 @@ func (s *ApplicationService) SubmitApplication(ctx context.Context, data Applica
 	}
 
 	now := time.Now()
-	isEarly := false
-
-	if hackathon.AcceptEarlyApplications && (now.After(*hackathon.EarlyApplicationOpen) && now.Before(*hackathon.EarlyApplicationClose)) {
-		isEarly = true
-	}
+	isEarly := hackathon.AcceptEarlyApplications &&
+		now.After(*hackathon.EarlyApplicationOpen) &&
+		now.Before(*hackathon.EarlyApplicationClose)
 
 	if !isEarly && (now.After(hackathon.ApplicationClose) || now.Before(hackathon.ApplicationOpen)) {
 		return nil, ErrApplicationNotOpened
@@ -314,6 +312,10 @@ func (s *ApplicationService) SaveApplication(ctx context.Context, data any, user
 
 func (s *ApplicationService) GetApplicationResumeURL(ctx context.Context, userID uuid.UUID, lifetimeSecs int64) (*storage.PresignedRequest, error) {
 	hackathon, err := s.db.Query.GetHackathon(ctx)
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to retrieve hackathon for resume download")
+		return nil, ErrGetResume
+	}
 
 	presignableStorage, ok := s.storage.(storage.PresignableStorage)
 
@@ -786,7 +788,7 @@ func (s *ApplicationService) SaveApplicationReview(ctx context.Context, req Save
 				Warn().
 				Str("ReviewID", reviewerId.String()).
 				Msg("Cannot review this application. either the assigned review is different")
-			return errors.New("An application has been assigned to a reviewer who is not authorized to review it")
+			return errors.New("an application has been assigned to a reviewer who is not authorized to review it")
 		}
 	}
 
@@ -868,7 +870,7 @@ func (s *ApplicationService) SearchAutoDecisionRequests(ctx context.Context, req
 			Limit:    int32(req.Limit),
 			Search:   &req.Search,
 			Approved: req.Approved,
-			Decision: &decision.ApplicationAutoDecisionType,
+			Decision: decision,
 		})
 		return err
 	})
@@ -968,7 +970,7 @@ func (s *ApplicationService) CheckApplicationReviewsComplete(ctx context.Context
 
 	underReviewApplicationIds, err := s.db.Query.ListUnderReviewApplicationIds(ctx, hackathon.ID)
 	if err != nil {
-		return false, errors.New("Failed to check application reviews status")
+		return false, errors.New("failed to check application reviews status")
 	}
 
 	return len(underReviewApplicationIds) == 0, nil
@@ -983,11 +985,9 @@ func (s *ApplicationService) isApplicationOpen(ctx context.Context) error {
 	}
 
 	now := time.Now()
-	isEarly := false
-
-	if hackathon.AcceptEarlyApplications && (now.After(*hackathon.EarlyApplicationOpen) && now.Before(*hackathon.EarlyApplicationClose)) {
-		isEarly = true
-	}
+	isEarly := hackathon.AcceptEarlyApplications &&
+		now.After(*hackathon.EarlyApplicationOpen) &&
+		now.Before(*hackathon.EarlyApplicationClose)
 
 	if !isEarly && (now.After(hackathon.ApplicationClose) || now.Before(hackathon.ApplicationOpen)) {
 		return ErrApplicationNotOpened
@@ -1032,7 +1032,7 @@ func (s *ApplicationService) isApplicationOpen(ctx context.Context) error {
 // 	var acceptedUserIds []uuid.UUID
 
 // 	ErrEventAlreadyStarted := errors.New("the event has already started")
-// 	ErrFailedToGetContactEmail := errors.New("Failed to get contact email")
+// 	ErrFailedToGetContactEmail := errors.New("failed to get contact email")
 
 // 	hackathon, err := s.db.Query.GetHackathon(ctx)
 // 	if err != nil {
@@ -1110,11 +1110,11 @@ func (s *ApplicationService) isApplicationOpen(ctx context.Context) error {
 // 	batRun, err := s.batService.GetRunById(ctx, batRunId)
 
 // 	if batRun.Status != sqlc.BatRunStatusCompleted {
-// 		return errors.New("This run status is not valid for this action.")
+// 		return errors.New("this run status is not valid for this action")
 // 	}
 
 // 	if len(batRun.AcceptedApplicants) == 0 {
-// 		return errors.New("No applicants marked as accepted.")
+// 		return errors.New("no applicants marked as accepted")
 // 	}
 
 // 	err = s.txm.WithTx(ctx, func(tx pgx.Tx) error {
@@ -1138,7 +1138,7 @@ func (s *ApplicationService) isApplicationOpen(ctx context.Context) error {
 
 // 	err = s.emailService.SendDecisionEmails(ctx, batRun)
 // 	if err != nil {
-// 		return errors.New("Failed to send decision emails")
+// 		return errors.New("failed to send decision emails")
 // 	}
 
 // 	return nil

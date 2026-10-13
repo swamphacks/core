@@ -146,7 +146,7 @@ func (h *handler) handleGetExtendedApplicationById(ctx context.Context, input *s
 		autoDecisionRequest = &AutoDecisionRequestDto{
 			ID:                   *application.AutoDecisionRequestID,
 			ApplicationID:        application.ID,
-			RequestedDecision:    string(*application.RequestedDecision),
+			RequestedDecision:    string(application.RequestedDecision.ApplicationAutoDecisionType),
 			Justification:        application.DecisionJustification,
 			AutoDecisionApproved: autoDecisionApproved,
 			CreatedAt:            *application.DecisionRequestCreatedAt,
@@ -312,7 +312,11 @@ func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) 
 		return nil, huma.Error400BadRequest("Invalid resume file")
 	}
 
-	defer resumeFile.Close()
+	defer func() {
+		if err := resumeFile.Close(); err != nil {
+			h.logger.Warn().Err(err).Msg("Failed to close uploaded resume")
+		}
+	}()
 
 	resumeFileBuffer := bytes.NewBuffer(nil)
 
@@ -391,7 +395,11 @@ func (h *handler) handleReplaceResume(ctx context.Context, input *struct {
 	if err != nil {
 		return nil, huma.Error400BadRequest("Failed to parse uploaded resume")
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			h.logger.Warn().Err(err).Msg("Failed to close uploaded resume")
+		}
+	}()
 
 	resumeBuffer := bytes.NewBuffer(nil)
 	if _, err := io.Copy(resumeBuffer, file); err != nil {
@@ -469,7 +477,7 @@ func (h *handler) handleGetReviewById(ctx context.Context, input *struct {
 		autoDecisionRequest = &AutoDecisionRequestDto{
 			ID:                   *review.DecisionRequestID,
 			ApplicationID:        review.ID,
-			RequestedDecision:    string(*review.RequestedDecision),
+			RequestedDecision:    string(review.RequestedDecision.ApplicationAutoDecisionType),
 			Justification:        review.DecisionJustification,
 			AutoDecisionApproved: autoDecisionApproved,
 			CreatedAt:            *review.DecisionRequestCreatedAt,

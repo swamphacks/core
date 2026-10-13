@@ -70,7 +70,11 @@ func (c *R2Client) Retrieve(ctx context.Context, bucketName, key string) ([]byte
 		return nil, err
 	}
 
-	defer result.Body.Close()
+	defer func() {
+		if err := result.Body.Close(); err != nil {
+			c.logger.Warn().Err(err).Msg("Failed to close object body")
+		}
+	}()
 	data := new(bytes.Buffer)
 	if _, err := data.ReadFrom(result.Body); err != nil {
 		c.logger.Err(err).Msgf("Failed to read object body from S3 with key %s", key)

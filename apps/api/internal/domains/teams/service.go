@@ -171,7 +171,7 @@ func (s *TeamService) KickMember(ctx context.Context, memberID, teamID, userID u
 
 	if err != nil {
 		s.logger.Err(err).Msg("KickMember fail, unable to get team info by id")
-		return errors.New("Unable to kick member")
+		return errors.New("unable to kick member")
 	}
 
 	if team.OwnerID != userID {
