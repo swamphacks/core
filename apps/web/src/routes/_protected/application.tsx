@@ -1,4 +1,5 @@
 import TablerAlertCircle from "~icons/tabler/alert-circle";
+import VisitorWaitlistForm from "@/modules/Application/VisitorWaitlistForm";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { hackathonQueryOptions } from "@/modules/Hackathon/hooks/useHackathon";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/_protected/application")({
 function RouteComponent() {
   const { user } = Route.useRouteContext();
   const hackathon = useSuspenseQuery(hackathonQueryOptions());
-  const application = useMyApplication();
+  const application = useMyApplication(user.role !== "visitor");
 
   const now = new Date();
   const applicationOpen = new Date(hackathon.data.applicationOpen);
@@ -45,6 +46,10 @@ function RouteComponent() {
     isApplicationOpen = now >= applicationOpen && now <= applicationClose;
   }
 
+  if (user.role === "visitor" && !isApplicationOpen) {
+    return <VisitorWaitlistForm />;
+  }
+
   if (application.isLoading) {
     return <PageLoading />;
   }
@@ -54,6 +59,7 @@ function RouteComponent() {
     "confirmed",
     "rejected",
     "waitlisted",
+    "waitlist_confirmed",
     "withdrawn",
   ].includes(application.data?.status ?? "");
 

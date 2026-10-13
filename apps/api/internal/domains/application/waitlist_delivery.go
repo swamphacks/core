@@ -65,13 +65,15 @@ func (s *ApplicationService) DeliverAdmissionWaitlistInvitations(
 			var recipient, name string
 			var offeredAt time.Time
 			var attempts int
+			var offerDurationSeconds float64
 			err = tx.QueryRow(ctx, `
-                SELECT recipient, first_name, offered_at, attempts
+                SELECT recipient, first_name, offered_at, attempts,
+                       EXTRACT(EPOCH FROM (confirmation_deadline - offered_at))::double precision
                 FROM waitlist_invitation_outbox
                 WHERE id=$1 AND sent_at IS NULL AND cancelled_at IS NULL
                   AND next_attempt_at <= now()
                 FOR UPDATE
-            `, outboxID).Scan(&recipient, &name, &offeredAt, &attempts)
+            `, outboxID).Scan(&recipient, &name, &offeredAt, &attempts, &offerDurationSeconds)
 			if errors.Is(err, pgx.ErrNoRows) {
 				return nil
 			}
@@ -122,7 +124,7 @@ func (s *ApplicationService) DeliverAdmissionWaitlistInvitations(
 				return err
 			}
 
-			deadline := time.Now().UTC().Add(48 * time.Hour)
+			deadline := time.Now().UTC().Add(time.Duration(offerDurationSeconds * float64(time.Second)))
 			if sendErr := send(ctx, recipient, name, deadline); sendErr != nil {
 				delay := time.Minute
 				for n := 0; n < attempts && delay < time.Hour; n++ {
