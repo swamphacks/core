@@ -266,24 +266,24 @@ func (s *EmailService) SendWelcomeEmailToAttendees(ctx context.Context) error {
 }
 
 var (
-	ErrListApplicationsFailure         = errors.New("Failed to retrieve applications")
-	ErrMissingRatings                  = errors.New("Some applications are missing their review ratings")
-	ErrRunConflict                     = errors.New("Run already exists for this event")
-	ErrFailedToAddRun                  = errors.New("Failed to add run")
-	ErrFailedToDeleteRun               = errors.New("Failed to delete run")
-	ErrFailedToUpdateRun               = errors.New("Failed to update run")
-	ErrCouldNotGetEventInfo            = errors.New("Could not retreive event info.")
-	ErrReviewsNotFinished              = errors.New("Please make sure reviews are finished before calculating application decisions.")
-	ErrRunMismatch                     = errors.New("That bat run does not belong to this event.")
-	ErrRunStatusInvalid                = errors.New("This run status is not valid for this action.")
-	ErrNoAcceptedApplicants            = errors.New("No applicants marked as accepted.")
-	ErrFailedToCheckAppReviewsComplete = errors.New("Could not get determine if application reviews have finished.")
-	ErrReviewsNotComplete              = errors.New("Please make sure reviews are finished before calculating application decisions.")
-	ErrCouldNotGetEmailInfo            = errors.New("Could not get email info for applicant.")
-	ErrParseTemplateFilepathFailed     = errors.New("Could not parse filepath for template.")
-	ErrFailedToSendDecisionEmails      = errors.New("Failed to send decision emails")
-	ErrTestErr                         = errors.New("Err while testing")
-	ErrFailedToGetContactEmail         = errors.New("Failed to get contact email")
+	ErrListApplicationsFailure         = errors.New("failed to retrieve applications")
+	ErrMissingRatings                  = errors.New("some applications are missing their review ratings")
+	ErrRunConflict                     = errors.New("run already exists for this event")
+	ErrFailedToAddRun                  = errors.New("failed to add run")
+	ErrFailedToDeleteRun               = errors.New("failed to delete run")
+	ErrFailedToUpdateRun               = errors.New("failed to update run")
+	ErrCouldNotGetEventInfo            = errors.New("could not retrieve event info")
+	ErrReviewsNotFinished              = errors.New("please make sure reviews are finished before calculating application decisions")
+	ErrRunMismatch                     = errors.New("that bat run does not belong to this event")
+	ErrRunStatusInvalid                = errors.New("this run status is not valid for this action")
+	ErrNoAcceptedApplicants            = errors.New("no applicants marked as accepted")
+	ErrFailedToCheckAppReviewsComplete = errors.New("could not get determine if application reviews have finished")
+	ErrReviewsNotComplete              = errors.New("please make sure reviews are finished before calculating application decisions")
+	ErrCouldNotGetEmailInfo            = errors.New("could not get email info for applicant")
+	ErrParseTemplateFilepathFailed     = errors.New("could not parse filepath for template")
+	ErrFailedToSendDecisionEmails      = errors.New("failed to send decision emails")
+	ErrTestErr                         = errors.New("err while testing")
+	ErrFailedToGetContactEmail         = errors.New("failed to get contact email")
 	ErrUserNotAttendee                 = errors.New("user is not an attendee")
 	ErrUserCheckedIn                   = errors.New("user already checked in")
 )
@@ -329,6 +329,9 @@ func (s *EmailService) SendDecisionEmails(ctx context.Context, batRun sqlc.BatRu
 			Name string
 		}
 		taskInfo, err := s.QueueSendHtmlEmailTask(contactEmail, rejectedEmailSubject, emailTemplateData{emailInfo.Name}, rejectedEmailTemplatePath)
+		if err != nil {
+			return err
+		}
 		s.logger.Info().Str("TaskID", taskInfo.ID).Str("Task Queue", taskInfo.Queue).Str("Task Type", taskInfo.Type).Msg("Queued rejection email")
 	}
 

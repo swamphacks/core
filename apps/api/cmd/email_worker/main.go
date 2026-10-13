@@ -44,7 +44,11 @@ func main() {
 	)
 
 	taskQueueClient := asynq.NewClient(redisOpt)
-	defer taskQueueClient.Close()
+	defer func() {
+		if err := taskQueueClient.Close(); err != nil {
+			logger.Warn().Err(err).Msg("Failed to close email queue client")
+		}
+	}()
 
 	db := database.NewDB(cfg.DatabaseURL)
 	defer db.Close()

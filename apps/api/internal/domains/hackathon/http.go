@@ -15,7 +15,7 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 	"github.com/swamphacks/core/apps/api/internal/emailutils"
-	. "github.com/swamphacks/core/apps/api/internal/parse"
+	"github.com/swamphacks/core/apps/api/internal/parse"
 )
 
 func RegisterRoutes(hackathonHandler *handler, group huma.API, mw *middleware.Middleware) {
@@ -242,17 +242,17 @@ type UpdateHackathonOutput struct {
 }
 
 type UpdateHackathonRequest struct {
-	Name             OmittableNullable[string]     `json:"name,omitempty"`
-	Description      OmittableNullable[*string]    `json:"description,omitempty"`
-	Location         OmittableNullable[*string]    `json:"location,omitempty"`
-	LocationUrl      OmittableNullable[*string]    `json:"locationUrl,omitempty"`
-	MaxAttendees     OmittableNullable[*int32]     `json:"maxAttendees,omitempty"`
-	ApplicationOpen  OmittableNullable[time.Time]  `json:"applicationOpen,omitempty"`
-	ApplicationClose OmittableNullable[time.Time]  `json:"applicationClose,omitempty"`
-	RsvpDeadline     OmittableNullable[*time.Time] `json:"rsvpDeadline,omitempty"`
-	DecisionRelease  OmittableNullable[*time.Time] `json:"decisionRelease,omitempty"`
-	StartTime        OmittableNullable[time.Time]  `json:"startTime,omitempty"`
-	EndTime          OmittableNullable[time.Time]  `json:"endTime,omitempty"`
+	Name             parse.OmittableNullable[string]     `json:"name,omitempty"`
+	Description      parse.OmittableNullable[*string]    `json:"description,omitempty"`
+	Location         parse.OmittableNullable[*string]    `json:"location,omitempty"`
+	LocationUrl      parse.OmittableNullable[*string]    `json:"locationUrl,omitempty"`
+	MaxAttendees     parse.OmittableNullable[*int32]     `json:"maxAttendees,omitempty"`
+	ApplicationOpen  parse.OmittableNullable[time.Time]  `json:"applicationOpen,omitempty"`
+	ApplicationClose parse.OmittableNullable[time.Time]  `json:"applicationClose,omitempty"`
+	RsvpDeadline     parse.OmittableNullable[*time.Time] `json:"rsvpDeadline,omitempty"`
+	DecisionRelease  parse.OmittableNullable[*time.Time] `json:"decisionRelease,omitempty"`
+	StartTime        parse.OmittableNullable[time.Time]  `json:"startTime,omitempty"`
+	EndTime          parse.OmittableNullable[time.Time]  `json:"endTime,omitempty"`
 }
 
 func (h *handler) handleUpdateHackathon(ctx context.Context, input *struct {

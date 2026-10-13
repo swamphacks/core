@@ -53,7 +53,11 @@ func TestConfirmedQRIntegration(t *testing.T) {
 		now()-interval '1 day',now()+interval '1 day',now()+interval '3 days',
 		now()+interval '12 hours',true
 	)`)
-	defer pool.Exec(context.Background(), "DELETE FROM hackathons WHERE id='xii'")
+	defer func() {
+		if _, err := pool.Exec(context.Background(), "DELETE FROM hackathons WHERE id='xii'"); err != nil {
+			t.Errorf("fixture cleanup failed: %v", err)
+		}
+	}()
 
 	db := &database.DB{Pool: pool, Query: sqlc.New(pool)}
 	service := &ApplicationService{
@@ -63,7 +67,11 @@ func TestConfirmedQRIntegration(t *testing.T) {
 	t.Run("confirmation queues once and retries with application email fallback", func(t *testing.T) {
 		id := uuid.New()
 		exec("INSERT INTO users (id,name,role) VALUES ($1,'Preview QR','applicant')", id)
-		defer pool.Exec(context.Background(), "DELETE FROM users WHERE id=$1", id)
+		defer func() {
+			if _, err := pool.Exec(context.Background(), "DELETE FROM users WHERE id=$1", id); err != nil {
+				t.Errorf("fixture cleanup failed: %v", err)
+			}
+		}()
 		exec(`INSERT INTO applications (user_id,hackathon_id,status,application)
 			VALUES ($1,'xii','accepted',
 			'{"firstName":"Preview","preferredEmail":"preview@example.test"}')`, id)
@@ -130,7 +138,11 @@ func TestConfirmedQRIntegration(t *testing.T) {
 	t.Run("withdrawal cancels pending email", func(t *testing.T) {
 		id := uuid.New()
 		exec("INSERT INTO users (id,name,role) VALUES ($1,'Withdraw test','applicant')", id)
-		defer pool.Exec(context.Background(), "DELETE FROM users WHERE id=$1", id)
+		defer func() {
+			if _, err := pool.Exec(context.Background(), "DELETE FROM users WHERE id=$1", id); err != nil {
+				t.Errorf("fixture cleanup failed: %v", err)
+			}
+		}()
 		exec("INSERT INTO applications (user_id,hackathon_id,status) VALUES ($1,'xii','accepted')", id)
 		if err := service.ConfirmAttendance(ctx, id); err != nil {
 			t.Fatal(err)
