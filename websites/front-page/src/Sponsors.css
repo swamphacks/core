@@ -767,6 +767,23 @@
     max-height: 86px;
   }
 }
+/* Center SperryTech on its own row and give its logo more room. */
+.sponsor-grid--medium .sponsor-card[aria-label="SperryTech"] {
+  grid-column: 1 / -1;
+}
+
+.sponsor-card[aria-label="SperryTech"] img {
+  max-width: min(100%, 350px);
+  max-height: 125px;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card[aria-label="SperryTech"] img {
+    max-width: min(100%, 230px);
+    max-height: 86px;
+  }
+}
+
 /* Additional southern lake space */
 .sponsors-container .water {
   min-height: 740px;

@@ -6,6 +6,7 @@ import fish from "./assets/fish.png";
 import FifthThird from "./assets/sponsors/fifth-third.png";
 import UF from "./assets/sponsors/uf.png";
 import CapitalOne from "./assets/sponsors/capital-one.svg";
+import SperryTech from "./assets/sponsors/SperryTech.svg";
 import BNY from "./assets/sponsors/bny.svg";
 import Roblox from "./assets/sponsors/roblox.svg";
 import Vobile from "./assets/sponsors/vobile.png";
@@ -60,6 +61,12 @@ const mediumSponsors: Sponsor[] = [
     logo: CpeLab,
     textMark: null,
     url: "https://eed.eng.ufl.edu/",
+  },
+  {
+    name: "SperryTech",
+    logo: SperryTech,
+    textMark: null,
+    url: "https://sperrytech.ai/",
   },
 ];
 
