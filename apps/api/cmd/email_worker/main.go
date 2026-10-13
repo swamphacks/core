@@ -44,7 +44,11 @@ func main() {
 	)
 
 	taskQueueClient := asynq.NewClient(redisOpt)
-	defer taskQueueClient.Close()
+	defer func() {
+		if err := taskQueueClient.Close(); err != nil {
+			logger.Warn().Err(err).Msg("Failed to close email queue client")
+		}
+	}()
 
 	db := database.NewDB(cfg.DatabaseURL)
 	defer db.Close()
@@ -67,6 +71,14 @@ func main() {
 	waitlistEnabled := os.Getenv("WAITLIST_DISPATCH_ENABLED") == "true"
 
 	mux := asynq.NewServeMux()
+
+	qrEmailEnabled := os.Getenv("CONFIRMED_QR_EMAIL_ENABLED") == "true"
+	mux.HandleFunc("confirmedqr:sweep", func(ctx context.Context, task *asynq.Task) error {
+		if !qrEmailEnabled {
+			return nil
+		}
+		return admissionService.DeliverConfirmedQREmails(ctx, emailService.SendConfirmedQREmail)
+	})
 
 	mux.HandleFunc("waitlist:sweep_admissions", func(ctx context.Context, task *asynq.Task) error {
 		if !waitlistEnabled {
@@ -123,6 +135,14 @@ func main() {
 	// The scheduler enqueues the sweep task on an interval; the server below
 	// consumes it like any other task, so scheduled sends share the same queue.
 	scheduler := asynq.NewScheduler(redisOpt, &asynq.SchedulerOpts{})
+
+	if qrEmailEnabled {
+		if _, err := scheduler.Register(
+			"@every 1m", asynq.NewTask("confirmedqr:sweep", nil), asynq.Queue("email"),
+		); err != nil {
+			log.Fatalf("Failed to register confirmed QR sweep: %v", err)
+		}
+	}
 	if _, err := scheduler.Register("@every 1m", tasks.NewTaskSweepScheduledCampaigns(), asynq.Queue("email")); err != nil {
 		log.Fatalf("Failed to register scheduled campaign sweep: %v", err)
 	}

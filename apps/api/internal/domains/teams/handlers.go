@@ -52,6 +52,9 @@ func (h *handler) handleGetMyTeam(ctx context.Context, input *struct{}) (*GetMyT
 	}
 
 	teamMembers, err := h.teamService.GetTeamMembers(ctx, team.ID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to get team members")
+	}
 
 	teamMembersDto := make([]TeamMemberDto, len(teamMembers))
 

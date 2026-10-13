@@ -93,7 +93,7 @@ func (s *UserService) GetUserByRFID(ctx context.Context, rfid string) (*sqlc.Use
 
 // 	if err != nil {
 // 		s.logger.Err(err).Msg("check in status fail")
-// 		return false, errors.New("Failed to get check in status for user")
+// 		return false, errors.New("failed to get check in status for user")
 // 	}
 
 // 	return checkedIn, nil
@@ -137,7 +137,7 @@ func (s *UserService) GetAllUsers(ctx context.Context, search *string, limit, of
 
 	if err != nil {
 		s.logger.Err(err).Msg("get all users fail")
-		return []sqlc.User{}, errors.New("Failed to get users")
+		return []sqlc.User{}, errors.New("failed to get users")
 	}
 
 	return users, nil

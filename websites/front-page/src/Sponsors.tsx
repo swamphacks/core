@@ -1,3 +1,6 @@
+import Photon from "./assets/sponsors/Photon.svg";
+import DSI from "./assets/sponsors/DSI_logo.svg";
+import MLH from "./assets/sponsors/MLH_logo.svg";
 import type { PointerEvent } from "react";
 import "./Sponsors.css";
 import boat from "./assets/boat.png";
@@ -253,7 +256,7 @@ export default function Sponsors() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <img src={Vobile} alt="Vobile, SwampHacks co-host" />
+                  <span className="text-2xl font-bold">Vobile</span>
                 </a>
               </div>
             </section>

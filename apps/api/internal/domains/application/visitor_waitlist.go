@@ -41,27 +41,27 @@ func registerVisitorWaitlistRoutes(h *handler, group huma.API, mw *middleware.Mi
 func validateVisitorSubmission(data ApplicationSubmissionFields) error {
 	if err := validator.New().StructExcept(
 		data, "Essay1", "Essay2", "UfHackathonExp"); err != nil {
-		return errors.New("Complete all required profile fields")
+		return errors.New("complete all required profile fields")
 	}
 	if !strings.HasSuffix(strings.ToLower(data.UniversityEmail), ".edu") {
-		return errors.New("University email must end in .edu")
+		return errors.New("university email must end in .edu")
 	}
 	if !regexp.MustCompile("^[0-9]{10}$").MatchString(data.Phone) {
-		return errors.New("Phone number must contain 10 digits")
+		return errors.New("phone number must contain 10 digits")
 	}
 	if !regexp.MustCompile("^(0[1-9]|1[0-2])/[0-9]{4}$").MatchString(data.GraduationYear) {
-		return errors.New("Graduation date must use MM/YYYY")
+		return errors.New("graduation date must use MM/YYYY")
 	}
 	for _, consent := range []string{
 		data.PictureConsent, data.InPersonAcknowledgement,
 		data.AgreeToConduct, data.InfoShareAuthorization,
 	} {
 		if consent != "agree" {
-			return errors.New("Agree to each required consent")
+			return errors.New("agree to each required consent")
 		}
 	}
 	if data.AgreeToMLHEmails != "" && data.AgreeToMLHEmails != "agree" {
-		return errors.New("Invalid MLH email preference")
+		return errors.New("invalid MLH email preference")
 	}
 	return nil
 }
@@ -220,7 +220,11 @@ func (h *handler) handleSubmitVisitorWaitlist(ctx context.Context, input *struct
 		return nil, huma.Error400BadRequest("Failed to parse form")
 	}
 
-	defer r.MultipartForm.RemoveAll()
+	defer func() {
+		if err := r.MultipartForm.RemoveAll(); err != nil {
+			h.logger.Warn().Err(err).Msg("Failed to remove multipart temporary files")
+		}
+	}()
 
 	var submission ApplicationSubmissionFields
 
@@ -275,7 +279,11 @@ func (h *handler) handleSubmitVisitorWaitlist(ctx context.Context, input *struct
 		return nil, huma.Error400BadRequest("Invalid resume file")
 	}
 
-	defer resumeFile.Close()
+	defer func() {
+		if err := resumeFile.Close(); err != nil {
+			h.logger.Warn().Err(err).Msg("Failed to close uploaded resume")
+		}
+	}()
 
 	resumeFileBuffer := bytes.NewBuffer(nil)
 

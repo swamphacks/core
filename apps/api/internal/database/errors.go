@@ -9,7 +9,7 @@ import (
 
 // Errors
 var (
-	ErrEntityNotFound          = errors.New("Entity not found")
+	ErrEntityNotFound          = errors.New("entity not found")
 	ErrUnexpectedFileType      = errors.New("did not expect this file type")
 	ErrFailedToUploadBanner    = errors.New("failed to upload banner")
 	ErrFailedToUpdateHackathon = errors.New("failed to update hackathon")
@@ -26,10 +26,10 @@ var (
 	ErrApplicationNotFound    = errors.New("can not find application for user")
 
 	// Bat runs
-	ErrDuplicateRun        = errors.New("Run already exists in the database")
-	ErrRunNotFound         = errors.New("Run not found")
-	ErrNoRunsDeleted       = errors.New("No Runs deleted")
-	ErrMultipleRunsDeleted = errors.New("Multiple Runs affected by delete query expecting to delete one")
+	ErrDuplicateRun        = errors.New("run already exists in the database")
+	ErrRunNotFound         = errors.New("run not found")
+	ErrNoRunsDeleted       = errors.New("no Runs deleted")
+	ErrMultipleRunsDeleted = errors.New("multiple Runs affected by delete query expecting to delete one")
 
 	// Emails
 	ErrDuplicateEmails = errors.New("email already exists in the database")

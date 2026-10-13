@@ -48,8 +48,8 @@ package bat
 // }
 
 // var (
-// 	ErrRunConflict    = errors.New("Run already exists for this event")
-// 	ErrFailedToAddRun = errors.New("Failed to add run")
+// 	ErrRunConflict    = errors.New("run already exists for this event")
+// 	ErrFailedToAddRun = errors.New("failed to add run")
 // )
 
 // func (s *BatService) AddRun(ctx context.Context) (*sqlc.BatRun, error) {
@@ -91,7 +91,7 @@ package bat
 // 	err := s.batRunsRepo.DeleteRunById(ctx, id)
 // 	if err != nil {
 // 		s.logger.Err(err).Msg("delete run by id failed")
-// 		return errors.New("Failed to delete run")
+// 		return errors.New("failed to delete run")
 // 	}
 
 // 	return err
@@ -126,13 +126,13 @@ package bat
 // 	// check to make sure reviews are done, update state if true, return error if not
 // 	nonReviewedApplicantUUIDs, err := s.applicationRepo.GetNonReviewedApplications(ctx)
 // 	if err != nil {
-// 		return errors.New("Could not get determine if application reviews have finished.")
+// 		return errors.New("could not get determine if application reviews have finished")
 // 	}
 
 // 	areReviewsComplete := len(nonReviewedApplicantUUIDs) == 0
 
 // 	if !areReviewsComplete {
-// 		return errors.New("Please make sure reviews are finished before calculating application decisions.")
+// 		return errors.New("please make sure reviews are finished before calculating application decisions")
 // 	}
 
 // 	engine, err := NewBatEngine(0.6, 0.4)
@@ -143,7 +143,7 @@ package bat
 // 	// Aggregate data necessary
 // 	applications, err := s.applicationRepo.ListAdmissionCandidates(ctx)
 // 	if err != nil || len(applications) == 0 {
-// 		return errors.New("Failed to retrieve applications")
+// 		return errors.New("failed to retrieve applications")
 // 	}
 
 // 	admissionCandidates, err := s.mapToCandidates(engine, applications)
@@ -182,7 +182,7 @@ package bat
 
 // 	err = s.batRunsRepo.UpdateRunById(ctx, params)
 // 	if err != nil {
-// 		return errors.New("Failed to update run")
+// 		return errors.New("failed to update run")
 // 	}
 
 // 	s.logger.Info().Int("Teams Members Accepted", int(len(acceptedTeamMembers))).Int("Accepted", int(engine.Quota.TotalAccepted)).Int("Rejected", len(rejected)).Msg("Finished Algo")
@@ -195,7 +195,7 @@ package bat
 // 	var appAdmissionsData []AdmissionCandidate
 // 	for _, app := range applications {
 // 		if app.ExperienceRating == nil || app.PassionRating == nil {
-// 			return []AdmissionCandidate{}, errors.New("Some applications are missing their review ratings")
+// 			return []AdmissionCandidate{}, errors.New("some applications are missing their review ratings")
 // 		}
 
 // 		var admissionContext AdmissionContext

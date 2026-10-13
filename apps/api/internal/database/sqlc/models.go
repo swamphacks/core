@@ -492,6 +492,19 @@ type BatRun struct {
 	HackathonID        string       `json:"hackathon_id"`
 }
 
+type ConfirmedQrEmailOutbox struct {
+	ApplicationID uuid.UUID  `json:"application_id"`
+	UserID        uuid.UUID  `json:"user_id"`
+	HackathonID   string     `json:"hackathon_id"`
+	CreatedAt     time.Time  `json:"created_at"`
+	SentAt        *time.Time `json:"sent_at"`
+	CancelledAt   *time.Time `json:"cancelled_at"`
+	Attempts      int32      `json:"attempts"`
+	NextAttemptAt time.Time  `json:"next_attempt_at"`
+	LastError     *string    `json:"last_error"`
+	MessageID     *string    `json:"message_id"`
+}
+
 type EmailCampaign struct {
 	ID              uuid.UUID            `json:"id"`
 	HackathonID     string               `json:"hackathon_id"`
