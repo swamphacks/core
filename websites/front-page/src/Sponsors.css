@@ -767,20 +767,26 @@
     max-height: 86px;
   }
 }
-/* Center SperryTech on its own row and give its logo more room. */
-.sponsor-grid--medium .sponsor-card[aria-label="SperryTech"] {
-  grid-column: 1 / -1;
+/* SperryTech's centered row between the co-host and medium sponsors. */
+.sponsor-tier--sperrytech {
+  align-items: center;
 }
 
-.sponsor-card[aria-label="SperryTech"] img {
-  max-width: min(100%, 350px);
-  max-height: 125px;
+.sponsor-card--sperrytech {
+  width: min(100%, 300px);
+  padding: 0px 0;
+}
+
+.sponsor-card--sperrytech img {
+  width: 100%;
+  height: auto;
+  max-width: 300px;
+  max-height: none;
 }
 
 @media (max-width: 760px) {
-  .sponsor-card[aria-label="SperryTech"] img {
-    max-width: min(100%, 230px);
-    max-height: 86px;
+  .sponsor-card--sperrytech {
+    width: min(85%, 300px);
   }
 }
 

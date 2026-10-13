@@ -62,12 +62,6 @@ const mediumSponsors: Sponsor[] = [
     textMark: null,
     url: "https://eed.eng.ufl.edu/",
   },
-  {
-    name: "SperryTech",
-    logo: SperryTech,
-    textMark: null,
-    url: "https://sperrytech.ai/",
-  },
 ];
 
 const smallSponsors: Sponsor[] = [
@@ -267,6 +261,17 @@ export default function Sponsors() {
                   <img src={Vobile} alt="Vobile, SwampHacks co-host" />
                 </a>
               </div>
+            </section>
+            <section className="sponsor-tier sponsor-tier--sperrytech">
+              <a
+                className="sponsor-card sponsor-card--sperrytech"
+                href="https://sperrytech.ai/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="SperryTech"
+              >
+                <img src={SperryTech} alt="SperryTech" />
+              </a>
             </section>
             <section className="sponsor-tier">
               <h2 className="sponsor-tier__label">Medium Sponsors</h2>
