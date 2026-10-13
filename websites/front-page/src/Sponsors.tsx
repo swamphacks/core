@@ -1,6 +1,3 @@
-import Photon from "./assets/sponsors/Photon.svg";
-import DSI from "./assets/sponsors/DSI_logo.svg";
-import MLH from "./assets/sponsors/MLH_logo.svg";
 import type { PointerEvent } from "react";
 import "./Sponsors.css";
 import boat from "./assets/boat.png";
@@ -12,6 +9,7 @@ import CapitalOne from "./assets/sponsors/capital-one.svg";
 import SperryTech from "./assets/sponsors/SperryTech.svg";
 import BNY from "./assets/sponsors/bny.svg";
 import Roblox from "./assets/sponsors/roblox.svg";
+import Vobile from "./assets/sponsors/vobile.png";
 import PureButtons from "./assets/sponsors/pure-buttons.svg";
 import UFCise from "./assets/sponsors/uf-cise-white.png";
 import CpeLab from "./assets/sponsors/cpe-lab.png";
@@ -260,7 +258,7 @@ export default function Sponsors() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <span className="text-2xl font-bold">Vobile</span>
+                  <img src={Vobile} alt="Vobile, SwampHacks co-host" />
                 </a>
               </div>
             </section>
