@@ -1,6 +1,3 @@
-import Photon from "./assets/sponsors/Photon.svg";
-import DSI from "./assets/sponsors/DSI_logo.svg";
-import MLH from "./assets/sponsors/MLH_logo.svg";
 import type { PointerEvent } from "react";
 import "./Sponsors.css";
 import boat from "./assets/boat.png";
@@ -9,12 +6,17 @@ import fish from "./assets/fish.png";
 import FifthThird from "./assets/sponsors/fifth-third.png";
 import UF from "./assets/sponsors/uf.png";
 import CapitalOne from "./assets/sponsors/capital-one.svg";
+import SperryTech from "./assets/sponsors/SperryTech.svg";
 import BNY from "./assets/sponsors/bny.svg";
 import Roblox from "./assets/sponsors/roblox.svg";
+import Vobile from "./assets/sponsors/vobile.png";
 import PureButtons from "./assets/sponsors/pure-buttons.svg";
 import UFCise from "./assets/sponsors/uf-cise-white.png";
 import CpeLab from "./assets/sponsors/cpe-lab.png";
 import DeepSpace from "./assets/sponsors/deepspace.png";
+import MLH from "./assets/sponsors/MLH_logo.svg";
+import DSI from "./assets/sponsors/DSI_logo.svg";
+import Photon from "./assets/sponsors/Photon.svg";
 
 type Sponsor = {
   name: string;
@@ -98,7 +100,7 @@ const smallSponsors: Sponsor[] = [
     logo: Photon,
     textMark: null,
     url: "https://photon.codes/",
-  },
+  }
 ];
 // import SponsorsImg from "./assets/Sponsors.png";
 // import SponsorsSvg from "./assets/Sponsors.svg";
@@ -256,9 +258,20 @@ export default function Sponsors() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <span className="text-2xl font-bold">Vobile</span>
+                  <img src={Vobile} alt="Vobile, SwampHacks co-host" />
                 </a>
               </div>
+            </section>
+            <section className="sponsor-tier sponsor-tier--sperrytech">
+              <a
+                className="sponsor-card sponsor-card--sperrytech"
+                href="https://sperrytech.ai/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="SperryTech"
+              >
+                <img src={SperryTech} alt="SperryTech" />
+              </a>
             </section>
             <section className="sponsor-tier">
               <h2 className="sponsor-tier__label">Medium Sponsors</h2>

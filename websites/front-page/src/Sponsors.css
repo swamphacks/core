@@ -767,13 +767,64 @@
     max-height: 86px;
   }
 }
+/* SperryTech's centered row between the co-host and medium sponsors. */
+.sponsor-tier--sperrytech {
+  align-items: center;
+}
+
+.sponsor-card--sperrytech {
+  width: min(100%, 300px);
+  padding: 0px 0;
+}
+
+.sponsor-card--sperrytech img {
+  width: 100%;
+  height: auto;
+  max-width: 300px;
+  max-height: none;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card--sperrytech {
+    width: min(85%, 300px);
+  }
+}
+
 /* Additional southern lake space */
 .sponsors-container .water {
+  height: auto;
   min-height: 740px;
   padding-bottom: 140px;
 }
 
+.sponsor-tier--cohost {
+  align-items: center;
+}
+
+.sponsor-card--cohost {
+  width: min(100%, 520px);
+  padding: 18px 0;
+}
+
+.sponsor-card--cohost a {
+  display: block;
+  width: 100%;
+}
+
+.sponsor-card--cohost img {
+  width: 100%;
+  height: auto;
+  max-width: 520px;
+  max-height: none;
+  image-rendering: auto;
+}
+
 @media (max-width: 760px) {
+  .sponsor-card--cohost {
+    width: min(85%, 520px);
+    padding: 12px 0;
+  }
+
   .sponsors-container .water {
     min-height: 630px;
     padding-bottom: 105px;
