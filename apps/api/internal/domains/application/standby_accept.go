@@ -113,9 +113,42 @@ func (s *ApplicationService) acceptStandby(ctx context.Context, eventID string, 
 		if nextUser != userID {
 			return errStandbyPriority
 		}
-		_, err = tx.Exec(ctx, `
+		if _, err := tx.Exec(ctx, `
 			UPDATE applications SET status='accepted',updated_at=now()
 			WHERE id=$1 AND status::text='waitlist_confirmed'
+		`, applicationID); err != nil {
+			return err
+		}
+
+		// Queue the notification atomically with the admission offer.
+		_, err = tx.Exec(ctx, `
+			INSERT INTO waitlist_invitation_outbox (
+				application_id, offered_at, confirmation_deadline,
+				recipient, first_name
+			)
+			SELECT o.application_id, o.offered_at, o.confirmation_deadline,
+				COALESCE(
+					NULLIF(trim(u.preferred_email), ''),
+					NULLIF(trim(u.email), ''),
+					NULLIF(trim(a.application->>'preferredEmail'), ''),
+					NULLIF(trim(a.application->>'universityEmail'), ''),
+					''
+				),
+				COALESCE(
+					NULLIF(trim(a.application->>'firstName'), ''),
+					NULLIF(split_part(trim(u.name), ' ', 1), ''),
+					'Hacker'
+				)
+			FROM application_waitlist_offers o
+			JOIN applications a ON a.id=o.application_id
+			JOIN users u ON u.id=a.user_id
+			WHERE o.application_id=$1
+				AND COALESCE(
+					NULLIF(trim(u.preferred_email), ''),
+					NULLIF(trim(u.email), ''),
+					NULLIF(trim(a.application->>'preferredEmail'), ''),
+					NULLIF(trim(a.application->>'universityEmail'), '')
+				) IS NOT NULL
 		`, applicationID)
 		return err
 	})

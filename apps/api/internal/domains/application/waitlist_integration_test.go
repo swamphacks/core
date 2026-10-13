@@ -387,6 +387,14 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 		dayOf := newApplicant(t, "rejected", "applicant")
 		staff := newApplicant(t, "started", "staff")
 
+		// Exercise the application email fallback for standby notifications.
+		exec(`UPDATE applications
+			SET application=jsonb_set(
+				COALESCE(application, '{}'::jsonb),
+				'{preferredEmail}', '"standby@example.com"'::jsonb
+			)
+			WHERE user_id=$1 AND hackathon_id=$2`, present, hackathonID)
+
 		for _, id := range []uuid.UUID{online, present, dayOf} {
 			if err := service.JoinAdmissionWaitlist(ctx, id); err != nil {
 				t.Fatal(err)
@@ -500,6 +508,19 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 		assertState(t, dayOf, "waitlist_confirmed", "applicant")
 		assertState(t, online, "waitlisted", "applicant")
 
+		var invitationCount int
+		if err := pool.QueryRow(ctx, `
+			SELECT count(*)
+			FROM waitlist_invitation_outbox o
+			JOIN applications a ON a.id=o.application_id
+			WHERE a.user_id=$1 AND a.hackathon_id=$2
+		`, present, hackathonID).Scan(&invitationCount); err != nil {
+			t.Fatal(err)
+		}
+		if invitationCount != 1 {
+			t.Fatalf("standby invitations=%d; want 1", invitationCount)
+		}
+
 		var deadlineExists bool
 		if err := pool.QueryRow(ctx, `
 			SELECT EXISTS(
@@ -519,6 +540,17 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 			t.Fatal(err)
 		}
 		assertState(t, dayOf, "accepted", "applicant")
+		if err := pool.QueryRow(ctx, `
+			SELECT count(*)
+			FROM waitlist_invitation_outbox o
+			JOIN applications a ON a.id=o.application_id
+			WHERE a.user_id=$1 AND a.hackathon_id=$2
+		`, dayOf, hackathonID).Scan(&invitationCount); err != nil {
+			t.Fatal(err)
+		}
+		if invitationCount != 0 {
+			t.Fatal("missing-email hacker unexpectedly queued an invitation")
+		}
 		if err := service.acceptStandby(ctx, hackathonID, online, staff, now); !errors.Is(err, errStandbyEmpty) {
 			t.Fatalf("absent hacker was accepted: %v", err)
 		}
