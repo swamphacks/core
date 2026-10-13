@@ -870,7 +870,7 @@ func (s *ApplicationService) SearchAutoDecisionRequests(ctx context.Context, req
 			Limit:    int32(req.Limit),
 			Search:   &req.Search,
 			Approved: req.Approved,
-			Decision: &decision.ApplicationAutoDecisionType,
+			Decision: decision,
 		})
 		return err
 	})

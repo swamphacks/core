@@ -73,6 +73,35 @@ func main() {
 	mux := asynq.NewServeMux()
 
 	qrEmailEnabled := os.Getenv("CONFIRMED_QR_EMAIL_ENABLED") == "true"
+
+	receiptEnabled := os.Getenv("WAITLIST_RECEIPT_EMAIL_ENABLED") == "true"
+	mux.HandleFunc("waitlistreceipt:sweep", func(ctx context.Context, task *asynq.Task) error {
+		if !receiptEnabled {
+			return nil
+		}
+		return admissionService.DeliverWaitlistReceipts(
+			ctx,
+			func(ctx context.Context, recipient, name, kind, source string) error {
+				if err := ctx.Err(); err != nil {
+					return err
+				}
+				subject := "You're on the SwampHacks XII waitlist"
+				template := "WaitlistSignupReceiptEmail.html"
+				if kind == "arrival" {
+					subject = "Your SwampHacks XII standby arrival is recorded"
+					template = "StandbyArrivalReceiptEmail.html"
+				} else if source == "day_of" {
+					subject = "Your SwampHacks XII day-of registration is complete"
+					template = "DayOfRegistrationReceiptEmail.html"
+				}
+				return emailService.SendHtmlEmail(
+					recipient, subject,
+					map[string]string{"Name": html.EscapeString(name)},
+					cfg.EmailTemplateDirectory+template,
+				)
+			},
+		)
+	})
 	mux.HandleFunc("confirmedqr:sweep", func(ctx context.Context, task *asynq.Task) error {
 		if !qrEmailEnabled {
 			return nil
@@ -135,6 +164,14 @@ func main() {
 	// The scheduler enqueues the sweep task on an interval; the server below
 	// consumes it like any other task, so scheduled sends share the same queue.
 	scheduler := asynq.NewScheduler(redisOpt, &asynq.SchedulerOpts{})
+
+	if receiptEnabled {
+		if _, err := scheduler.Register(
+			"@every 1m", asynq.NewTask("waitlistreceipt:sweep", nil), asynq.Queue("email"),
+		); err != nil {
+			log.Fatalf("Failed to register waitlist receipt sweep: %v", err)
+		}
+	}
 
 	if qrEmailEnabled {
 		if _, err := scheduler.Register(
