@@ -250,6 +250,41 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
             WHERE o.application_id=a.id AND a.hackathon_id=$1
         `, hackathonID)
 
+		t.Run("pending legacy offer retains 48 hours", func(t *testing.T) {
+			exec(`
+                UPDATE waitlist_invitation_outbox o
+                SET confirmation_deadline=o.offered_at + interval '48 hours',
+                    next_attempt_at=now()
+                FROM applications a
+                WHERE o.application_id=a.id AND a.hackathon_id=$1
+                  AND o.sent_at IS NULL AND o.cancelled_at IS NULL
+            `, hackathonID)
+
+			calls := 0
+			result, err := service.DeliverAdmissionWaitlistInvitations(
+				ctx, func(_ context.Context, _, _ string, deadline time.Time) error {
+					calls++
+					remaining := time.Until(deadline)
+					if remaining < 48*time.Hour-time.Minute || remaining > 48*time.Hour {
+						t.Errorf("legacy offer window changed: %v", remaining)
+					}
+					return errors.New("test keeps legacy invitation pending")
+				},
+			)
+			if err != nil || calls != 1 || result.Failed != 1 {
+				t.Fatalf("legacy delivery result: %+v, calls=%d, error=%v", result, calls, err)
+			}
+
+			exec(`
+                UPDATE waitlist_invitation_outbox o
+                SET confirmation_deadline=o.offered_at + interval '12 hours',
+                    next_attempt_at=now()
+                FROM applications a
+                WHERE o.application_id=a.id AND a.hackathon_id=$1
+                  AND o.sent_at IS NULL AND o.cancelled_at IS NULL
+            `, hackathonID)
+		})
+
 		calls := 0
 		delivered, err := service.DeliverAdmissionWaitlistInvitations(
 			ctx, func(_ context.Context, recipient, name string, deadline time.Time) error {
@@ -258,7 +293,7 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 					t.Errorf("unexpected recipient: %s", recipient)
 				}
 				remaining := time.Until(deadline)
-				if remaining < 48*time.Hour-time.Minute || remaining > 48*time.Hour {
+				if remaining < 12*time.Hour-time.Minute || remaining > 12*time.Hour {
 					t.Errorf("invalid confirmation window: %v", remaining)
 				}
 				return nil
@@ -573,8 +608,8 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if deadline.Sub(offered) != 48*time.Hour {
-			t.Fatal("offer does not provide exactly 48 hours")
+		if deadline.Sub(offered) != 12*time.Hour {
+			t.Fatal("offer does not provide exactly 12 hours")
 		}
 
 		exec("UPDATE applications SET status = 'accepted' WHERE id = $1", applicationID)
