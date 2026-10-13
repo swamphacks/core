@@ -78,6 +78,24 @@ const smallSponsors: Sponsor[] = [
     textMark: null,
     url: "https://deep.space/",
   },
+  {
+    name: "MLH",
+    logo: MLH,
+    textMark: null,
+    url: "https://www.mlh.com/",
+  },
+  {
+    name: "DSI",
+    logo: DSI,
+    textMark: null,
+    url: "https://www.instagram.com/uf_dsi/",
+  },
+  {
+    name: "Photon",
+    logo: Photon,
+    textMark: null,
+    url: "https://photon.codes/",
+  },
 ];
 // import SponsorsImg from "./assets/Sponsors.png";
 // import SponsorsSvg from "./assets/Sponsors.svg";
@@ -228,6 +246,17 @@ export default function Sponsors() {
           <h1 className="sponsors-header">Sponsors</h1>
 
           <div className="sponsor-tiers">
+            <section className="sponsor-tier sponsor-tier--cohost">
+              <div className="sponsor-card sponsor-card--cohost">
+                <a
+                  href={"https://us.vobile.com/"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={Vobile} alt="Vobile, SwampHacks co-host" />
+                </a>
+              </div>
+            </section>
             <section className="sponsor-tier">
               <h2 className="sponsor-tier__label">Medium Sponsors</h2>
               <div className="sponsor-grid sponsor-grid--medium">
