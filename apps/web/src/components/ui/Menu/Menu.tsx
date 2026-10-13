@@ -16,19 +16,35 @@ import { Popover, type PopoverProps } from "../Popover";
 import TablerChevronRight from "~icons/tabler/chevron-right";
 import TablerCheck from "~icons/tabler/check";
 import { composeTailwindRenderProps } from "@/components/ui/utils";
+import { cn } from "@/utils/cn";
 
 interface MenuProps<T> extends AriaMenuProps<T> {
   placement?: PopoverProps["placement"];
+  /** Classes for the surrounding popover, e.g. to tune its enter/exit animation. */
+  popoverClassName?: string;
   header?: React.ReactNode;
 }
 
-export function Menu<T extends object>({ header, ...props }: MenuProps<T>) {
+export function Menu<T extends object>({
+  header,
+  className,
+  popoverClassName,
+  ...props
+}: MenuProps<T>) {
   return (
-    <Popover placement={props.placement} className="min-w-[170px]">
+    <Popover
+      placement={props.placement}
+      className={cn("min-w-[170px]", popoverClassName)}
+    >
       {header}
       <AriaMenu
         {...props}
-        className="p-1 outline max-h-[inherit] overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]"
+        // Merge rather than replace: the className prop was previously accepted
+        // by the type but silently dropped.
+        className={cn(
+          "p-1 outline max-h-[inherit] overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]",
+          className,
+        )}
       />
     </Popover>
   );
