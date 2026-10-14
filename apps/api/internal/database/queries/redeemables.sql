@@ -1,14 +1,18 @@
 -- name: GetRedeemables :many
+-- total_redeemed counts NFC scans (one nfc_tags_redeemables row per item handed
+-- out), the same rows the check_redeemable_count trigger counts against stock.
+-- COUNT(ntr.id), not COUNT(*): an item with no scans must count 0, not 1.
 SELECT r.id,
-r.name, 
-r.amount AS total_stock, 
-r.max_user_amount,
-r.created_at, 
-r.updated_at,
-COALESCE(SUM(ur.amount), 0) AS total_redeemed
+    r.name,
+    r.amount AS total_stock,
+    r.max_user_amount,
+    r.created_at,
+    r.updated_at,
+    COUNT(ntr.id) AS total_redeemed
 FROM redeemables r
-LEFT JOIN user_redemptions ur ON r.id = ur.redeemable_id
-GROUP BY r.id;
+LEFT JOIN nfc_tags_redeemables ntr ON ntr.redeemable_id = r.id
+GROUP BY r.id
+ORDER BY r.name, r.id;
 
 -- name: RedeemRedeemable :one
 INSERT INTO user_redemptions (user_id, redeemable_id, hackathon_id, amount)

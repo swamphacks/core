@@ -62,27 +62,31 @@ func (q *Queries) DeleteRedeemable(ctx context.Context, id uuid.UUID) error {
 
 const getRedeemables = `-- name: GetRedeemables :many
 SELECT r.id,
-r.name, 
-r.amount AS total_stock, 
-r.max_user_amount,
-r.created_at, 
-r.updated_at,
-COALESCE(SUM(ur.amount), 0) AS total_redeemed
+    r.name,
+    r.amount AS total_stock,
+    r.max_user_amount,
+    r.created_at,
+    r.updated_at,
+    COUNT(ntr.id) AS total_redeemed
 FROM redeemables r
-LEFT JOIN user_redemptions ur ON r.id = ur.redeemable_id
+LEFT JOIN nfc_tags_redeemables ntr ON ntr.redeemable_id = r.id
 GROUP BY r.id
+ORDER BY r.name, r.id
 `
 
 type GetRedeemablesRow struct {
-	ID            uuid.UUID   `json:"id"`
-	Name          string      `json:"name"`
-	TotalStock    int32       `json:"total_stock"`
-	MaxUserAmount int32       `json:"max_user_amount"`
-	CreatedAt     time.Time   `json:"created_at"`
-	UpdatedAt     time.Time   `json:"updated_at"`
-	TotalRedeemed interface{} `json:"total_redeemed"`
+	ID            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	TotalStock    int32     `json:"total_stock"`
+	MaxUserAmount int32     `json:"max_user_amount"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	TotalRedeemed int64     `json:"total_redeemed"`
 }
 
+// total_redeemed counts NFC scans (one nfc_tags_redeemables row per item handed
+// out), the same rows the check_redeemable_count trigger counts against stock.
+// COUNT(ntr.id), not COUNT(*): an item with no scans must count 0, not 1.
 func (q *Queries) GetRedeemables(ctx context.Context) ([]GetRedeemablesRow, error) {
 	rows, err := q.db.Query(ctx, getRedeemables)
 	if err != nil {

@@ -114,11 +114,16 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
         COALESCE(w.signup_source,'preregistered'),w.in_person_joined_at,
         COALESCE((
             SELECT jsonb_agg(jsonb_build_object(
-                'redeemableId',r.id,'name',r.name,'amount',ur.amount
-            ) ORDER BY r.name,r.id)
-            FROM user_redemptions ur JOIN redeemables r ON r.id=ur.redeemable_id
-            WHERE ur.user_id=u.id AND ur.hackathon_id=a.hackathon_id
-                AND r.hackathon_id=a.hackathon_id AND ur.amount>0
+                'redeemableId',x.id,'name',x.name,'amount',x.amount
+            ) ORDER BY x.name,x.id)
+            FROM (
+                SELECT r.id, r.name, count(*) AS amount
+                FROM nfc_tags_redeemables ntr
+                JOIN nfc_tags_user ntu ON ntu.tag_id=ntr.tag_id
+                JOIN redeemables r ON r.id=ntr.redeemable_id
+                WHERE ntu.user_id=u.id AND r.hackathon_id=a.hackathon_id
+                GROUP BY r.id, r.name
+            ) x
         ),'[]'::jsonb)
     FROM applications a
     JOIN users u ON u.id=a.user_id
@@ -138,10 +143,11 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
         AND ($4='' OR ($4='yes' AND ci.user_id IS NOT NULL)
             OR ($4='no' AND ci.user_id IS NULL))
         AND ($5::uuid IS NULL OR EXISTS (
-            SELECT 1 FROM user_redemptions ur JOIN redeemables r ON r.id=ur.redeemable_id
-            WHERE ur.user_id=u.id AND ur.hackathon_id=a.hackathon_id
-                AND r.hackathon_id=a.hackathon_id
-                AND ur.redeemable_id=$5 AND ur.amount>0
+            SELECT 1 FROM nfc_tags_redeemables ntr
+            JOIN nfc_tags_user ntu ON ntu.tag_id=ntr.tag_id
+            JOIN redeemables r ON r.id=ntr.redeemable_id
+            WHERE ntu.user_id=u.id AND r.hackathon_id=a.hackathon_id
+                AND ntr.redeemable_id=$5
         ))
     ORDER BY CASE WHEN a.status::text='waitlist_confirmed' THEN 0 ELSE 1 END,
         CASE WHEN w.signup_source='day_of' THEN 1 ELSE 0 END,
