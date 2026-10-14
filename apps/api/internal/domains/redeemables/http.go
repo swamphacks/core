@@ -45,11 +45,11 @@ func RegisterRoutes(redeemablesHandler *handler, group huma.API, mw *middleware.
 		OperationID:   "update-redeemable",
 		Method:        http.MethodPatch,
 		Summary:       "Update Redeemable",
-		Description:   "Update specific fields (name, max per user) of a redeemable",
+		Description:   "Update specific fields (name, max per user, type) of a redeemable",
 		Tags:          []string{"Redeemables"},
 		Path:          "/{redeemableId}",
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError, http.StatusBadRequest},
+		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError, http.StatusBadRequest, http.StatusNotFound},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
 	}, redeemablesHandler.handleUpdateRedeemable)
@@ -122,8 +122,9 @@ func (h *handler) handleCreateRedeemable(ctx context.Context, input *struct {
 }
 
 type UpdateRedeemableRequest struct {
-	Name          *string `json:"name,omitempty"`
+	Name          *string `json:"name,omitempty" minLength:"1"`
 	MaxUserAmount *int    `json:"maxUserAmount,omitempty" minimum:"1"`
+	Type          *string `json:"type,omitempty" enum:"meal,tshirt,swag,drink"`
 }
 
 type UpdateRedeemableOutput struct {
@@ -140,8 +141,11 @@ func (h *handler) handleUpdateRedeemable(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Invalid redeemable id")
 	}
 
-	_, err = h.redeemablesService.UpdateRedeemable(ctx, redeemableId, input.Body.Name, input.Body.MaxUserAmount)
+	_, err = h.redeemablesService.UpdateRedeemable(ctx, redeemableId, input.Body.Name, input.Body.MaxUserAmount, input.Body.Type)
 
+	if errors.Is(err, ErrRedeemableNotFound) {
+		return nil, huma.Error404NotFound("Redeemable not found")
+	}
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Fail to update redeemable")
 	}

@@ -56,6 +56,7 @@ func (q *Queries) DeleteRedeemable(ctx context.Context, id uuid.UUID) error {
 const getRedeemables = `-- name: GetRedeemables :many
 SELECT r.id,
     r.name,
+    r.type,
     r.max_user_amount,
     r.created_at,
     r.updated_at,
@@ -69,6 +70,7 @@ ORDER BY r.name, r.id
 type GetRedeemablesRow struct {
 	ID            uuid.UUID `json:"id"`
 	Name          string    `json:"name"`
+	Type          string    `json:"type"`
 	MaxUserAmount int32     `json:"max_user_amount"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
@@ -89,6 +91,7 @@ func (q *Queries) GetRedeemables(ctx context.Context) ([]GetRedeemablesRow, erro
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Type,
 			&i.MaxUserAmount,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -109,6 +112,7 @@ UPDATE redeemables
 SET 
     name = COALESCE($2, name),
     max_user_amount = COALESCE($3, max_user_amount),
+    type = COALESCE($4, type),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
 RETURNING id, name, max_user_amount, created_at, updated_at, hackathon_id, type
@@ -118,10 +122,16 @@ type UpdateRedeemableParams struct {
 	ID            uuid.UUID `json:"id"`
 	Name          *string   `json:"name"`
 	MaxUserAmount *int32    `json:"max_user_amount"`
+	Type          *string   `json:"type"`
 }
 
 func (q *Queries) UpdateRedeemable(ctx context.Context, arg UpdateRedeemableParams) (Redeemable, error) {
-	row := q.db.QueryRow(ctx, updateRedeemable, arg.ID, arg.Name, arg.MaxUserAmount)
+	row := q.db.QueryRow(ctx, updateRedeemable,
+		arg.ID,
+		arg.Name,
+		arg.MaxUserAmount,
+		arg.Type,
+	)
 	var i Redeemable
 	err := row.Scan(
 		&i.ID,

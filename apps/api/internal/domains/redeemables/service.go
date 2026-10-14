@@ -9,9 +9,12 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
-// ErrNoActiveHackathon is re-exported so the handler checks the service-level
-// name, matching ErrEmailCampaignNotFound in the email package.
-var ErrNoActiveHackathon = repository.ErrNoActiveHackathon
+// Re-exported so the handler checks the service-level names, matching
+// ErrEmailCampaignNotFound in the email package.
+var (
+	ErrNoActiveHackathon  = repository.ErrNoActiveHackathon
+	ErrRedeemableNotFound = repository.ErrRedeemableNotFound
+)
 
 type RedeemablesService struct {
 	redeemablesRepo *repository.RedeemablesRepository
@@ -57,7 +60,7 @@ func (s *RedeemablesService) DeleteRedeemable(ctx context.Context, redeemableID 
 	return nil
 }
 
-func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID uuid.UUID, name *string, maxUserAmount *int) (*sqlc.Redeemable, error) {
+func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID uuid.UUID, name *string, maxUserAmount *int, redeemableType *string) (*sqlc.Redeemable, error) {
 
 	var maxUserAmount32 *int32
 	if maxUserAmount != nil {
@@ -69,6 +72,7 @@ func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID 
 		ID:            redeemableID,
 		Name:          name,
 		MaxUserAmount: maxUserAmount32,
+		Type:          redeemableType,
 	})
 
 	if err != nil {

@@ -10,7 +10,10 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
-var ErrNoActiveHackathon = errors.New("no active hackathon")
+var (
+	ErrNoActiveHackathon  = errors.New("no active hackathon")
+	ErrRedeemableNotFound = errors.New("redeemable not found")
+)
 
 type RedeemablesRepository struct {
 	db *database.DB
@@ -51,6 +54,9 @@ func (r *RedeemablesRepository) DeleteRedeemable(ctx context.Context, redeemable
 
 func (r *RedeemablesRepository) UpdateRedeemable(ctx context.Context, params sqlc.UpdateRedeemableParams) (*sqlc.Redeemable, error) {
 	redeemable, err := r.db.Query.UpdateRedeemable(ctx, params)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrRedeemableNotFound
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@
 -- out). COUNT(ntr.id), not COUNT(*): an item with no scans must count 0, not 1.
 SELECT r.id,
     r.name,
+    r.type,
     r.max_user_amount,
     r.created_at,
     r.updated_at,
@@ -26,6 +27,7 @@ UPDATE redeemables
 SET 
     name = COALESCE(sqlc.narg('name'), name),
     max_user_amount = COALESCE(sqlc.narg('max_user_amount'), max_user_amount),
+    type = COALESCE(sqlc.narg('type'), type),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
 RETURNING *;
