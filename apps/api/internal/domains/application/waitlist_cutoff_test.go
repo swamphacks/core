@@ -11,6 +11,7 @@ func TestAdmissionWaitlistCutoff(t *testing.T) {
 		at   string
 		open bool
 	}{
+		{"October 14 is open", "2026-10-14T05:00:00Z", true},
 		{"last minute is open", "2026-10-16T03:59:59Z", true},
 		{"midnight Eastern is closed", "2026-10-16T04:00:00Z", false},
 		{"after cutoff is closed", "2026-10-16T04:00:01Z", false},

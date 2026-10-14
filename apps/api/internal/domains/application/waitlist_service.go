@@ -14,7 +14,7 @@ var ErrWaitlistClosed = errors.New("the deadline to join the waitlist was Octobe
 var ErrLeaveWaitlistEligibility = errors.New("only waitlisted applicants can leave the waitlist")
 
 // The full 11:59 PM minute is included.
-var admissionWaitlistClosesAt = time.Date(2026, time.October, 5, 3, 59, 0, 0, time.UTC).Add(time.Minute)
+var admissionWaitlistClosesAt = time.Date(2026, time.October, 16, 3, 59, 0, 0, time.UTC).Add(time.Minute)
 
 func admissionWaitlistIsOpen(now time.Time) bool {
 	return now.Before(admissionWaitlistClosesAt)
