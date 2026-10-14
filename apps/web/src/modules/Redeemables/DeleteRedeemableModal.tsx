@@ -1,24 +1,23 @@
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { api } from "@/lib/ky";
 import { showToast } from "@/lib/toast/toast";
-import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useContext } from "react";
 import TablerAlertTriangle from "~icons/tabler/alert-triangle";
 import { OverlayTriggerStateContext } from "react-aria-components";
+import {
+  apiErrorMessage,
+  useDeleteRedeemable,
+  type Redeemable,
+} from "./hooks/useRedeemables";
 
 interface DeleteRedeemableModalProps {
-  eventId: string;
-  redeemableId: string;
+  redeemable: Redeemable;
 }
 
-function DeleteRedeemableModal({
-  eventId,
-  redeemableId,
-}: DeleteRedeemableModalProps) {
-  const queryClient = useQueryClient();
+function DeleteRedeemableModal({ redeemable }: DeleteRedeemableModalProps) {
   const [countdown, setCountdown] = useState(3);
   const state = useContext(OverlayTriggerStateContext)!;
+  const { mutateAsync: deleteRedeemable, isPending } = useDeleteRedeemable();
 
   useEffect(() => {
     if (state.isOpen) {
@@ -42,27 +41,28 @@ function DeleteRedeemableModal({
     return () => clearInterval(timer);
   }, [state.isOpen]);
 
-  const handleDeleteRedeemable = async (
-    eventId: string,
-    redeemableId: string,
-  ) => {
+  const handleDelete = async () => {
     try {
-      await api.delete(`events/${eventId}/redeemables/${redeemableId}`);
+      await deleteRedeemable(redeemable.id);
       showToast({
-        title: "Redeemable Deleted",
-        message: "Successfully deleted redeemable.",
+        title: "Item Deleted",
+        message: `Deleted ${redeemable.name}.`,
         type: "success",
       });
-      queryClient.invalidateQueries({ queryKey: ["redeemables", eventId] });
+      state.close();
     } catch (error) {
-      console.error("Failed to delete redeemable", error);
       showToast({
         title: "Delete Failed",
-        message: "Failed to delete redeemable. Please try again.",
+        message: await apiErrorMessage(
+          error,
+          "Failed to delete the item. Please try again.",
+        ),
         type: "error",
       });
     }
   };
+
+  const redeemed = redeemable.total_redeemed;
 
   return (
     <Modal isDismissible className="p-6 rounded-xl shadow-lg max-w-sm w-full">
@@ -72,19 +72,27 @@ function DeleteRedeemableModal({
         </div>
 
         <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-          Delete Redeemable?
+          Delete {redeemable.name}?
         </h3>
         <div className="mt-4 rounded-lg bg-red-50 dark:bg-red-900/20 p-4 border border-red-100 dark:border-red-900/30">
           <p className="text-sm leading-relaxed text-red-800 dark:text-red-200 font-medium">
             This action is permanent.
           </p>
-          <p className="mt-2 text-xs leading-relaxed text-red-700/80 dark:text-red-300/80">
-            Deleting this will erase ALL records for future analytics.
-            <span className="block mt-2 font-semibold">
-              Do not delete redeemables that have already been used by guests,
-              as we may use that data in the future.
-            </span>
-          </p>
+          {redeemed > 0 ? (
+            <p className="mt-2 text-xs leading-relaxed text-red-700/80 dark:text-red-300/80">
+              It erases {redeemed}{" "}
+              {redeemed === 1 ? "redemption" : "redemptions"} of this item. If
+              you recreate it, everyone who already got one can redeem it again.
+              <span className="block mt-2 font-semibold">
+                To change the name, type or limit, edit the item instead.
+              </span>
+            </p>
+          ) : (
+            <p className="mt-2 text-xs leading-relaxed text-red-700/80 dark:text-red-300/80">
+              Nobody has redeemed this item yet. Staff phones keep showing it
+              until the app is reopened.
+            </p>
+          )}
         </div>
       </div>
 
@@ -92,10 +100,11 @@ function DeleteRedeemableModal({
         <Button
           variant="danger"
           isDisabled={countdown > 0}
-          onPress={() => handleDeleteRedeemable(eventId, redeemableId)}
+          isPending={isPending}
+          onPress={handleDelete}
           className="w-full text-sm py-2.5 shadow-sm transition-all"
         >
-          {countdown > 0 ? `Wait ${countdown}s...` : "Delete Redeemable"}
+          {countdown > 0 ? `Wait ${countdown}s...` : "Delete Item"}
         </Button>
       </div>
     </Modal>
