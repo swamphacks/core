@@ -41,8 +41,7 @@ export const Empty: Story = {
 };
 
 export const Square: Story = {
-    args: {
-        shape: "square"
-    },
-  };
-  
+  args: {
+    shape: "square",
+  },
+};

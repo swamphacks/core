@@ -1,4 +1,4 @@
 ignoreScripts: false
 allowBuilds:
-  '@tailwindcss/oxide': true
+  "@tailwindcss/oxide": true
   esbuild: true

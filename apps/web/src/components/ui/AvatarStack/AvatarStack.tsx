@@ -59,8 +59,7 @@ export function AvatarStack({
               "w-12 h-12 text-base": size === "lg",
               "w-16 h-16 text-lg": size === "xl",
             },
-            bordered &&
-              "ring-1 ring-border",
+            bordered && "ring-1 ring-border",
           )}
           style={{ zIndex: displayAvatars.length + 1 }}
         >
