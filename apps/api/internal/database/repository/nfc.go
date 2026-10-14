@@ -35,6 +35,15 @@ func (r *NFCRepository) GetTshirts(ctx context.Context) ([]sqlc.GetTshirtsRow, e
 	return tshirts, nil
 }
 
+func (r *NFCRepository) GetRedeemablesByType(ctx context.Context, redeemableType string) ([]sqlc.GetRedeemablesByTypeRow, error) {
+	redeemables, err := r.db.Query.GetRedeemablesByType(ctx, redeemableType)
+	if err != nil {
+		return nil, err
+	}
+
+	return redeemables, nil
+}
+
 func (r *NFCRepository) CheckinUser(ctx context.Context, params sqlc.CheckinUserParams) (*sqlc.NfcTagsUser, error) {
 	user, err := r.db.Query.CheckinUser(ctx, params)
 	if err != nil {

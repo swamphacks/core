@@ -45,6 +45,16 @@ func (s *NfcService) GetTshirts(ctx context.Context) ([]sqlc.GetTshirtsRow, erro
 	return tshirts, nil
 }
 
+func (s *NfcService) GetRedeemablesByType(ctx context.Context, redeemableType string) ([]sqlc.GetRedeemablesByTypeRow, error) {
+	redeemables, err := s.nfcRepo.GetRedeemablesByType(ctx, redeemableType)
+	if err != nil {
+		s.logger.Err(err).Str("type", redeemableType).Msg("Failed to get redeemables by type")
+		return nil, errors.New("failed to get redeemables")
+	}
+
+	return redeemables, nil
+}
+
 func (s *NfcService) CheckinUser(ctx context.Context, tagID string, userID uuid.UUID) (*sqlc.NfcTagsUser, error) {
 	user, err := s.nfcRepo.CheckinUser(ctx, sqlc.CheckinUserParams{
 		TagID:  tagID,

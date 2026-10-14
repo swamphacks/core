@@ -8,6 +8,11 @@ SELECT name, id, max_user_amount FROM redeemables
 where type = 'tshirt'
 Order by name;
 
+-- name: GetRedeemablesByType :many
+SELECT name, id, max_user_amount FROM redeemables
+WHERE type = @redeemable_type
+ORDER BY name, id;
+
 -- name: TagToRedeemable :exec
 INSERT INTO nfc_tags_redeemables (tag_id, redeemable_id) VALUES ($1, $2);
 

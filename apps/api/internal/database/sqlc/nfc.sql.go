@@ -68,6 +68,38 @@ func (q *Queries) GetMeals(ctx context.Context) ([]GetMealsRow, error) {
 	return items, nil
 }
 
+const getRedeemablesByType = `-- name: GetRedeemablesByType :many
+SELECT name, id, max_user_amount FROM redeemables
+WHERE type = $1
+ORDER BY name, id
+`
+
+type GetRedeemablesByTypeRow struct {
+	Name          string    `json:"name"`
+	ID            uuid.UUID `json:"id"`
+	MaxUserAmount int32     `json:"max_user_amount"`
+}
+
+func (q *Queries) GetRedeemablesByType(ctx context.Context, redeemableType string) ([]GetRedeemablesByTypeRow, error) {
+	rows, err := q.db.Query(ctx, getRedeemablesByType, redeemableType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetRedeemablesByTypeRow{}
+	for rows.Next() {
+		var i GetRedeemablesByTypeRow
+		if err := rows.Scan(&i.Name, &i.ID, &i.MaxUserAmount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSocials = `-- name: GetSocials :many
 SELECT title as name, id FROM workshops
 WHERE type = 'social'

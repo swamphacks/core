@@ -39,6 +39,17 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 	}, nfcHandler.handleGetTshirts)
 
 	huma.Register(group, huma.Operation{
+		OperationID: "GetRedeemablesByType",
+		Method:      http.MethodGet,
+		Summary:     "Get redeemables of one type",
+		Description: "Get redeemables filtered by type (meal, tshirt, swag, drink)",
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/redeemables",
+		Errors:      []int{http.StatusInternalServerError},
+	}, nfcHandler.handleGetRedeemablesByType)
+
+	huma.Register(group, huma.Operation{
 		OperationID: "CheckinUser",
 		Method:      http.MethodPost,
 		Summary:     "Checkin user with NFC tag",
@@ -115,6 +126,14 @@ type GetTshirtsOutput struct {
 	Body []sqlc.GetTshirtsRow `json:"body"`
 }
 
+type GetRedeemablesByTypeInput struct {
+	Type string `query:"type" required:"true" enum:"meal,tshirt,swag,drink"`
+}
+
+type GetRedeemablesByTypeOutput struct {
+	Body []sqlc.GetRedeemablesByTypeRow `json:"body"`
+}
+
 type GetWorkshopsOutput struct {
 	Body []sqlc.GetWorkshopsRow `json:"body"`
 }
@@ -185,6 +204,17 @@ func (h *handler) handleGetTshirts(ctx context.Context, input *struct{}) (*GetTs
 
 	return &GetTshirtsOutput{
 		Body: tshirts,
+	}, nil
+}
+
+func (h *handler) handleGetRedeemablesByType(ctx context.Context, input *GetRedeemablesByTypeInput) (*GetRedeemablesByTypeOutput, error) {
+	redeemables, err := h.nfcService.GetRedeemablesByType(ctx, input.Type)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("failed to get redeemables")
+	}
+
+	return &GetRedeemablesByTypeOutput{
+		Body: redeemables,
 	}, nil
 }
 
