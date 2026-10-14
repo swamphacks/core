@@ -644,10 +644,52 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 		}
 	})
 
+	t.Run("withdrawn applicant explicitly rejoins with a fresh queue entry", func(t *testing.T) {
+		id := newApplicant(t, "withdrawn", "applicant")
+		exec(`INSERT INTO waitlist (hackathon_id,user_id,created_at)
+			VALUES ($1,$2,now()-interval '2 hours')`, hackathonID, id)
+
+		var before time.Time
+		if err := pool.QueryRow(ctx,
+			"SELECT clock_timestamp()",
+		).Scan(&before); err != nil {
+			t.Fatal(err)
+		}
+		if err := service.JoinAdmissionWaitlist(ctx, id); err != nil {
+			t.Fatal(err)
+		}
+		assertState(t, id, "waitlisted", "applicant")
+
+		var joined time.Time
+		if err := pool.QueryRow(ctx, `
+			SELECT created_at FROM waitlist
+			WHERE hackathon_id=$1 AND user_id=$2
+		`, hackathonID, id).Scan(&joined); err != nil {
+			t.Fatal(err)
+		}
+		if joined.Before(before) {
+			t.Fatalf("rejoin timestamp=%s precedes database time=%s", joined, before)
+		}
+
+		if err := service.JoinAdmissionWaitlist(ctx, id); err != nil {
+			t.Fatal(err)
+		}
+		var repeated time.Time
+		if err := pool.QueryRow(ctx, `
+			SELECT created_at FROM waitlist
+			WHERE hackathon_id=$1 AND user_id=$2
+		`, hackathonID, id).Scan(&repeated); err != nil {
+			t.Fatal(err)
+		}
+		if !repeated.Equal(joined) {
+			t.Fatal("repeated join changed the new queue timestamp")
+		}
+	})
+
 	t.Run("join rejects ineligible statuses", func(t *testing.T) {
 		for _, status := range []string{
 			"started", "submitted", "under_review",
-			"accepted", "confirmed", "withdrawn",
+			"accepted", "confirmed",
 		} {
 			t.Run(status, func(t *testing.T) {
 				id := newApplicant(t, status, "applicant")

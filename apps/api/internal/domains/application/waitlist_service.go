@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-var ErrWaitlistEligibility = errors.New("only rejected applicants can join the waitlist")
+var ErrWaitlistEligibility = errors.New("only rejected or withdrawn applicants can join the waitlist")
 var ErrWaitlistClosed = errors.New("the deadline to join the waitlist was October 15, 2026 at 11:59 PM ET")
 var ErrLeaveWaitlistEligibility = errors.New("only waitlisted applicants can leave the waitlist")
 
@@ -50,11 +50,19 @@ func (s *ApplicationService) changeAdmissionStatus(
 
 		if join {
 			// Repeated joins preserve an existing entry, including after closure.
-			if status == "rejected" && !admissionWaitlistIsOpen(time.Now()) {
+			if status != "waitlisted" && !admissionWaitlistIsOpen(time.Now()) {
 				return ErrWaitlistClosed
 			}
-			if status != "rejected" && status != "waitlisted" {
+			if status != "rejected" && status != "withdrawn" && status != "waitlisted" {
 				return ErrWaitlistEligibility
+			}
+			// Explicitly rejoining after withdrawal starts a new queue entry.
+			if status == "withdrawn" {
+				if _, err := tx.Exec(ctx, `
+					DELETE FROM waitlist WHERE hackathon_id=$1 AND user_id=$2
+				`, hackathonID, userID); err != nil {
+					return err
+				}
 			}
 			_, err = tx.Exec(ctx, `
 				INSERT INTO waitlist (hackathon_id, user_id)
