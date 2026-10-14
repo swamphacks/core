@@ -9,6 +9,10 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
+// ErrNoActiveHackathon is re-exported so the handler checks the service-level
+// name, matching ErrEmailCampaignNotFound in the email package.
+var ErrNoActiveHackathon = repository.ErrNoActiveHackathon
+
 type RedeemablesService struct {
 	redeemablesRepo *repository.RedeemablesRepository
 	logger          zerolog.Logger
@@ -30,12 +34,12 @@ func (s *RedeemablesService) GetRedeemables(ctx context.Context) (*[]sqlc.GetRed
 	return redeemables, nil
 }
 
-func (s *RedeemablesService) CreateRedeemable(ctx context.Context, name string, amount int, maxUserAmount int) (*sqlc.Redeemable, error) {
+func (s *RedeemablesService) CreateRedeemable(ctx context.Context, name string, amount int, maxUserAmount int, redeemableType string) (*sqlc.Redeemable, error) {
 	params := sqlc.CreateRedeemableParams{
 		Name:          name,
 		Amount:        int32(amount),
 		MaxUserAmount: int32(maxUserAmount),
-		HackthonID:    "xii",
+		Type:          redeemableType,
 	}
 	redeemable, err := s.redeemablesRepo.CreateRedeemable(ctx, params)
 	if err != nil {

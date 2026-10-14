@@ -2,11 +2,15 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
+
+var ErrNoActiveHackathon = errors.New("no active hackathon")
 
 type RedeemablesRepository struct {
 	db *database.DB
@@ -28,6 +32,9 @@ func (r *RedeemablesRepository) GetRedeemables(ctx context.Context) (*[]sqlc.Get
 
 func (r *RedeemablesRepository) CreateRedeemable(ctx context.Context, params sqlc.CreateRedeemableParams) (*sqlc.Redeemable, error) {
 	redeemable, err := r.db.Query.CreateRedeemable(ctx, params)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNoActiveHackathon
+	}
 	if err != nil {
 		return nil, err
 	}

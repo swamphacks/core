@@ -13,8 +13,10 @@ import (
 )
 
 const createRedeemable = `-- name: CreateRedeemable :one
-INSERT INTO redeemables (name, amount, max_user_amount, hackathon_id)
-VALUES ($1, $2, $3, $4)
+INSERT INTO redeemables (name, amount, max_user_amount, type, hackathon_id)
+SELECT $1, $2, $3, $4, h.id
+FROM hackathons h
+WHERE h.is_active
 RETURNING id, name, amount, max_user_amount, created_at, updated_at, hackathon_id, type
 `
 
@@ -22,15 +24,17 @@ type CreateRedeemableParams struct {
 	Name          string `json:"name"`
 	Amount        int32  `json:"amount"`
 	MaxUserAmount int32  `json:"max_user_amount"`
-	HackthonID    string `json:"hackthon_id"`
+	Type          string `json:"type"`
 }
 
+// Inserts into the active hackathon. With no active hackathon the SELECT
+// yields no rows, so nothing is inserted and pgx returns ErrNoRows.
 func (q *Queries) CreateRedeemable(ctx context.Context, arg CreateRedeemableParams) (Redeemable, error) {
 	row := q.db.QueryRow(ctx, createRedeemable,
 		arg.Name,
 		arg.Amount,
 		arg.MaxUserAmount,
-		arg.HackthonID,
+		arg.Type,
 	)
 	var i Redeemable
 	err := row.Scan(

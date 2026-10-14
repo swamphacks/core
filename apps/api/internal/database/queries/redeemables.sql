@@ -31,8 +31,12 @@ FROM user_redemptions ur
 WHERE ur.redeemable_id = $1;
 
 -- name: CreateRedeemable :one
-INSERT INTO redeemables (name, amount, max_user_amount, hackathon_id)
-VALUES (@name, @amount, @max_user_amount, @hackthon_id)
+-- Inserts into the active hackathon. With no active hackathon the SELECT
+-- yields no rows, so nothing is inserted and pgx returns ErrNoRows.
+INSERT INTO redeemables (name, amount, max_user_amount, type, hackathon_id)
+SELECT @name, @amount, @max_user_amount, @type, h.id
+FROM hackathons h
+WHERE h.is_active
 RETURNING *;
 
 -- name: UpdateRedeemable :one

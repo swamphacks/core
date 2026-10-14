@@ -2,6 +2,7 @@ package redeemables
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -36,7 +37,7 @@ func RegisterRoutes(redeemablesHandler *handler, group huma.API, mw *middleware.
 		Tags:          []string{"Redeemables"},
 		Path:          "",
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
-		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError},
+		Errors:        []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusInternalServerError},
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
 	}, redeemablesHandler.handleCreateRedeemable)
@@ -124,8 +125,9 @@ func (h *handler) handleGetRedeemables(ctx context.Context, input *struct{}) (*G
 
 type CreateRedeemableRequest struct {
 	Name          string `json:"name" minLength:"1"`
-	Amount        int    `json:"amount" minimum:"1"`
-	MaxUserAmount int    `json:"maxUserAmount"`
+	Amount        int    `json:"amount" minimum:"0"`
+	MaxUserAmount int    `json:"maxUserAmount" minimum:"1"`
+	Type          string `json:"type" enum:"meal,tshirt,swag,drink"`
 }
 
 type CreateRedeemableOutput struct {
@@ -135,8 +137,11 @@ type CreateRedeemableOutput struct {
 func (h *handler) handleCreateRedeemable(ctx context.Context, input *struct {
 	Body CreateRedeemableRequest
 }) (*CreateRedeemableOutput, error) {
-	redeemable, err := h.redeemablesService.CreateRedeemable(ctx, input.Body.Name, input.Body.Amount, input.Body.MaxUserAmount)
+	redeemable, err := h.redeemablesService.CreateRedeemable(ctx, input.Body.Name, input.Body.Amount, input.Body.MaxUserAmount, input.Body.Type)
 
+	if errors.Is(err, ErrNoActiveHackathon) {
+		return nil, huma.Error400BadRequest("No active hackathon. Activate a hackathon before creating redeemables.")
+	}
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to create redeemable")
 	}
