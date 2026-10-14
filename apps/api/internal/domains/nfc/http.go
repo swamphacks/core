@@ -252,6 +252,11 @@ func (h *handler) handleTagToRedeemable(ctx context.Context, input *TagToRedeema
 			case "P0005":
 				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "No redeemables left in stock"}}, nil
 			case "23503":
+				// The app loads its item list once, so it can still offer an
+				// item that staff have since deleted.
+				if pgErr.ConstraintName == "nfc_tags_redeemables_redeemable_id_fkey" {
+					return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "This item no longer exists. Reload the item list and pick again"}}, nil
+				}
 				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Tag has not been checked in"}}, nil
 			}
 		}
