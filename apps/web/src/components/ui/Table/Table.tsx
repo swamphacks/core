@@ -1,18 +1,10 @@
 import { flexRender, type Table } from "@tanstack/react-table";
-import {
-  MultiSelect,
-  type MultiSelectProps,
-} from "@/components/ui/MultiSelect";
 import { Select } from "@/components/ui/Select";
-import { TextField } from "@/components/ui/TextField";
 import { Button } from "../Button";
-import TablerChevronUp from "~icons/tabler/chevron-up";
-import TablerChevronDown from "~icons/tabler/chevron-down";
 import TablerChevronRight from "~icons/tabler/chevron-right";
 import TablerChevronLeft from "~icons/tabler/chevron-left";
 import TablerChevronsRight from "~icons/tabler/chevrons-right";
 import TablerChevronsLeft from "~icons/tabler/chevrons-left";
-import TablerArrowsSort from "~icons/tabler/arrows-sort";
 
 export interface ColumnFilter {
   id: string;
