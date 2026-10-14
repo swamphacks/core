@@ -25,7 +25,7 @@ const tracks = [
   {
     name: "Artificial Intelligence & Machine Learning",
     icon: Robot,
-    prizeAttribution: "Prize brought to you by DSI!",
+    prizeAttribution: "Brought to you by DSI!",
     description:
       "Push the boundaries of what's possible. Leverage AI to build projects powered by artificial intelligence, from LLMs and AI agents to computer vision and machine learning that make an impact across any domain.",
   },
@@ -68,8 +68,7 @@ const customModalStyles = {
     backgroundColor: "#4d3222",
     border: "3px solid #b98762",
     borderRadius: "4px",
-    boxShadow:
-      "8px 8px 0 #1d130d, inset 0 0 0 2px #2a1b12",
+    boxShadow: "8px 8px 0 #1d130d, inset 0 0 0 2px #2a1b12",
     outline: "none",
     transform: "translate(-50%, -50%)",
     zIndex: "10001",
