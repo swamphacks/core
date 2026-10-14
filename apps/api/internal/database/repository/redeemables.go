@@ -56,19 +56,3 @@ func (r *RedeemablesRepository) UpdateRedeemable(ctx context.Context, params sql
 	}
 	return &redeemable, nil
 }
-
-func (r *RedeemablesRepository) RedeemRedeemable(ctx context.Context, params sqlc.RedeemRedeemableParams) (*sqlc.UserRedemption, error) {
-	redemption, err := r.db.Query.RedeemRedeemable(ctx, params)
-	if err != nil {
-		return nil, err
-	}
-	return &redemption, nil
-}
-
-func (r *RedeemablesRepository) UpdateRedemption(ctx context.Context, params sqlc.UpdateRedemptionParams) error {
-	err := r.db.Query.UpdateRedemption(ctx, params)
-	if err != nil {
-		return err
-	}
-	return nil
-}

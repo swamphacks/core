@@ -84,34 +84,3 @@ func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID 
 	}
 	return redeemable, nil
 }
-
-func (s *RedeemablesService) RedeemRedeemable(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID) error {
-	// Need to do a check to see if the user is checked in
-	// Probably need event service
-
-	// CREATE NEW SQL function for getting checked in status
-	_, err := s.redeemablesRepo.RedeemRedeemable(ctx, sqlc.RedeemRedeemableParams{
-		UserID:       userID,
-		RedeemableID: redeemableID,
-	})
-
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to redeem redeemable")
-		return err
-	}
-	return nil
-}
-
-func (s *RedeemablesService) UpdateRedemption(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID, amount int) error {
-	err := s.redeemablesRepo.UpdateRedemption(ctx, sqlc.UpdateRedemptionParams{
-		RedeemableID: redeemableID,
-		UserID:       userID,
-		Amount:       int32(amount),
-	})
-
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to update redemption")
-		return err
-	}
-	return nil
-}

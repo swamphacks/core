@@ -11,7 +11,6 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/api/cookie"
 	"github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/config"
-	"github.com/swamphacks/core/apps/api/internal/ctxutils"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
@@ -67,32 +66,6 @@ func RegisterRoutes(redeemablesHandler *handler, group huma.API, mw *middleware.
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
 	}, redeemablesHandler.handleDeleteRedeemable)
-
-	huma.Register(group, huma.Operation{
-		OperationID:   "redeem-redeemable",
-		Method:        http.MethodPost,
-		Summary:       "Redeem Redeemable",
-		Description:   "Redeems a redeemable by id. Creates a redemption record linking a specific user to a redeemable item",
-		Tags:          []string{"Redeemables"},
-		Path:          "/{redeemableId}/users/{userID}",
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError, http.StatusBadRequest},
-		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
-		DefaultStatus: http.StatusOK,
-	}, redeemablesHandler.handleRedeemRedeemable)
-
-	huma.Register(group, huma.Operation{
-		OperationID:   "update-redemption",
-		Method:        http.MethodPatch,
-		Summary:       "Update Redemption",
-		Description:   "Updates a redemption created by the user.",
-		Tags:          []string{"Redeemables"},
-		Path:          "/{redeemableId}/users/{userID}",
-		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma},
-		Errors:        []int{http.StatusUnauthorized, http.StatusInternalServerError, http.StatusBadRequest},
-		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
-		DefaultStatus: http.StatusOK,
-	}, redeemablesHandler.handleUpdateRedemption)
 }
 
 type handler struct {
@@ -198,65 +171,4 @@ func (h *handler) handleDeleteRedeemable(ctx context.Context, input *struct {
 	}
 
 	return &DeleteRedeemableOutput{Status: http.StatusOK}, nil
-}
-
-type RedeemRedeemableOutput struct {
-	Status int
-}
-
-func (h *handler) handleRedeemRedeemable(ctx context.Context, input *struct {
-	RedeemableId string `path:"redeemableId"`
-}) (*RedeemRedeemableOutput, error) {
-	userCtx := ctxutils.GetUserFromCtx(ctx)
-
-	if userCtx == nil {
-		return nil, huma.Error400BadRequest("Failed to get current user info")
-	}
-
-	redeemableId, err := uuid.Parse(input.RedeemableId)
-
-	if err != nil {
-		return nil, huma.Error400BadRequest("Invalid redeemable id")
-	}
-
-	err = h.redeemablesService.RedeemRedeemable(ctx, redeemableId, userCtx.UserID)
-
-	if err != nil {
-		return nil, huma.Error500InternalServerError("Failed to redeem redeemable")
-	}
-
-	return &RedeemRedeemableOutput{Status: http.StatusOK}, nil
-}
-
-type UpdateRedemptionRequest struct {
-	Amount int `json:"newAmount,omitempty"`
-}
-
-type UpdateRedemptionOutput struct {
-	Status int
-}
-
-func (h *handler) handleUpdateRedemption(ctx context.Context, input *struct {
-	RedeemableId string `path:"redeemableId"`
-	Body         UpdateRedemptionRequest
-}) (*UpdateRedeemableOutput, error) {
-	userCtx := ctxutils.GetUserFromCtx(ctx)
-
-	if userCtx == nil {
-		return nil, huma.Error400BadRequest("Failed to get current user info")
-	}
-
-	redeemableId, err := uuid.Parse(input.RedeemableId)
-
-	if err != nil {
-		return nil, huma.Error400BadRequest("Invalid redeemable id")
-	}
-
-	err = h.redeemablesService.UpdateRedemption(ctx, redeemableId, userCtx.UserID, input.Body.Amount)
-
-	if err != nil {
-		return nil, huma.Error500InternalServerError("Failed to update redemption")
-	}
-
-	return &UpdateRedeemableOutput{Status: http.StatusOK}, nil
 }

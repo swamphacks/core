@@ -14,26 +14,6 @@ LEFT JOIN nfc_tags_redeemables ntr ON ntr.redeemable_id = r.id
 GROUP BY r.id
 ORDER BY r.name, r.id;
 
--- name: RedeemRedeemable :one
-INSERT INTO user_redemptions (user_id, redeemable_id, hackathon_id, amount)
-SELECT @user_id, @redeemable_id, 1
-WHERE (
-    SELECT COALESCE(SUM(amount), 0) 
-    FROM user_redemptions 
-    WHERE redeemable_id = @redeemable_id
-) < (SELECT amount FROM redeemables WHERE id = @redeemable_id)
-ON CONFLICT (user_id, redeemable_id) 
-DO UPDATE SET 
-    amount = user_redemptions.amount + 1,
-    updated_at = CURRENT_TIMESTAMP
-WHERE user_redemptions.amount < (SELECT max_user_amount FROM redeemables WHERE id = @redeemable_id)
-RETURNING *;
-
--- name: GetRedemptionInfoByRedeemableID :many
-SELECT ur.user_id, ur.redeemable_id, ur.amount, ur.created_at, ur.updated_at
-FROM user_redemptions ur
-WHERE ur.redeemable_id = $1;
-
 -- name: CreateRedeemable :one
 -- Inserts into the active hackathon. With no active hackathon the SELECT
 -- yields no rows, so nothing is inserted and pgx returns ErrNoRows.
@@ -56,11 +36,3 @@ RETURNING *;
 -- name: DeleteRedeemable :exec
 DELETE FROM redeemables
 WHERE id = $1;
-
--- name: UpdateRedemption :exec
-UPDATE user_redemptions
-SET
-    amount = $1
-WHERE user_id = $2 AND redeemable_id = $3;
-
-

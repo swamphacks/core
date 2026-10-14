@@ -115,81 +115,6 @@ func (q *Queries) GetRedeemables(ctx context.Context) ([]GetRedeemablesRow, erro
 	return items, nil
 }
 
-const getRedemptionInfoByRedeemableID = `-- name: GetRedemptionInfoByRedeemableID :many
-SELECT ur.user_id, ur.redeemable_id, ur.amount, ur.created_at, ur.updated_at
-FROM user_redemptions ur
-WHERE ur.redeemable_id = $1
-`
-
-type GetRedemptionInfoByRedeemableIDRow struct {
-	UserID       uuid.UUID `json:"user_id"`
-	RedeemableID uuid.UUID `json:"redeemable_id"`
-	Amount       int32     `json:"amount"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-}
-
-func (q *Queries) GetRedemptionInfoByRedeemableID(ctx context.Context, redeemableID uuid.UUID) ([]GetRedemptionInfoByRedeemableIDRow, error) {
-	rows, err := q.db.Query(ctx, getRedemptionInfoByRedeemableID, redeemableID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetRedemptionInfoByRedeemableIDRow{}
-	for rows.Next() {
-		var i GetRedemptionInfoByRedeemableIDRow
-		if err := rows.Scan(
-			&i.UserID,
-			&i.RedeemableID,
-			&i.Amount,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const redeemRedeemable = `-- name: RedeemRedeemable :one
-INSERT INTO user_redemptions (user_id, redeemable_id, hackathon_id, amount)
-SELECT $1, $2, 1
-WHERE (
-    SELECT COALESCE(SUM(amount), 0) 
-    FROM user_redemptions 
-    WHERE redeemable_id = $2
-) < (SELECT amount FROM redeemables WHERE id = $2)
-ON CONFLICT (user_id, redeemable_id) 
-DO UPDATE SET 
-    amount = user_redemptions.amount + 1,
-    updated_at = CURRENT_TIMESTAMP
-WHERE user_redemptions.amount < (SELECT max_user_amount FROM redeemables WHERE id = $2)
-RETURNING user_id, redeemable_id, amount, created_at, updated_at, hackathon_id
-`
-
-type RedeemRedeemableParams struct {
-	UserID       uuid.UUID `json:"user_id"`
-	RedeemableID uuid.UUID `json:"redeemable_id"`
-}
-
-func (q *Queries) RedeemRedeemable(ctx context.Context, arg RedeemRedeemableParams) (UserRedemption, error) {
-	row := q.db.QueryRow(ctx, redeemRedeemable, arg.UserID, arg.RedeemableID)
-	var i UserRedemption
-	err := row.Scan(
-		&i.UserID,
-		&i.RedeemableID,
-		&i.Amount,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.HackathonID,
-	)
-	return i, err
-}
-
 const updateRedeemable = `-- name: UpdateRedeemable :one
 UPDATE redeemables
 SET 
@@ -227,22 +152,4 @@ func (q *Queries) UpdateRedeemable(ctx context.Context, arg UpdateRedeemablePara
 		&i.Type,
 	)
 	return i, err
-}
-
-const updateRedemption = `-- name: UpdateRedemption :exec
-UPDATE user_redemptions
-SET
-    amount = $1
-WHERE user_id = $2 AND redeemable_id = $3
-`
-
-type UpdateRedemptionParams struct {
-	Amount       int32     `json:"amount"`
-	UserID       uuid.UUID `json:"user_id"`
-	RedeemableID uuid.UUID `json:"redeemable_id"`
-}
-
-func (q *Queries) UpdateRedemption(ctx context.Context, arg UpdateRedemptionParams) error {
-	_, err := q.db.Exec(ctx, updateRedemption, arg.Amount, arg.UserID, arg.RedeemableID)
-	return err
 }
