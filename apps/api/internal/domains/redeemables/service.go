@@ -34,10 +34,9 @@ func (s *RedeemablesService) GetRedeemables(ctx context.Context) (*[]sqlc.GetRed
 	return redeemables, nil
 }
 
-func (s *RedeemablesService) CreateRedeemable(ctx context.Context, name string, amount int, maxUserAmount int, redeemableType string) (*sqlc.Redeemable, error) {
+func (s *RedeemablesService) CreateRedeemable(ctx context.Context, name string, maxUserAmount int, redeemableType string) (*sqlc.Redeemable, error) {
 	params := sqlc.CreateRedeemableParams{
 		Name:          name,
-		Amount:        int32(amount),
 		MaxUserAmount: int32(maxUserAmount),
 		Type:          redeemableType,
 	}
@@ -58,13 +57,8 @@ func (s *RedeemablesService) DeleteRedeemable(ctx context.Context, redeemableID 
 	return nil
 }
 
-func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID uuid.UUID, name *string, amount *int, maxUserAmount *int) (*sqlc.Redeemable, error) {
+func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID uuid.UUID, name *string, maxUserAmount *int) (*sqlc.Redeemable, error) {
 
-	var amount32 *int32
-	if amount != nil {
-		v := int32(*amount)
-		amount32 = &v
-	}
 	var maxUserAmount32 *int32
 	if maxUserAmount != nil {
 		v := int32(*maxUserAmount)
@@ -74,7 +68,6 @@ func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID 
 	redeemable, err := s.redeemablesRepo.UpdateRedeemable(ctx, sqlc.UpdateRedeemableParams{
 		ID:            redeemableID,
 		Name:          name,
-		Amount:        amount32,
 		MaxUserAmount: maxUserAmount32,
 	})
 

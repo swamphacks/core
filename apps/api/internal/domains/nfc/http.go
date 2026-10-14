@@ -249,8 +249,6 @@ func (h *handler) handleTagToRedeemable(ctx context.Context, input *TagToRedeema
 			switch pgErr.Code {
 			case "P0001":
 				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Hacker reached the limit for this item"}}, nil
-			case "P0005":
-				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "No redeemables left in stock"}}, nil
 			case "23503":
 				// The app loads its item list once, so it can still offer an
 				// item that staff have since deleted.

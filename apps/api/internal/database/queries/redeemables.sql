@@ -1,10 +1,8 @@
 -- name: GetRedeemables :many
 -- total_redeemed counts NFC scans (one nfc_tags_redeemables row per item handed
--- out), the same rows the check_redeemable_count trigger counts against stock.
--- COUNT(ntr.id), not COUNT(*): an item with no scans must count 0, not 1.
+-- out). COUNT(ntr.id), not COUNT(*): an item with no scans must count 0, not 1.
 SELECT r.id,
     r.name,
-    r.amount AS total_stock,
     r.max_user_amount,
     r.created_at,
     r.updated_at,
@@ -17,8 +15,8 @@ ORDER BY r.name, r.id;
 -- name: CreateRedeemable :one
 -- Inserts into the active hackathon. With no active hackathon the SELECT
 -- yields no rows, so nothing is inserted and pgx returns ErrNoRows.
-INSERT INTO redeemables (name, amount, max_user_amount, type, hackathon_id)
-SELECT @name, @amount, @max_user_amount, @type, h.id
+INSERT INTO redeemables (name, max_user_amount, type, hackathon_id)
+SELECT @name, @max_user_amount, @type, h.id
 FROM hackathons h
 WHERE h.is_active
 RETURNING *;
@@ -27,7 +25,6 @@ RETURNING *;
 UPDATE redeemables
 SET 
     name = COALESCE(sqlc.narg('name'), name),
-    amount = COALESCE(sqlc.narg('amount'), amount),
     max_user_amount = COALESCE(sqlc.narg('max_user_amount'), max_user_amount),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1

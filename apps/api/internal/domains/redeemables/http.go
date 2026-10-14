@@ -45,7 +45,7 @@ func RegisterRoutes(redeemablesHandler *handler, group huma.API, mw *middleware.
 		OperationID:   "update-redeemable",
 		Method:        http.MethodPatch,
 		Summary:       "Update Redeemable",
-		Description:   "Update specific fields (name, stock, max per user) of a redeemable",
+		Description:   "Update specific fields (name, max per user) of a redeemable",
 		Tags:          []string{"Redeemables"},
 		Path:          "/{redeemableId}",
 		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
@@ -98,7 +98,6 @@ func (h *handler) handleGetRedeemables(ctx context.Context, input *struct{}) (*G
 
 type CreateRedeemableRequest struct {
 	Name          string `json:"name" minLength:"1"`
-	Amount        int    `json:"amount" minimum:"0"`
 	MaxUserAmount int    `json:"maxUserAmount" minimum:"1"`
 	Type          string `json:"type" enum:"meal,tshirt,swag,drink"`
 }
@@ -110,7 +109,7 @@ type CreateRedeemableOutput struct {
 func (h *handler) handleCreateRedeemable(ctx context.Context, input *struct {
 	Body CreateRedeemableRequest
 }) (*CreateRedeemableOutput, error) {
-	redeemable, err := h.redeemablesService.CreateRedeemable(ctx, input.Body.Name, input.Body.Amount, input.Body.MaxUserAmount, input.Body.Type)
+	redeemable, err := h.redeemablesService.CreateRedeemable(ctx, input.Body.Name, input.Body.MaxUserAmount, input.Body.Type)
 
 	if errors.Is(err, ErrNoActiveHackathon) {
 		return nil, huma.Error400BadRequest("No active hackathon. Activate a hackathon before creating redeemables.")
@@ -124,8 +123,7 @@ func (h *handler) handleCreateRedeemable(ctx context.Context, input *struct {
 
 type UpdateRedeemableRequest struct {
 	Name          *string `json:"name,omitempty"`
-	Amount        *int    `json:"totalStock,omitempty"`
-	MaxUserAmount *int    `json:"maxUserAmount,omitempty"`
+	MaxUserAmount *int    `json:"maxUserAmount,omitempty" minimum:"1"`
 }
 
 type UpdateRedeemableOutput struct {
@@ -142,7 +140,7 @@ func (h *handler) handleUpdateRedeemable(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("Invalid redeemable id")
 	}
 
-	_, err = h.redeemablesService.UpdateRedeemable(ctx, redeemableId, input.Body.Name, input.Body.Amount, input.Body.MaxUserAmount)
+	_, err = h.redeemablesService.UpdateRedeemable(ctx, redeemableId, input.Body.Name, input.Body.MaxUserAmount)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Fail to update redeemable")

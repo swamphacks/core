@@ -13,16 +13,15 @@ import (
 )
 
 const createRedeemable = `-- name: CreateRedeemable :one
-INSERT INTO redeemables (name, amount, max_user_amount, type, hackathon_id)
-SELECT $1, $2, $3, $4, h.id
+INSERT INTO redeemables (name, max_user_amount, type, hackathon_id)
+SELECT $1, $2, $3, h.id
 FROM hackathons h
 WHERE h.is_active
-RETURNING id, name, amount, max_user_amount, created_at, updated_at, hackathon_id, type
+RETURNING id, name, max_user_amount, created_at, updated_at, hackathon_id, type
 `
 
 type CreateRedeemableParams struct {
 	Name          string `json:"name"`
-	Amount        int32  `json:"amount"`
 	MaxUserAmount int32  `json:"max_user_amount"`
 	Type          string `json:"type"`
 }
@@ -30,17 +29,11 @@ type CreateRedeemableParams struct {
 // Inserts into the active hackathon. With no active hackathon the SELECT
 // yields no rows, so nothing is inserted and pgx returns ErrNoRows.
 func (q *Queries) CreateRedeemable(ctx context.Context, arg CreateRedeemableParams) (Redeemable, error) {
-	row := q.db.QueryRow(ctx, createRedeemable,
-		arg.Name,
-		arg.Amount,
-		arg.MaxUserAmount,
-		arg.Type,
-	)
+	row := q.db.QueryRow(ctx, createRedeemable, arg.Name, arg.MaxUserAmount, arg.Type)
 	var i Redeemable
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Amount,
 		&i.MaxUserAmount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -63,7 +56,6 @@ func (q *Queries) DeleteRedeemable(ctx context.Context, id uuid.UUID) error {
 const getRedeemables = `-- name: GetRedeemables :many
 SELECT r.id,
     r.name,
-    r.amount AS total_stock,
     r.max_user_amount,
     r.created_at,
     r.updated_at,
@@ -77,7 +69,6 @@ ORDER BY r.name, r.id
 type GetRedeemablesRow struct {
 	ID            uuid.UUID `json:"id"`
 	Name          string    `json:"name"`
-	TotalStock    int32     `json:"total_stock"`
 	MaxUserAmount int32     `json:"max_user_amount"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
@@ -85,8 +76,7 @@ type GetRedeemablesRow struct {
 }
 
 // total_redeemed counts NFC scans (one nfc_tags_redeemables row per item handed
-// out), the same rows the check_redeemable_count trigger counts against stock.
-// COUNT(ntr.id), not COUNT(*): an item with no scans must count 0, not 1.
+// out). COUNT(ntr.id), not COUNT(*): an item with no scans must count 0, not 1.
 func (q *Queries) GetRedeemables(ctx context.Context) ([]GetRedeemablesRow, error) {
 	rows, err := q.db.Query(ctx, getRedeemables)
 	if err != nil {
@@ -99,7 +89,6 @@ func (q *Queries) GetRedeemables(ctx context.Context) ([]GetRedeemablesRow, erro
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.TotalStock,
 			&i.MaxUserAmount,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -119,32 +108,24 @@ const updateRedeemable = `-- name: UpdateRedeemable :one
 UPDATE redeemables
 SET 
     name = COALESCE($2, name),
-    amount = COALESCE($3, amount),
-    max_user_amount = COALESCE($4, max_user_amount),
+    max_user_amount = COALESCE($3, max_user_amount),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, name, amount, max_user_amount, created_at, updated_at, hackathon_id, type
+RETURNING id, name, max_user_amount, created_at, updated_at, hackathon_id, type
 `
 
 type UpdateRedeemableParams struct {
 	ID            uuid.UUID `json:"id"`
 	Name          *string   `json:"name"`
-	Amount        *int32    `json:"amount"`
 	MaxUserAmount *int32    `json:"max_user_amount"`
 }
 
 func (q *Queries) UpdateRedeemable(ctx context.Context, arg UpdateRedeemableParams) (Redeemable, error) {
-	row := q.db.QueryRow(ctx, updateRedeemable,
-		arg.ID,
-		arg.Name,
-		arg.Amount,
-		arg.MaxUserAmount,
-	)
+	row := q.db.QueryRow(ctx, updateRedeemable, arg.ID, arg.Name, arg.MaxUserAmount)
 	var i Redeemable
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Amount,
 		&i.MaxUserAmount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
