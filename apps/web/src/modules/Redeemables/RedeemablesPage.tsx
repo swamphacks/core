@@ -19,9 +19,11 @@ import {
 
 export default function RedeemablesPage() {
   const redeemables = useRedeemables();
-  const rows = redeemables.data ?? [];
-  const hasUnscannableItems = rows.some(
-    (r) => !redeemableTypeInfo(r.type)?.appTab,
+  // Only list items the NFC app can scan, so staff don't see swag or drink
+  // items that no app tab shows.
+  const rows = useMemo(
+    () => (redeemables.data ?? []).filter((r) => redeemableTypeInfo(r.type)),
+    [redeemables.data],
   );
 
   const columns: ColumnDef<Redeemable>[] = useMemo(
@@ -46,7 +48,7 @@ export default function RedeemablesPage() {
             <div className="flex items-center gap-2">
               <Badge>{info?.name ?? row.original.type}</Badge>
               <span className="text-xs text-text-secondary">
-                {info?.appTab ? `${info.appTab} tab` : "Not in the app yet"}
+                {info?.appTab} tab
               </span>
             </div>
           );
@@ -101,8 +103,8 @@ export default function RedeemablesPage() {
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Redeemables</h1>
           <p className="text-sm text-text-secondary">
-            Meals, T-shirts and other items staff hand out by scanning NFC tags.
-            Each scan counts toward the hacker's limit for that item.
+            Meals and T-shirts staff hand out by scanning NFC tags. Each scan
+            counts toward the hacker's limit for that item.
           </p>
         </div>
         <DialogTrigger>
@@ -114,13 +116,6 @@ export default function RedeemablesPage() {
         </DialogTrigger>
       </div>
 
-      {hasUnscannableItems && (
-        <p className="mt-4 rounded-md border border-border bg-surface p-3 text-sm text-text-secondary">
-          Swag and drink items don't show up in the NFC app yet. Until it adds
-          those tabs, create them as Meal or T-shirt, then edit the type later.
-        </p>
-      )}
-
       <div className="mt-5 p-2 rounded-lg bg-surface border border-border flex flex-col">
         {redeemables.isLoading ? (
           <p className="p-2">Loading items...</p>
@@ -128,7 +123,7 @@ export default function RedeemablesPage() {
           <p className="p-2">Unable to load items.</p>
         ) : rows.length === 0 ? (
           <p className="p-2 text-text-secondary">
-            No items yet. Create one for each meal or giveaway.
+            No items yet. Create one for each meal or T-shirt giveaway.
           </p>
         ) : (
           <Table
