@@ -73,7 +73,7 @@ function App() {
       </a>
 
       <CountdownCorner
-        targetDate={new Date("2026-10-16")}
+        targetDate={new Date("2026-10-16T15:00:00-04:00")}
         label="Swamphacks Begins In:"
       />
 

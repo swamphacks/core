@@ -274,3 +274,41 @@
     animation: none;
   }
 }
+
+/* A single celebration that never blocks clicks. */
+.countdown-confetti {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1001;
+}
+
+.countdown-confetti > span {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 13px;
+  opacity: 0;
+  animation: countdown-confetti-fall 3s linear both;
+}
+
+@keyframes countdown-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(-25px, 0, 0) rotate(0deg);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(65px, 110vh, 0) rotate(720deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .countdown-confetti {
+    display: none;
+  }
+}
