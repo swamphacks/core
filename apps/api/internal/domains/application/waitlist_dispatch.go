@@ -19,6 +19,13 @@ type WaitlistDispatchResult struct {
 func (s *ApplicationService) DispatchAdmissionWaitlist(
 	ctx context.Context, now time.Time,
 ) (WaitlistDispatchResult, error) {
+	return s.DispatchAdmissionWaitlistWithNewOffers(ctx, now, true)
+}
+
+// Pausing new offers preserves expiration processing and existing offers.
+func (s *ApplicationService) DispatchAdmissionWaitlistWithNewOffers(
+	ctx context.Context, now time.Time, allowNewOffers bool,
+) (WaitlistDispatchResult, error) {
 	var result WaitlistDispatchResult
 	err := s.txm.WithTx(ctx, func(tx pgx.Tx) error {
 		var eventID string
@@ -112,7 +119,7 @@ func (s *ApplicationService) DispatchAdmissionWaitlist(
 			return err
 		}
 
-		if !now.Before(closesAt) {
+		if !now.Before(closesAt) || !allowNewOffers {
 			return nil
 		}
 

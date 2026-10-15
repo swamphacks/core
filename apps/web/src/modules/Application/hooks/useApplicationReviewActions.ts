@@ -176,7 +176,7 @@ export const useApplicationReviewActions = (
   const deleteAutoDecisionRequest = useMutation({
     mutationFn: ({ requestId }: { requestId: string }) =>
       deleteAutoDecisionRequestFn(requestId),
-    onSuccess: (_) => {
+    onSuccess: () => {
       if (reviewId) {
         queryClient.setQueryData<ParsedApplicationReview>(
           applicationReviewQueryKey(reviewId),

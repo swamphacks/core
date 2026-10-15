@@ -1,39 +1,48 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/core-favicon-light.svg" />
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/core-favicon-light.svg" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="/core-favicon-light.svg"
+      media="(prefers-color-scheme: light)"
+    />
 
-  <link rel="icon" type="image/svg+xml" href="/core-favicon-light.svg" media="(prefers-color-scheme: light)" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="/core-favicon-dark.svg"
+      media="(prefers-color-scheme: dark)"
+    />
 
-  <link rel="icon" type="image/svg+xml" href="/core-favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SwampHacks Portal</title>
+    <script>
+      // This script is used to prevent flashing on page load, as it loads the apporiate theme first before loading the css
+      const theme = localStorage.getItem("ui-theme") || "system";
+      const root = window.document.documentElement;
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SwampHacks Portal</title>
-  <script>
-    // This script is used to prevent flashing on page load, as it loads the apporiate theme first before loading the css
-    const theme = localStorage.getItem("ui-theme") || "system";
-    const root = window.document.documentElement;
+      root.classList.remove("light", "dark");
 
-    root.classList.remove("light", "dark");
+      if (theme === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+          .matches
+          ? "dark"
+          : "light";
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
+        root.classList.add(systemTheme);
+      } else {
+        root.classList.add(theme);
+      }
 
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
-    }
-
-    // Only apply this class only after the theme has been applied, hence the calling the onload function
-    window.onload = () => {
-      document.body.classList.add("enable-theme-transition");
-    };
-  </script>
+      // Only apply this class only after the theme has been applied, hence the calling the onload function
+      window.onload = () => {
+        document.body.classList.add("enable-theme-transition");
+      };
+    </script>
 
     <!-- Load Leaflet from CDN -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -42,13 +51,12 @@
     <!-- Esri Leaflet and Esri Leaflet Vector -->
     <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
     <script src="https://unpkg.com/esri-leaflet-vector@4/dist/esri-leaflet-vector.js"></script>
-  <!-- MANDATORY: Used for injecting env variables at build -->
-  <script src="/env-config.js"></script>
-</head>
+    <!-- MANDATORY: Used for injecting env variables at build -->
+    <script src="/env-config.js"></script>
+  </head>
 
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
-</body>
-
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

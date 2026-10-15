@@ -1,6 +1,7 @@
 {
   "metadata": {
     "title": "this is a test form json",
+    "earlyTitle": "this is an early test form json",
     "description": "this is a very good description"
   },
 
@@ -73,7 +74,7 @@
           "label": "Upload a file",
           "required": true,
           "validation": {
-            "validMimeTypes": ["image/png"]
+            "validMimeTypes": "image/png"
           }
         }
       ]
@@ -143,7 +144,7 @@
           "label": "Upload a file",
           "required": true,
           "validation": {
-            "validMimeTypes": ["image/png"]
+            "validMimeTypes": "image/png"
           }
         },
         {

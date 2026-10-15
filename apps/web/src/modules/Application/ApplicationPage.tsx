@@ -398,36 +398,52 @@ interface WithdrawnProps {
 }
 
 function Withdrawn({ name }: WithdrawnProps) {
+  const { joinWaitlist } = useApplicationActions();
+  const waitlistClosed = Date.now() >= Date.parse("2026-10-16T00:00:00-04:00");
+
   return (
     <div className="w-full sm:max-w-200 mx-auto font-figtree p-2 relative">
       <h1 className="text-2xl">Hi, {name}!</h1>
-
       <div className="my-3 flex flex-col gap-3">
-        <p>Your application for SwampHacks XII has been withdrawn.</p>
-
+        <p>Your application for SwampHacks XII is marked as withdrawn.</p>
         <p>
-          We appreciate your interest in SwampHacks and the time you took to
-          apply. While we're sorry you won't be able to join us this year, we
-          hope to see you at a future event.
+          If you still want to participate, you can join the waitlist before
+          October 15 at 11:59 PM ET. This creates a new place at the end of the
+          queue and does not restore a previous acceptance. Joining does not
+          guarantee admission.
         </p>
-
+        <Button
+          onClick={() => {
+            if (
+              window.confirm(
+                "Join the waitlist? You will join at the end of the queue. This does not restore your previous acceptance.",
+              )
+            ) {
+              joinWaitlist.mutate();
+            }
+          }}
+          isDisabled={joinWaitlist.isPending || waitlistClosed}
+          size="md"
+          className="w-[200px] max-w-full min-h-10"
+        >
+          {waitlistClosed
+            ? "Waitlist Closed"
+            : joinWaitlist.isPending
+              ? "Joining..."
+              : "Join Waitlist"}
+        </Button>
         <p>
-          If your plans change and registration is still open, please reach out
-          to our team and we'll do our best to help.
+          If you believe you already confirmed attendance and this status is
+          incorrect, contact staff so we can review your application.
         </p>
-
         <p>
-          You can also stay connected with the SwampHacks community through our{" "}
-          <a className="underline" href="https://discord.com/invite/NfRPv9JtAG">
-            Discord server
-          </a>{" "}
-          and follow future announcements for upcoming events and opportunities.
-        </p>
-
-        <p>
-          If you have any questions, feel free to contact us at{" "}
+          Contact us at{" "}
           <a className="underline" href="mailto:contact@swamphacks.com">
             contact@swamphacks.com
+          </a>{" "}
+          or in the{" "}
+          <a className="underline" href="https://discord.gg/rKD2vKVWd">
+            SwampHacks Discord
           </a>
           .
         </p>
