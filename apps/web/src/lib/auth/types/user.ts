@@ -9,7 +9,7 @@ export const userContextSchema = z.object({
   image: z.string().nullable().optional(),
   role: z.enum(["admin", "staff", "attendee", "applicant", "visitor"]),
   emailConsent: z.boolean(),
-  checkedInAt: z.date().nullable(),
+  checkedInAt: z.coerce.date().nullable(),
   rfid: z.string().nullable(),
   hasSeenNewApplicationStatus: z.boolean().nullable(),
 });
