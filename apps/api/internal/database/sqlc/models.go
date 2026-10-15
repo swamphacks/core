@@ -582,7 +582,6 @@ type NfcTagsWorkshop struct {
 type Redeemable struct {
 	ID            uuid.UUID `json:"id"`
 	Name          string    `json:"name"`
-	Amount        int32     `json:"amount"`
 	MaxUserAmount int32     `json:"max_user_amount"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`

@@ -2,10 +2,17 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
+)
+
+var (
+	ErrNoActiveHackathon  = errors.New("no active hackathon")
+	ErrRedeemableNotFound = errors.New("redeemable not found")
 )
 
 type RedeemablesRepository struct {
@@ -28,6 +35,9 @@ func (r *RedeemablesRepository) GetRedeemables(ctx context.Context) (*[]sqlc.Get
 
 func (r *RedeemablesRepository) CreateRedeemable(ctx context.Context, params sqlc.CreateRedeemableParams) (*sqlc.Redeemable, error) {
 	redeemable, err := r.db.Query.CreateRedeemable(ctx, params)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNoActiveHackathon
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -44,24 +54,11 @@ func (r *RedeemablesRepository) DeleteRedeemable(ctx context.Context, redeemable
 
 func (r *RedeemablesRepository) UpdateRedeemable(ctx context.Context, params sqlc.UpdateRedeemableParams) (*sqlc.Redeemable, error) {
 	redeemable, err := r.db.Query.UpdateRedeemable(ctx, params)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrRedeemableNotFound
+	}
 	if err != nil {
 		return nil, err
 	}
 	return &redeemable, nil
-}
-
-func (r *RedeemablesRepository) RedeemRedeemable(ctx context.Context, params sqlc.RedeemRedeemableParams) (*sqlc.UserRedemption, error) {
-	redemption, err := r.db.Query.RedeemRedeemable(ctx, params)
-	if err != nil {
-		return nil, err
-	}
-	return &redemption, nil
-}
-
-func (r *RedeemablesRepository) UpdateRedemption(ctx context.Context, params sqlc.UpdateRedemptionParams) error {
-	err := r.db.Query.UpdateRedemption(ctx, params)
-	if err != nil {
-		return err
-	}
-	return nil
 }

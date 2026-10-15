@@ -48,14 +48,12 @@ def fetch_hackathon_ids(cur):
 
 
 def generate_row(hackathon_ids):
-    amount = random.randint(10, 500)
-    max_user_amount = random.randint(1, min(5, amount))
+    max_user_amount = random.randint(1, 5)
     redeemable_type = random.choice(REDEEMABLE_TYPES)
     name = random.choice(REDEEMABLE_NAMES[redeemable_type])
 
     return {
         "name": name,
-        "amount": amount,
         "max_user_amount": max_user_amount,
         "type": redeemable_type,
         "hackathon_id": random.choice(hackathon_ids),
@@ -68,7 +66,6 @@ def main():
 
     columns = [
         "name",
-        "amount",
         "max_user_amount",
         "type",
         "hackathon_id",
