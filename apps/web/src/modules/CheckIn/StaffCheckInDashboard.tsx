@@ -1,6 +1,5 @@
 import { HTTPError } from "ky";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/ky";
 import { Modal } from "@/components/ui/Modal";
 import QRCode from "react-qr-code";
@@ -9,28 +8,10 @@ import { Sheet } from "@/components/ui/Sheet";
 import ApplicationViewer from "@/modules/Application/ApplicationViewer";
 import useParsedForm from "@/modules/Application/hooks/useParsedForm";
 import { Button } from "@/components/ui/Button";
-
-interface DashboardRow {
-  applicationId: string;
-  userId: string;
-  name: string;
-  email: string;
-  status: string;
-  checkedInAt: string | null;
-  rfid: string | null;
-  signupSource: string;
-  standbyArrival: string | null;
-  redemptions: { redeemableId: string; name: string; amount: number }[];
-}
-
-interface Dashboard {
-  hackathonId: string;
-  confirmed: number;
-  confirmedCheckedIn: number;
-  dayOfSignups: number;
-  standbyWaiting: number;
-  rows: DashboardRow[];
-}
+import TablerQrcode from "~icons/tabler/qrcode";
+import QrCheckInScanner from "./components/QrCheckInScanner";
+import { useCheckInDashboard } from "./hooks/useCheckInDashboard";
+import type { DashboardRow } from "./types";
 
 const fieldClass =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm";
@@ -82,17 +63,13 @@ export default function StaffCheckInDashboard({
   const [selectedAttendee, setSelectedAttendee] = useState<DashboardRow | null>(
     null,
   );
+  const [scannerOpen, setScannerOpen] = useState(false);
 
-  const dashboard = useQuery({
-    queryKey: ["check-in-dashboard", hackathonId, search, status, redeemableId],
-    queryFn: ({ signal }) =>
-      api
-        .get("application/check-in-dashboard", {
-          searchParams: { hackathonId, search, status, redeemableId },
-          signal,
-        })
-        .json<Dashboard>(),
-    refetchInterval: 15000,
+  const dashboard = useCheckInDashboard({
+    hackathonId,
+    search,
+    status,
+    redeemableId,
   });
 
   const data = dashboard.data;
@@ -147,7 +124,17 @@ export default function StaffCheckInDashboard({
 
   return (
     <main className="w-full max-w-7xl p-4 sm:p-6 pb-24 space-y-5">
-      <h1 className="text-2xl font-bold">Check-in Dashboard</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Check-in Dashboard</h1>
+        <button
+          type="button"
+          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white whitespace-nowrap"
+          onClick={() => setScannerOpen(true)}
+        >
+          <TablerQrcode className="h-5 w-5" aria-hidden />
+          Scan QR
+        </button>
+      </div>
 
       {data && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -457,6 +444,11 @@ export default function StaffCheckInDashboard({
           </div>
         )}
       </Modal>
+
+      <QrCheckInScanner
+        isOpen={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+      />
     </main>
   );
 }
