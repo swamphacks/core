@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { HTTPError } from "ky";
+import { useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/ky";
 import { Scanner, type IDetectedBarcode } from "@yudiel/react-qr-scanner";
 import { Modal } from "@/components/ui/Modal";
 import { parseQrIntent } from "@/lib/qr-intents/parse";
@@ -25,8 +28,8 @@ const toneClass: Record<Verdict["tone"], string> = {
   blocked: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
 };
 
-// Mirrors what the dashboard treats as checked in (an NFC tag linked to the
-// user), so the scanner never disagrees with the table behind it.
+// Reads the same checkedInAt the dashboard shows (NFC nametag linked or
+// checked in here), so the scanner never disagrees with the table behind it.
 function verdictFor(row: DashboardRow): Verdict {
   if (row.checkedInAt) {
     return {
@@ -47,8 +50,7 @@ function verdictFor(row: DashboardRow): Verdict {
     return {
       label: "Ready to check in",
       tone: "ready",
-      detail:
-        "Confirmed attendee. Link an NFC nametag on the mobile app to finish check-in.",
+      detail: "Confirmed attendee. Check them in below.",
     };
   }
   if (row.status === "waitlist_confirmed") {
@@ -74,14 +76,50 @@ export default function QrCheckInScanner({
 }) {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [cameraError, setCameraError] = useState("");
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [checkInError, setCheckInError] = useState("");
+  const [justCheckedIn, setJustCheckedIn] = useState(false);
+  const queryClient = useQueryClient();
   // Unfiltered, so a scan finds the hacker no matter what the table is
   // filtered to. Shares the cache entry with the dashboard's default view.
   const dashboard = useCheckInDashboard({}, { enabled: isOpen });
 
-  function close() {
+  function reset() {
     setResult(null);
+    setCheckInError("");
+    setJustCheckedIn(false);
+  }
+
+  function close() {
+    reset();
     setCameraError("");
     onClose();
+  }
+
+  async function checkIn(userId: string) {
+    setCheckingIn(true);
+    setCheckInError("");
+    try {
+      await api.post("application/check-in", {
+        json: { userId },
+        retry: 0,
+      });
+      setJustCheckedIn(true);
+      await queryClient.invalidateQueries({
+        queryKey: ["check-in-dashboard"],
+      });
+    } catch (error) {
+      let message = "Unable to check in hacker.";
+      if (error instanceof HTTPError) {
+        const response = await error.response
+          .json<{ detail?: string }>()
+          .catch(() => null);
+        message = response?.detail ?? message;
+      }
+      setCheckInError(message);
+    } finally {
+      setCheckingIn(false);
+    }
   }
 
   function onScan(codes: IDetectedBarcode[]) {
@@ -188,25 +226,43 @@ export default function QrCheckInScanner({
             </div>
 
             {verdict.tone === "ready" && (
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-green-600 px-4 py-3 font-medium text-white disabled:opacity-50"
+                  disabled={checkingIn}
+                  onClick={() => checkIn(row.userId)}
+                >
+                  {checkingIn ? "Checking in…" : `Check in ${row.name}`}
+                </button>
+                {checkInError && (
+                  <p role="alert" className="text-sm text-red-600">
+                    {checkInError}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {(verdict.tone === "ready" || justCheckedIn) && (
               <div className="rounded-xl border-2 border-dashed border-border p-4">
                 <div className="flex flex-wrap items-center gap-2 font-medium">
                   <TablerNfc className="h-5 w-5" aria-hidden />
-                  Next: finish on the mobile app
+                  {justCheckedIn
+                    ? "Next: link their NFC nametag on the mobile app"
+                    : "NFC nametag: link it afterwards on the mobile app"}
                   <span className="rounded-full border border-border px-2 py-0.5 text-xs text-text-secondary">
                     NFC not available on web
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-text-secondary">
-                  This hacker is <strong>not checked in yet</strong>. The QR
-                  scan only verifies them. Check-in happens after this, on a
-                  phone with the SwampHacks mobile app:
+                  Checking in here skips the nametag. To use their nametag for
+                  meals and swag, link it after check-in on a phone with the
+                  SwampHacks mobile app:
                 </p>
                 <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-text-secondary">
                   <li>Give the hacker their NFC nametag.</li>
                   <li>Open the SwampHacks mobile app on a phone.</li>
-                  <li>
-                    Tap the nametag to link it to {row.name} and check them in.
-                  </li>
+                  <li>Tap the nametag to link it to {row.name}.</li>
                 </ol>
               </div>
             )}
@@ -218,7 +274,7 @@ export default function QrCheckInScanner({
             <button
               type="button"
               className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white"
-              onClick={() => setResult(null)}
+              onClick={reset}
             >
               Scan next
             </button>
