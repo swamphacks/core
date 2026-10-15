@@ -47,7 +47,8 @@ function verdictFor(row: DashboardRow): Verdict {
     return {
       label: "Ready to check in",
       tone: "ready",
-      detail: "Confirmed attendee. Link a wristband to finish check-in.",
+      detail:
+        "Confirmed attendee. Link an NFC nametag on the mobile app to finish check-in.",
     };
   }
   if (row.status === "waitlist_confirmed") {
@@ -188,24 +189,25 @@ export default function QrCheckInScanner({
 
             {verdict.tone === "ready" && (
               <div className="rounded-xl border-2 border-dashed border-border p-4">
-                <div className="flex items-center gap-2 font-medium">
+                <div className="flex flex-wrap items-center gap-2 font-medium">
                   <TablerNfc className="h-5 w-5" aria-hidden />
-                  Link NFC wristband
+                  Next: finish on the mobile app
                   <span className="rounded-full border border-border px-2 py-0.5 text-xs text-text-secondary">
-                    Coming soon
+                    NFC not available on web
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-text-secondary">
-                  The hacker portal can't read NFC yet. Tap this hacker's
-                  wristband with the SwampHacks mobile app to finish check-in.
+                  This hacker is <strong>not checked in yet</strong>. The QR
+                  scan only verifies them. Check-in happens after this, on a
+                  phone with the SwampHacks mobile app:
                 </p>
-                <button
-                  type="button"
-                  disabled
-                  className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white opacity-50 cursor-not-allowed"
-                >
-                  Check in (NFC required)
-                </button>
+                <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-text-secondary">
+                  <li>Give the hacker their NFC nametag.</li>
+                  <li>Open the SwampHacks mobile app on a phone.</li>
+                  <li>
+                    Tap the nametag to link it to {row.name} and check them in.
+                  </li>
+                </ol>
               </div>
             )}
           </div>
