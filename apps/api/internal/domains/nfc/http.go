@@ -264,7 +264,10 @@ func (h *handler) handleTagToRedeemable(ctx context.Context, input *TagToRedeema
 }
 
 func (h *handler) handleTagToWorkshop(ctx context.Context, input *TagToWorkshopInput) (*ExpectedOutput, error) {
-	rows, err := h.nfcService.TagToWorkshop(ctx, input.Body.TagID, input.Body.WorkshopID)
+	_, err := h.nfcService.TagToWorkshop(ctx, input.Body.TagID, input.Body.WorkshopID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Already registered for this workshop"}}, nil
+	}
 	if err != nil {
 		h.logger.Err(err).Msg("failed to tag workshop")
 		var pgErr *pgconn.PgError
@@ -272,9 +275,6 @@ func (h *handler) handleTagToWorkshop(ctx context.Context, input *TagToWorkshopI
 			return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Tag has not been checked in"}}, nil
 		}
 		return nil, huma.Error500InternalServerError("failed to tag workshop")
-	}
-	if rows == 0 {
-		return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Already registered for this workshop"}}, nil
 	}
 	return &ExpectedOutput{Body: ExpectedBody{Res: true, Msg: "Successfully tagged user to workshop"}}, nil
 }

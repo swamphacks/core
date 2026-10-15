@@ -28,12 +28,13 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/domains/users"
 	"github.com/swamphacks/core/apps/api/internal/domains/workshops"
 	"github.com/swamphacks/core/apps/api/internal/emailutils"
-	"github.com/swamphacks/core/apps/api/internal/logger"
+	zlogger "github.com/swamphacks/core/apps/api/internal/logger"
 	"github.com/swamphacks/core/apps/api/internal/storage"
 )
 
 func Run() {
-	logger := logger.New()
+	logger := zlogger.New()
+	checkinLogger := zlogger.NewCheckinLogger()
 	config := config.LoadConfig()
 
 	db := database.NewDB(config.DatabaseURL)
@@ -163,7 +164,7 @@ func Run() {
 	apiKeysHandler := apikeys.NewHandler(apiKeysService, logger)
 	apikeys.RegisterRoutes(apiKeysHandler, huma.NewGroup(api, "/apikeys"), mw)
 
-	nfcService := nfc.NewService(nfcRepo, logger)
+	nfcService := nfc.NewService(nfcRepo, logger, checkinLogger)
 	nfcHandler := nfc.NewHandler(nfcService, logger)
 	nfc.RegisterRoutes(nfcHandler, huma.NewGroup(api, "/nfc"), mw)
 
