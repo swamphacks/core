@@ -69,6 +69,7 @@ func main() {
 		emailService, cfg, logger,
 	)
 	waitlistEnabled := os.Getenv("WAITLIST_DISPATCH_ENABLED") == "true"
+	allowNewWaitlistOffers := os.Getenv("WAITLIST_NEW_OFFERS_ENABLED") != "false"
 
 	mux := asynq.NewServeMux()
 
@@ -113,7 +114,9 @@ func main() {
 		if !waitlistEnabled {
 			return nil
 		}
-		dispatched, err := admissionService.DispatchAdmissionWaitlist(ctx, time.Now().UTC())
+		dispatched, err := admissionService.DispatchAdmissionWaitlistWithNewOffers(
+			ctx, time.Now().UTC(), allowNewWaitlistOffers,
+		)
 		if err != nil {
 			return err
 		}

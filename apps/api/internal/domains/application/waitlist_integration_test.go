@@ -381,6 +381,84 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 
 	})
 
+	t.Run("paused promotions expire old offers and preserve valid offers", func(t *testing.T) {
+		now := time.Now().UTC()
+		var previousCapacity *int
+		if err := pool.QueryRow(ctx,
+			"SELECT max_attendees FROM hackathons WHERE id=$1",
+			hackathonID,
+		).Scan(&previousCapacity); err != nil {
+			t.Fatal(err)
+		}
+		exec("UPDATE hackathons SET max_attendees=3 WHERE id=$1", hackathonID)
+		defer exec("UPDATE hackathons SET max_attendees=$2 WHERE id=$1",
+			hackathonID, previousCapacity)
+
+		exec(`INSERT INTO waitlist_dispatch_policies (
+			hackathon_id,enabled,invitations_open_at,online_join_closes_at,
+			in_person_opens_at,invitations_close_at
+		) VALUES ($1,true,$2,$3,$4,$5)`,
+			hackathonID, now.Add(-time.Hour), now.Add(24*time.Hour),
+			now.Add(25*time.Hour), now.Add(48*time.Hour))
+		defer exec("DELETE FROM waitlist_dispatch_policies WHERE hackathon_id=$1", hackathonID)
+
+		expired := newApplicant(t, "accepted", "applicant")
+		current := newApplicant(t, "accepted", "applicant")
+		waiting := newApplicant(t, "waitlisted", "applicant")
+		exec("UPDATE users SET email='waiting@example.test' WHERE id=$1", waiting)
+		exec("INSERT INTO waitlist (hackathon_id,user_id) VALUES ($1,$2)",
+			hackathonID, waiting)
+
+		for _, offer := range []struct {
+			user            uuid.UUID
+			start, deadline time.Time
+		}{
+			{expired, now.Add(-13 * time.Hour), now.Add(-time.Hour)},
+			{current, now, now.Add(12 * time.Hour)},
+		} {
+			exec(`INSERT INTO application_waitlist_offers (
+				application_id,offered_at,confirmation_deadline
+			)
+			SELECT id,$3,$4 FROM applications
+			WHERE user_id=$1 AND hackathon_id=$2`,
+				offer.user, hackathonID, offer.start, offer.deadline)
+		}
+		exec(`INSERT INTO waitlist_invitation_outbox (
+			application_id,offered_at,confirmation_deadline,recipient,first_name
+		)
+		SELECT o.application_id,o.offered_at,o.confirmation_deadline,
+			'current@example.test','Current'
+		FROM application_waitlist_offers o
+		JOIN applications a ON a.id=o.application_id
+		WHERE a.user_id=$1 AND a.hackathon_id=$2`, current, hackathonID)
+
+		result, err := service.DispatchAdmissionWaitlistWithNewOffers(ctx, now, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result.Expired != 1 || result.Offered != 0 {
+			t.Fatalf("paused sweep=%+v; want one expiration and no offers", result)
+		}
+		assertState(t, expired, "withdrawn", "applicant")
+		assertState(t, current, "accepted", "applicant")
+		assertState(t, waiting, "waitlisted", "applicant")
+
+		calls := 0
+		delivered, err := service.DeliverAdmissionWaitlistInvitations(ctx,
+			func(_ context.Context, recipient, name string, deadline time.Time) error {
+				calls++
+				if recipient != "current@example.test" {
+					t.Fatal("wrong existing offer recipient")
+				}
+				return nil
+			})
+		if err != nil || delivered.Sent != 1 || calls != 1 {
+			t.Fatalf("existing offer delivery=%+v calls=%d error=%v", delivered, calls, err)
+		}
+		assertState(t, current, "accepted", "applicant")
+		assertState(t, waiting, "waitlisted", "applicant")
+	})
+
 	t.Run("standby requires staff acceptance and preserves priority", func(t *testing.T) {
 		online := newApplicant(t, "rejected", "applicant")
 		present := newApplicant(t, "rejected", "applicant")
@@ -566,10 +644,52 @@ func TestAdmissionWaitlistIntegration(t *testing.T) {
 		}
 	})
 
+	t.Run("withdrawn applicant explicitly rejoins with a fresh queue entry", func(t *testing.T) {
+		id := newApplicant(t, "withdrawn", "applicant")
+		exec(`INSERT INTO waitlist (hackathon_id,user_id,created_at)
+			VALUES ($1,$2,now()-interval '2 hours')`, hackathonID, id)
+
+		var before time.Time
+		if err := pool.QueryRow(ctx,
+			"SELECT clock_timestamp()",
+		).Scan(&before); err != nil {
+			t.Fatal(err)
+		}
+		if err := service.JoinAdmissionWaitlist(ctx, id); err != nil {
+			t.Fatal(err)
+		}
+		assertState(t, id, "waitlisted", "applicant")
+
+		var joined time.Time
+		if err := pool.QueryRow(ctx, `
+			SELECT created_at FROM waitlist
+			WHERE hackathon_id=$1 AND user_id=$2
+		`, hackathonID, id).Scan(&joined); err != nil {
+			t.Fatal(err)
+		}
+		if joined.Before(before) {
+			t.Fatalf("rejoin timestamp=%s precedes database time=%s", joined, before)
+		}
+
+		if err := service.JoinAdmissionWaitlist(ctx, id); err != nil {
+			t.Fatal(err)
+		}
+		var repeated time.Time
+		if err := pool.QueryRow(ctx, `
+			SELECT created_at FROM waitlist
+			WHERE hackathon_id=$1 AND user_id=$2
+		`, hackathonID, id).Scan(&repeated); err != nil {
+			t.Fatal(err)
+		}
+		if !repeated.Equal(joined) {
+			t.Fatal("repeated join changed the new queue timestamp")
+		}
+	})
+
 	t.Run("join rejects ineligible statuses", func(t *testing.T) {
 		for _, status := range []string{
 			"started", "submitted", "under_review",
-			"accepted", "confirmed", "withdrawn",
+			"accepted", "confirmed",
 		} {
 			t.Run(status, func(t *testing.T) {
 				id := newApplicant(t, status, "applicant")

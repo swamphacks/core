@@ -44,7 +44,7 @@ func (r *NFCRepository) GetRedeemablesByType(ctx context.Context, redeemableType
 	return redeemables, nil
 }
 
-func (r *NFCRepository) CheckinUser(ctx context.Context, params sqlc.CheckinUserParams) (*sqlc.NfcTagsUser, error) {
+func (r *NFCRepository) CheckinUser(ctx context.Context, params sqlc.CheckinUserParams) (*sqlc.CheckinUserRow, error) {
 	user, err := r.db.Query.CheckinUser(ctx, params)
 	if err != nil {
 		return nil, err
@@ -53,17 +53,22 @@ func (r *NFCRepository) CheckinUser(ctx context.Context, params sqlc.CheckinUser
 	return &user, nil
 }
 
-func (r *NFCRepository) TagToWorkshop(ctx context.Context, params sqlc.TagToWorkshopParams) (int64, error) {
+func (r *NFCRepository) TagToWorkshop(ctx context.Context, params sqlc.TagToWorkshopParams) (*sqlc.TagToWorkshopRow, error) {
 	workshop, err := r.db.Query.TagToWorkshop(ctx, params)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return workshop, nil
+	return &workshop, nil
 }
 
-func (r *NFCRepository) TagToRedeemable(ctx context.Context, params sqlc.TagToRedeemableParams) error {
-	return r.db.Query.TagToRedeemable(ctx, params)
+func (r *NFCRepository) TagToRedeemable(ctx context.Context, params sqlc.TagToRedeemableParams) (*sqlc.TagToRedeemableRow, error) {
+	redeemable, err := r.db.Query.TagToRedeemable(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return &redeemable, nil
 }
 
 func (r *NFCRepository) GetSocials(ctx context.Context) ([]sqlc.GetSocialsRow, error) {
