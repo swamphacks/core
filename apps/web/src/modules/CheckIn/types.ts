@@ -5,6 +5,7 @@ export interface DashboardRow {
   email: string;
   status: string;
   checkedInAt: string | null;
+  nfcLinked: boolean;
   rfid: string | null;
   signupSource: string;
   standbyArrival: string | null;

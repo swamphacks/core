@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { HTTPError } from "ky";
 import { useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/ky";
 import { Scanner, type IDetectedBarcode } from "@yudiel/react-qr-scanner";
 import { Modal } from "@/components/ui/Modal";
 import { parseQrIntent } from "@/lib/qr-intents/parse";
 import TablerNfc from "~icons/tabler/nfc";
+import { checkInWithoutNfc, undoCheckIn } from "../checkInActions";
 import { useCheckInDashboard } from "../hooks/useCheckInDashboard";
 import type { DashboardRow } from "../types";
 
@@ -43,7 +42,7 @@ function verdictFor(row: DashboardRow): Verdict {
           hour: "numeric",
           minute: "2-digit",
         },
-      )}.`,
+      )}${row.nfcLinked ? " with their NFC nametag" : " without an NFC nametag"}.`,
     };
   }
   if (row.status === "confirmed") {
@@ -76,7 +75,7 @@ export default function QrCheckInScanner({
 }) {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [cameraError, setCameraError] = useState("");
-  const [checkingIn, setCheckingIn] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [checkInError, setCheckInError] = useState("");
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const queryClient = useQueryClient();
@@ -96,30 +95,30 @@ export default function QrCheckInScanner({
     onClose();
   }
 
-  async function checkIn(userId: string) {
-    setCheckingIn(true);
+  async function run(action: "check-in" | "undo", userId: string) {
+    if (
+      action === "undo" &&
+      !window.confirm(
+        "Undo this check-in? The hacker will need to be checked in again.",
+      )
+    )
+      return;
+
+    setBusy(true);
     setCheckInError("");
-    try {
-      await api.post("application/check-in", {
-        json: { userId },
-        retry: 0,
-      });
-      setJustCheckedIn(true);
+    const error =
+      action === "check-in"
+        ? await checkInWithoutNfc(userId)
+        : await undoCheckIn(userId);
+    if (error) {
+      setCheckInError(error);
+    } else {
+      setJustCheckedIn(action === "check-in");
       await queryClient.invalidateQueries({
         queryKey: ["check-in-dashboard"],
       });
-    } catch (error) {
-      let message = "Unable to check in hacker.";
-      if (error instanceof HTTPError) {
-        const response = await error.response
-          .json<{ detail?: string }>()
-          .catch(() => null);
-        message = response?.detail ?? message;
-      }
-      setCheckInError(message);
-    } finally {
-      setCheckingIn(false);
     }
+    setBusy(false);
   }
 
   function onScan(codes: IDetectedBarcode[]) {
@@ -230,17 +229,29 @@ export default function QrCheckInScanner({
                 <button
                   type="button"
                   className="w-full rounded-lg bg-green-600 px-4 py-3 font-medium text-white disabled:opacity-50"
-                  disabled={checkingIn}
-                  onClick={() => checkIn(row.userId)}
+                  disabled={busy}
+                  onClick={() => run("check-in", row.userId)}
                 >
-                  {checkingIn ? "Checking in…" : `Check in ${row.name}`}
+                  {busy ? "Checking in…" : `Check in ${row.name}`}
                 </button>
-                {checkInError && (
-                  <p role="alert" className="text-sm text-red-600">
-                    {checkInError}
-                  </p>
-                )}
               </div>
+            )}
+
+            {verdict.tone === "done" && !row.nfcLinked && (
+              <button
+                type="button"
+                className={`${actionClass} self-start disabled:opacity-50`}
+                disabled={busy}
+                onClick={() => run("undo", row.userId)}
+              >
+                {busy ? "Undoing…" : "Undo check-in"}
+              </button>
+            )}
+
+            {checkInError && (
+              <p role="alert" className="text-sm text-red-600">
+                {checkInError}
+              </p>
             )}
 
             {(verdict.tone === "ready" || justCheckedIn) && (

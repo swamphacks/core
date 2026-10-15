@@ -10,6 +10,7 @@ import useParsedForm from "@/modules/Application/hooks/useParsedForm";
 import { Button } from "@/components/ui/Button";
 import TablerQrcode from "~icons/tabler/qrcode";
 import QrCheckInScanner from "./components/QrCheckInScanner";
+import { undoCheckIn } from "./checkInActions";
 import { useCheckInDashboard } from "./hooks/useCheckInDashboard";
 import type { DashboardRow } from "./types";
 
@@ -82,6 +83,23 @@ export default function StaffCheckInDashboard({
   const filterCount = [hackathonId, status, redeemableId].filter(
     Boolean,
   ).length;
+
+  async function undo(row: DashboardRow) {
+    if (busyUser) return;
+    if (
+      !window.confirm(
+        `Undo ${row.name}'s check-in? They will need to be checked in again.`,
+      )
+    )
+      return;
+
+    setBusyUser(row.userId);
+    setActionError("");
+    const error = await undoCheckIn(row.userId);
+    if (error) setActionError(error);
+    else await dashboard.refetch();
+    setBusyUser(null);
+  }
 
   async function updateStandby(row: DashboardRow, accept: boolean) {
     if (!data || busyUser) return;
@@ -378,8 +396,18 @@ export default function StaffCheckInDashboard({
                     )}
                     {row.status === "confirmed" && !row.checkedInAt && (
                       <span className="text-text-secondary whitespace-nowrap">
-                        Check in with NFC
+                        Check in with Scan QR or NFC
                       </span>
+                    )}
+                    {row.checkedInAt && !row.nfcLinked && (
+                      <button
+                        type="button"
+                        className={actionClass}
+                        disabled={busyUser !== null}
+                        onClick={() => undo(row)}
+                      >
+                        {busyUser === row.userId ? "Undoing…" : "Undo check-in"}
+                      </button>
                     )}
                   </td>
                 </tr>

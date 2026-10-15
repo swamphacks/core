@@ -31,6 +31,7 @@ type CheckInDashboardRow struct {
 	Email          string          `json:"email"`
 	Status         string          `json:"status"`
 	CheckedInAt    *time.Time      `json:"checkedInAt"`
+	NFCLinked      bool            `json:"nfcLinked"`
 	RFID           *string         `json:"rfid"`
 	SignupSource   string          `json:"signupSource"`
 	StandbyArrival *time.Time      `json:"standbyArrival"`
@@ -76,6 +77,21 @@ func registerCheckInDashboardRoutes(h *handler, group huma.API, mw *middleware.M
 		Errors:        []int{401, 403, 404, 409, 500},
 		DefaultStatus: http.StatusOK,
 	}, h.handleManualCheckIn)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "undo-manual-check-in",
+		Method:      http.MethodPost,
+		Path:        "/check-in/undo",
+		Summary:     "Undo Check-In Without NFC",
+		Description: "Staff route for clearing a check-in made without an NFC nametag, for example a mis-tap. Check-ins with a linked NFC nametag cannot be undone here.",
+		Tags:        []string{"Application"},
+		Middlewares: huma.Middlewares{
+			mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma,
+		},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		Errors:        []int{401, 403, 404, 409, 500},
+		DefaultStatus: http.StatusOK,
+	}, h.handleUndoManualCheckIn)
 }
 
 func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDashboardInput) (*CheckInDashboardOutput, error) {
@@ -129,7 +145,8 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
         COALESCE(NULLIF(trim(concat_ws(' ',a.application->>'firstName',
             a.application->>'lastName')),''),u.name),
         COALESCE(NULLIF(u.preferred_email,''),u.email),
-        a.status::text, LEAST(ci.created_at, u.checked_in_at), u.rfid,
+        a.status::text, LEAST(ci.created_at, u.checked_in_at),
+        ci.user_id IS NOT NULL, u.rfid,
         COALESCE(w.signup_source,'preregistered'),w.in_person_joined_at,
         COALESCE((
             SELECT jsonb_agg(jsonb_build_object(
@@ -182,7 +199,7 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
 		var redemptions []byte
 		if err := rows.Scan(
 			&row.ApplicationID, &row.UserID, &row.Name, &row.Email, &row.Status,
-			&row.CheckedInAt, &row.RFID, &row.SignupSource, &row.StandbyArrival,
+			&row.CheckedInAt, &row.NFCLinked, &row.RFID, &row.SignupSource, &row.StandbyArrival,
 			&redemptions,
 		); err != nil {
 			fmt.Print(err)
@@ -261,4 +278,49 @@ func (h *handler) handleManualCheckIn(ctx context.Context, input *ManualCheckInI
 		"Only confirmed hackers can be checked in (status: %s)",
 		strings.ReplaceAll(status, "_", " "),
 	))
+}
+
+type UndoManualCheckInOutput struct {
+	Body struct {
+		UserID uuid.UUID `json:"userId"`
+	}
+}
+
+// Only clears check-ins made without NFC. A hacker with a linked nametag would
+// still count as checked in, so undoing their timestamp here would change
+// nothing staff can see.
+func (h *handler) handleUndoManualCheckIn(ctx context.Context, input *ManualCheckInInput) (*UndoManualCheckInOutput, error) {
+	output := &UndoManualCheckInOutput{}
+	err := h.applicationService.db.Pool.QueryRow(ctx, `
+    UPDATE users u SET checked_in_at=NULL, updated_at=now()
+    WHERE u.id=$1 AND u.checked_in_at IS NOT NULL
+        AND NOT EXISTS (SELECT 1 FROM nfc_tags_user ntu WHERE ntu.user_id=u.id)
+    RETURNING u.id
+`, input.Body.UserID).Scan(&output.Body.UserID)
+	if err == nil {
+		h.logger.Info().Str("type", "checkin").Str("user_id", input.Body.UserID.String()).Msg("Check-in without NFC undone")
+		return output, nil
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		h.logger.Err(err).Msg("undo check-in failed")
+		return nil, huma.Error500InternalServerError("Unable to undo check-in")
+	}
+
+	// Nothing was cleared; work out why so staff get a useful message.
+	var nfcLinked bool
+	err = h.applicationService.db.Pool.QueryRow(ctx, `
+    SELECT EXISTS (SELECT 1 FROM nfc_tags_user ntu WHERE ntu.user_id=u.id)
+    FROM users u WHERE u.id=$1
+`, input.Body.UserID).Scan(&nfcLinked)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, huma.Error404NotFound("Hacker not found")
+	}
+	if err != nil {
+		h.logger.Err(err).Msg("undo check-in lookup failed")
+		return nil, huma.Error500InternalServerError("Unable to undo check-in")
+	}
+	if nfcLinked {
+		return nil, huma.Error409Conflict("Hacker checked in with an NFC nametag, which can't be undone from the web")
+	}
+	return nil, huma.Error409Conflict("Hacker is not checked in")
 }
