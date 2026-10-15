@@ -5,6 +5,7 @@ import (
 	"os"
 	"runtime/debug"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
