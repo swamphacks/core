@@ -7,15 +7,29 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const checkinUser = `-- name: CheckinUser :one
-INSERT INTO nfc_tags_user (tag_id, user_id) VALUES
-($1, $2)
-ON CONFLICT DO NOTHING 
-RETURNING id, tag_id, user_id, created_at, updated_at
+WITH checked_in AS (
+    INSERT INTO nfc_tags_user (tag_id, user_id) VALUES
+    ($1, $2)
+    ON CONFLICT DO NOTHING
+    RETURNING id, tag_id, user_id, created_at, updated_at
+)
+SELECT
+    checked_in.id,
+    checked_in.tag_id,
+    checked_in.user_id,
+    checked_in.created_at,
+    checked_in.updated_at,
+    users.name,
+    COALESCE(applications.status::text, 'none') AS application_status
+FROM checked_in
+JOIN users ON users.id = checked_in.user_id
+LEFT JOIN applications ON applications.user_id = users.id
 `
 
 type CheckinUserParams struct {
@@ -23,15 +37,27 @@ type CheckinUserParams struct {
 	UserID *uuid.UUID `json:"user_id"`
 }
 
-func (q *Queries) CheckinUser(ctx context.Context, arg CheckinUserParams) (NfcTagsUser, error) {
+type CheckinUserRow struct {
+	ID                uuid.UUID  `json:"id"`
+	TagID             string     `json:"tag_id"`
+	UserID            *uuid.UUID `json:"user_id"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
+	Name              string     `json:"name"`
+	ApplicationStatus string     `json:"application_status"`
+}
+
+func (q *Queries) CheckinUser(ctx context.Context, arg CheckinUserParams) (CheckinUserRow, error) {
 	row := q.db.QueryRow(ctx, checkinUser, arg.TagID, arg.UserID)
-	var i NfcTagsUser
+	var i CheckinUserRow
 	err := row.Scan(
 		&i.ID,
 		&i.TagID,
 		&i.UserID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
+		&i.ApplicationStatus,
 	)
 	return i, err
 }
@@ -57,6 +83,38 @@ func (q *Queries) GetMeals(ctx context.Context) ([]GetMealsRow, error) {
 	items := []GetMealsRow{}
 	for rows.Next() {
 		var i GetMealsRow
+		if err := rows.Scan(&i.Name, &i.ID, &i.MaxUserAmount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRedeemablesByType = `-- name: GetRedeemablesByType :many
+SELECT name, id, max_user_amount FROM redeemables
+WHERE type = $1
+ORDER BY name, id
+`
+
+type GetRedeemablesByTypeRow struct {
+	Name          string    `json:"name"`
+	ID            uuid.UUID `json:"id"`
+	MaxUserAmount int32     `json:"max_user_amount"`
+}
+
+func (q *Queries) GetRedeemablesByType(ctx context.Context, redeemableType string) ([]GetRedeemablesByTypeRow, error) {
+	rows, err := q.db.Query(ctx, getRedeemablesByType, redeemableType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetRedeemablesByTypeRow{}
+	for rows.Next() {
+		var i GetRedeemablesByTypeRow
 		if err := rows.Scan(&i.Name, &i.ID, &i.MaxUserAmount); err != nil {
 			return nil, err
 		}
@@ -162,8 +220,29 @@ func (q *Queries) GetWorkshops(ctx context.Context) ([]GetWorkshopsRow, error) {
 	return items, nil
 }
 
-const tagToRedeemable = `-- name: TagToRedeemable :exec
-INSERT INTO nfc_tags_redeemables (tag_id, redeemable_id) VALUES ($1, $2)
+const tagToRedeemable = `-- name: TagToRedeemable :one
+WITH redeemed AS (
+    INSERT INTO nfc_tags_redeemables (tag_id, redeemable_id)
+    VALUES ($1, $2)
+    RETURNING tag_id, redeemable_id
+)
+SELECT
+    users.name,
+    redeemables.name AS redeemable_name,
+    GREATEST(
+        redeemables.max_user_amount -
+        (
+            SELECT COUNT(*)::integer
+            FROM nfc_tags_redeemables
+            WHERE tag_id = redeemed.tag_id
+              AND redeemable_id = redeemed.redeemable_id
+        ) - 1,
+        0
+    )::integer AS items_remaining
+FROM redeemed
+JOIN nfc_tags_user ON nfc_tags_user.tag_id = redeemed.tag_id
+JOIN users ON users.id = nfc_tags_user.user_id
+JOIN redeemables ON redeemables.id = redeemed.redeemable_id
 `
 
 type TagToRedeemableParams struct {
@@ -171,15 +250,31 @@ type TagToRedeemableParams struct {
 	RedeemableID uuid.UUID `json:"redeemable_id"`
 }
 
-func (q *Queries) TagToRedeemable(ctx context.Context, arg TagToRedeemableParams) error {
-	_, err := q.db.Exec(ctx, tagToRedeemable, arg.TagID, arg.RedeemableID)
-	return err
+type TagToRedeemableRow struct {
+	Name           string `json:"name"`
+	RedeemableName string `json:"redeemable_name"`
+	ItemsRemaining int32  `json:"items_remaining"`
 }
 
-const tagToWorkshop = `-- name: TagToWorkshop :execrows
-INSERT INTO nfc_tags_workshops (tag_id, workshop_id)
-VALUES ($1, $2)
-ON CONFLICT (tag_id, workshop_id) DO NOTHING
+func (q *Queries) TagToRedeemable(ctx context.Context, arg TagToRedeemableParams) (TagToRedeemableRow, error) {
+	row := q.db.QueryRow(ctx, tagToRedeemable, arg.TagID, arg.RedeemableID)
+	var i TagToRedeemableRow
+	err := row.Scan(&i.Name, &i.RedeemableName, &i.ItemsRemaining)
+	return i, err
+}
+
+const tagToWorkshop = `-- name: TagToWorkshop :one
+WITH tagged AS (
+    INSERT INTO nfc_tags_workshops (tag_id, workshop_id)
+    VALUES ($1, $2)
+    ON CONFLICT (tag_id, workshop_id) DO NOTHING
+    RETURNING tag_id, workshop_id
+)
+SELECT users.name, workshops.title AS workshop_name
+FROM tagged
+JOIN nfc_tags_user ON nfc_tags_user.tag_id = tagged.tag_id
+JOIN users ON users.id = nfc_tags_user.user_id
+JOIN workshops ON workshops.id = tagged.workshop_id
 `
 
 type TagToWorkshopParams struct {
@@ -187,10 +282,14 @@ type TagToWorkshopParams struct {
 	WorkshopID uuid.UUID `json:"workshop_id"`
 }
 
-func (q *Queries) TagToWorkshop(ctx context.Context, arg TagToWorkshopParams) (int64, error) {
-	result, err := q.db.Exec(ctx, tagToWorkshop, arg.TagID, arg.WorkshopID)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+type TagToWorkshopRow struct {
+	Name         string `json:"name"`
+	WorkshopName string `json:"workshop_name"`
+}
+
+func (q *Queries) TagToWorkshop(ctx context.Context, arg TagToWorkshopParams) (TagToWorkshopRow, error) {
+	row := q.db.QueryRow(ctx, tagToWorkshop, arg.TagID, arg.WorkshopID)
+	var i TagToWorkshopRow
+	err := row.Scan(&i.Name, &i.WorkshopName)
+	return i, err
 }

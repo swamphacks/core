@@ -39,6 +39,17 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 	}, nfcHandler.handleGetTshirts)
 
 	huma.Register(group, huma.Operation{
+		OperationID: "GetRedeemablesByType",
+		Method:      http.MethodGet,
+		Summary:     "Get redeemables of one type",
+		Description: "Get redeemables filtered by type (meal, tshirt, swag, drink)",
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/redeemables",
+		Errors:      []int{http.StatusInternalServerError},
+	}, nfcHandler.handleGetRedeemablesByType)
+
+	huma.Register(group, huma.Operation{
 		OperationID: "CheckinUser",
 		Method:      http.MethodPost,
 		Summary:     "Checkin user with NFC tag",
@@ -115,6 +126,14 @@ type GetTshirtsOutput struct {
 	Body []sqlc.GetTshirtsRow `json:"body"`
 }
 
+type GetRedeemablesByTypeInput struct {
+	Type string `query:"type" required:"true" enum:"meal,tshirt,swag,drink"`
+}
+
+type GetRedeemablesByTypeOutput struct {
+	Body []sqlc.GetRedeemablesByTypeRow `json:"body"`
+}
+
 type GetWorkshopsOutput struct {
 	Body []sqlc.GetWorkshopsRow `json:"body"`
 }
@@ -188,6 +207,17 @@ func (h *handler) handleGetTshirts(ctx context.Context, input *struct{}) (*GetTs
 	}, nil
 }
 
+func (h *handler) handleGetRedeemablesByType(ctx context.Context, input *GetRedeemablesByTypeInput) (*GetRedeemablesByTypeOutput, error) {
+	redeemables, err := h.nfcService.GetRedeemablesByType(ctx, input.Type)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("failed to get redeemables")
+	}
+
+	return &GetRedeemablesByTypeOutput{
+		Body: redeemables,
+	}, nil
+}
+
 func (h *handler) handleGetWorkshops(ctx context.Context, input *struct{}) (*GetWorkshopsOutput, error) {
 	workshops, err := h.nfcService.GetWorkshops(ctx)
 	if err != nil {
@@ -219,9 +249,12 @@ func (h *handler) handleTagToRedeemable(ctx context.Context, input *TagToRedeema
 			switch pgErr.Code {
 			case "P0001":
 				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Hacker reached the limit for this item"}}, nil
-			case "P0005":
-				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "No redeemables left in stock"}}, nil
 			case "23503":
+				// The app loads its item list once and has no refresh, so it can
+				// still offer an item that staff have since deleted.
+				if pgErr.ConstraintName == "nfc_tags_redeemables_redeemable_id_fkey" {
+					return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "This item was deleted. Close and reopen the app, then pick an item again"}}, nil
+				}
 				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Tag has not been checked in"}}, nil
 			}
 		}
@@ -231,7 +264,10 @@ func (h *handler) handleTagToRedeemable(ctx context.Context, input *TagToRedeema
 }
 
 func (h *handler) handleTagToWorkshop(ctx context.Context, input *TagToWorkshopInput) (*ExpectedOutput, error) {
-	rows, err := h.nfcService.TagToWorkshop(ctx, input.Body.TagID, input.Body.WorkshopID)
+	_, err := h.nfcService.TagToWorkshop(ctx, input.Body.TagID, input.Body.WorkshopID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Already registered for this workshop"}}, nil
+	}
 	if err != nil {
 		h.logger.Err(err).Msg("failed to tag workshop")
 		var pgErr *pgconn.PgError
@@ -239,9 +275,6 @@ func (h *handler) handleTagToWorkshop(ctx context.Context, input *TagToWorkshopI
 			return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Tag has not been checked in"}}, nil
 		}
 		return nil, huma.Error500InternalServerError("failed to tag workshop")
-	}
-	if rows == 0 {
-		return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Already registered for this workshop"}}, nil
 	}
 	return &ExpectedOutput{Body: ExpectedBody{Res: true, Msg: "Successfully tagged user to workshop"}}, nil
 }

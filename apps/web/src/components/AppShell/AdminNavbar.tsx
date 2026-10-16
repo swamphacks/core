@@ -4,6 +4,7 @@ import TablerClipboardCheck from "~icons/tabler/clipboard-check";
 import TablerFileText from "~icons/tabler/file-text";
 import TablerChartBarPopular from "~icons/tabler/chart-bar-popular";
 import TablerSearch from "~icons/tabler/search";
+import TablerGift from "~icons/tabler/gift";
 
 interface AdminNavbaPropsProps {
   pathname: string;
@@ -15,6 +16,7 @@ export default function AdminNavbaProps({ pathname }: AdminNavbaPropsProps) {
     pathname,
   );
   const applicationSearchActive = /^\/application-search\/?$/.test(pathname);
+  const redeemablesActive = /^\/redeemables\/?$/.test(pathname);
 
   const commonNavLinks = (
     <>
@@ -22,6 +24,12 @@ export default function AdminNavbaProps({ pathname }: AdminNavbaPropsProps) {
         label="Check-in Dashboard"
         href="/check-in"
         active={pathname.startsWith("/check-in")}
+      />
+      <NavLink
+        label="Redeemables"
+        href="/redeemables"
+        leftSection={<TablerGift className="w-5 aspect-square" />}
+        active={redeemablesActive}
       />
       <NavLink
         label="Information"

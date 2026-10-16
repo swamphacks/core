@@ -14,14 +14,16 @@ import (
 )
 
 type NfcService struct {
-	nfcRepo *repository.NFCRepository
-	logger  zerolog.Logger
+	nfcRepo       *repository.NFCRepository
+	logger        zerolog.Logger
+	checkinLogger zerolog.Logger
 }
 
-func NewService(nfcRepo *repository.NFCRepository, logger zerolog.Logger) *NfcService {
+func NewService(nfcRepo *repository.NFCRepository, logger zerolog.Logger, checkinLogger zerolog.Logger) *NfcService {
 	return &NfcService{
-		nfcRepo: nfcRepo,
-		logger:  logger,
+		nfcRepo:       nfcRepo,
+		logger:        logger,
+		checkinLogger: checkinLogger,
 	}
 }
 
@@ -45,7 +47,17 @@ func (s *NfcService) GetTshirts(ctx context.Context) ([]sqlc.GetTshirtsRow, erro
 	return tshirts, nil
 }
 
-func (s *NfcService) CheckinUser(ctx context.Context, tagID string, userID uuid.UUID) (*sqlc.NfcTagsUser, error) {
+func (s *NfcService) GetRedeemablesByType(ctx context.Context, redeemableType string) ([]sqlc.GetRedeemablesByTypeRow, error) {
+	redeemables, err := s.nfcRepo.GetRedeemablesByType(ctx, redeemableType)
+	if err != nil {
+		s.logger.Err(err).Str("type", redeemableType).Msg("Failed to get redeemables by type")
+		return nil, errors.New("failed to get redeemables")
+	}
+
+	return redeemables, nil
+}
+
+func (s *NfcService) CheckinUser(ctx context.Context, tagID string, userID uuid.UUID) (*sqlc.CheckinUserRow, error) {
 	user, err := s.nfcRepo.CheckinUser(ctx, sqlc.CheckinUserParams{
 		TagID:  tagID,
 		UserID: &userID,
@@ -54,25 +66,42 @@ func (s *NfcService) CheckinUser(ctx context.Context, tagID string, userID uuid.
 		if !errors.Is(err, pgx.ErrNoRows) {
 			s.logger.Err(err).Msg("Failed to check in user")
 		}
+		if user == nil {
+			s.checkinLogger.Info().Str("type", "checkin").Msgf("❌ User can't check in - UserId: %s - Error: %s", userID, err.Error())
+		} else {
+			s.checkinLogger.Info().Str("type", "checkin").Msgf("❌ User can't check in - Name: %s - Status: %s - Error: %s", user.Name, user.ApplicationStatus, err.Error())
+		}
 		return nil, fmt.Errorf("check in user: %w", err)
 	}
+
+	s.checkinLogger.Info().Str("type", "checkin").Msgf("✅ User checked in - Name: %s - Status: %s", user.Name, user.ApplicationStatus)
+
 	return user, nil
 }
 
-func (s *NfcService) TagToWorkshop(ctx context.Context, tagID string, workshopID uuid.UUID) (int64, error) {
-	rows, err := s.nfcRepo.TagToWorkshop(ctx, sqlc.TagToWorkshopParams{
+func (s *NfcService) TagToWorkshop(ctx context.Context, tagID string, workshopID uuid.UUID) (*sqlc.TagToWorkshopRow, error) {
+	workshop, err := s.nfcRepo.TagToWorkshop(ctx, sqlc.TagToWorkshopParams{
 		TagID:      tagID,
 		WorkshopID: workshopID,
 	})
 	if err != nil {
-		s.logger.Err(err).Msg("Failed to tag to workshop")
-		return 0, fmt.Errorf("tag to workshop: %w", err)
+		if !errors.Is(err, pgx.ErrNoRows) {
+			s.logger.Err(err).Msg("Failed to tag to workshop")
+		}
+		return nil, fmt.Errorf("tag to workshop: %w", err)
 	}
-	return rows, nil
+
+	s.checkinLogger.Info().Str("type", "workshop").Msgf(
+		"✅ User checked in successfully - Name: %s - Workshop: %s",
+		workshop.Name,
+		workshop.WorkshopName,
+	)
+
+	return workshop, nil
 }
 
 func (s *NfcService) TagToRedeemable(ctx context.Context, tagID string, redeemableID uuid.UUID) error {
-	err := s.nfcRepo.TagToRedeemable(ctx, sqlc.TagToRedeemableParams{
+	redeemable, err := s.nfcRepo.TagToRedeemable(ctx, sqlc.TagToRedeemableParams{
 		TagID:        tagID,
 		RedeemableID: redeemableID,
 	})
@@ -80,6 +109,14 @@ func (s *NfcService) TagToRedeemable(ctx context.Context, tagID string, redeemab
 		s.logger.Err(err).Msg("Failed to tag to redeemable")
 		return fmt.Errorf("tag to redeemable: %w", err)
 	}
+
+	s.checkinLogger.Info().Str("type", "redeemable").Msgf(
+		"✅ User checked in successfully - Name: %s - Redeemable: %s - Items remaining: %d",
+		redeemable.Name,
+		redeemable.RedeemableName,
+		redeemable.ItemsRemaining,
+	)
+
 	return nil
 }
 

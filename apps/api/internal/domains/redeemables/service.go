@@ -9,6 +9,13 @@ import (
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
+// Re-exported so the handler checks the service-level names, matching
+// ErrEmailCampaignNotFound in the email package.
+var (
+	ErrNoActiveHackathon  = repository.ErrNoActiveHackathon
+	ErrRedeemableNotFound = repository.ErrRedeemableNotFound
+)
+
 type RedeemablesService struct {
 	redeemablesRepo *repository.RedeemablesRepository
 	logger          zerolog.Logger
@@ -30,12 +37,11 @@ func (s *RedeemablesService) GetRedeemables(ctx context.Context) (*[]sqlc.GetRed
 	return redeemables, nil
 }
 
-func (s *RedeemablesService) CreateRedeemable(ctx context.Context, name string, amount int, maxUserAmount int) (*sqlc.Redeemable, error) {
+func (s *RedeemablesService) CreateRedeemable(ctx context.Context, name string, maxUserAmount int, redeemableType string) (*sqlc.Redeemable, error) {
 	params := sqlc.CreateRedeemableParams{
 		Name:          name,
-		Amount:        int32(amount),
 		MaxUserAmount: int32(maxUserAmount),
-		HackthonID:    "xii",
+		Type:          redeemableType,
 	}
 	redeemable, err := s.redeemablesRepo.CreateRedeemable(ctx, params)
 	if err != nil {
@@ -54,13 +60,8 @@ func (s *RedeemablesService) DeleteRedeemable(ctx context.Context, redeemableID 
 	return nil
 }
 
-func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID uuid.UUID, name *string, amount *int, maxUserAmount *int) (*sqlc.Redeemable, error) {
+func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID uuid.UUID, name *string, maxUserAmount *int, redeemableType *string) (*sqlc.Redeemable, error) {
 
-	var amount32 *int32
-	if amount != nil {
-		v := int32(*amount)
-		amount32 = &v
-	}
 	var maxUserAmount32 *int32
 	if maxUserAmount != nil {
 		v := int32(*maxUserAmount)
@@ -70,8 +71,8 @@ func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID 
 	redeemable, err := s.redeemablesRepo.UpdateRedeemable(ctx, sqlc.UpdateRedeemableParams{
 		ID:            redeemableID,
 		Name:          name,
-		Amount:        amount32,
 		MaxUserAmount: maxUserAmount32,
+		Type:          redeemableType,
 	})
 
 	if err != nil {
@@ -79,35 +80,4 @@ func (s *RedeemablesService) UpdateRedeemable(ctx context.Context, redeemableID 
 		return nil, err
 	}
 	return redeemable, nil
-}
-
-func (s *RedeemablesService) RedeemRedeemable(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID) error {
-	// Need to do a check to see if the user is checked in
-	// Probably need event service
-
-	// CREATE NEW SQL function for getting checked in status
-	_, err := s.redeemablesRepo.RedeemRedeemable(ctx, sqlc.RedeemRedeemableParams{
-		UserID:       userID,
-		RedeemableID: redeemableID,
-	})
-
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to redeem redeemable")
-		return err
-	}
-	return nil
-}
-
-func (s *RedeemablesService) UpdateRedemption(ctx context.Context, redeemableID uuid.UUID, userID uuid.UUID, amount int) error {
-	err := s.redeemablesRepo.UpdateRedemption(ctx, sqlc.UpdateRedemptionParams{
-		RedeemableID: redeemableID,
-		UserID:       userID,
-		Amount:       int32(amount),
-	})
-
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to update redemption")
-		return err
-	}
-	return nil
 }
