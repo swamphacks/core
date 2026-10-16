@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/api/cookie"
 	"github.com/swamphacks/core/apps/api/internal/api/middleware"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
@@ -59,6 +60,19 @@ func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middlewa
 		Path:        "/checkin/nfc-links",
 		Errors:      []int{http.StatusUnprocessableEntity, http.StatusInternalServerError, http.StatusNotFound},
 	}, nfcHandler.handleCheckinUser)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "unlink-nfc-tag",
+		Method:        http.MethodDelete,
+		Summary:       "Unlink a user's NFC tag",
+		Description:   "Removes the NFC tag link for the specified user",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Tags:          []string{"NFC"},
+		Path:          "/checkin/nfc-links/{userId}",
+		Errors:        []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusNoContent,
+	}, nfcHandler.handleUnlinkTag)
 
 	huma.Register(group, huma.Operation{
 		OperationID: "TagToWorkshop",
@@ -151,6 +165,10 @@ type CheckinUserInput struct {
 
 type CheckinUserOutput struct {
 	Body sqlc.NfcTagsUser `json:"body"`
+}
+
+type UnlinkTagOutput struct {
+	Status int
 }
 
 type ExpectedBody struct {
@@ -290,4 +308,18 @@ func (h *handler) handleCheckinUser(ctx context.Context, input *CheckinUserInput
 	}
 	id := user.ID.String()
 	return &ExpectedOutput{Body: ExpectedBody{Res: true, Msg: "Successfully checked in user", Evidence: &id}}, nil
+}
+
+func (h *handler) handleUnlinkTag(ctx context.Context, input *struct {
+	UserID uuid.UUID `path:"userId"`
+}) (*UnlinkTagOutput, error) {
+	unlinked, err := h.nfcService.UnlinkTag(ctx, input.UserID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to unlink NFC tag")
+	}
+	if !unlinked {
+		return nil, huma.Error404NotFound("No NFC tag is linked to this user")
+	}
+
+	return &UnlinkTagOutput{Status: http.StatusNoContent}, nil
 }

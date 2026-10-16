@@ -38,13 +38,13 @@ type CheckinUserParams struct {
 }
 
 type CheckinUserRow struct {
-	ID                uuid.UUID  `json:"id"`
-	TagID             string     `json:"tag_id"`
-	UserID            *uuid.UUID `json:"user_id"`
-	CreatedAt         time.Time  `json:"created_at"`
-	UpdatedAt         time.Time  `json:"updated_at"`
-	Name              string     `json:"name"`
-	ApplicationStatus string     `json:"application_status"`
+	ID                uuid.UUID   `json:"id"`
+	TagID             string      `json:"tag_id"`
+	UserID            *uuid.UUID  `json:"user_id"`
+	CreatedAt         time.Time   `json:"created_at"`
+	UpdatedAt         time.Time   `json:"updated_at"`
+	Name              string      `json:"name"`
+	ApplicationStatus interface{} `json:"application_status"`
 }
 
 func (q *Queries) CheckinUser(ctx context.Context, arg CheckinUserParams) (CheckinUserRow, error) {
@@ -60,6 +60,18 @@ func (q *Queries) CheckinUser(ctx context.Context, arg CheckinUserParams) (Check
 		&i.ApplicationStatus,
 	)
 	return i, err
+}
+
+const deleteTagByUserId = `-- name: DeleteTagByUserId :execrows
+DELETE FROM nfc_tags_user WHERE user_id = $1
+`
+
+func (q *Queries) DeleteTagByUserId(ctx context.Context, userID *uuid.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteTagByUserId, userID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getMeals = `-- name: GetMeals :many
@@ -157,6 +169,23 @@ func (q *Queries) GetSocials(ctx context.Context) ([]GetSocialsRow, error) {
 	return items, nil
 }
 
+const getTag = `-- name: GetTag :one
+SELECT id, tag_id, user_id, created_at, updated_at FROM nfc_tags_user WHERE tag_id = $1
+`
+
+func (q *Queries) GetTag(ctx context.Context, tagID string) (NfcTagsUser, error) {
+	row := q.db.QueryRow(ctx, getTag, tagID)
+	var i NfcTagsUser
+	err := row.Scan(
+		&i.ID,
+		&i.TagID,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getTshirts = `-- name: GetTshirts :many
 SELECT name, id, max_user_amount FROM redeemables
 where type = 'tshirt'
@@ -222,9 +251,9 @@ func (q *Queries) GetWorkshops(ctx context.Context) ([]GetWorkshopsRow, error) {
 
 const tagToRedeemable = `-- name: TagToRedeemable :one
 WITH redeemed AS (
-    INSERT INTO nfc_tags_redeemables (tag_id, redeemable_id)
-    VALUES ($1, $2)
-    RETURNING tag_id, redeemable_id
+    INSERT INTO nfc_tags_redeemables (user_id, tag_id, redeemable_id)
+    VALUES ($1, $2, $3)
+    RETURNING user_id, tag_id, redeemable_id
 )
 SELECT
     users.name,
@@ -234,19 +263,20 @@ SELECT
         (
             SELECT COUNT(*)::integer
             FROM nfc_tags_redeemables
-            WHERE tag_id = redeemed.tag_id
+            WHERE user_id = redeemed.user_id
               AND redeemable_id = redeemed.redeemable_id
         ) - 1,
         0
     )::integer AS items_remaining
 FROM redeemed
-JOIN nfc_tags_user ON nfc_tags_user.tag_id = redeemed.tag_id
+JOIN nfc_tags_user ON nfc_tags_user.user_id = redeemed.user_id
 JOIN users ON users.id = nfc_tags_user.user_id
 JOIN redeemables ON redeemables.id = redeemed.redeemable_id
 `
 
 type TagToRedeemableParams struct {
-	TagID        string    `json:"tag_id"`
+	UserID       uuid.UUID `json:"user_id"`
+	TagID        *string   `json:"tag_id"`
 	RedeemableID uuid.UUID `json:"redeemable_id"`
 }
 
@@ -257,7 +287,7 @@ type TagToRedeemableRow struct {
 }
 
 func (q *Queries) TagToRedeemable(ctx context.Context, arg TagToRedeemableParams) (TagToRedeemableRow, error) {
-	row := q.db.QueryRow(ctx, tagToRedeemable, arg.TagID, arg.RedeemableID)
+	row := q.db.QueryRow(ctx, tagToRedeemable, arg.UserID, arg.TagID, arg.RedeemableID)
 	var i TagToRedeemableRow
 	err := row.Scan(&i.Name, &i.RedeemableName, &i.ItemsRemaining)
 	return i, err
@@ -265,20 +295,21 @@ func (q *Queries) TagToRedeemable(ctx context.Context, arg TagToRedeemableParams
 
 const tagToWorkshop = `-- name: TagToWorkshop :one
 WITH tagged AS (
-    INSERT INTO nfc_tags_workshops (tag_id, workshop_id)
-    VALUES ($1, $2)
-    ON CONFLICT (tag_id, workshop_id) DO NOTHING
-    RETURNING tag_id, workshop_id
+    INSERT INTO nfc_tags_workshops (user_id, tag_id, workshop_id)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (user_id, workshop_id) DO NOTHING
+    RETURNING user_id, workshop_id
 )
 SELECT users.name, workshops.title AS workshop_name
 FROM tagged
-JOIN nfc_tags_user ON nfc_tags_user.tag_id = tagged.tag_id
+JOIN nfc_tags_user ON nfc_tags_user.user_id = tagged.user_id
 JOIN users ON users.id = nfc_tags_user.user_id
 JOIN workshops ON workshops.id = tagged.workshop_id
 `
 
 type TagToWorkshopParams struct {
-	TagID      string    `json:"tag_id"`
+	UserID     uuid.UUID `json:"user_id"`
+	TagID      *string   `json:"tag_id"`
 	WorkshopID uuid.UUID `json:"workshop_id"`
 }
 
@@ -288,7 +319,7 @@ type TagToWorkshopRow struct {
 }
 
 func (q *Queries) TagToWorkshop(ctx context.Context, arg TagToWorkshopParams) (TagToWorkshopRow, error) {
-	row := q.db.QueryRow(ctx, tagToWorkshop, arg.TagID, arg.WorkshopID)
+	row := q.db.QueryRow(ctx, tagToWorkshop, arg.UserID, arg.TagID, arg.WorkshopID)
 	var i TagToWorkshopRow
 	err := row.Scan(&i.Name, &i.WorkshopName)
 	return i, err

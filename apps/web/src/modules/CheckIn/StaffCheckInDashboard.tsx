@@ -148,6 +148,34 @@ export default function StaffCheckInDashboard({
     }
   }
 
+  async function unlinkTag(row: DashboardRow) {
+    if (busyUser) return;
+    if (
+      !window.confirm(
+        `Unlink the NFC tag from ${row.name}? They will need a tag linked again to check in with NFC.`,
+      )
+    )
+      return;
+
+    setBusyUser(row.userId);
+    setActionError("");
+    try {
+      await api.delete(`nfc/checkin/nfc-links/${row.userId}`, { retry: 0 });
+      await dashboard.refetch();
+    } catch (error) {
+      let message = "Unable to unlink NFC tag.";
+      if (error instanceof HTTPError) {
+        const response = await error.response
+          .json<{ detail?: string }>()
+          .catch(() => null);
+        message = response?.detail ?? message;
+      }
+      setActionError(message);
+    } finally {
+      setBusyUser(null);
+    }
+  }
+
   return (
     <main className="w-full max-w-7xl p-4 sm:p-6 pb-24 space-y-5">
       <h1 className="text-2xl font-bold">Check-in Dashboard</h1>
@@ -500,6 +528,18 @@ export default function StaffCheckInDashboard({
                         <span className="text-text-secondary whitespace-nowrap">
                           Check in with NFC
                         </span>
+                      )}
+                      {row.checkedInAt && (
+                      <button
+                        type="button"
+                        className={`${actionClass} mt-2`}
+                        disabled={busyUser !== null}
+                        onClick={() => unlinkTag(row)}
+                      >
+                        {busyUser === row.userId
+                          ? "Unlinking…"
+                          : "Unlink NFC tag"}
+                      </button>
                       )}
                     </div>
                   </td>
