@@ -19,10 +19,14 @@ interface DashboardRow {
   rfid: string | null;
   signupSource: string;
   standbyArrival: string | null;
+  standbyPosition: number | null;
   redemptions: { redeemableId: string; name: string; amount: number }[];
 }
 
 interface Dashboard {
+  capacity: number;
+  outstandingOffers: number;
+  unreservedSpots: number;
   hackathonId: string;
   confirmed: number;
   confirmedCheckedIn: number;
@@ -149,21 +153,65 @@ export default function StaffCheckInDashboard({
       <h1 className="text-2xl font-bold">Check-in Dashboard</h1>
 
       {data && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            [
-              "Confirmed checked in",
-              `${data.confirmedCheckedIn} / ${data.confirmed}`,
-            ],
-            ["Standby waiting", data.standbyWaiting],
-            ["Day-of signups", data.dayOfSignups],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-xl border border-border p-4">
-              <p className="text-sm text-text-secondary">{label}</p>
-              <p className="mt-1 text-2xl font-semibold">{value}</p>
-            </div>
-          ))}
-        </div>
+        <section className="rounded-xl border border-border">
+          <div className="grid grid-cols-1 sm:grid-cols-3">
+            {[
+              [
+                "Checked in · confirmed",
+                `${data.confirmedCheckedIn} of ${data.confirmed}`,
+              ],
+              ["Standby waiting", data.standbyWaiting],
+              [
+                "Unreserved spots",
+                data.capacity > 0 ? data.unreservedSpots : "—",
+              ],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="px-5 py-4 border-b sm:border-b-0 sm:border-r border-border last:border-0"
+              >
+                <p className="text-xs font-medium text-text-secondary">
+                  {label}
+                </p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums">
+                  {value}
+                </p>
+              </div>
+            ))}
+          </div>
+          <details className="border-t border-border px-5 py-3 text-sm">
+            <summary className="cursor-pointer text-text-secondary">
+              Capacity and reservation details
+            </summary>
+            <dl className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                [
+                  "Capacity target",
+                  data.capacity > 0 ? data.capacity : "Not configured",
+                ],
+                [
+                  "Confirmed, not checked in",
+                  Math.max(0, data.confirmed - data.confirmedCheckedIn),
+                ],
+                ["Outstanding offers", data.outstandingOffers],
+                ["Day-of signups", data.dayOfSignups],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt className="text-xs text-text-secondary">{label}</dt>
+                  <dd className="mt-1 font-medium tabular-nums">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </details>
+          {data.capacity > 0 &&
+            data.confirmed + data.outstandingOffers > data.capacity && (
+              <p className="border-t border-border px-5 py-3 text-sm text-amber-800 dark:text-amber-200">
+                Reservations exceed the target by{" "}
+                {data.confirmed + data.outstandingOffers - data.capacity}.
+                Existing offers remain valid.
+              </p>
+            )}
+        </section>
       )}
 
       <div className="flex gap-3">
@@ -273,11 +321,6 @@ export default function StaffCheckInDashboard({
         </p>
       )}
 
-      <p className="text-sm text-text-secondary">
-        Standby arrival records presence in the standby line, not admission. NFC
-        check-in is shown separately under Details.
-      </p>
-
       {actionError && (
         <p role="alert" className="text-red-600">
           {actionError}
@@ -312,11 +355,17 @@ export default function StaffCheckInDashboard({
                   className="border-b border-border last:border-0"
                 >
                   <td className="px-4 py-3 align-top">
+                    {tab === "Standby" && row.standbyPosition != null && (
+                      <p className="mb-1.5 text-xs font-semibold text-text-secondary">
+                        #{row.standbyPosition}
+                        {row.standbyPosition === 1 ? " · Next in line" : ""}
+                      </p>
+                    )}
                     {isAdmin ? (
                       <DialogTrigger>
                         <button
                           type="button"
-                          className="font-semibold text-left hover:underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
+                          className="font-semibold text-left underline decoration-current/30 underline-offset-4 hover:decoration-current transition-colors focus-visible:outline-2 focus-visible:outline-offset-4"
                           aria-label={`View application for ${row.name}`}
                         >
                           {row.name}
@@ -336,18 +385,20 @@ export default function StaffCheckInDashboard({
                     <p className="mt-1 text-text-secondary break-all">
                       {row.email}
                     </p>
-                    <span className="inline-block mt-1.5 rounded-md bg-white/5 px-2 py-0.5 text-[11px] text-text-secondary">
-                      {row.signupSource === "day_of"
-                        ? "Day-of"
-                        : "Preregistered"}
-                    </span>
-                    <button
-                      type="button"
-                      className="inline-flex mt-2 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-main hover:bg-background transition-colors"
-                      onClick={() => setSelectedAttendee(row)}
-                    >
-                      QR code
-                    </button>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex h-7 items-center rounded-md bg-slate-100 px-2.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        {row.signupSource === "day_of"
+                          ? "Day-of"
+                          : "Preregistered"}
+                      </span>
+                      <button
+                        type="button"
+                        className="inline-flex h-7 items-center rounded-md border border-border px-2.5 text-xs font-medium text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        onClick={() => setSelectedAttendee(row)}
+                      >
+                        QR code
+                      </button>
+                    </div>
                     <details className="mt-1.5 text-text-secondary">
                       <summary className="cursor-pointer text-xs">
                         Details
