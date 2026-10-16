@@ -49,7 +49,7 @@ function awaitingArrival(row: DashboardRow) {
 
 function statusLabel(row: DashboardRow) {
   if (row.checkedInAt) return "Checked in";
-  if (row.status === "waitlist_confirmed") return "Standby";
+  if (row.status === "waitlist_confirmed") return "Standby · arrival recorded";
   if (awaitingArrival(row)) return "Awaiting arrival";
   return row.status.replaceAll("_", " ");
 }
@@ -274,6 +274,11 @@ export default function StaffCheckInDashboard({
         </p>
       )}
 
+      <p className="text-sm text-text-secondary">
+        Standby arrival records presence in the standby line, not admission. NFC
+        check-in is shown separately under Details.
+      </p>
+
       {actionError && (
         <p role="alert" className="text-red-600">
           {actionError}
@@ -289,11 +294,16 @@ export default function StaffCheckInDashboard({
           <table className="w-full min-w-[700px] text-sm text-left">
             <thead>
               <tr className="border-b border-border text-text-secondary">
-                {["Hacker", "Status", "Arrival", "Action"].map((label) => (
-                  <th key={label} className="p-4 whitespace-nowrap font-medium">
-                    {label}
-                  </th>
-                ))}
+                {["Hacker", "Status", "Standby arrival", "Next step"].map(
+                  (label) => (
+                    <th
+                      key={label}
+                      className="p-4 whitespace-nowrap font-medium"
+                    >
+                      {label}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody>
@@ -325,7 +335,12 @@ export default function StaffCheckInDashboard({
                       </summary>
                       <div className="mt-2 space-y-1 text-xs">
                         <p>Application: {row.status.replaceAll("_", " ")}</p>
-                        <p>Check-in: {timestamp(row.checkedInAt)}</p>
+                        <p>
+                          NFC check-in:{" "}
+                          {row.checkedInAt
+                            ? timestamp(row.checkedInAt)
+                            : "Not checked in"}
+                        </p>
                         <p>
                           Redeemables:{" "}
                           {row.redemptions
@@ -349,7 +364,15 @@ export default function StaffCheckInDashboard({
                     </span>
                   </td>
                   <td className="p-4 align-top whitespace-nowrap">
-                    {timestamp(row.standbyArrival)}
+                    {row.standbyArrival
+                      ? timestamp(row.standbyArrival)
+                      : [
+                            "waitlisted",
+                            "waitlist_confirmed",
+                            "rejected",
+                          ].includes(row.status)
+                        ? "Not recorded"
+                        : "Not applicable"}
                   </td>
                   <td className="p-4 align-top min-w-[190px]">
                     {isAdmin && (
@@ -376,7 +399,7 @@ export default function StaffCheckInDashboard({
                       >
                         {busyUser === row.userId
                           ? "Recording…"
-                          : "Record arrival"}
+                          : "Record standby arrival"}
                       </button>
                     )}
                     {row.status === "waitlist_confirmed" && (
@@ -386,9 +409,33 @@ export default function StaffCheckInDashboard({
                         disabled={busyUser !== null}
                         onClick={() => updateStandby(row, true)}
                       >
-                        {busyUser === row.userId ? "Accepting…" : "Accept"}
+                        {busyUser === row.userId ? "Accepting…" : "Offer spot"}
                       </button>
                     )}
+                    {row.checkedInAt && (
+                      <p className="text-text-secondary">Check-in complete</p>
+                    )}
+                    {!row.checkedInAt && row.status === "accepted" && (
+                      <p className="text-text-secondary">
+                        Waiting for portal confirmation
+                      </p>
+                    )}
+                    {!row.checkedInAt &&
+                      awaitingArrival(row) &&
+                      hackathonId && (
+                        <p className="text-text-secondary">
+                          Select the active event to record standby arrival
+                        </p>
+                      )}
+                    {!row.checkedInAt &&
+                      !awaitingArrival(row) &&
+                      !["accepted", "confirmed", "waitlist_confirmed"].includes(
+                        row.status,
+                      ) && (
+                        <p className="text-text-secondary">
+                          No check-in action
+                        </p>
+                      )}
                     {row.status === "confirmed" && !row.checkedInAt && (
                       <span className="text-text-secondary whitespace-nowrap">
                         Check in with NFC
