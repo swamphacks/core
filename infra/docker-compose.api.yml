@@ -2,6 +2,13 @@ services:
   # Caddy
 
   caddy:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: ghcr.io/caddybuilds/caddy-cloudflare:latest
     container_name: caddy
     env_file:
@@ -20,6 +27,12 @@ services:
   # Development Services
   # ========================
   api-dev:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: ghcr.io/swamphacks/core-api:dev
     ports:
       - "8081:8080"
@@ -30,6 +43,12 @@ services:
       - redis-dev
 
   email-worker-dev:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: ghcr.io/swamphacks/core-email-worker:dev
     restart: always
     env_file:
@@ -38,6 +57,12 @@ services:
       - redis-dev
 
   bat-worker-dev:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: ghcr.io/swamphacks/core-bat-worker:dev
     restart: always
     env_file:
@@ -46,6 +71,12 @@ services:
       - redis-dev
 
   redis-dev:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: redis:8.2.1-alpine
     container_name: redis-dev
     restart: always
@@ -69,6 +100,12 @@ services:
       start_period: 5s
 
   asynqmon-dev:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: hibiken/asynqmon:latest
     platform: linux/amd64
     ports:
@@ -83,6 +120,12 @@ services:
   # Production Services
   # ========================
   api:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: ghcr.io/swamphacks/core-api:latest
     ports:
       - "8080:8080"
@@ -93,6 +136,12 @@ services:
       - redis
 
   email-worker:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: ghcr.io/swamphacks/core-email-worker:latest
     restart: always
     env_file:
@@ -101,6 +150,12 @@ services:
       - redis
 
   bat-worker:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: ghcr.io/swamphacks/core-bat-worker:latest
     restart: always
     env_file:
@@ -109,6 +164,12 @@ services:
       - redis
 
   redis:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: redis:8.2.1-alpine
     container_name: redis
     restart: always
@@ -132,6 +193,12 @@ services:
       start_period: 5s
 
   asynqmon:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: hibiken/asynqmon:latest
     platform: linux/amd64
     ports:
@@ -146,6 +213,12 @@ services:
   # Monitoring
   # ========================
   loki:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: grafana/loki:3.7.1
     container_name: loki
     command: "-config.file=/etc/loki/config.yml"
@@ -153,6 +226,12 @@ services:
       - ../monitoring/loki-config.yml:/etc/loki/config.yml
 
   alloy:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: grafana/alloy:v1.15.0
     container_name: alloy
     command: run /etc/alloy/config.alloy
@@ -163,6 +242,12 @@ services:
       - loki
 
   grafana:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: grafana/grafana:12.4.2
     container_name: grafana
     env_file:
@@ -181,6 +266,12 @@ services:
       - api
 
   grafana-dev:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     image: grafana/grafana:12.4.2
     container_name: grafana-dev
     env_file:

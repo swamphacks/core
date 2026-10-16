@@ -29,7 +29,7 @@ function getTimeLeft(targetDate: Date): TimeLeft {
 }
 
 export default function CountdownCorner({
-  targetDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 3),
+  targetDate = new Date("2026-10-16T15:00:00-04:00"),
   label = "Swamphacks Begins In:",
 }: CountdownCornerProps) {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(() =>
@@ -43,7 +43,47 @@ export default function CountdownCorner({
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  if (timeLeft.done) return null;
+
+  const [celebrating, setCelebrating] = useState(false);
+
+  useEffect(() => {
+    if (!timeLeft.done) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    setCelebrating(true);
+    const timeout = window.setTimeout(() => setCelebrating(false), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [timeLeft.done]);
+
+  if (timeLeft.done) {
+    return (
+      <>
+        <div className="countdown-corner" role="status">
+          <span className="countdown-corner__label">
+            SwampHacks XII is here!
+          </span>
+        </div>
+        {celebrating && (
+          <div className="countdown-confetti" aria-hidden="true">
+            {Array.from({ length: 80 }, (_, index) => (
+              <span
+                key={index}
+                style={{
+                  left: `${(index * 37) % 100}%`,
+                  backgroundColor: [
+                    "#dfff72", "#f8c76b", "#ed8ca5", "#83d5ef", "#c8a2ef",
+                  ][index % 5],
+                  animationDelay: `${(index % 12) * 0.08}s`,
+                  animationDuration: `${2.8 + (index % 5) * 0.25}s`,
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+
 
   const pad = (n: number) => String(n).padStart(2, "0");
 
