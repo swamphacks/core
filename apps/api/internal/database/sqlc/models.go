@@ -557,10 +557,11 @@ type InterestSubmission struct {
 
 type NfcTagsRedeemable struct {
 	ID           uuid.UUID `json:"id"`
-	TagID        string    `json:"tag_id"`
 	RedeemableID uuid.UUID `json:"redeemable_id"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
+	UserID       uuid.UUID `json:"user_id"`
+	TagID        *string   `json:"tag_id"`
 }
 
 type NfcTagsUser struct {
@@ -573,10 +574,11 @@ type NfcTagsUser struct {
 
 type NfcTagsWorkshop struct {
 	ID         uuid.UUID `json:"id"`
-	TagID      string    `json:"tag_id"`
 	WorkshopID uuid.UUID `json:"workshop_id"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
+	UserID     uuid.UUID `json:"user_id"`
+	TagID      *string   `json:"tag_id"`
 }
 
 type Redeemable struct {

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/swamphacks/core/apps/api/internal/database"
 	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
@@ -51,6 +52,19 @@ func (r *NFCRepository) CheckinUser(ctx context.Context, params sqlc.CheckinUser
 	}
 
 	return &user, nil
+}
+
+func (r *NFCRepository) GetTag(ctx context.Context, tagId string) (*sqlc.NfcTagsUser, error) {
+	tag, err := r.db.Query.GetTag(ctx, tagId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tag, nil
+}
+
+func (r *NFCRepository) DeleteTagByUserID(ctx context.Context, userID uuid.UUID) (int64, error) {
+	return r.db.Query.DeleteTagByUserId(ctx, &userID)
 }
 
 func (r *NFCRepository) TagToWorkshop(ctx context.Context, params sqlc.TagToWorkshopParams) (*sqlc.TagToWorkshopRow, error) {
