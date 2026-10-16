@@ -8,7 +8,6 @@ import { DialogTrigger } from "react-aria-components";
 import { Sheet } from "@/components/ui/Sheet";
 import ApplicationViewer from "@/modules/Application/ApplicationViewer";
 import useParsedForm from "@/modules/Application/hooks/useParsedForm";
-import { Button } from "@/components/ui/Button";
 
 interface DashboardRow {
   applicationId: string;
@@ -312,24 +311,44 @@ export default function StaffCheckInDashboard({
                   key={row.userId}
                   className="border-b border-border last:border-0"
                 >
-                  <td className="p-4 align-top">
-                    <p className="font-semibold">{row.name}</p>
+                  <td className="px-4 py-3 align-top">
+                    {isAdmin ? (
+                      <DialogTrigger>
+                        <button
+                          type="button"
+                          className="font-semibold text-left hover:underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
+                          aria-label={`View application for ${row.name}`}
+                        >
+                          {row.name}
+                        </button>
+                        <Sheet sheetClassName="w-full sm:w-160 lg:w-200">
+                          {parsedForm && (
+                            <ApplicationViewer
+                              parsedForm={parsedForm}
+                              applicationId={row.applicationId}
+                            />
+                          )}
+                        </Sheet>
+                      </DialogTrigger>
+                    ) : (
+                      <p className="font-semibold">{row.name}</p>
+                    )}
                     <p className="mt-1 text-text-secondary break-all">
                       {row.email}
                     </p>
-                    <span className="inline-block mt-2 rounded-full border border-border px-2 py-0.5 text-xs">
+                    <span className="inline-block mt-1.5 rounded-md bg-white/5 px-2 py-0.5 text-[11px] text-text-secondary">
                       {row.signupSource === "day_of"
                         ? "Day-of"
                         : "Preregistered"}
                     </span>
                     <button
                       type="button"
-                      className="block mt-2 text-sm font-medium text-blue-600 underline underline-offset-2 dark:text-blue-400"
+                      className="inline-flex mt-2 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-main hover:bg-background transition-colors"
                       onClick={() => setSelectedAttendee(row)}
                     >
-                      Show QR code
+                      QR code
                     </button>
-                    <details className="mt-2 text-text-secondary">
+                    <details className="mt-1.5 text-text-secondary">
                       <summary className="cursor-pointer text-xs">
                         Details
                       </summary>
@@ -350,7 +369,7 @@ export default function StaffCheckInDashboard({
                       </div>
                     </details>
                   </td>
-                  <td className="p-4 align-top">
+                  <td className="px-4 py-3 align-top">
                     <span
                       className={`inline-block rounded-full px-3 py-1 text-xs font-medium capitalize ${
                         row.checkedInAt
@@ -374,73 +393,64 @@ export default function StaffCheckInDashboard({
                         ? "Not recorded"
                         : "Not applicable"}
                   </td>
-                  <td className="p-4 align-top min-w-[190px]">
-                    {isAdmin && (
-                      <DialogTrigger>
-                        <Button variant="secondary" className={actionClass}>
-                          View application
-                        </Button>
-                        <Sheet sheetClassName="w-full sm:w-160 lg:w-200">
-                          {parsedForm && (
-                            <ApplicationViewer
-                              parsedForm={parsedForm}
-                              applicationId={row.applicationId}
-                            />
-                          )}
-                        </Sheet>
-                      </DialogTrigger>
-                    )}
-                    {!hackathonId && awaitingArrival(row) && (
-                      <button
-                        type="button"
-                        className={actionClass}
-                        disabled={busyUser !== null}
-                        onClick={() => updateStandby(row, false)}
-                      >
-                        {busyUser === row.userId
-                          ? "Recording…"
-                          : "Record standby arrival"}
-                      </button>
-                    )}
-                    {row.status === "waitlist_confirmed" && (
-                      <button
-                        type="button"
-                        className="rounded-lg bg-blue-600 text-white px-4 py-2 font-medium whitespace-nowrap disabled:opacity-50"
-                        disabled={busyUser !== null}
-                        onClick={() => updateStandby(row, true)}
-                      >
-                        {busyUser === row.userId ? "Accepting…" : "Offer spot"}
-                      </button>
-                    )}
-                    {row.checkedInAt && (
-                      <p className="text-text-secondary">Check-in complete</p>
-                    )}
-                    {!row.checkedInAt && row.status === "accepted" && (
-                      <p className="text-text-secondary">
-                        Waiting for portal confirmation
-                      </p>
-                    )}
-                    {!row.checkedInAt &&
-                      awaitingArrival(row) &&
-                      hackathonId && (
+                  <td className="px-4 py-3 align-top min-w-[190px]">
+                    <div className="flex flex-col items-start gap-2">
+                      {!hackathonId && awaitingArrival(row) && (
+                        <button
+                          type="button"
+                          className={actionClass}
+                          disabled={busyUser !== null}
+                          onClick={() => updateStandby(row, false)}
+                        >
+                          {busyUser === row.userId
+                            ? "Recording…"
+                            : "Record standby arrival"}
+                        </button>
+                      )}
+                      {row.status === "waitlist_confirmed" && (
+                        <button
+                          type="button"
+                          className="rounded-lg bg-blue-600 text-white px-4 py-2 font-medium whitespace-nowrap disabled:opacity-50"
+                          disabled={busyUser !== null}
+                          onClick={() => updateStandby(row, true)}
+                        >
+                          {busyUser === row.userId
+                            ? "Accepting…"
+                            : "Offer spot"}
+                        </button>
+                      )}
+                      {row.checkedInAt && (
+                        <p className="text-text-secondary">Check-in complete</p>
+                      )}
+                      {!row.checkedInAt && row.status === "accepted" && (
                         <p className="text-text-secondary">
-                          Select the active event to record standby arrival
+                          Waiting for portal confirmation
                         </p>
                       )}
-                    {!row.checkedInAt &&
-                      !awaitingArrival(row) &&
-                      !["accepted", "confirmed", "waitlist_confirmed"].includes(
-                        row.status,
-                      ) && (
-                        <p className="text-text-secondary">
-                          No check-in action
-                        </p>
+                      {!row.checkedInAt &&
+                        awaitingArrival(row) &&
+                        hackathonId && (
+                          <p className="text-text-secondary">
+                            Select the active event to record standby arrival
+                          </p>
+                        )}
+                      {!row.checkedInAt &&
+                        !awaitingArrival(row) &&
+                        ![
+                          "accepted",
+                          "confirmed",
+                          "waitlist_confirmed",
+                        ].includes(row.status) && (
+                          <p className="text-text-secondary">
+                            No check-in action
+                          </p>
+                        )}
+                      {row.status === "confirmed" && !row.checkedInAt && (
+                        <span className="text-text-secondary whitespace-nowrap">
+                          Check in with NFC
+                        </span>
                       )}
-                    {row.status === "confirmed" && !row.checkedInAt && (
-                      <span className="text-text-secondary whitespace-nowrap">
-                        Check in with NFC
-                      </span>
-                    )}
+                    </div>
                   </td>
                 </tr>
               ))}
