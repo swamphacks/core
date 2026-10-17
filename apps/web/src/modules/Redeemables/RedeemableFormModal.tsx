@@ -20,7 +20,7 @@ import { showToast } from "@/lib/toast/toast";
 
 const redeemableSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
-  type: z.enum(["meal", "tshirt", "swag", "drink"], "Pick a type"),
+  type: z.enum(["meal", "tshirt"], "Pick a type"),
   maxUserAmount: z
     .number("Enter a number")
     .int("Must be a whole number")
@@ -155,9 +155,7 @@ export function RedeemableFormModal({ redeemable }: RedeemableFormModalProps) {
                   }}
                   description={
                     info
-                      ? info.appTab
-                        ? `Shows in the app's ${info.appTab} tab.`
-                        : "The app has no tab for this type yet, so it can't be scanned. Use Meal or T-shirt for now."
+                      ? `Shows in the app's ${info.appTab} tab.`
                       : "Sets which tab the item shows in on the NFC app."
                   }
                   isDisabled={isSubmitting}

@@ -66,6 +66,19 @@ func RegisterRoutes(redeemablesHandler *handler, group huma.API, mw *middleware.
 		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
 		DefaultStatus: http.StatusOK,
 	}, redeemablesHandler.handleDeleteRedeemable)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "redeem-redeemable-for-user",
+		Method:        http.MethodPost,
+		Summary:       "Redeem by QR Code",
+		Description:   "Staff route for handing one item to a hacker whose QR code was scanned on the web portal. The hacker must be checked in with a confirmed application to the item's hackathon, and under the item's per-hacker limit.",
+		Tags:          []string{"Redeemables"},
+		Path:          "/{redeemableId}/redeem",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Errors:        []int{http.StatusUnauthorized, http.StatusBadRequest, http.StatusNotFound, http.StatusConflict, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusOK,
+	}, redeemablesHandler.handleRedeemForUser)
 }
 
 type handler struct {
@@ -173,4 +186,49 @@ func (h *handler) handleDeleteRedeemable(ctx context.Context, input *struct {
 	}
 
 	return &DeleteRedeemableOutput{Status: http.StatusOK}, nil
+}
+
+type RedeemForUserInput struct {
+	RedeemableId string `path:"redeemableId"`
+	Body         struct {
+		UserID uuid.UUID `json:"userId" required:"true"`
+	}
+}
+
+type RedeemForUserOutput struct {
+	Body struct {
+		Name           string `json:"name"`
+		RedeemableName string `json:"redeemableName"`
+		MaxUserAmount  int32  `json:"maxUserAmount"`
+		ItemsRemaining int32  `json:"itemsRemaining"`
+	}
+}
+
+func (h *handler) handleRedeemForUser(ctx context.Context, input *RedeemForUserInput) (*RedeemForUserOutput, error) {
+	redeemableId, err := uuid.Parse(input.RedeemableId)
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid redeemable id")
+	}
+
+	row, err := h.redeemablesService.RedeemForUser(ctx, redeemableId, input.Body.UserID)
+	if errors.Is(err, ErrRedeemableNotFound) {
+		return nil, huma.Error404NotFound("This item was deleted. Pick an item again")
+	}
+	var redeemErr *RedeemError
+	if errors.As(err, &redeemErr) {
+		if errors.Is(err, ErrHackerNotFound) || errors.Is(err, ErrNoApplication) {
+			return nil, huma.Error404NotFound(redeemErr.Message)
+		}
+		return nil, huma.Error409Conflict(redeemErr.Message)
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to redeem item")
+	}
+
+	output := &RedeemForUserOutput{}
+	output.Body.Name = row.Name
+	output.Body.RedeemableName = row.RedeemableName
+	output.Body.MaxUserAmount = row.MaxUserAmount
+	output.Body.ItemsRemaining = row.ItemsRemaining
+	return output, nil
 }

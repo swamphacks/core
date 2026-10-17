@@ -6,10 +6,12 @@ import {
   useReactTable,
   getCoreRowModel,
 } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { DialogTrigger } from "react-aria-components";
 import TablerPlus from "~icons/tabler/plus";
+import TablerQrcode from "~icons/tabler/qrcode";
 import { DeleteRedeemableModal } from "./DeleteRedeemableModal";
+import QrRedeemScanner from "./QrRedeemScanner";
 import { RedeemableFormModal } from "./RedeemableFormModal";
 import {
   redeemableTypeInfo,
@@ -19,9 +21,12 @@ import {
 
 export default function RedeemablesPage() {
   const redeemables = useRedeemables();
-  const rows = redeemables.data ?? [];
-  const hasUnscannableItems = rows.some(
-    (r) => !redeemableTypeInfo(r.type)?.appTab,
+  const [scannerOpen, setScannerOpen] = useState(false);
+  // Only list items the NFC app can scan, so staff don't see swag or drink
+  // items that no app tab shows.
+  const rows = useMemo(
+    () => (redeemables.data ?? []).filter((r) => redeemableTypeInfo(r.type)),
+    [redeemables.data],
   );
 
   const columns: ColumnDef<Redeemable>[] = useMemo(
@@ -46,7 +51,7 @@ export default function RedeemablesPage() {
             <div className="flex items-center gap-2">
               <Badge>{info?.name ?? row.original.type}</Badge>
               <span className="text-xs text-text-secondary">
-                {info?.appTab ? `${info.appTab} tab` : "Not in the app yet"}
+                {info?.appTab} tab
               </span>
             </div>
           );
@@ -101,25 +106,28 @@ export default function RedeemablesPage() {
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Redeemables</h1>
           <p className="text-sm text-text-secondary">
-            Meals, T-shirts and other items staff hand out by scanning NFC tags.
-            Each scan counts toward the hacker's limit for that item.
+            Meals and T-shirts staff hand out by scanning NFC tags or hacker QR
+            codes. Each scan counts toward the hacker's limit for that item.
           </p>
         </div>
-        <DialogTrigger>
-          <Button variant="primary" className="w-fit">
-            <TablerPlus className="w-4 h-4" />
-            New Item
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            className="w-fit"
+            onPress={() => setScannerOpen(true)}
+          >
+            <TablerQrcode className="w-4 h-4" />
+            Scan to redeem
           </Button>
-          <RedeemableFormModal />
-        </DialogTrigger>
+          <DialogTrigger>
+            <Button variant="primary" className="w-fit">
+              <TablerPlus className="w-4 h-4" />
+              New Item
+            </Button>
+            <RedeemableFormModal />
+          </DialogTrigger>
+        </div>
       </div>
-
-      {hasUnscannableItems && (
-        <p className="mt-4 rounded-md border border-border bg-surface p-3 text-sm text-text-secondary">
-          Swag and drink items don't show up in the NFC app yet. Until it adds
-          those tabs, create them as Meal or T-shirt, then edit the type later.
-        </p>
-      )}
 
       <div className="mt-5 p-2 rounded-lg bg-surface border border-border flex flex-col">
         {redeemables.isLoading ? (
@@ -128,7 +136,7 @@ export default function RedeemablesPage() {
           <p className="p-2">Unable to load items.</p>
         ) : rows.length === 0 ? (
           <p className="p-2 text-text-secondary">
-            No items yet. Create one for each meal or giveaway.
+            No items yet. Create one for each meal or T-shirt giveaway.
           </p>
         ) : (
           <Table
@@ -139,6 +147,11 @@ export default function RedeemablesPage() {
           />
         )}
       </div>
+
+      <QrRedeemScanner
+        isOpen={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+      />
     </div>
   );
 }
