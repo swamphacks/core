@@ -6,10 +6,12 @@ import {
   useReactTable,
   getCoreRowModel,
 } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { DialogTrigger } from "react-aria-components";
 import TablerPlus from "~icons/tabler/plus";
+import TablerQrcode from "~icons/tabler/qrcode";
 import { DeleteRedeemableModal } from "./DeleteRedeemableModal";
+import QrRedeemScanner from "./QrRedeemScanner";
 import { RedeemableFormModal } from "./RedeemableFormModal";
 import {
   redeemableTypeInfo,
@@ -19,6 +21,7 @@ import {
 
 export default function RedeemablesPage() {
   const redeemables = useRedeemables();
+  const [scannerOpen, setScannerOpen] = useState(false);
   // Only list items the NFC app can scan, so staff don't see swag or drink
   // items that no app tab shows.
   const rows = useMemo(
@@ -103,17 +106,27 @@ export default function RedeemablesPage() {
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Redeemables</h1>
           <p className="text-sm text-text-secondary">
-            Meals and T-shirts staff hand out by scanning NFC tags. Each scan
-            counts toward the hacker's limit for that item.
+            Meals and T-shirts staff hand out by scanning NFC tags or hacker QR
+            codes. Each scan counts toward the hacker's limit for that item.
           </p>
         </div>
-        <DialogTrigger>
-          <Button variant="primary" className="w-fit">
-            <TablerPlus className="w-4 h-4" />
-            New Item
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            className="w-fit"
+            onPress={() => setScannerOpen(true)}
+          >
+            <TablerQrcode className="w-4 h-4" />
+            Scan to redeem
           </Button>
-          <RedeemableFormModal />
-        </DialogTrigger>
+          <DialogTrigger>
+            <Button variant="primary" className="w-fit">
+              <TablerPlus className="w-4 h-4" />
+              New Item
+            </Button>
+            <RedeemableFormModal />
+          </DialogTrigger>
+        </div>
       </div>
 
       <div className="mt-5 p-2 rounded-lg bg-surface border border-border flex flex-col">
@@ -134,6 +147,11 @@ export default function RedeemablesPage() {
           />
         )}
       </div>
+
+      <QrRedeemScanner
+        isOpen={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+      />
     </div>
   );
 }
