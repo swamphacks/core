@@ -9,6 +9,7 @@ export type CreateRedeemableRequest =
 export type UpdateRedeemableRequest =
   components["schemas"]["UpdateRedeemableRequest"];
 export type RedeemableType = CreateRedeemableRequest["type"];
+export type Redemption = components["schemas"]["RedeemForUserOutputBody"];
 
 // The NFC app lists items by type, one tab per type. Only types that have a
 // tab are offered here. The API also accepts swag and drink, but the app has
@@ -28,9 +29,10 @@ export function redeemableTypeInfo(type: string) {
 
 export const redeemablesQueryKey = ["redeemables"];
 
-export function useRedeemables() {
+export function useRedeemables({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: redeemablesQueryKey,
+    enabled,
     queryFn: async () =>
       (await api.get("redeemables").json<Redeemable[] | null>()) ?? [],
     // Keeps the redeemed counts current while scanning is happening.
@@ -96,5 +98,27 @@ export async function apiErrorMessage(error: unknown, fallback: string) {
     return fieldErrors || body.detail || fallback;
   } catch {
     return fallback;
+  }
+}
+
+// Records one item for the hacker whose QR code staff scanned. Returns the
+// API's message on failure, such as the hacker being at the limit.
+export async function redeemForUser(
+  redeemableId: string,
+  userId: string,
+): Promise<{ ok: true; value: Redemption } | { ok: false; message: string }> {
+  try {
+    const value = await api
+      .post(`redeemables/${redeemableId}/redeem`, {
+        json: { userId },
+        retry: 0,
+      })
+      .json<Redemption>();
+    return { ok: true, value };
+  } catch (error) {
+    return {
+      ok: false,
+      message: await apiErrorMessage(error, "Unable to redeem item."),
+    };
   }
 }

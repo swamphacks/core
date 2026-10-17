@@ -53,6 +53,51 @@ func (q *Queries) DeleteRedeemable(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getRedeemEligibility = `-- name: GetRedeemEligibility :one
+SELECT
+    r.name AS redeemable_name,
+    r.max_user_amount,
+    (u.id IS NOT NULL)::boolean AS user_exists,
+    COALESCE(a.status::text, '')::text AS application_status,
+    COALESCE(
+        u.checked_in_at IS NOT NULL
+        OR EXISTS (SELECT 1 FROM nfc_tags_user ntu WHERE ntu.user_id = u.id),
+        false
+    )::boolean AS checked_in
+FROM redeemables r
+LEFT JOIN users u ON u.id = $1
+LEFT JOIN applications a ON a.user_id = u.id AND a.hackathon_id = r.hackathon_id
+WHERE r.id = $2
+`
+
+type GetRedeemEligibilityParams struct {
+	UserID       uuid.UUID `json:"user_id"`
+	RedeemableID uuid.UUID `json:"redeemable_id"`
+}
+
+type GetRedeemEligibilityRow struct {
+	RedeemableName    string `json:"redeemable_name"`
+	MaxUserAmount     int32  `json:"max_user_amount"`
+	UserExists        bool   `json:"user_exists"`
+	ApplicationStatus string `json:"application_status"`
+	CheckedIn         bool   `json:"checked_in"`
+}
+
+// Explains why RedeemForUser inserted nothing. No row means the redeemable
+// does not exist.
+func (q *Queries) GetRedeemEligibility(ctx context.Context, arg GetRedeemEligibilityParams) (GetRedeemEligibilityRow, error) {
+	row := q.db.QueryRow(ctx, getRedeemEligibility, arg.UserID, arg.RedeemableID)
+	var i GetRedeemEligibilityRow
+	err := row.Scan(
+		&i.RedeemableName,
+		&i.MaxUserAmount,
+		&i.UserExists,
+		&i.ApplicationStatus,
+		&i.CheckedIn,
+	)
+	return i, err
+}
+
 const getRedeemables = `-- name: GetRedeemables :many
 SELECT r.id,
     r.name,
@@ -105,6 +150,74 @@ func (q *Queries) GetRedeemables(ctx context.Context) ([]GetRedeemablesRow, erro
 		return nil, err
 	}
 	return items, nil
+}
+
+const redeemForUser = `-- name: RedeemForUser :one
+WITH redeemed AS (
+    INSERT INTO nfc_tags_redeemables (user_id, redeemable_id)
+    SELECT u.id, r.id
+    FROM users u
+    JOIN redeemables r ON r.id = $1
+    JOIN applications a ON a.user_id = u.id AND a.hackathon_id = r.hackathon_id
+    WHERE u.id = $2
+      AND a.status = 'confirmed'
+      AND (
+          u.checked_in_at IS NOT NULL
+          OR EXISTS (SELECT 1 FROM nfc_tags_user ntu WHERE ntu.user_id = u.id)
+      )
+    RETURNING user_id, redeemable_id
+)
+SELECT
+    COALESCE(
+        NULLIF(trim(concat_ws(' ', a.application->>'firstName', a.application->>'lastName')), ''),
+        u.name
+    )::text AS name,
+    r.name AS redeemable_name,
+    r.max_user_amount,
+    GREATEST(
+        r.max_user_amount - (
+            SELECT COUNT(*)::integer
+            FROM nfc_tags_redeemables ntr
+            WHERE ntr.user_id = redeemed.user_id
+              AND ntr.redeemable_id = redeemed.redeemable_id
+        ) - 1,
+        0
+    )::integer AS items_remaining
+FROM redeemed
+JOIN users u ON u.id = redeemed.user_id
+JOIN redeemables r ON r.id = redeemed.redeemable_id
+JOIN applications a ON a.user_id = u.id AND a.hackathon_id = r.hackathon_id
+`
+
+type RedeemForUserParams struct {
+	RedeemableID uuid.UUID `json:"redeemable_id"`
+	UserID       uuid.UUID `json:"user_id"`
+}
+
+type RedeemForUserRow struct {
+	Name           string `json:"name"`
+	RedeemableName string `json:"redeemable_name"`
+	MaxUserAmount  int32  `json:"max_user_amount"`
+	ItemsRemaining int32  `json:"items_remaining"`
+}
+
+// Records one item handed out after staff scan a hacker's QR code on the web
+// portal. No NFC tag is involved, so tag_id stays NULL. Inserts only for a
+// hacker who is checked in (NFC nametag linked or checked_in_at set) with a
+// confirmed application to the item's hackathon; otherwise nothing is inserted
+// and pgx returns ErrNoRows. check_redeemable_count_trigger enforces the
+// per-hacker limit. The outer SELECT sees the table as it was before the
+// insert, hence the extra - 1.
+func (q *Queries) RedeemForUser(ctx context.Context, arg RedeemForUserParams) (RedeemForUserRow, error) {
+	row := q.db.QueryRow(ctx, redeemForUser, arg.RedeemableID, arg.UserID)
+	var i RedeemForUserRow
+	err := row.Scan(
+		&i.Name,
+		&i.RedeemableName,
+		&i.MaxUserAmount,
+		&i.ItemsRemaining,
+	)
+	return i, err
 }
 
 const updateRedeemable = `-- name: UpdateRedeemable :one
