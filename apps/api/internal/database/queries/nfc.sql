@@ -1,3 +1,9 @@
+-- name: GetTag :one
+SELECT * FROM nfc_tags_user WHERE tag_id = @tag_id;
+
+-- name: DeleteTagByUserId :execrows
+DELETE FROM nfc_tags_user WHERE user_id = @user_id;
+
 -- name: GetMeals :many
 SELECT name, id, max_user_amount FROM redeemables
 WHERE type = 'meal'
@@ -15,9 +21,9 @@ ORDER BY name, id;
 
 -- name: TagToRedeemable :one
 WITH redeemed AS (
-    INSERT INTO nfc_tags_redeemables (tag_id, redeemable_id)
-    VALUES ($1, $2)
-    RETURNING tag_id, redeemable_id
+    INSERT INTO nfc_tags_redeemables (user_id, tag_id, redeemable_id)
+    VALUES ($1, $2, $3)
+    RETURNING user_id, tag_id, redeemable_id
 )
 SELECT
     users.name,
@@ -27,13 +33,13 @@ SELECT
         (
             SELECT COUNT(*)::integer
             FROM nfc_tags_redeemables
-            WHERE tag_id = redeemed.tag_id
+            WHERE user_id = redeemed.user_id
               AND redeemable_id = redeemed.redeemable_id
         ) - 1,
         0
     )::integer AS items_remaining
 FROM redeemed
-JOIN nfc_tags_user ON nfc_tags_user.tag_id = redeemed.tag_id
+JOIN nfc_tags_user ON nfc_tags_user.user_id = redeemed.user_id
 JOIN users ON users.id = nfc_tags_user.user_id
 JOIN redeemables ON redeemables.id = redeemed.redeemable_id;
 
@@ -68,13 +74,13 @@ ORDER BY title;
 
 -- name: TagToWorkshop :one
 WITH tagged AS (
-    INSERT INTO nfc_tags_workshops (tag_id, workshop_id)
-    VALUES ($1, $2)
-    ON CONFLICT (tag_id, workshop_id) DO NOTHING
-    RETURNING tag_id, workshop_id
+    INSERT INTO nfc_tags_workshops (user_id, tag_id, workshop_id)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (user_id, workshop_id) DO NOTHING
+    RETURNING user_id, workshop_id
 )
 SELECT users.name, workshops.title AS workshop_name
 FROM tagged
-JOIN nfc_tags_user ON nfc_tags_user.tag_id = tagged.tag_id
+JOIN nfc_tags_user ON nfc_tags_user.user_id = tagged.user_id
 JOIN users ON users.id = nfc_tags_user.user_id
 JOIN workshops ON workshops.id = tagged.workshop_id;

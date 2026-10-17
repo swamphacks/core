@@ -7,7 +7,6 @@ import { DialogTrigger } from "react-aria-components";
 import { Sheet } from "@/components/ui/Sheet";
 import ApplicationViewer from "@/modules/Application/ApplicationViewer";
 import useParsedForm from "@/modules/Application/hooks/useParsedForm";
-import { Button } from "@/components/ui/Button";
 import TablerQrcode from "~icons/tabler/qrcode";
 import QrCheckInScanner from "./components/QrCheckInScanner";
 import { undoCheckIn } from "./checkInActions";
@@ -31,7 +30,7 @@ function awaitingArrival(row: DashboardRow) {
 
 function statusLabel(row: DashboardRow) {
   if (row.checkedInAt) return "Checked in";
-  if (row.status === "waitlist_confirmed") return "Standby";
+  if (row.status === "waitlist_confirmed") return "Standby · arrival recorded";
   if (awaitingArrival(row)) return "Awaiting arrival";
   return row.status.replaceAll("_", " ");
 }
@@ -140,6 +139,34 @@ export default function StaffCheckInDashboard({
     }
   }
 
+  async function unlinkTag(row: DashboardRow) {
+    if (busyUser) return;
+    if (
+      !window.confirm(
+        `Unlink the NFC tag from ${row.name}? They will need a tag linked again to check in with NFC.`,
+      )
+    )
+      return;
+
+    setBusyUser(row.userId);
+    setActionError("");
+    try {
+      await api.delete(`nfc/checkin/nfc-links/${row.userId}`, { retry: 0 });
+      await dashboard.refetch();
+    } catch (error) {
+      let message = "Unable to unlink NFC tag.";
+      if (error instanceof HTTPError) {
+        const response = await error.response
+          .json<{ detail?: string }>()
+          .catch(() => null);
+        message = response?.detail ?? message;
+      }
+      setActionError(message);
+    } finally {
+      setBusyUser(null);
+    }
+  }
+
   return (
     <main className="w-full max-w-7xl p-4 sm:p-6 pb-24 space-y-5">
       <div className="flex items-center justify-between gap-3">
@@ -155,21 +182,65 @@ export default function StaffCheckInDashboard({
       </div>
 
       {data && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            [
-              "Confirmed checked in",
-              `${data.confirmedCheckedIn} / ${data.confirmed}`,
-            ],
-            ["Standby waiting", data.standbyWaiting],
-            ["Day-of signups", data.dayOfSignups],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-xl border border-border p-4">
-              <p className="text-sm text-text-secondary">{label}</p>
-              <p className="mt-1 text-2xl font-semibold">{value}</p>
-            </div>
-          ))}
-        </div>
+        <section className="rounded-xl border border-border">
+          <div className="grid grid-cols-1 sm:grid-cols-3">
+            {[
+              [
+                "Checked in · confirmed",
+                `${data.confirmedCheckedIn} of ${data.confirmed}`,
+              ],
+              ["Standby waiting", data.standbyWaiting],
+              [
+                "Unreserved spots",
+                data.capacity > 0 ? data.unreservedSpots : "—",
+              ],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="px-5 py-4 border-b sm:border-b-0 sm:border-r border-border last:border-0"
+              >
+                <p className="text-xs font-medium text-text-secondary">
+                  {label}
+                </p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums">
+                  {value}
+                </p>
+              </div>
+            ))}
+          </div>
+          <details className="border-t border-border px-5 py-3 text-sm">
+            <summary className="cursor-pointer text-text-secondary">
+              Capacity and reservation details
+            </summary>
+            <dl className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                [
+                  "Capacity target",
+                  data.capacity > 0 ? data.capacity : "Not configured",
+                ],
+                [
+                  "Confirmed, not checked in",
+                  Math.max(0, data.confirmed - data.confirmedCheckedIn),
+                ],
+                ["Outstanding offers", data.outstandingOffers],
+                ["Day-of signups", data.dayOfSignups],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt className="text-xs text-text-secondary">{label}</dt>
+                  <dd className="mt-1 font-medium tabular-nums">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </details>
+          {data.capacity > 0 &&
+            data.confirmed + data.outstandingOffers > data.capacity && (
+              <p className="border-t border-border px-5 py-3 text-sm text-amber-800 dark:text-amber-200">
+                Reservations exceed the target by{" "}
+                {data.confirmed + data.outstandingOffers - data.capacity}.
+                Existing offers remain valid.
+              </p>
+            )}
+        </section>
       )}
 
       <div className="flex gap-3">
@@ -294,11 +365,16 @@ export default function StaffCheckInDashboard({
           <table className="w-full min-w-[700px] text-sm text-left">
             <thead>
               <tr className="border-b border-border text-text-secondary">
-                {["Hacker", "Status", "Arrival", "Action"].map((label) => (
-                  <th key={label} className="p-4 whitespace-nowrap font-medium">
-                    {label}
-                  </th>
-                ))}
+                {["Hacker", "Status", "Standby arrival", "Next step"].map(
+                  (label) => (
+                    <th
+                      key={label}
+                      className="p-4 whitespace-nowrap font-medium"
+                    >
+                      {label}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody>
@@ -307,30 +383,63 @@ export default function StaffCheckInDashboard({
                   key={row.userId}
                   className="border-b border-border last:border-0"
                 >
-                  <td className="p-4 align-top">
-                    <p className="font-semibold">{row.name}</p>
+                  <td className="px-4 py-3 align-top">
+                    {tab === "Standby" && row.standbyPosition != null && (
+                      <p className="mb-1.5 text-xs font-semibold text-text-secondary">
+                        #{row.standbyPosition}
+                        {row.standbyPosition === 1 ? " · Next in line" : ""}
+                      </p>
+                    )}
+                    {isAdmin ? (
+                      <DialogTrigger>
+                        <button
+                          type="button"
+                          className="font-semibold text-left underline decoration-current/30 underline-offset-4 hover:decoration-current transition-colors focus-visible:outline-2 focus-visible:outline-offset-4"
+                          aria-label={`View application for ${row.name}`}
+                        >
+                          {row.name}
+                        </button>
+                        <Sheet sheetClassName="w-full sm:w-160 lg:w-200">
+                          {parsedForm && (
+                            <ApplicationViewer
+                              parsedForm={parsedForm}
+                              applicationId={row.applicationId}
+                            />
+                          )}
+                        </Sheet>
+                      </DialogTrigger>
+                    ) : (
+                      <p className="font-semibold">{row.name}</p>
+                    )}
                     <p className="mt-1 text-text-secondary break-all">
                       {row.email}
                     </p>
-                    <span className="inline-block mt-2 rounded-full border border-border px-2 py-0.5 text-xs">
-                      {row.signupSource === "day_of"
-                        ? "Day-of"
-                        : "Preregistered"}
-                    </span>
-                    <button
-                      type="button"
-                      className="block mt-2 text-sm font-medium text-blue-600 underline underline-offset-2 dark:text-blue-400"
-                      onClick={() => setSelectedAttendee(row)}
-                    >
-                      Show QR code
-                    </button>
-                    <details className="mt-2 text-text-secondary">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex h-7 items-center rounded-md bg-slate-100 px-2.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        {row.signupSource === "day_of"
+                          ? "Day-of"
+                          : "Preregistered"}
+                      </span>
+                      <button
+                        type="button"
+                        className="inline-flex h-7 items-center rounded-md border border-border px-2.5 text-xs font-medium text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        onClick={() => setSelectedAttendee(row)}
+                      >
+                        QR code
+                      </button>
+                    </div>
+                    <details className="mt-1.5 text-text-secondary">
                       <summary className="cursor-pointer text-xs">
                         Details
                       </summary>
                       <div className="mt-2 space-y-1 text-xs">
                         <p>Application: {row.status.replaceAll("_", " ")}</p>
-                        <p>Check-in: {timestamp(row.checkedInAt)}</p>
+                        <p>
+                          NFC check-in:{" "}
+                          {row.checkedInAt
+                            ? timestamp(row.checkedInAt)
+                            : "Not checked in"}
+                        </p>
                         <p>
                           Redeemables:{" "}
                           {row.redemptions
@@ -340,7 +449,7 @@ export default function StaffCheckInDashboard({
                       </div>
                     </details>
                   </td>
-                  <td className="p-4 align-top">
+                  <td className="px-4 py-3 align-top">
                     <span
                       className={`inline-block rounded-full px-3 py-1 text-xs font-medium capitalize ${
                         row.checkedInAt
@@ -354,61 +463,98 @@ export default function StaffCheckInDashboard({
                     </span>
                   </td>
                   <td className="p-4 align-top whitespace-nowrap">
-                    {timestamp(row.standbyArrival)}
+                    {row.standbyArrival
+                      ? timestamp(row.standbyArrival)
+                      : [
+                            "waitlisted",
+                            "waitlist_confirmed",
+                            "rejected",
+                          ].includes(row.status)
+                        ? "Not recorded"
+                        : "Not applicable"}
                   </td>
-                  <td className="p-4 align-top min-w-[190px]">
-                    {isAdmin && (
-                      <DialogTrigger>
-                        <Button variant="secondary" className={actionClass}>
-                          View application
-                        </Button>
-                        <Sheet sheetClassName="w-full sm:w-160 lg:w-200">
-                          {parsedForm && (
-                            <ApplicationViewer
-                              parsedForm={parsedForm}
-                              applicationId={row.applicationId}
-                            />
-                          )}
-                        </Sheet>
-                      </DialogTrigger>
-                    )}
-                    {!hackathonId && awaitingArrival(row) && (
-                      <button
-                        type="button"
-                        className={actionClass}
-                        disabled={busyUser !== null}
-                        onClick={() => updateStandby(row, false)}
-                      >
-                        {busyUser === row.userId
-                          ? "Recording…"
-                          : "Record arrival"}
-                      </button>
-                    )}
-                    {row.status === "waitlist_confirmed" && (
-                      <button
-                        type="button"
-                        className="rounded-lg bg-blue-600 text-white px-4 py-2 font-medium whitespace-nowrap disabled:opacity-50"
-                        disabled={busyUser !== null}
-                        onClick={() => updateStandby(row, true)}
-                      >
-                        {busyUser === row.userId ? "Accepting…" : "Accept"}
-                      </button>
-                    )}
-                    {row.status === "confirmed" && !row.checkedInAt && (
-                      <span className="text-text-secondary whitespace-nowrap">
-                        Check in with Scan QR or NFC
-                      </span>
-                    )}
-                    {row.checkedInAt && !row.nfcLinked && (
-                      <button
-                        type="button"
-                        className={actionClass}
-                        disabled={busyUser !== null}
-                        onClick={() => undo(row)}
-                      >
-                        {busyUser === row.userId ? "Undoing…" : "Undo check-in"}
-                      </button>
-                    )}
+                  <td className="px-4 py-3 align-top min-w-[190px]">
+                    <div className="flex flex-col items-start gap-2">
+                      {!hackathonId && awaitingArrival(row) && (
+                        <button
+                          type="button"
+                          className={actionClass}
+                          disabled={busyUser !== null}
+                          onClick={() => updateStandby(row, false)}
+                        >
+                          {busyUser === row.userId
+                            ? "Recording…"
+                            : "Record standby arrival"}
+                        </button>
+                      )}
+                      {row.status === "waitlist_confirmed" && (
+                        <button
+                          type="button"
+                          className="rounded-lg bg-blue-600 text-white px-4 py-2 font-medium whitespace-nowrap disabled:opacity-50"
+                          disabled={busyUser !== null}
+                          onClick={() => updateStandby(row, true)}
+                        >
+                          {busyUser === row.userId
+                            ? "Accepting…"
+                            : "Offer spot"}
+                        </button>
+                      )}
+                      {row.checkedInAt && (
+                        <p className="text-text-secondary">Check-in complete</p>
+                      )}
+                      {!row.checkedInAt && row.status === "accepted" && (
+                        <p className="text-text-secondary">
+                          Waiting for portal confirmation
+                        </p>
+                      )}
+                      {!row.checkedInAt &&
+                        awaitingArrival(row) &&
+                        hackathonId && (
+                          <p className="text-text-secondary">
+                            Select the active event to record standby arrival
+                          </p>
+                        )}
+                      {!row.checkedInAt &&
+                        !awaitingArrival(row) &&
+                        ![
+                          "accepted",
+                          "confirmed",
+                          "waitlist_confirmed",
+                        ].includes(row.status) && (
+                          <p className="text-text-secondary">
+                            No check-in action
+                          </p>
+                        )}
+                      {row.status === "confirmed" && !row.checkedInAt && (
+                        <span className="text-text-secondary whitespace-nowrap">
+                          Check in with Scan QR or NFC
+                        </span>
+                      )}
+                      {row.checkedInAt && !row.nfcLinked && (
+                        <button
+                          type="button"
+                          className={actionClass}
+                          disabled={busyUser !== null}
+                          onClick={() => undo(row)}
+                        >
+                          {busyUser === row.userId
+                            ? "Undoing…"
+                            : "Undo check-in"}
+                        </button>
+                      )}
+                      {row.nfcLinked && (
+                        <button
+                          type="button"
+                          className={actionClass}
+                          disabled={busyUser !== null}
+                          onClick={() => unlinkTag(row)}
+                        >
+                          {busyUser === row.userId
+                            ? "Unlinking…"
+                            : "Unlink NFC tag"}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

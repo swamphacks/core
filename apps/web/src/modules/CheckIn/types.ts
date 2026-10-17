@@ -9,10 +9,14 @@ export interface DashboardRow {
   rfid: string | null;
   signupSource: string;
   standbyArrival: string | null;
+  standbyPosition: number | null;
   redemptions: { redeemableId: string; name: string; amount: number }[];
 }
 
 export interface Dashboard {
+  capacity: number;
+  outstandingOffers: number;
+  unreservedSpots: number;
   hackathonId: string;
   confirmed: number;
   confirmedCheckedIn: number;

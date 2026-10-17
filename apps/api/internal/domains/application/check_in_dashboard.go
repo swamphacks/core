@@ -25,21 +25,26 @@ type CheckInDashboardInput struct {
 }
 
 type CheckInDashboardRow struct {
-	ApplicationID  uuid.UUID       `json:"applicationId"`
-	UserID         uuid.UUID       `json:"userId"`
-	Name           string          `json:"name"`
-	Email          string          `json:"email"`
-	Status         string          `json:"status"`
-	CheckedInAt    *time.Time      `json:"checkedInAt"`
-	NFCLinked      bool            `json:"nfcLinked"`
-	RFID           *string         `json:"rfid"`
-	SignupSource   string          `json:"signupSource"`
-	StandbyArrival *time.Time      `json:"standbyArrival"`
-	Redemptions    json.RawMessage `json:"redemptions"`
+	StandbyPosition *int64          `json:"standbyPosition"`
+	ApplicationID   uuid.UUID       `json:"applicationId"`
+	UserID          uuid.UUID       `json:"userId"`
+	Name            string          `json:"name"`
+	Email           string          `json:"email"`
+	Status          string          `json:"status"`
+	CheckedInAt     *time.Time      `json:"checkedInAt"`
+	NFCLinked       bool            `json:"nfcLinked"`
+	RFID            *string         `json:"rfid"`
+	SignupSource    string          `json:"signupSource"`
+	StandbyArrival  *time.Time      `json:"standbyArrival"`
+	Redemptions     json.RawMessage `json:"redemptions"`
 }
 
 type CheckInDashboardOutput struct {
 	Body struct {
+		Capacity          int64 `json:"capacity"`
+		OutstandingOffers int64 `json:"outstandingOffers"`
+		UnreservedSpots   int64 `json:"unreservedSpots"`
+
 		HackathonID        string                `json:"hackathonId"`
 		Confirmed          int64                 `json:"confirmed"`
 		ConfirmedCheckedIn int64                 `json:"confirmedCheckedIn"`
@@ -107,9 +112,9 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
 	output := &CheckInDashboardOutput{}
 	output.Body.Rows = []CheckInDashboardRow{}
 	err := h.applicationService.db.Pool.QueryRow(ctx, `
-		SELECT id FROM hackathons
+		SELECT id, COALESCE(max_attendees,0) FROM hackathons
 		WHERE ($1='' AND is_active) OR ($1<>'' AND id=$1)
-	`, input.HackathonID).Scan(&output.Body.HackathonID)
+	`, input.HackathonID).Scan(&output.Body.HackathonID, &output.Body.Capacity)
 	if err != nil {
 		return nil, huma.Error404NotFound("Hackathon not found")
 	}
@@ -120,7 +125,8 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
         count(*) FILTER (WHERE a.status::text='confirmed'
             AND (ci.user_id IS NOT NULL OR u.checked_in_at IS NOT NULL)),
         count(*) FILTER (WHERE w.signup_source='day_of'),
-        count(*) FILTER (WHERE a.status::text='waitlist_confirmed')
+        count(*) FILTER (WHERE a.status::text='waitlist_confirmed'),
+        count(*) FILTER (WHERE a.status::text='accepted')
     FROM applications a
     JOIN users u ON u.id=a.user_id
     LEFT JOIN LATERAL (
@@ -134,20 +140,40 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
     WHERE a.hackathon_id=$1 AND NOT a.is_fake AND NOT u.is_fake
 `, output.Body.HackathonID).Scan(
 		&output.Body.Confirmed, &output.Body.ConfirmedCheckedIn,
-		&output.Body.DayOfSignups, &output.Body.StandbyWaiting,
+		&output.Body.DayOfSignups, &output.Body.StandbyWaiting, &output.Body.OutstandingOffers,
 	)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Unable to load check-in totals")
 	}
 
+	output.Body.UnreservedSpots = max(
+		int64(0),
+		output.Body.Capacity-output.Body.Confirmed-output.Body.OutstandingOffers,
+	)
+
 	rows, err := h.applicationService.db.Pool.Query(ctx, `
+    WITH standby_queue AS (
+        SELECT a.id AS application_id,
+            row_number() OVER (
+                ORDER BY
+                    CASE WHEN w.signup_source='preregistered' THEN 0 ELSE 1 END,
+                    w.in_person_joined_at,w.created_at,w.user_id
+            ) AS position
+        FROM applications a
+        JOIN users u ON u.id=a.user_id
+        JOIN waitlist w
+            ON w.hackathon_id=a.hackathon_id AND w.user_id=a.user_id
+        WHERE a.hackathon_id=$1 AND a.status::text='waitlist_confirmed'
+            AND u.role='applicant' AND NOT a.is_fake AND NOT u.is_fake
+            AND w.in_person_joined_at IS NOT NULL
+    )
     SELECT a.id, u.id,
         COALESCE(NULLIF(trim(concat_ws(' ',a.application->>'firstName',
             a.application->>'lastName')),''),u.name),
         COALESCE(NULLIF(u.preferred_email,''),u.email),
         a.status::text, LEAST(ci.created_at, u.checked_in_at),
         ci.user_id IS NOT NULL, u.rfid,
-        COALESCE(w.signup_source,'preregistered'),w.in_person_joined_at,
+        COALESCE(w.signup_source,'preregistered'),w.in_person_joined_at,sq.position,
         COALESCE((
             SELECT jsonb_agg(jsonb_build_object(
                 'redeemableId',x.id,'name',x.name,'amount',x.amount
@@ -162,6 +188,7 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
             ) x
         ),'[]'::jsonb)
     FROM applications a
+    LEFT JOIN standby_queue sq ON sq.application_id=a.id
     JOIN users u ON u.id=a.user_id
     LEFT JOIN LATERAL (
         SELECT ntu.user_id, ntu.created_at
@@ -200,6 +227,7 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
 		if err := rows.Scan(
 			&row.ApplicationID, &row.UserID, &row.Name, &row.Email, &row.Status,
 			&row.CheckedInAt, &row.NFCLinked, &row.RFID, &row.SignupSource, &row.StandbyArrival,
+			&row.StandbyPosition,
 			&redemptions,
 		); err != nil {
 			fmt.Print(err)

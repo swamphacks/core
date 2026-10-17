@@ -10,17 +10,16 @@ export type UpdateRedeemableRequest =
   components["schemas"]["UpdateRedeemableRequest"];
 export type RedeemableType = CreateRedeemableRequest["type"];
 
-// The NFC app lists items by type, one tab per type. Swag and drink have no
-// tab yet, so items of those types can't be scanned until the app adds them.
+// The NFC app lists items by type, one tab per type. Only types that have a
+// tab are offered here. The API also accepts swag and drink, but the app has
+// no tab for them yet, so they stay hidden until it does.
 export const REDEEMABLE_TYPES: {
   id: RedeemableType;
   name: string;
-  appTab: string | null;
+  appTab: string;
 }[] = [
   { id: "meal", name: "Meal", appTab: "Meals" },
   { id: "tshirt", name: "T-shirt", appTab: "T-shirts" },
-  { id: "swag", name: "Swag", appTab: null },
-  { id: "drink", name: "Drink", appTab: null },
 ];
 
 export function redeemableTypeInfo(type: string) {

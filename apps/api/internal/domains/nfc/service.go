@@ -80,8 +80,21 @@ func (s *NfcService) CheckinUser(ctx context.Context, tagID string, userID uuid.
 }
 
 func (s *NfcService) TagToWorkshop(ctx context.Context, tagID string, workshopID uuid.UUID) (*sqlc.TagToWorkshopRow, error) {
+	user, err := s.getUserIDFromTagId(ctx, tagID)
+
+	if err != nil {
+		s.logger.Err(err).Msg(fmt.Sprintf("Failed to tag to workshop, can't get user id, tagID: %s", tagID))
+		return nil, fmt.Errorf("tag to workshop: %w", err)
+	}
+
+	if user.UserID == nil {
+		s.logger.Err(err).Msg(fmt.Sprintf("userID is null for tag, %s", tagID))
+		return nil, fmt.Errorf("tag to redeemable: %w", err)
+	}
+
 	workshop, err := s.nfcRepo.TagToWorkshop(ctx, sqlc.TagToWorkshopParams{
-		TagID:      tagID,
+		TagID:      &tagID,
+		UserID:     *user.UserID,
 		WorkshopID: workshopID,
 	})
 	if err != nil {
@@ -101,8 +114,21 @@ func (s *NfcService) TagToWorkshop(ctx context.Context, tagID string, workshopID
 }
 
 func (s *NfcService) TagToRedeemable(ctx context.Context, tagID string, redeemableID uuid.UUID) error {
+	user, err := s.getUserIDFromTagId(ctx, tagID)
+
+	if err != nil {
+		s.logger.Err(err).Msg(fmt.Sprintf("Failed to tag to redeemable, can't get user id, tagID: %s", tagID))
+		return fmt.Errorf("tag to redeemable: %w", err)
+	}
+
+	if user.UserID == nil {
+		s.logger.Err(err).Msg(fmt.Sprintf("userID is null for tag, %s", tagID))
+		return fmt.Errorf("tag to redeemable: %w", err)
+	}
+
 	redeemable, err := s.nfcRepo.TagToRedeemable(ctx, sqlc.TagToRedeemableParams{
-		TagID:        tagID,
+		UserID:       *user.UserID,
+		TagID:        &tagID,
 		RedeemableID: redeemableID,
 	})
 	if err != nil {
@@ -138,4 +164,30 @@ func (s *NfcService) GetSocials(ctx context.Context) ([]sqlc.GetSocialsRow, erro
 	}
 
 	return socials, nil
+}
+
+func (s *NfcService) UnlinkTag(ctx context.Context, userID uuid.UUID) (bool, error) {
+	rowsAffected, err := s.nfcRepo.DeleteTagByUserID(ctx, userID)
+	if err != nil {
+		s.logger.Err(err).Str("user_id", userID.String()).Msg("Failed to unlink NFC tag")
+		return false, errors.New("failed to unlink NFC tag")
+	}
+
+	return rowsAffected > 0, nil
+}
+
+func (s *NfcService) getUserIDFromTagId(ctx context.Context, tagID string) (*sqlc.NfcTagsUser, error) {
+	user, err := s.nfcRepo.GetTag(ctx, tagID)
+
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to get userid from tagid")
+		return nil, errors.New("failed to get userid from tagid")
+	}
+
+	if user == nil {
+		s.logger.Err(err).Msg("user is null from GetTag")
+		return nil, errors.New("failed to get user from tagid")
+	}
+
+	return user, nil
 }
