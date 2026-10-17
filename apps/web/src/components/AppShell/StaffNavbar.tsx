@@ -20,6 +20,11 @@ export default function StaffNavbar({ pathname }: StaffNavbarProps) {
   const commonNavLinks = (
     <>
       <NavLink
+        label="Workshop attendance"
+        href="/workshop-attendance"
+        active={pathname.startsWith("/workshop-attendance")}
+      />
+      <NavLink
         label="Check-in Dashboard"
         href="/check-in"
         active={pathname.startsWith("/check-in")}
