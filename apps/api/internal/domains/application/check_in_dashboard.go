@@ -181,9 +181,8 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
             FROM (
                 SELECT r.id, r.name, count(*) AS amount
                 FROM nfc_tags_redeemables ntr
-                JOIN nfc_tags_user ntu ON ntu.tag_id=ntr.tag_id
                 JOIN redeemables r ON r.id=ntr.redeemable_id
-                WHERE ntu.user_id=u.id AND r.hackathon_id=a.hackathon_id
+                WHERE ntr.user_id=u.id AND r.hackathon_id=a.hackathon_id
                 GROUP BY r.id, r.name
             ) x
         ),'[]'::jsonb)
@@ -207,9 +206,8 @@ func (h *handler) handleCheckInDashboard(ctx context.Context, input *CheckInDash
             OR ($4='no' AND ci.user_id IS NULL AND u.checked_in_at IS NULL))
         AND ($5::uuid IS NULL OR EXISTS (
             SELECT 1 FROM nfc_tags_redeemables ntr
-            JOIN nfc_tags_user ntu ON ntu.tag_id=ntr.tag_id
             JOIN redeemables r ON r.id=ntr.redeemable_id
-            WHERE ntu.user_id=u.id AND r.hackathon_id=a.hackathon_id
+            WHERE ntr.user_id=u.id AND r.hackathon_id=a.hackathon_id
                 AND ntr.redeemable_id=$5
         ))
     ORDER BY CASE WHEN a.status::text='waitlist_confirmed' THEN 0 ELSE 1 END,

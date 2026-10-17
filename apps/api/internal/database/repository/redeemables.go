@@ -62,3 +62,23 @@ func (r *RedeemablesRepository) UpdateRedeemable(ctx context.Context, params sql
 	}
 	return &redeemable, nil
 }
+
+// Returns pgx.ErrNoRows when nothing was inserted; GetRedeemEligibility says why.
+func (r *RedeemablesRepository) RedeemForUser(ctx context.Context, params sqlc.RedeemForUserParams) (*sqlc.RedeemForUserRow, error) {
+	row, err := r.db.Query.RedeemForUser(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	return &row, nil
+}
+
+func (r *RedeemablesRepository) GetRedeemEligibility(ctx context.Context, params sqlc.GetRedeemEligibilityParams) (*sqlc.GetRedeemEligibilityRow, error) {
+	row, err := r.db.Query.GetRedeemEligibility(ctx, params)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrRedeemableNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &row, nil
+}
