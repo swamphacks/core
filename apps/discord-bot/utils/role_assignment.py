@@ -21,7 +21,7 @@ async def get_attendees_for_event(api_url: str, session_cookie: str, event_id: s
         async with aiohttp.ClientSession() as session:
             headers = {"Cookie": f"sh_session_id={session_cookie}"}
             async with session.get(
-                f"{api_url}/discord/event/{event_id}/attendees",
+                f"{api_url}/hackathon/attendees/discord",
                 headers=headers
             ) as response:
                 if response.status == 200:
