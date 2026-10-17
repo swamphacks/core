@@ -19,14 +19,19 @@ type WorkshopAttendance struct {
 }
 
 type AttendanceWorkshop struct {
-	ID        uuid.UUID `json:"id"`
-	Title     string    `json:"title"`
-	Type      string    `json:"type"`
-	StartTime time.Time `json:"startTime"`
+	ID             uuid.UUID `json:"id"`
+	Title          string    `json:"title"`
+	Type           string    `json:"type"`
+	StartTime      time.Time `json:"startTime"`
+	CheckedInCount int64     `json:"checkedInCount"`
 }
 
 func (r *WorkshopsRepository) AttendanceWorkshops(ctx context.Context) ([]AttendanceWorkshop, error) {
-	rows, err := r.db.Pool.Query(ctx, `SELECT id,title,type,start_time FROM workshops ORDER BY start_time,title,id`)
+	rows, err := r.db.Pool.Query(ctx, `SELECT w.id,w.title,w.type,w.start_time,count(DISTINCT a.user_id)
+FROM workshops w
+LEFT JOIN nfc_tags_workshops a ON a.workshop_id=w.id
+GROUP BY w.id,w.title,w.type,w.start_time
+ORDER BY w.start_time,w.title,w.id`)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +39,7 @@ func (r *WorkshopsRepository) AttendanceWorkshops(ctx context.Context) ([]Attend
 	result := []AttendanceWorkshop{}
 	for rows.Next() {
 		var w AttendanceWorkshop
-		if err := rows.Scan(&w.ID, &w.Title, &w.Type, &w.StartTime); err != nil {
+		if err := rows.Scan(&w.ID, &w.Title, &w.Type, &w.StartTime, &w.CheckedInCount); err != nil {
 			return nil, err
 		}
 		result = append(result, w)
