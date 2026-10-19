@@ -171,6 +171,14 @@ func (s *EmailCampaignService) UpdateCampaignStatus(
 		return nil, ErrEmailCampaignSentAtRequired
 	}
 
+	// A draft has no send time, so unscheduling clears it. The handler cannot do
+	// this itself: ScheduledAt is a *time.Time, so an omitted field and an explicit
+	// null both arrive as nil and it has to assume "leave it alone".
+	if params.Status == sqlc.EmailCampaignStatusDraft {
+		params.ScheduledAtDoUpdate = true
+		params.ScheduledAt = nil
+	}
+
 	return s.emailCampaignRepo.UpdateEmailCampaignStatus(ctx, params)
 }
 
