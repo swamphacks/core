@@ -341,7 +341,7 @@ class General(commands.Cog):
             )
             return
         
-        mentor_role_name = RoleNames.MENTOR_XI
+        mentor_role_name = RoleNames.MENTOR_XII
         mentor_role_id = get_role_id(mentor_role_name)
         
         if mentor_role_id:

@@ -59,7 +59,7 @@ class Support(commands.Cog):
             description=description,
             color=color_map[color]
         )
-        embed.set_footer(text="Powered by SwampHacksXI")
+        embed.set_footer(text="Powered by SwampHacksXII")
         await interaction.response.defer(ephemeral=True)
         await interaction.delete_original_response()
         await interaction.channel.send(embed=embed, view=TicketView())
