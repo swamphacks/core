@@ -79,7 +79,7 @@ export const ThemeSwitch = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="flex gap-2 text-text-main mt-2 border border-input-border rounded-md w-fit">
+    <div className="flex gap-2 text-text-main bg-white dark:bg-slate-900 border border-input-border rounded-md w-fit overflow-hidden shadow-lg">
       <button
         className={cn(
           theme === "light" &&

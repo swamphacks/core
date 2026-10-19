@@ -61,16 +61,22 @@ func (h *handler) handleGetMyApplication(ctx context.Context, input *struct{}) (
 		return nil, huma.Error500InternalServerError("Application is null")
 	}
 
+	deadline, err := h.applicationService.GetApplicationConfirmationDeadline(ctx, application.ID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to retrieve confirmation deadline")
+	}
+
 	return &GetMyApplicationOutput{Body: MyApplicationResponseDto{
-		ID:          application.ID,
-		UserID:      application.UserID,
-		Status:      string(application.Status),
-		Application: application.Application,
-		CreatedAt:   application.CreatedAt,
-		SavedAt:     application.SavedAt,
-		UpdatedAt:   application.UpdatedAt,
-		SubmittedAt: application.SubmittedAt,
-		HackathonID: application.HackathonID,
+		RsvpDeadline: deadline,
+		ID:           application.ID,
+		UserID:       application.UserID,
+		Status:       string(application.Status),
+		Application:  application.Application,
+		CreatedAt:    application.CreatedAt,
+		SavedAt:      application.SavedAt,
+		UpdatedAt:    application.UpdatedAt,
+		SubmittedAt:  application.SubmittedAt,
+		HackathonID:  application.HackathonID,
 	}}, nil
 }
 
@@ -128,13 +134,21 @@ func (h *handler) handleGetExtendedApplicationById(ctx context.Context, input *s
 	}
 
 	var autoDecisionRequest *AutoDecisionRequestDto
-	if application.AutoDecisionRequestID != nil && application.RequestedDecision.Valid {
+	if application.AutoDecisionRequestID != nil {
+		var autoDecisionApproved bool
+
+		if application.DecisionApproved == nil {
+			autoDecisionApproved = false
+		} else {
+			autoDecisionApproved = *application.DecisionApproved
+		}
+
 		autoDecisionRequest = &AutoDecisionRequestDto{
 			ID:                   *application.AutoDecisionRequestID,
 			ApplicationID:        application.ID,
 			RequestedDecision:    string(application.RequestedDecision.ApplicationAutoDecisionType),
 			Justification:        application.DecisionJustification,
-			AutoDecisionApproved: *application.DecisionApproved,
+			AutoDecisionApproved: autoDecisionApproved,
 			CreatedAt:            *application.DecisionRequestCreatedAt,
 			DecidedBy:            application.DecidedBy,
 		}
@@ -298,7 +312,11 @@ func (h *handler) handleSubmitApplication(ctx context.Context, input *struct{}) 
 		return nil, huma.Error400BadRequest("Invalid resume file")
 	}
 
-	defer resumeFile.Close()
+	defer func() {
+		if err := resumeFile.Close(); err != nil {
+			h.logger.Warn().Err(err).Msg("Failed to close uploaded resume")
+		}
+	}()
 
 	resumeFileBuffer := bytes.NewBuffer(nil)
 
@@ -377,7 +395,11 @@ func (h *handler) handleReplaceResume(ctx context.Context, input *struct {
 	if err != nil {
 		return nil, huma.Error400BadRequest("Failed to parse uploaded resume")
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			h.logger.Warn().Err(err).Msg("Failed to close uploaded resume")
+		}
+	}()
 
 	resumeBuffer := bytes.NewBuffer(nil)
 	if _, err := io.Copy(resumeBuffer, file); err != nil {
@@ -443,13 +465,21 @@ func (h *handler) handleGetReviewById(ctx context.Context, input *struct {
 	}
 
 	var autoDecisionRequest *AutoDecisionRequestDto
-	if review.DecisionRequestID != nil && review.RequestedDecision.Valid {
+	if review.DecisionRequestID != nil {
+		var autoDecisionApproved bool
+
+		if review.DecisionApproved == nil {
+			autoDecisionApproved = false
+		} else {
+			autoDecisionApproved = *review.DecisionApproved
+		}
+
 		autoDecisionRequest = &AutoDecisionRequestDto{
 			ID:                   *review.DecisionRequestID,
 			ApplicationID:        review.ID,
 			RequestedDecision:    string(review.RequestedDecision.ApplicationAutoDecisionType),
 			Justification:        review.DecisionJustification,
-			AutoDecisionApproved: *review.DecisionApproved,
+			AutoDecisionApproved: autoDecisionApproved,
 			CreatedAt:            *review.DecisionRequestCreatedAt,
 			DecidedBy:            review.DecisionDecidedBy,
 		}
@@ -795,14 +825,17 @@ func (h *handler) handleWithdrawApplication(ctx context.Context, input *struct{}
 		return nil, huma.Error400BadRequest("Failed to get current user info")
 	}
 
-	if userCtx.Role != sqlc.RoleApplicant {
+	if userCtx.Role != sqlc.RoleApplicant && userCtx.Role != sqlc.RoleAttendee {
 		return nil, huma.Error400BadRequest("Not an applicant")
 	}
 
 	err := h.applicationService.WithdrawApplication(ctx, userCtx.UserID)
 
+	if errors.Is(err, ErrWithdrawalEligibility) {
+		return nil, huma.Error409Conflict(err.Error())
+	}
 	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+		return nil, huma.Error500InternalServerError("Unable to withdraw attendance")
 	}
 
 	return &WithdrawApplicationOutput{Status: http.StatusOK}, nil
@@ -826,7 +859,13 @@ func (h *handler) handleConfirmAttendance(ctx context.Context, input *struct{}) 
 	err := h.applicationService.ConfirmAttendance(ctx, userCtx.UserID)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+		if errors.Is(err, ErrConfirmationDeadlinePassed) {
+			return nil, huma.Error409Conflict(ErrConfirmationDeadlinePassed.Error())
+		}
+		if errors.Is(err, ErrConfirmationNotAccepted) {
+			return nil, huma.Error409Conflict(ErrConfirmationNotAccepted.Error())
+		}
+		return nil, huma.Error500InternalServerError("Unable to confirm attendance")
 	}
 
 	return &ConfirmAttendanceOutput{Status: http.StatusOK}, nil

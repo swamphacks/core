@@ -4,7 +4,12 @@ import type { useMyTeam } from "./hooks/useMyTeam";
 import { HTTPError } from "ky";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/Button";
-import { DialogTrigger } from "react-aria-components";
+import {
+  DialogTrigger,
+  Focusable,
+  Tooltip,
+  TooltipTrigger,
+} from "react-aria-components";
 import TablerPlus from "~icons/tabler/user-plus";
 import { Modal } from "@/components/ui/Modal";
 import TablerTrash from "~icons/tabler/trash";
@@ -12,18 +17,31 @@ import { useTeamInvitation } from "./hooks/useTeamInvite";
 import { useState } from "react";
 import TablerLink from "~icons/tabler/link";
 import TablerLogout from "~icons/tabler/logout";
+import TablerShieldCheck from "~icons/tabler/shield-check";
+import TablerShieldQuestion from "~icons/tabler/shield-question";
+import TablerShieldX from "~icons/tabler/shield-x";
 import { Input } from "@/components/ui/Field";
 
 export default function TeamDetails({
   team,
   user,
+  accepted,
 }: {
   user: UserContext;
   team: NonNullable<ReturnType<typeof useMyTeam>["data"]>;
+  accepted: boolean;
 }) {
   const { deleteTeam, leaveTeam, kickMember } = useTeamActions();
   const isOwner = team.ownerId === user.userId;
-  const members = team.members ?? [];
+  const members = [...(team.members ?? [])].sort((a, b) => {
+    const priority: Record<string, number> = {
+      confirmed: 0,
+      accepted: 1,
+      not_accepted: 2,
+    };
+
+    return (priority[a.status] ?? 3) - (priority[b.status] ?? 3);
+  });
 
   const handleDeleteTeam = () => {
     const confirmed = window.confirm("Are you sure you want to delete team?");
@@ -132,14 +150,7 @@ export default function TeamDetails({
                 key={member.id}
                 className="flex gap-2 items-center mt-2 justify-between"
               >
-                <div className="flex gap-2 items-center">
-                  <img
-                    src={member.image!}
-                    alt={"user avatar"}
-                    className="size-8 rounded-full object-cover"
-                  />
-                  <p className="truncate w-50">{member.name}</p>
-                </div>
+                <TeamMember member={member} accepted={accepted} />
 
                 {isOwner && member.id != user.userId && (
                   <Button
@@ -157,6 +168,57 @@ export default function TeamDetails({
         ) : (
           <p className="mt-1 text-sm text-text-secondary">No members yet.</p>
         )}
+      </div>
+    </div>
+  );
+}
+
+function TeamMember({
+  member,
+  accepted,
+}: {
+  member: NonNullable<
+    NonNullable<ReturnType<typeof useMyTeam>["data"]>["members"]
+  >[number];
+  accepted: boolean;
+}) {
+  const getIconForStatus = (status: string) => {
+    let icon, tooltip;
+    if (status === "confirmed") {
+      icon = <TablerShieldCheck className="text-green-500" />;
+      tooltip = "Confirmed their attendance 😎";
+    } else if (status === "accepted") {
+      icon = <TablerShieldQuestion className="text-blue-500" />;
+      tooltip = "Accepted, but has not yet confirmed 🙃";
+    } else {
+      icon = <TablerShieldX />;
+      tooltip = "Not yet accepted 🥲";
+    }
+
+    return (
+      <TooltipTrigger delay={250} closeDelay={250}>
+        <Focusable>{icon}</Focusable>
+        <Tooltip
+          offset={5}
+          className="bg-surface border-input-border border-2 py-1 px-2 rounded-md"
+        >
+          {tooltip}
+        </Tooltip>
+      </TooltipTrigger>
+    );
+  };
+
+  return (
+    <div className="flex gap-2 items-center">
+      <img
+        src={member.image!}
+        alt={"user avatar"}
+        className="size-8 rounded-full object-cover"
+      />
+      <div className="flex w-50 items-center gap-1">
+        <p className="min-w-0 truncate">{member.name}</p>
+
+        {accepted && getIconForStatus(member.status)}
       </div>
     </div>
   );

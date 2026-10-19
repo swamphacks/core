@@ -13,34 +13,32 @@ import (
 )
 
 const createRedeemable = `-- name: CreateRedeemable :one
-INSERT INTO redeemables (name, amount, max_user_amount, hackathon_id)
-VALUES ($1, $2, $3, $4)
-RETURNING id, name, amount, max_user_amount, created_at, updated_at, hackathon_id
+INSERT INTO redeemables (name, max_user_amount, type, hackathon_id)
+SELECT $1, $2, $3, h.id
+FROM hackathons h
+WHERE h.is_active
+RETURNING id, name, max_user_amount, created_at, updated_at, hackathon_id, type
 `
 
 type CreateRedeemableParams struct {
 	Name          string `json:"name"`
-	Amount        int32  `json:"amount"`
 	MaxUserAmount int32  `json:"max_user_amount"`
-	HackthonID    string `json:"hackthon_id"`
+	Type          string `json:"type"`
 }
 
+// Inserts into the active hackathon. With no active hackathon the SELECT
+// yields no rows, so nothing is inserted and pgx returns ErrNoRows.
 func (q *Queries) CreateRedeemable(ctx context.Context, arg CreateRedeemableParams) (Redeemable, error) {
-	row := q.db.QueryRow(ctx, createRedeemable,
-		arg.Name,
-		arg.Amount,
-		arg.MaxUserAmount,
-		arg.HackthonID,
-	)
+	row := q.db.QueryRow(ctx, createRedeemable, arg.Name, arg.MaxUserAmount, arg.Type)
 	var i Redeemable
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Amount,
 		&i.MaxUserAmount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.HackathonID,
+		&i.Type,
 	)
 	return i, err
 }
@@ -55,29 +53,77 @@ func (q *Queries) DeleteRedeemable(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getRedeemEligibility = `-- name: GetRedeemEligibility :one
+SELECT
+    r.name AS redeemable_name,
+    r.max_user_amount,
+    (u.id IS NOT NULL)::boolean AS user_exists,
+    COALESCE(a.status::text, '')::text AS application_status,
+    COALESCE(
+        u.checked_in_at IS NOT NULL
+        OR EXISTS (SELECT 1 FROM nfc_tags_user ntu WHERE ntu.user_id = u.id),
+        false
+    )::boolean AS checked_in
+FROM redeemables r
+LEFT JOIN users u ON u.id = $1
+LEFT JOIN applications a ON a.user_id = u.id AND a.hackathon_id = r.hackathon_id
+WHERE r.id = $2
+`
+
+type GetRedeemEligibilityParams struct {
+	UserID       uuid.UUID `json:"user_id"`
+	RedeemableID uuid.UUID `json:"redeemable_id"`
+}
+
+type GetRedeemEligibilityRow struct {
+	RedeemableName    string `json:"redeemable_name"`
+	MaxUserAmount     int32  `json:"max_user_amount"`
+	UserExists        bool   `json:"user_exists"`
+	ApplicationStatus string `json:"application_status"`
+	CheckedIn         bool   `json:"checked_in"`
+}
+
+// Explains why RedeemForUser inserted nothing. No row means the redeemable
+// does not exist.
+func (q *Queries) GetRedeemEligibility(ctx context.Context, arg GetRedeemEligibilityParams) (GetRedeemEligibilityRow, error) {
+	row := q.db.QueryRow(ctx, getRedeemEligibility, arg.UserID, arg.RedeemableID)
+	var i GetRedeemEligibilityRow
+	err := row.Scan(
+		&i.RedeemableName,
+		&i.MaxUserAmount,
+		&i.UserExists,
+		&i.ApplicationStatus,
+		&i.CheckedIn,
+	)
+	return i, err
+}
+
 const getRedeemables = `-- name: GetRedeemables :many
 SELECT r.id,
-r.name, 
-r.amount AS total_stock, 
-r.max_user_amount,
-r.created_at, 
-r.updated_at,
-COALESCE(SUM(ur.amount), 0) AS total_redeemed
+    r.name,
+    r.type,
+    r.max_user_amount,
+    r.created_at,
+    r.updated_at,
+    COUNT(ntr.id) AS total_redeemed
 FROM redeemables r
-LEFT JOIN user_redemptions ur ON r.id = ur.redeemable_id
+LEFT JOIN nfc_tags_redeemables ntr ON ntr.redeemable_id = r.id
 GROUP BY r.id
+ORDER BY r.name, r.id
 `
 
 type GetRedeemablesRow struct {
-	ID            uuid.UUID   `json:"id"`
-	Name          string      `json:"name"`
-	TotalStock    int32       `json:"total_stock"`
-	MaxUserAmount int32       `json:"max_user_amount"`
-	CreatedAt     time.Time   `json:"created_at"`
-	UpdatedAt     time.Time   `json:"updated_at"`
-	TotalRedeemed interface{} `json:"total_redeemed"`
+	ID            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	Type          string    `json:"type"`
+	MaxUserAmount int32     `json:"max_user_amount"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	TotalRedeemed int64     `json:"total_redeemed"`
 }
 
+// total_redeemed counts NFC scans (one nfc_tags_redeemables row per item handed
+// out). COUNT(ntr.id), not COUNT(*): an item with no scans must count 0, not 1.
 func (q *Queries) GetRedeemables(ctx context.Context) ([]GetRedeemablesRow, error) {
 	rows, err := q.db.Query(ctx, getRedeemables)
 	if err != nil {
@@ -90,7 +136,7 @@ func (q *Queries) GetRedeemables(ctx context.Context) ([]GetRedeemablesRow, erro
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.TotalStock,
+			&i.Type,
 			&i.MaxUserAmount,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -106,77 +152,70 @@ func (q *Queries) GetRedeemables(ctx context.Context) ([]GetRedeemablesRow, erro
 	return items, nil
 }
 
-const getRedemptionInfoByRedeemableID = `-- name: GetRedemptionInfoByRedeemableID :many
-SELECT ur.user_id, ur.redeemable_id, ur.amount, ur.created_at, ur.updated_at
-FROM user_redemptions ur
-WHERE ur.redeemable_id = $1
+const redeemForUser = `-- name: RedeemForUser :one
+WITH redeemed AS (
+    INSERT INTO nfc_tags_redeemables (user_id, redeemable_id)
+    SELECT u.id, r.id
+    FROM users u
+    JOIN redeemables r ON r.id = $1
+    JOIN applications a ON a.user_id = u.id AND a.hackathon_id = r.hackathon_id
+    WHERE u.id = $2
+      AND a.status = 'confirmed'
+      AND (
+          u.checked_in_at IS NOT NULL
+          OR EXISTS (SELECT 1 FROM nfc_tags_user ntu WHERE ntu.user_id = u.id)
+      )
+    RETURNING user_id, redeemable_id
+)
+SELECT
+    COALESCE(
+        NULLIF(trim(concat_ws(' ', a.application->>'firstName', a.application->>'lastName')), ''),
+        u.name
+    )::text AS name,
+    r.name AS redeemable_name,
+    r.max_user_amount,
+    GREATEST(
+        r.max_user_amount - (
+            SELECT COUNT(*)::integer
+            FROM nfc_tags_redeemables ntr
+            WHERE ntr.user_id = redeemed.user_id
+              AND ntr.redeemable_id = redeemed.redeemable_id
+        ) - 1,
+        0
+    )::integer AS items_remaining
+FROM redeemed
+JOIN users u ON u.id = redeemed.user_id
+JOIN redeemables r ON r.id = redeemed.redeemable_id
+JOIN applications a ON a.user_id = u.id AND a.hackathon_id = r.hackathon_id
 `
 
-type GetRedemptionInfoByRedeemableIDRow struct {
-	UserID       uuid.UUID `json:"user_id"`
+type RedeemForUserParams struct {
 	RedeemableID uuid.UUID `json:"redeemable_id"`
-	Amount       int32     `json:"amount"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-}
-
-func (q *Queries) GetRedemptionInfoByRedeemableID(ctx context.Context, redeemableID uuid.UUID) ([]GetRedemptionInfoByRedeemableIDRow, error) {
-	rows, err := q.db.Query(ctx, getRedemptionInfoByRedeemableID, redeemableID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetRedemptionInfoByRedeemableIDRow{}
-	for rows.Next() {
-		var i GetRedemptionInfoByRedeemableIDRow
-		if err := rows.Scan(
-			&i.UserID,
-			&i.RedeemableID,
-			&i.Amount,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const redeemRedeemable = `-- name: RedeemRedeemable :one
-INSERT INTO user_redemptions (user_id, redeemable_id, hackathon_id, amount)
-SELECT $1, $2, 1
-WHERE (
-    SELECT COALESCE(SUM(amount), 0) 
-    FROM user_redemptions 
-    WHERE redeemable_id = $2
-) < (SELECT amount FROM redeemables WHERE id = $2)
-ON CONFLICT (user_id, redeemable_id) 
-DO UPDATE SET 
-    amount = user_redemptions.amount + 1,
-    updated_at = CURRENT_TIMESTAMP
-WHERE user_redemptions.amount < (SELECT max_user_amount FROM redeemables WHERE id = $2)
-RETURNING user_id, redeemable_id, amount, created_at, updated_at, hackathon_id
-`
-
-type RedeemRedeemableParams struct {
 	UserID       uuid.UUID `json:"user_id"`
-	RedeemableID uuid.UUID `json:"redeemable_id"`
 }
 
-func (q *Queries) RedeemRedeemable(ctx context.Context, arg RedeemRedeemableParams) (UserRedemption, error) {
-	row := q.db.QueryRow(ctx, redeemRedeemable, arg.UserID, arg.RedeemableID)
-	var i UserRedemption
+type RedeemForUserRow struct {
+	Name           string `json:"name"`
+	RedeemableName string `json:"redeemable_name"`
+	MaxUserAmount  int32  `json:"max_user_amount"`
+	ItemsRemaining int32  `json:"items_remaining"`
+}
+
+// Records one item handed out after staff scan a hacker's QR code on the web
+// portal. No NFC tag is involved, so tag_id stays NULL. Inserts only for a
+// hacker who is checked in (NFC nametag linked or checked_in_at set) with a
+// confirmed application to the item's hackathon; otherwise nothing is inserted
+// and pgx returns ErrNoRows. check_redeemable_count_trigger enforces the
+// per-hacker limit. The outer SELECT sees the table as it was before the
+// insert, hence the extra - 1.
+func (q *Queries) RedeemForUser(ctx context.Context, arg RedeemForUserParams) (RedeemForUserRow, error) {
+	row := q.db.QueryRow(ctx, redeemForUser, arg.RedeemableID, arg.UserID)
+	var i RedeemForUserRow
 	err := row.Scan(
-		&i.UserID,
-		&i.RedeemableID,
-		&i.Amount,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.HackathonID,
+		&i.Name,
+		&i.RedeemableName,
+		&i.MaxUserAmount,
+		&i.ItemsRemaining,
 	)
 	return i, err
 }
@@ -185,54 +224,36 @@ const updateRedeemable = `-- name: UpdateRedeemable :one
 UPDATE redeemables
 SET 
     name = COALESCE($2, name),
-    amount = COALESCE($3, amount),
-    max_user_amount = COALESCE($4, max_user_amount),
+    max_user_amount = COALESCE($3, max_user_amount),
+    type = COALESCE($4, type),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, name, amount, max_user_amount, created_at, updated_at, hackathon_id
+RETURNING id, name, max_user_amount, created_at, updated_at, hackathon_id, type
 `
 
 type UpdateRedeemableParams struct {
 	ID            uuid.UUID `json:"id"`
 	Name          *string   `json:"name"`
-	Amount        *int32    `json:"amount"`
 	MaxUserAmount *int32    `json:"max_user_amount"`
+	Type          *string   `json:"type"`
 }
 
 func (q *Queries) UpdateRedeemable(ctx context.Context, arg UpdateRedeemableParams) (Redeemable, error) {
 	row := q.db.QueryRow(ctx, updateRedeemable,
 		arg.ID,
 		arg.Name,
-		arg.Amount,
 		arg.MaxUserAmount,
+		arg.Type,
 	)
 	var i Redeemable
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Amount,
 		&i.MaxUserAmount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.HackathonID,
+		&i.Type,
 	)
 	return i, err
-}
-
-const updateRedemption = `-- name: UpdateRedemption :exec
-UPDATE user_redemptions
-SET
-    amount = $1
-WHERE user_id = $2 AND redeemable_id = $3
-`
-
-type UpdateRedemptionParams struct {
-	Amount       int32     `json:"amount"`
-	UserID       uuid.UUID `json:"user_id"`
-	RedeemableID uuid.UUID `json:"redeemable_id"`
-}
-
-func (q *Queries) UpdateRedemption(ctx context.Context, arg UpdateRedemptionParams) error {
-	_, err := q.db.Exec(ctx, updateRedemption, arg.Amount, arg.UserID, arg.RedeemableID)
-	return err
 }

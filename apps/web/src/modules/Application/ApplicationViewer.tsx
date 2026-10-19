@@ -1,3 +1,4 @@
+import InPersonWaitlistAction from "./InPersonWaitlistAction";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
@@ -28,8 +29,17 @@ export default function ApplicationViewer({
 }: ApplicationResponsesProps) {
   const extendedApplication = useExtendedApplication(applicationId);
 
-  if (!extendedApplication.data || extendedApplication.isLoading) {
+  if (!extendedApplication.data && extendedApplication.isLoading) {
     return <p>Loading...</p>;
+  }
+
+  if (!extendedApplication.data) {
+    return (
+      <p>
+        Unable to find user application. This is most likely because the user
+        never submitted an application or their application is incomplete.
+      </p>
+    );
   }
 
   const appFields = extendedApplication.data.application;
@@ -104,6 +114,7 @@ export default function ApplicationViewer({
                 <div className="space-y-1 mt-2">
                   <p>User ID: {extendedApplication.data.user.id}</p>
                   <p>Email: {extendedApplication.data.user.email}</p>
+                  <p>Status: {extendedApplication.data.status}</p>
                 </div>
               </div>
               {Object.entries(parsedForm).map(([sectionLabel, fields]) => (
@@ -141,6 +152,10 @@ export default function ApplicationViewer({
                 status={extendedApplication.data.status}
                 applicationId={extendedApplication.data.id}
                 userId={extendedApplication.data.user.id}
+              />
+              <InPersonWaitlistAction
+                userId={extendedApplication.data.user.id}
+                status={extendedApplication.data.status}
               />
               {extendedApplication.data.review && (
                 <ApplicationReviews
@@ -427,15 +442,11 @@ function ApplicationAutoDecision({
 }
 
 async function updateApplicationFn(applicationId: string, status: string) {
-  try {
-    await api.patch(`application`, {
-      json: { applicationId, status },
-    });
+  await api.patch(`application`, {
+    json: { applicationId, status },
+  });
 
-    return { applicationId, status };
-  } catch (err) {
-    throw err;
-  }
+  return { applicationId, status };
 }
 
 async function updateReviewFn({
@@ -449,25 +460,21 @@ async function updateReviewFn({
   experienceRating: number;
   notes: string;
 }) {
-  try {
-    await api.patch(`application/review`, {
-      json: {
-        id: reviewId,
-        passionRating,
-        experienceRating,
-        notes,
-      },
-    });
-
-    return {
-      reviewId,
+  await api.patch(`application/review`, {
+    json: {
+      id: reviewId,
       passionRating,
       experienceRating,
       notes,
-    };
-  } catch (err) {
-    throw err;
-  }
+    },
+  });
+
+  return {
+    reviewId,
+    passionRating,
+    experienceRating,
+    notes,
+  };
 }
 
 export function useApplicationActionsAdmin(applicationId: string) {

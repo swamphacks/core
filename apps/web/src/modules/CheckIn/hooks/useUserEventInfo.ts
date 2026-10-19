@@ -1,39 +1,39 @@
 import { api } from "@/lib/ky";
-import { EventRoleSchema, PlatformRoleSchema } from "@/lib/openapi/zodSchemas";
 import { useQuery } from "@tanstack/react-query";
-import z from "zod";
+import { z } from "zod";
 
-const userEventInfoSchema = z.object({
-  user_id: z.uuid(),
+const userSchema = z.object({
+  id: z.uuid(),
   name: z.string(),
   email: z.email(),
-  image: z.url().nullable(),
-  platform_role: PlatformRoleSchema,
-  event_role: EventRoleSchema.nullable(),
+  image: z.string().nullable().optional(),
+  role: z.enum(["admin", "staff", "attendee", "applicant", "visitor"]),
   checked_in_at: z.coerce.date().nullable(),
 });
 
-export type UserEventInfo = z.infer<typeof userEventInfoSchema>;
+async function fetchUserEventInfo(userId: string) {
+  const result = await api.get(`users/userid/${userId}`).json();
+  const user = userSchema.parse(result);
 
-const fetchUserEventInfo = async (userId: string | null, eventId: string) => {
-  if (!userId) {
-    return null;
-  }
-  const result = await api.get(`events/${eventId}/users/${userId}`).json();
+  return {
+    user_id: user.id,
+    name: user.name,
+    email: user.email,
+    image: user.image ?? null,
+    event_role: user.role === "attendee" ? ("attendee" as const) : null,
+    checked_in_at: user.checked_in_at,
+  };
+}
 
-  return userEventInfoSchema.parse(result);
-};
+export type UserEventInfo = Awaited<ReturnType<typeof fetchUserEventInfo>>;
 
-/**
- *
- * @param userId - ID of the user to fetch info for
- * @param eventId - ID of the event
- * @returns - Object containing user event info. See UserEventInfo type.
- */
-export const useUserEventInfo = (eventId: string, userId: string | null) => {
+export function useUserEventInfo(eventId: string, userId: string | null) {
   return useQuery({
-    queryKey: ["userEventInfo", userId],
-    queryFn: () => fetchUserEventInfo(userId, eventId),
+    queryKey: ["userEventInfo", eventId, userId],
+    queryFn: () => {
+      if (!userId) throw new Error("User ID is required");
+      return fetchUserEventInfo(userId);
+    },
     enabled: !!userId,
   });
-};
+}

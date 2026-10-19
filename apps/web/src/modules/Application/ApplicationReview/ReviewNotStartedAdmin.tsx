@@ -18,7 +18,9 @@ export default function ReviewNotStartedAdmin({
   }
 
   const now = new Date();
-  const applicationPeriodClosed = now >= new Date(hackathon.application_close);
+  // const applicationPeriodClosed = now >= new Date(hackathon.application_close);
+  const applicationPeriodClosed =
+    now >= new Date(hackathon.early_application_close!);
   const validNumOfApplicants = stats.data.statusStats.submitted > 0;
 
   return (

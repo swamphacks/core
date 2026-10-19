@@ -1,112 +1,124 @@
 import { api } from "@/lib/ky";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { components } from "@/lib/openapi/schema";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 
-export interface Redeemable {
-  id: string;
-  event_id: string;
+export type Redeemable = components["schemas"]["GetRedeemablesRow"];
+export type CreateRedeemableRequest =
+  components["schemas"]["CreateRedeemableRequest"];
+export type UpdateRedeemableRequest =
+  components["schemas"]["UpdateRedeemableRequest"];
+export type RedeemableType = CreateRedeemableRequest["type"];
+export type Redemption = components["schemas"]["RedeemForUserOutputBody"];
+
+// The NFC app lists items by type, one tab per type. Only types that have a
+// tab are offered here. The API also accepts swag and drink, but the app has
+// no tab for them yet, so they stay hidden until it does.
+export const REDEEMABLE_TYPES: {
+  id: RedeemableType;
   name: string;
-  total_stock: number;
-  max_user_amount: number;
-  created_at: string;
-  updated_at: string;
-  total_redeemed: number | string;
+  appTab: string;
+}[] = [
+  { id: "meal", name: "Meal", appTab: "Meals" },
+  { id: "tshirt", name: "T-shirt", appTab: "T-shirts" },
+];
+
+export function redeemableTypeInfo(type: string) {
+  return REDEEMABLE_TYPES.find((t) => t.id === type);
 }
 
-export async function fetchRedeemables(eventId: string): Promise<Redeemable[]> {
-  const result = await api
-    .get<Redeemable[]>(`events/${eventId}/redeemables`)
-    .json();
-  return result;
-}
+export const redeemablesQueryKey = ["redeemables"];
 
-export function useRedeemables(eventId: string) {
+export function useRedeemables({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
-    queryKey: ["redeemables", eventId],
-    queryFn: () => fetchRedeemables(eventId),
+    queryKey: redeemablesQueryKey,
+    enabled,
+    queryFn: async () =>
+      (await api.get("redeemables").json<Redeemable[] | null>()) ?? [],
+    // Keeps the redeemed counts current while scanning is happening.
+    refetchInterval: 15000,
   });
 }
 
-interface CreateRedeemableRequest {
-  name: string;
-  amount: number;
-  max_user_amount: number;
-}
-
-export function useCreateRedeemable(eventId: string) {
+export function useCreateRedeemable() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateRedeemableRequest) => {
-      // The backend returns a Redeemable struct (which has 'amount' field)
-      // but we invalidate queries so the GET response (with 'total_stock') will be fetched
-      await api.post(`events/${eventId}/redeemables`, {
-        json: data,
-      });
+    mutationFn: async (body: CreateRedeemableRequest) => {
+      await api.post("redeemables", { json: body });
     },
-    onSuccess: () => {
-      // Invalidate to refetch with the correct format from GET endpoint
-      queryClient.invalidateQueries({ queryKey: ["redeemables", eventId] });
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: redeemablesQueryKey }),
   });
 }
 
-interface GetUserByRFIDResponse {
-  user_id: string;
-}
-
-// Convert RFID to UserID
-export async function getUserByRFID(
-  eventId: string,
-  rfid: string,
-): Promise<GetUserByRFIDResponse> {
-  const result = await api
-    .get<GetUserByRFIDResponse>(`events/${eventId}/users/by-rfid/${rfid}`)
-    .json();
-  return result;
-}
-
-export function useRedeemRedeemable(eventId: string, redeemableId: string) {
+export function useUpdateRedeemable() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (userId: string) => {
-      await api.post(
-        `events/${eventId}/redeemables/${redeemableId}/users/${userId}`,
-      );
+    mutationFn: async ({
+      id,
+      body,
+    }: {
+      id: string;
+      body: UpdateRedeemableRequest;
+    }) => {
+      await api.patch(`redeemables/${id}`, { json: body });
     },
-    onSuccess: () => {
-      // Invalidate to refetch updated redeemable data
-      queryClient.invalidateQueries({ queryKey: ["redeemables", eventId] });
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: redeemablesQueryKey }),
   });
 }
 
-export function useUpdateRedeemable(eventId: string, redeemableId: string) {
+export function useDeleteRedeemable() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Partial<Redeemable>) => {
-      await api.patch(`events/${eventId}/redeemables/${redeemableId}`, {
-        json: data,
-      });
+    mutationFn: async (id: string) => {
+      await api.delete(`redeemables/${id}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["redeemables", eventId] });
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: redeemablesQueryKey }),
   });
 }
 
-interface CheckInStatusResponse {
-  checked_in_status: string;
+// The API returns huma error bodies: { detail, errors?: [{ message, location }] }.
+export async function apiErrorMessage(error: unknown, fallback: string) {
+  if (!(error instanceof HTTPError)) return fallback;
+
+  try {
+    const body = (await error.response.json()) as {
+      detail?: string;
+      errors?: { message?: string; location?: string }[];
+    };
+    const fieldErrors = body.errors
+      ?.map((e) => e.message)
+      .filter(Boolean)
+      .join("; ");
+    return fieldErrors || body.detail || fallback;
+  } catch {
+    return fallback;
+  }
 }
 
-export function useGetCheckedInStatus(eventId: string) {
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      const response = await api
-        .get(`events/${eventId}/users/${userId}/checked-in-status`)
-        .json<CheckInStatusResponse>();
-      return response;
-    },
-  });
+// Records one item for the hacker whose QR code staff scanned. Returns the
+// API's message on failure, such as the hacker being at the limit.
+export async function redeemForUser(
+  redeemableId: string,
+  userId: string,
+): Promise<{ ok: true; value: Redemption } | { ok: false; message: string }> {
+  try {
+    const value = await api
+      .post(`redeemables/${redeemableId}/redeem`, {
+        json: { userId },
+        retry: 0,
+      })
+      .json<Redemption>();
+    return { ok: true, value };
+  } catch (error) {
+    return {
+      ok: false,
+      message: await apiErrorMessage(error, "Unable to redeem item."),
+    };
+  }
 }

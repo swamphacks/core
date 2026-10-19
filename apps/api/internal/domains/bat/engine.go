@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	ErrImproperWeights  = errors.New("Passion and experience weights don't add to 1.0")
-	ErrScoreOutOfBounds = errors.New("The score can only range from 1 to 5")
+	ErrImproperWeights  = errors.New("passion and experience weights don't add to 1.0")
+	ErrScoreOutOfBounds = errors.New("the score can only range from 1 to 5")
 )
 
 type BucketType int

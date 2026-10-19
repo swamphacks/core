@@ -20,7 +20,7 @@ SELECT
     COUNT(*) FILTER (WHERE status = 'rejected')      AS rejected,
     COUNT(*) FILTER (WHERE status = 'waitlisted')    AS waitlisted,
     COUNT(*) FILTER (WHERE status = 'withdrawn')     AS withdrawn
-FROM applications
+FROM applications WHERE is_early=false
 `
 
 type GetApplicationStatusesRow struct {

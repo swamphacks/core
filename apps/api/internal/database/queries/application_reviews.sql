@@ -16,6 +16,15 @@ JOIN applications ON applications.id = ar.application_id
 WHERE reviewer_id = @reviewer_id
 ORDER BY application_id ASC;
 
+-- name: ListRegularReviewsByReviewerId :many
+SELECT 
+    ar.*,
+    applications.user_id
+FROM application_reviews ar
+JOIN applications ON applications.id = ar.application_id AND applications.is_early = false
+WHERE reviewer_id = @reviewer_id
+ORDER BY application_id ASC;
+
 -- name: ListApplicationReviewersById :many
 SELECT reviewer_id FROM application_reviews
 WHERE application_id = @application_id;
@@ -32,6 +41,7 @@ SELECT
 FROM application_reviews AS ar
 LEFT JOIN users AS reviewer
   ON reviewer.id = ar.reviewer_id
+JOIN applications ON applications.id = ar.application_id AND applications.is_early = false
 GROUP BY
   reviewer.id;
 
@@ -141,7 +151,7 @@ SET
     justification = CASE WHEN @justification_do_update::boolean THEN @justification ELSE justification END,
     approved = CASE WHEN @approved_do_update::boolean THEN @approved ELSE approved END,
     decided_by = CASE WHEN @approved_by_do_update::boolean THEN @decided_by ELSE decided_by END
-WHERE id = @id AND reviewer_id = @reviewer_id;
+WHERE id = @id;
 
 -- name: DeleteAllAutoDecisionRequests :exec
 DELETE FROM application_auto_decision_requests;

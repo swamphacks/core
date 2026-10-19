@@ -1,61 +1,103 @@
 import { api } from "@/lib/ky";
+import { useUserQueryKey } from "@/lib/auth/hooks/useUser";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { HTTPError } from "ky";
 import { toast } from "react-toastify";
 import { myApplicationQueryKey } from "./useMyApplication";
-import type { ErrorResponse } from "@/lib/auth/types";
 
-async function confirmAttendanceFn() {
+async function performAction(
+  method: "post" | "patch",
+  endpoint: string,
+  failureMessage: string,
+) {
   try {
-    await api.patch("application/confirm");
-  } catch (err) {
-    if (err instanceof HTTPError) {
-      const errorBody = await err.response.json<ErrorResponse>();
-      toast.error(errorBody.message || "Failed to confirm attendance.");
+    if (method === "post") {
+      await api.post(endpoint);
     } else {
-      toast.error("An error occurred while confirming attendance.");
+      await api.patch(endpoint);
     }
-
-    throw err;
-  }
-}
-
-async function withdrawApplicationFn() {
-  try {
-    await api.patch("application/withdraw");
-  } catch (err) {
-    if (err instanceof HTTPError) {
-      const errorBody = await err.response.json<ErrorResponse>();
-      toast.error(errorBody.message || "Failed to withdraw application.");
-    } else {
-      toast.error("An error occurred while withdrawing application.");
+  } catch (error) {
+    let message = failureMessage;
+    if (error instanceof HTTPError) {
+      const body = (await error.response.json().catch(() => null)) as {
+        detail?: string;
+        message?: string;
+      } | null;
+      message = body?.detail || body?.message || failureMessage;
     }
-
-    throw err;
+    toast.error(message);
+    throw error;
   }
 }
 
 export function useApplicationActions() {
   const queryClient = useQueryClient();
 
+  const refreshStatus = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: myApplicationQueryKey }),
+      queryClient.invalidateQueries({ queryKey: useUserQueryKey }),
+    ]);
+  };
+
   const confirmAttendance = useMutation({
-    mutationFn: confirmAttendanceFn,
-    onSuccess: () => {
+    mutationFn: () =>
+      performAction(
+        "patch",
+        "application/confirm",
+        "Failed to confirm attendance.",
+      ),
+    onSuccess: async () => {
       toast.success("Attendance confirmed!");
-      queryClient.invalidateQueries({
-        queryKey: myApplicationQueryKey,
-      });
+      await refreshStatus();
+      window.location.assign("/hacker-portal");
     },
   });
 
   const withdrawApplication = useMutation({
-    mutationFn: withdrawApplicationFn,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: myApplicationQueryKey,
-      });
+    mutationFn: () =>
+      performAction(
+        "patch",
+        "application/withdraw",
+        "Failed to withdraw attendance.",
+      ),
+    onSuccess: async () => {
+      toast.success("Your attendance has been withdrawn.");
+      await refreshStatus();
+      window.location.assign("/application");
     },
   });
 
-  return { confirmAttendance, withdrawApplication };
+  const joinWaitlist = useMutation({
+    mutationFn: () =>
+      performAction(
+        "post",
+        "application/join-waitlist",
+        "Failed to join the waitlist.",
+      ),
+    onSuccess: async () => {
+      toast.success("You are on the waitlist.");
+      await refreshStatus();
+    },
+  });
+
+  const leaveWaitlist = useMutation({
+    mutationFn: () =>
+      performAction(
+        "post",
+        "application/leave-waitlist",
+        "Failed to leave the waitlist.",
+      ),
+    onSuccess: async () => {
+      toast.success("You have left the waitlist.");
+      await refreshStatus();
+    },
+  });
+
+  return {
+    confirmAttendance,
+    withdrawApplication,
+    joinWaitlist,
+    leaveWaitlist,
+  };
 }

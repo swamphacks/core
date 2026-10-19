@@ -13,8 +13,8 @@ import (
 var (
 	ErrApiKeyNotFound = repository.ErrApiKeyNotFound
 
-	ErrApiKeyNameRequired        = errors.New("API Key name cannot be empty")
-	ErrApiKeyDescriptionRequired = errors.New("API Key description cannot be empty")
+	ErrApiKeyNameRequired        = errors.New("aPI Key name cannot be empty")
+	ErrApiKeyDescriptionRequired = errors.New("aPI Key description cannot be empty")
 )
 
 type ApiKeysService struct {

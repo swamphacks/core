@@ -12,7 +12,7 @@ describe("JSON Form Builder", () => {
   it("parses valid form json correctly", () => {
     const { success, error, data } = FormSchema.safeParse(validJSON);
 
-    expect(success).toBe(true);
+    expect(success, JSON.stringify(error?.issues, null, 2)).toBe(true);
     expect(data).toBeDefined();
     expect(error).toBeUndefined();
   });

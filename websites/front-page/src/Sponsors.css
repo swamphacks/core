@@ -12,25 +12,191 @@
 
 .sponsors-header {
   font-family: 'Pixelify Sans', monospace;
-  text-align: center;
+  text-align: left;
   font-size: 40px;
-  margin-left: 20px;
+  margin-left: auto;
   margin-top: 30px;
+    width: min(1040px, calc(100% - 48px));
+    margin-right: auto;
+    box-sizing: border-box;
 }
 
 .sponsors-vegetation {
-  bottom: 0%;
-  height: 100px;
+  position: relative;
+  width: 100%;
+  height: 120px;
+  margin-bottom: -34px;
   image-rendering: pixelated;
   background: url('/assets/vegetation.png') repeat-x bottom;
   background-size: auto 100%;
-  z-index: 3;
-  width: 100%;
+  z-index: 4;
+}
+
+.sponsor-tiers {
+  display: flex;
+  width: min(1040px, calc(100% - 48px));
+  flex-direction: column;
+  gap: 18px;
+  margin: 16px auto 0;
+}
+
+.sponsor-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.sponsor-tier__label {
+  margin: 0;
+  color: #f1ddc1;
+  font-family: "Jersey 20", cursive;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.sponsor-grid {
+  display: grid;
+  justify-content: center;
+  gap: 12px;
+}
+
+.sponsor-grid--medium {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sponsor-grid--small {
+  grid-template-columns: repeat(3, minmax(0, 180px));
+}
+
+.sponsor-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  color: #f7ead6;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  text-decoration: none;
+  animation: sponsor-float 4.8s ease-in-out infinite;
+  will-change: transform;
+  transition:
+    filter 180ms ease,
+    opacity 180ms ease;
+}
+
+.sponsor-card:hover {
+  filter:
+    brightness(1.12)
+    drop-shadow(0 0 9px rgba(255, 240, 205, 0.28));
+  opacity: 1;
+}
+
+.sponsor-card--medium {
+  min-height: 76px;
+  padding: 8px 16px;
+}
+
+.sponsor-card--small {
+  min-height: 52px;
+  padding: 6px 14px;
+}
+
+.sponsor-card img {
+  display: block;
+  max-width: 100%;
+  max-height: 58px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 5px rgba(5, 20, 23, 0.25));
+}
+
+.sponsor-card__mark {
+  color: #fff1d9;
+  font-family: "Pixelify Sans", monospace;
+  font-size: clamp(19px, 1.7vw, 27px);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  text-shadow:
+    0 2px 0 rgba(21, 40, 42, 0.72),
+    0 0 8px rgba(255, 238, 196, 0.13);
+}
+
+.sponsor-card img + .sponsor-card__mark {
+  margin-left: 10px;
+  font-size: 14px;
+}
+
+.sponsor-card:nth-child(2) {
+  animation-delay: -1.2s;
+  animation-duration: 5.3s;
+}
+
+.sponsor-card:nth-child(3) {
+  animation-delay: -2.7s;
+  animation-duration: 4.5s;
+}
+
+.sponsor-card:nth-child(4) {
+  animation-delay: -3.6s;
+  animation-duration: 5.6s;
+}
+
+@keyframes sponsor-float {
+  0%,
+  100% {
+    transform: translate3d(0, 2px, 0) rotate(-0.35deg);
+  }
+
+  50% {
+    transform: translate3d(0, -7px, 0) rotate(0.35deg);
+  }
+}
+
+@media (max-width: 760px) {
+  .sponsor-grid--medium {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sponsor-card--medium {
+    min-height: 68px;
+    padding: 10px;
+  }
+
+  .sponsor-card img {
+    max-height: 42px;
+  }
 }
 
 .boat {
+  display: block;
   width: 150px;
   image-rendering: pixelated;
+}
+
+.boat-reflection {
+  position: absolute;
+  top: calc(100% - 3px);
+  left: 0;
+  opacity: 0.2;
+  pointer-events: none;
+  filter: saturate(0.5) brightness(0.65);
+  transform: scaleY(-0.82);
+  transform-origin: center;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.72),
+    transparent 88%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.72),
+    transparent 88%
+  );
+  animation: reflection-ripple 3.4s ease-in-out infinite;
 }
 
 .boat-outer-container {
@@ -38,6 +204,12 @@
   right: 0;
   top: -50px;
   z-index: 10;
+  animation: boat-drift 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.fish-path--right .fish {
+  scale: -1 1;
 }
 
 .boat-container {
@@ -53,32 +225,125 @@
 
 .water {
   position: relative;
-  height: 400px;
-  width: 100%;
   display: block;
   justify-content: center;
-  background: linear-gradient(#306271, rgb(11, 53, 53));
+  width: 100%;
+  height: 400px;
+  padding-top: 34px;
+  overflow: visible;
+  background: linear-gradient(
+    to bottom,
+    #3c8795 0%,
+    #246f7d 45%,
+    #155763 100%
+  );
+  image-rendering: pixelated;
 }
 
-.fish-school {
-  opacity: 15%;
+
+.water-texture {
   position: absolute;
   inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url('/assets/water-texture.png');
+  background-position: 0 0;
+  background-size: 780px auto;
+  background-repeat: repeat;
+  opacity: 0.16;
+  filter: saturate(0.65) contrast(0.82);
+  mix-blend-mode: screen;
+  image-rendering: pixelated;
+  animation: water-texture-drift 40s linear infinite;
+}
+
+.water::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 64px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(8, 22, 13, 0.72),
+      rgba(23, 65, 62, 0.2) 55%,
+      transparent
+    );
+  z-index: 1;
+}
+
+.water::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 120px;
+  pointer-events: none;
+  background: url('/assets/vegetation.png') repeat-x top;
+  background-size: auto 100%;
+  image-rendering: pixelated;
+  opacity: 0.3;
+  filter: saturate(0.72) brightness(0.82);
+  transform: scaleY(-1);
+  transform-origin: center;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.92),
+    transparent 96%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.92),
+    transparent 96%
+  );
+  z-index: 1;
+}
+
+
+.fish-school {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   overflow: hidden;
+  opacity: 0.28;
   pointer-events: none;
 }
 
-.fish {
+.fish-path {
   position: absolute;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  pointer-events: none;
+  will-change: translate;
+}
+
+.fish-path--right {
+  left: -90px;
+  animation-name: fish-swim-right;
+}
+
+.fish-path--left {
+  right: -90px;
+  animation-name: fish-swim-left;
+}
+
+.fish {
+  display: block;
   image-rendering: pixelated;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.20));
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
 }
 
 .sponsors-coming-soon {
   font-size: 30px;
   margin-top: 50px;
   text-align: center;
-  width: 900px;
+  width: min(1040px, calc(100% - 48px));
 }
 
 @media (min-width: 768px) {
@@ -91,7 +356,7 @@
   .sponsors-header {
     height: fit-content;
     text-align: left;
-    width: 900px;  
+    width: min(1040px, calc(100% - 48px));  
   }
 
   .sponsors-header {
@@ -118,4 +383,450 @@
 .sponsors {
   max-width: 600px;
   z-index: 100;
+}
+
+.boat-container::before,
+.boat-container::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 23%;
+  width: 8px;
+  height: 8px;
+  z-index: 3;
+  background: rgba(224, 220, 207, 0.88);
+  box-shadow:
+    8px -8px 0 rgba(190, 192, 184, 0.72),
+    2px -18px 0 rgba(157, 164, 158, 0.55);
+  image-rendering: pixelated;
+  pointer-events: none;
+  animation: ship-smoke 2.4s steps(5, end) infinite;
+}
+
+.boat-container::after {
+  animation-delay: 1.2s;
+}
+
+@keyframes boat-drift {
+  0%,
+  100% {
+    transform: translateX(0) translateY(0) rotate(-0.3deg);
+  }
+
+  50% {
+    transform: translateX(-18px) translateY(4px) rotate(0.5deg);
+  }
+}
+
+@keyframes ship-smoke {
+  0% {
+    opacity: 0;
+    transform: translate(0, 4px) scale(0.65);
+  }
+
+  20% {
+    opacity: 0.75;
+  }
+
+  70% {
+    opacity: 0.35;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-16px, -34px) scale(1.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boat-outer-container,
+  .boat-container::before,
+  .boat-container::after {
+    animation: none;
+  }
+}
+
+
+@keyframes fish-swim-right {
+  from {
+    translate: 0 0;
+  }
+
+  25% {
+    translate: calc(25vw + 45px) -4px;
+  }
+
+  50% {
+    translate: calc(50vw + 90px) 3px;
+  }
+
+  75% {
+    translate: calc(75vw + 135px) -3px;
+  }
+
+  to {
+    translate: calc(100vw + 180px) 0;
+  }
+}
+
+@keyframes fish-swim-left {
+  from {
+    translate: 0 0;
+  }
+
+  25% {
+    translate: calc(-25vw - 45px) -4px;
+  }
+
+  50% {
+    translate: calc(-50vw - 90px) 3px;
+  }
+
+  75% {
+    translate: calc(-75vw - 135px) -3px;
+  }
+
+  to {
+    translate: calc(-100vw - 180px) 0;
+  }
+}
+
+
+
+@keyframes reflection-ripple {
+  0%,
+  100% {
+    transform: scaleY(-0.82) skewX(-1deg);
+    opacity: 0.18;
+  }
+
+  50% {
+    transform: scaleY(-0.78) skewX(1deg);
+    opacity: 0.23;
+  }
+}
+
+
+@keyframes water-texture-drift {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 780px 0;
+  }
+}
+
+.sponsor-card--small {
+  min-height: 38px;
+  padding: 3px 10px;
+}
+
+.sponsor-card--small img {
+  width: auto;
+  max-width: 120px;
+  max-height: 34px;
+}
+
+/* Enlarge Fifth Third—the second medium sponsor */
+.sponsor-grid--medium .sponsor-card:nth-child(2) img {
+  max-width: 190px;
+  max-height: 82px;
+  transform: scale(1.25);
+}
+
+/* Make the UF HWCOE / Center for Experiential Learning logo white */
+.sponsor-grid--medium .sponsor-card:nth-child(4) img {
+  filter:
+    brightness(0)
+    invert(1)
+    drop-shadow(0 3px 5px rgba(5, 20, 23, 0.3));
+  opacity: 0.95;
+}
+
+/* Hide sponsor tier labels */
+.sponsor-tier__label {
+  display: none;
+}
+
+/* Add breathing room between logo rows */
+.sponsor-tiers {
+  gap: 42px;
+  margin-top: 28px;
+}
+
+/* Enlarge every sponsor logo */
+.sponsor-card img {
+  width: auto;
+  max-width: 260px;
+  max-height: 82px;
+}
+
+/* Keep formerly-small sponsors larger but proportional */
+.sponsor-card--small img {
+  width: auto;
+  max-width: 190px;
+  max-height: 62px;
+}
+
+/* Expand the lake section */
+.water {
+  min-height: 620px;
+  padding-bottom: 70px;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card img {
+    max-width: 170px;
+    max-height: 60px;
+  }
+
+  .sponsor-card--small img {
+    max-width: 135px;
+    max-height: 48px;
+  }
+
+  .water {
+    min-height: 540px;
+    padding-bottom: 55px;
+  }
+}
+
+/* Reduce small sponsor logos */
+.sponsor-card--small img {
+  width: auto;
+  max-width: 145px;
+  max-height: 46px;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card--small img {
+    max-width: 110px;
+    max-height: 38px;
+  }
+}
+/* Sponsor logo visibility refinement */
+.sponsor-tiers {
+  width: min(1240px, calc(100% - 48px));
+  gap: 48px;
+}
+
+.sponsor-grid--medium {
+  gap: 20px;
+}
+
+.sponsor-card--medium {
+  min-height: 112px;
+  padding: 10px 8px;
+}
+
+.sponsor-card--medium img {
+  width: auto;
+  max-width: min(100%, 290px);
+  max-height: 104px;
+}
+
+.sponsor-grid--medium .sponsor-card:nth-child(2) img {
+  max-width: min(100%, 285px);
+  max-height: 108px;
+  transform: scale(1.12);
+}
+
+.sponsor-card--small {
+  min-height: 72px;
+  padding: 6px 12px;
+}
+
+.sponsor-card--small img {
+  width: auto;
+  max-width: 170px;
+  max-height: 62px;
+}
+
+.sponsor-card[aria-label="PureButtons"] img {
+  max-width: 180px;
+  max-height: 68px;
+}
+
+@media (max-width: 760px) {
+  .sponsor-tiers {
+    width: min(100% - 28px, 620px);
+    gap: 34px;
+  }
+
+  .sponsor-grid--medium {
+    gap: 16px 12px;
+  }
+
+  .sponsor-card--medium {
+    min-height: 82px;
+    padding: 8px 5px;
+  }
+
+  .sponsor-card--medium img {
+    max-width: min(100%, 190px);
+    max-height: 72px;
+  }
+
+  .sponsor-grid--medium .sponsor-card:nth-child(2) img {
+    max-width: min(100%, 185px);
+    max-height: 76px;
+    transform: scale(1.08);
+  }
+
+  .sponsor-card--small {
+    min-height: 58px;
+    padding: 5px 8px;
+  }
+
+  .sponsor-card--small img {
+    max-width: 125px;
+    max-height: 46px;
+  }
+
+  .sponsor-card[aria-label="PureButtons"] img {
+    max-width: 135px;
+    max-height: 50px;
+  }
+}
+/* New sponsor logos only */.sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img {
+  width: 140%;
+  max-width: 460px;
+  max-height: 130px;
+  flex-shrink: 0;
+}
+.sponsor-card[aria-label="UF CpE Lab"] img {
+  width: 100%;
+  max-width: 330px;
+  max-height: 86px;
+}
+
+.sponsor-card[aria-label="DeepSpace"] img {
+  width: 82px;
+  height: 82px;
+  max-width: 82px;
+  max-height: 82px;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img,
+  .sponsor-card[aria-label="UF CpE Lab"] img {
+    max-height: 58px;
+  }
+
+  .sponsor-card[aria-label="DeepSpace"] img {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+/* Fifth Third size adjustment */
+.sponsor-card[aria-label="Fifth Third Bank"] img {
+  width: auto;
+  height: 125px;
+  max-width: 290px;
+  max-height: 125px;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card[aria-label="Fifth Third Bank"] img {
+    height: 88px;
+    max-height: 88px;
+  }
+}
+/* Equal UF sponsor sizing */
+.sponsor-card[aria-label="UF Center for Experiential Learning"] img,
+.sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img,
+.sponsor-card[aria-label="UF CpE Lab"] img {
+  width: auto;
+  height: 110px;
+  max-width: 115%;
+  max-height: 110px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card[aria-label="UF Center for Experiential Learning"] img,
+  .sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img,
+  .sponsor-card[aria-label="UF CpE Lab"] img {
+    height: 78px;
+    max-height: 78px;
+  }
+}
+/* Slightly larger CISE logo */
+.sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img {
+  height: 124px;
+  max-height: 124px;
+  max-width: 125%;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card[aria-label="UF Computer & Information Science & Engineering"] img {
+    height: 86px;
+    max-height: 86px;
+  }
+}
+/* SperryTech's centered row between the co-host and medium sponsors. */
+.sponsor-tier--sperrytech {
+  align-items: center;
+}
+
+.sponsor-card--sperrytech {
+  width: min(100%, 300px);
+  padding: 0px 0;
+}
+
+.sponsor-card--sperrytech img {
+  width: 100%;
+  height: auto;
+  max-width: 300px;
+  max-height: none;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card--sperrytech {
+    width: min(85%, 300px);
+  }
+}
+
+/* Additional southern lake space */
+.sponsors-container .water {
+  height: auto;
+  min-height: 740px;
+  padding-bottom: 140px;
+}
+
+.sponsor-tier--cohost {
+  align-items: center;
+}
+
+.sponsor-card--cohost {
+  width: min(100%, 520px);
+  padding: 18px 0;
+}
+
+.sponsor-card--cohost a {
+  display: block;
+  width: 100%;
+}
+
+.sponsor-card--cohost img {
+  width: 100%;
+  height: auto;
+  max-width: 520px;
+  max-height: none;
+  image-rendering: auto;
+}
+
+@media (max-width: 760px) {
+  .sponsor-card--cohost {
+    width: min(85%, 520px);
+    padding: 12px 0;
+  }
+
+  .sponsors-container .water {
+    min-height: 630px;
+    padding-bottom: 105px;
+  }
 }

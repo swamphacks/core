@@ -180,10 +180,7 @@ func (s *EmailCampaignService) DeleteCampaign(
 	ctx context.Context,
 	params sqlc.DeleteEmailCampaignParams,
 ) error {
-	existingCampaign, err := s.emailCampaignRepo.GetEmailCampaignByID(ctx, sqlc.GetEmailCampaignByIDParams{
-		ID:          params.ID,
-		HackathonID: params.HackathonID,
-	})
+	existingCampaign, err := s.emailCampaignRepo.GetEmailCampaignByID(ctx, sqlc.GetEmailCampaignByIDParams(params))
 	if err != nil {
 		return err
 	}

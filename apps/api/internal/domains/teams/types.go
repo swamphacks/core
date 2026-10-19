@@ -35,10 +35,19 @@ type TeamDto struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type TeamMemberStatus string
+
+const (
+	TeamMemberStatusConfirmed   TeamMemberStatus = "confirmed"
+	TeamMemberStatusAccepted    TeamMemberStatus = "accepted"
+	TeamMemberStatusNotAccepted TeamMemberStatus = "not_accepted"
+)
+
 type TeamMemberDto struct {
-	ID    uuid.UUID `json:"id"`
-	Name  string    `json:"name"`
-	Image *string   `json:"image"`
+	ID     uuid.UUID        `json:"id"`
+	Name   string           `json:"name"`
+	Image  *string          `json:"image"`
+	Status TeamMemberStatus `json:"status"`
 	// JoinedAt time.Time `json:"joinedAt"`
 }
 

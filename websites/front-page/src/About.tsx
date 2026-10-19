@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "./About.css";
 import Modal from "react-modal";
 import Sign from "./assets/Sign.png";
@@ -9,7 +9,6 @@ import Pic3 from "./assets/random/pic3.jpg";
 import Pic4 from "./assets/random/pic4.jpg";
 import Pic5 from "./assets/random/pic5.jpg";
 import Pic6 from "./assets/random/pic6.jpg";
-import Arrow from "./assets/arrow.png";
 import Camera from "./assets/Camera.png";
 
 // Test
@@ -17,62 +16,33 @@ const images = [Pic1, Pic2, Pic3, Pic4, Pic5, Pic6];
 
 const customModalStyles = {
   overlay: {
-    backgroundColor: "rgba(0, 0, 0, 0.35)",
-    zIndex: "100",
+    backgroundColor: "rgba(3, 7, 2, 0.62)",
+    zIndex: "10000",
   },
   content: {
-    overflow: "hidden",
-    borderColor: "#231909",
-    borderWidth: "5px",
-    backgroundColor: "#7D573C",
     top: "50%",
     left: "50%",
     right: "auto",
     bottom: "auto",
+    width: "min(calc(100% - 32px), 540px)",
+    maxHeight: "82vh",
     marginRight: "-50%",
+    padding: "28px",
+    overflow: "auto",
+    color: "#f4e4cf",
+    backgroundColor: "#4d3222",
+    border: "3px solid #b98762",
+    borderRadius: "4px",
+    boxShadow:
+      "8px 8px 0 #1d130d, inset 0 0 0 2px #2a1b12",
+    outline: "none",
     transform: "translate(-50%, -50%)",
-    zIndex: "100",
+    zIndex: "10001",
   },
 };
 
 export default function About() {
-  const [activeIndex, setActiveIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const isMobile = useIsMobile();
-  const itemWidth = isMobile ? 183 : 210;
-
-  const handlePrevious = () => {
-    if (activeIndex == 0) {
-      return;
-    }
-
-    setActiveIndex(
-      (currentIndex) => (currentIndex - 1 + images.length) % images.length,
-    );
-  };
-
-  const handleNext = () => {
-    if (isMobile && activeIndex == images.length / 2 + 1) {
-      return;
-    }
-    if (!isMobile && activeIndex == images.length / 2) {
-      return;
-    }
-    setActiveIndex((currentIndex) => (currentIndex + 1) % images.length);
-  };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (isMobile && activeIndex == images.length / 2 + 1) {
-        return;
-      }
-      if (!isMobile && activeIndex == images.length / 2) {
-        return;
-      }
-      setActiveIndex((currentIndex) => (currentIndex + 1) % images.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [activeIndex]);
 
   return (
     <div id="about" className="about-container">
@@ -93,42 +63,31 @@ export default function About() {
         <p className="sh-xi">A look back at SwampHacks XI</p>
         <div className="pictures-container">
           <img className="camera" src={Camera} alt="" />
-          <button
-            type="button"
-            className="arrow-button"
-            onClick={handlePrevious}
-            aria-label="Show previous images"
-          >
-            <img className="arrow" src={Arrow} alt="Previous" />
-          </button>
-
           <div className="carousel-window">
-            <div
-              className="carousel-track"
-              style={{
-                transform: `translateX(-${activeIndex * itemWidth}px)`,
-              }}
-            >
-              {images.map((image, index) => (
-                <img
-                  onClick={() => setSelectedIndex(index)}
-                  key={`${image}-${index}`}
-                  className="hackathon-picture"
-                  src={image}
-                  alt={`SwampHacks XI moment ${index + 1}`}
-                />
+            <div className="carousel-track">
+              {[0, 1].map((copy) => (
+                <div
+                  className="carousel-set"
+                  key={copy}
+                  aria-hidden={copy === 1}
+                >
+                  {images.map((image, index) => (
+                    <img
+                      onClick={() => setSelectedIndex(index)}
+                      key={`${copy}-${image}-${index}`}
+                      className="hackathon-picture"
+                      src={image}
+                      alt={
+                        copy === 0
+                          ? `SwampHacks XI moment ${index + 1}`
+                          : ""
+                      }
+                    />
+                  ))}
+                </div>
               ))}
             </div>
           </div>
-
-          <button
-            type="button"
-            className="arrow-button"
-            onClick={handleNext}
-            aria-label="Show next images"
-          >
-            <img className="arrow right" src={Arrow} alt="Next" />
-          </button>
         </div>
       </div>
 
@@ -170,7 +129,7 @@ export default function About() {
         <div className="tracks-modal-container">
           <button
             onClick={() => setSelectedIndex(null)}
-            className="modal-close-btn nes-btn is-error"
+            className="modal-close-btn pixel-button pixel-button--danger"
           >
             X
           </button>
@@ -181,31 +140,3 @@ export default function About() {
   );
 }
 
-function useIsMobile(breakpoint: number = 768): boolean {
-  // Initialize state; default to false if window is not available (SSR safe)
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-
-  useEffect(() => {
-    // Return early if code runs on the server side
-    if (typeof window === "undefined") return;
-
-    const mediaQuery = window.matchMedia(`(max-width: ${breakpoint}px)`);
-
-    // Set initial value
-    setIsMobile(mediaQuery.matches);
-
-    // Listener function to catch screen size updates
-    const handleMediaQueryChange = (event: MediaQueryListEvent) => {
-      setIsMobile(event.matches);
-    };
-
-    // Listen for changes
-    mediaQuery.addEventListener("change", handleMediaQueryChange);
-
-    // Clean up event listener when component unmounts
-    return () =>
-      mediaQuery.removeEventListener("change", handleMediaQueryChange);
-  }, [breakpoint]);
-
-  return isMobile;
-}

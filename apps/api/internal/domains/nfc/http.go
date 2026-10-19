@@ -1,0 +1,325 @@
+package nfc
+
+import (
+	"context"
+	"errors"
+	"net/http"
+
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/rs/zerolog"
+	"github.com/swamphacks/core/apps/api/internal/api/cookie"
+	"github.com/swamphacks/core/apps/api/internal/api/middleware"
+	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
+)
+
+func RegisterRoutes(nfcHandler *handler, group huma.API, mw *middleware.Middleware) {
+
+	huma.Register(group, huma.Operation{
+		OperationID: "GetMeals",
+		Method:      http.MethodGet,
+		Summary:     "Get all Meals from redeemables table",
+		Description: "Get all Meals from redeemables table",
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/redeemables/meals",
+		Errors:      []int{http.StatusInternalServerError, http.StatusNotFound},
+	}, nfcHandler.handleGetMeals)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "GetTshirts",
+		Method:      http.MethodGet,
+		Summary:     "Get all Tshirts from redeemables table",
+		Description: "Get all Tshirts from redeemables table",
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/redeemables/Tshirt",
+		Errors:      []int{http.StatusInternalServerError, http.StatusNotFound},
+	}, nfcHandler.handleGetTshirts)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "GetRedeemablesByType",
+		Method:      http.MethodGet,
+		Summary:     "Get redeemables of one type",
+		Description: "Get redeemables filtered by type (meal, tshirt, swag, drink)",
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/redeemables",
+		Errors:      []int{http.StatusInternalServerError},
+	}, nfcHandler.handleGetRedeemablesByType)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "CheckinUser",
+		Method:      http.MethodPost,
+		Summary:     "Checkin user with NFC tag",
+		Description: "Checkin user with NFC tag",
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/checkin/nfc-links",
+		Errors:      []int{http.StatusUnprocessableEntity, http.StatusInternalServerError, http.StatusNotFound},
+	}, nfcHandler.handleCheckinUser)
+
+	huma.Register(group, huma.Operation{
+		OperationID:   "unlink-nfc-tag",
+		Method:        http.MethodDelete,
+		Summary:       "Unlink a user's NFC tag",
+		Description:   "Removes the NFC tag link for the specified user",
+		Middlewares:   huma.Middlewares{mw.Auth.RequireAuthHuma, mw.Auth.RequireStaffHuma},
+		Tags:          []string{"NFC"},
+		Path:          "/checkin/nfc-links/{userId}",
+		Errors:        []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound, http.StatusInternalServerError},
+		Parameters:    []*huma.Param{cookie.SessionCookieHumaParam},
+		DefaultStatus: http.StatusNoContent,
+	}, nfcHandler.handleUnlinkTag)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "TagToWorkshop",
+		Method:      http.MethodPost,
+		Summary:     "Tag user to workshop with NFC tag",
+		Description: "Tag user to workshop with NFC tag",
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/workshops/tag",
+		Errors:      []int{http.StatusUnprocessableEntity, http.StatusInternalServerError, http.StatusNotFound},
+	}, nfcHandler.handleTagToWorkshop)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "TagToRedeemable",
+		Method:      http.MethodPost,
+		Summary:     "Tag user to redeemable with NFC tag",
+		Description: "Tag user to redeemable with NFC tag",
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/redeemables/tag",
+		Errors:      []int{http.StatusUnprocessableEntity, http.StatusInternalServerError, http.StatusNotFound},
+	}, nfcHandler.handleTagToRedeemable)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "GetWorkshops",
+		Method:      http.MethodGet,
+		Summary:     "Get all workshops",
+		Description: "Get all workshops",
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/workshops",
+		Errors:      []int{http.StatusInternalServerError, http.StatusNotFound},
+	}, nfcHandler.handleGetWorkshops)
+
+	huma.Register(group, huma.Operation{
+		OperationID: "GetSocials",
+		Method:      http.MethodGet,
+		Summary:     "Get all socials",
+		Description: "Get all socials",
+		Middlewares: huma.Middlewares{mw.Auth.RequireMobileHuma},
+		Tags:        []string{"NFC"},
+		Path:        "/workshops/socials",
+		Errors:      []int{http.StatusInternalServerError, http.StatusNotFound},
+	}, nfcHandler.handleGetSocials)
+
+}
+
+type handler struct {
+	nfcService *NfcService
+	logger     zerolog.Logger
+}
+
+func NewHandler(nfcService *NfcService, logger zerolog.Logger) *handler {
+	return &handler{
+		nfcService: nfcService,
+		logger:     logger,
+	}
+}
+
+type GetMealsOutput struct {
+	Body []sqlc.GetMealsRow `json:"body"`
+}
+
+type GetTshirtsOutput struct {
+	Body []sqlc.GetTshirtsRow `json:"body"`
+}
+
+type GetRedeemablesByTypeInput struct {
+	Type string `query:"type" required:"true" enum:"meal,tshirt,swag,drink"`
+}
+
+type GetRedeemablesByTypeOutput struct {
+	Body []sqlc.GetRedeemablesByTypeRow `json:"body"`
+}
+
+type GetWorkshopsOutput struct {
+	Body []sqlc.GetWorkshopsRow `json:"body"`
+}
+
+type GetSocialsOutput struct {
+	Body []sqlc.GetSocialsRow `json:"body"`
+}
+
+type CheckinUserInput struct {
+	Body struct {
+		TagID  string    `json:"nfc_id"`
+		UserID uuid.UUID `json:"event_id"`
+	}
+}
+
+type CheckinUserOutput struct {
+	Body sqlc.NfcTagsUser `json:"body"`
+}
+
+type UnlinkTagOutput struct {
+	Status int
+}
+
+type ExpectedBody struct {
+	Res      bool    `json:"res"`
+	Msg      string  `json:"msg"`
+	Evidence *string `json:"evidence"`
+}
+
+type ExpectedOutput struct {
+	Body ExpectedBody
+}
+
+type TagToWorkshopInput struct {
+	Body struct {
+		TagID      string    `json:"nfc_id"`
+		WorkshopID uuid.UUID `json:"event_id"`
+	}
+}
+
+type TagToWorkshopOutput struct {
+	Body int64 `json:"body"`
+}
+
+type TagToRedeemableInput struct {
+	Body struct {
+		TagID        string    `json:"nfc_id"`
+		RedeemableID uuid.UUID `json:"event_id"`
+	}
+}
+
+type TagToRedeemableOutput struct {
+	Body string `json:"body"`
+}
+
+func (h *handler) handleGetMeals(ctx context.Context, input *struct{}) (*GetMealsOutput, error) {
+	meals, err := h.nfcService.GetMeals(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetMealsOutput{
+		Body: meals,
+	}, nil
+}
+
+func (h *handler) handleGetTshirts(ctx context.Context, input *struct{}) (*GetTshirtsOutput, error) {
+	tshirts, err := h.nfcService.GetTshirts(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetTshirtsOutput{
+		Body: tshirts,
+	}, nil
+}
+
+func (h *handler) handleGetRedeemablesByType(ctx context.Context, input *GetRedeemablesByTypeInput) (*GetRedeemablesByTypeOutput, error) {
+	redeemables, err := h.nfcService.GetRedeemablesByType(ctx, input.Type)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("failed to get redeemables")
+	}
+
+	return &GetRedeemablesByTypeOutput{
+		Body: redeemables,
+	}, nil
+}
+
+func (h *handler) handleGetWorkshops(ctx context.Context, input *struct{}) (*GetWorkshopsOutput, error) {
+	workshops, err := h.nfcService.GetWorkshops(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetWorkshopsOutput{
+		Body: workshops,
+	}, nil
+}
+
+func (h *handler) handleGetSocials(ctx context.Context, input *struct{}) (*GetSocialsOutput, error) {
+	socials, err := h.nfcService.GetSocials(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetSocialsOutput{
+		Body: socials,
+	}, nil
+}
+
+func (h *handler) handleTagToRedeemable(ctx context.Context, input *TagToRedeemableInput) (*ExpectedOutput, error) {
+	err := h.nfcService.TagToRedeemable(ctx, input.Body.TagID, input.Body.RedeemableID)
+	if err != nil {
+		h.logger.Err(err).Msg("failed to tag redeemable")
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case "P0001":
+				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Hacker reached the limit for this item"}}, nil
+			case "23503":
+				// The app loads its item list once and has no refresh, so it can
+				// still offer an item that staff have since deleted.
+				if pgErr.ConstraintName == "nfc_tags_redeemables_redeemable_id_fkey" {
+					return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "This item was deleted. Close and reopen the app, then pick an item again"}}, nil
+				}
+				return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Tag has not been checked in"}}, nil
+			}
+		}
+		return nil, huma.Error500InternalServerError("failed to tag redeemable")
+	}
+	return &ExpectedOutput{Body: ExpectedBody{Res: true, Msg: "Successfully tagged user to redeemable"}}, nil
+}
+
+func (h *handler) handleTagToWorkshop(ctx context.Context, input *TagToWorkshopInput) (*ExpectedOutput, error) {
+	_, err := h.nfcService.TagToWorkshop(ctx, input.Body.TagID, input.Body.WorkshopID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Already registered for this workshop"}}, nil
+	}
+	if err != nil {
+		h.logger.Err(err).Msg("failed to tag workshop")
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+			return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Tag has not been checked in"}}, nil
+		}
+		return nil, huma.Error500InternalServerError("failed to tag workshop")
+	}
+	return &ExpectedOutput{Body: ExpectedBody{Res: true, Msg: "Successfully tagged user to workshop"}}, nil
+}
+
+func (h *handler) handleCheckinUser(ctx context.Context, input *CheckinUserInput) (*ExpectedOutput, error) {
+	user, err := h.nfcService.CheckinUser(ctx, input.Body.TagID, input.Body.UserID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return &ExpectedOutput{Body: ExpectedBody{Res: false, Msg: "Tag or user already checked in"}}, nil
+	}
+	if err != nil {
+		h.logger.Err(err).Msg("failed to check in user")
+		return nil, huma.Error500InternalServerError("failed to check in user")
+	}
+	id := user.ID.String()
+	return &ExpectedOutput{Body: ExpectedBody{Res: true, Msg: "Successfully checked in user", Evidence: &id}}, nil
+}
+
+func (h *handler) handleUnlinkTag(ctx context.Context, input *struct {
+	UserID uuid.UUID `path:"userId"`
+}) (*UnlinkTagOutput, error) {
+	unlinked, err := h.nfcService.UnlinkTag(ctx, input.UserID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Unable to unlink NFC tag")
+	}
+	if !unlinked {
+		return nil, huma.Error404NotFound("No NFC tag is linked to this user")
+	}
+
+	return &UnlinkTagOutput{Status: http.StatusNoContent}, nil
+}

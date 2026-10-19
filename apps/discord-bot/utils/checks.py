@@ -77,12 +77,12 @@ def requires_admin() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
 
 def has_bot_full_access_or_hacker() -> Callable[[Interaction], Coroutine[Any, Any, bool]]:
     """
-    Check if the user has bot full access (moderator, mentor, bot, staff, admin) OR Hacker (XI) role.
+    Check if the user has bot full access (moderator, mentor, bot, staff, admin) OR Hacker (XII) role.
     This allows Hacker (XI) to use specific commands like create_vc, add_to_thread, grant_vc_access
     while still restricting them from other moderator-only commands.
 
     Returns:
-        bool: True if the user has bot full access or Hacker (XI) role, False otherwise
+        bool: True if the user has bot full access or Hacker (XII) role, False otherwise
     """
     async def predicate(interaction: Interaction):
         # Ensure interaction is in a guild and a user exists
@@ -98,8 +98,8 @@ def has_bot_full_access_or_hacker() -> Callable[[Interaction], Coroutine[Any, An
         if any(role.name in acceptable_roles for role in member.roles):
             return True
         
-        # Then check if user has Hacker (XI) role
-        hacker_role = discord.utils.get(member.roles, name=RoleNames.HACKER_XI)
+        # Then check if user has Hacker (XII) role
+        hacker_role = discord.utils.get(member.roles, name=RoleNames.HACKER_XII)
         if hacker_role:
             return True
         

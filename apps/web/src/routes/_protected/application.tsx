@@ -1,9 +1,11 @@
+import TablerAlertCircle from "~icons/tabler/alert-circle";
+import VisitorWaitlistForm from "@/modules/Application/VisitorWaitlistForm";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { hackathonQueryOptions } from "@/modules/Hackathon/hooks/useHackathon";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import TablerAlertCircle from "~icons/tabler/alert-circle";
 import { PageLoading } from "@/components/PageLoading";
 import ApplicationPage from "@/modules/Application/ApplicationPage";
+import { useMyApplication } from "@/modules/Application/hooks/useMyApplication";
 
 export const Route = createFileRoute("/_protected/application")({
   component: RouteComponent,
@@ -25,6 +27,7 @@ export const Route = createFileRoute("/_protected/application")({
 function RouteComponent() {
   const { user } = Route.useRouteContext();
   const hackathon = useSuspenseQuery(hackathonQueryOptions());
+  const application = useMyApplication(user.role !== "visitor");
 
   const now = new Date();
   const applicationOpen = new Date(hackathon.data.applicationOpen);
@@ -43,7 +46,24 @@ function RouteComponent() {
     isApplicationOpen = now >= applicationOpen && now <= applicationClose;
   }
 
-  if (!isApplicationOpen) {
+  if (user.role === "visitor" && !isApplicationOpen) {
+    return <VisitorWaitlistForm />;
+  }
+
+  if (application.isLoading) {
+    return <PageLoading />;
+  }
+
+  const hasDecision = [
+    "accepted",
+    "confirmed",
+    "rejected",
+    "waitlisted",
+    "waitlist_confirmed",
+    "withdrawn",
+  ].includes(application.data?.status ?? "");
+
+  if (!isApplicationOpen && !hasDecision) {
     return (
       <div className="max-w-xs mx-auto h-full flex flex-col justify-center items-center gap-8 text-text-secondary">
         <div className="flex flex-row items-center justify-center gap-2">

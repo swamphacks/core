@@ -39,7 +39,7 @@ export default function ApplicationPage({
         }),
       );
     }
-  }, [user]);
+  }, [user, queryClient]);
 
   if (application.isLoading) {
     return <PageLoading />;
@@ -50,22 +50,82 @@ export default function ApplicationPage({
   }
 
   const applicationResponses = JSON.parse(atob(application.data.application));
-  const name = applicationResponses["firstName"];
+  const firstName = applicationResponses["firstName"];
+  const name =
+    typeof firstName === "string" && firstName.trim()
+      ? firstName.trim()
+      : "Hacker";
 
   if (application.data.status === "accepted") {
-    return <Accepted name={name} />;
+    return (
+      <Accepted
+        name={name}
+        rspvDeadline={application.data.rsvpDeadline ?? null}
+      />
+    );
+  }
+
+  if (application.data.status === "confirmed") {
+    return <Confirmed name={name} />;
   }
 
   if (application.data.status === "rejected") {
     return <Rejected name={name} />;
   }
 
+  if (application.data.status === "waitlist_confirmed") {
+    return (
+      <div className="w-full sm:max-w-180 mx-auto p-2">
+        <h1 className="text-2xl font-bold">Waitlist confirmed</h1>
+        <p className="mt-3">
+          Your arrival has been recorded. Please remain in the standby line and
+          wait for staff to admit you.
+        </p>
+        <p className="mt-3 text-text-secondary">
+          Previously registered hackers take priority over day-of signups.
+          Admission depends on available capacity.
+        </p>
+      </div>
+    );
+  }
+
   if (application.data.status === "waitlisted") {
-    return <Waitlisted name={name} />;
+    return (
+      <Waitlisted
+        name={name}
+        dayOf={applicationResponses["registrationType"] === "day-of"}
+      />
+    );
   }
 
   if (application.data.status === "withdrawn") {
     return <Withdrawn name={name} />;
+  }
+
+  const now = new Date();
+  const applicationOpen = new Date(hackathon.applicationOpen);
+  const applicationClose = new Date(hackathon.applicationClose);
+
+  let isApplicationOpen;
+  if (hackathon.acceptEarlyApplications) {
+    const earlyApplicationOpen = new Date(hackathon.earlyApplicationOpen!);
+    const earlyApplicationClose = new Date(hackathon.earlyApplicationClose!);
+    isApplicationOpen =
+      (now >= earlyApplicationOpen && now <= earlyApplicationClose) ||
+      (now >= applicationOpen && now <= applicationClose);
+  } else {
+    isApplicationOpen = now >= applicationOpen && now <= applicationClose;
+  }
+
+  if (!isApplicationOpen) {
+    return (
+      <div className="max-w-xs mx-auto h-full flex flex-col justify-center items-center gap-8 text-text-secondary">
+        <div className="flex flex-row items-center justify-center gap-2">
+          <TablerAlertCircle />
+          <p>Applications are currently closed.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -82,23 +142,23 @@ export default function ApplicationPage({
 
 interface AcceptedProps {
   name: string;
+  rspvDeadline: string | null;
 }
 
-function Accepted({ name }: AcceptedProps) {
+function Accepted({ name, rspvDeadline }: AcceptedProps) {
   const { confirmAttendance, withdrawApplication } = useApplicationActions();
 
   const handleConfirmAttendance = async () => {
-    await confirmAttendance.mutateAsync();
-    window.location.reload();
+    confirmAttendance.mutate();
   };
 
   const handleWithdrawApplication = async () => {
     const isConfirmed = window.confirm(
-      "Are you sure you want to withdraw your application?",
+      "Withdraw your attendance? This releases your spot at SwampHacks XII.",
     );
 
     if (isConfirmed) {
-      await withdrawApplication.mutateAsync();
+      withdrawApplication.mutate();
     }
   };
 
@@ -108,9 +168,24 @@ function Accepted({ name }: AcceptedProps) {
       <div className="my-3 flex flex-col gap-2">
         <p>You've been accepted to hack in SwampHacks XII!</p>
         <p>
-          Please confirm your attendance by January 2nd. Failure to do so means
-          you are giving up your spot, and we will admit someone from a
-          waitlist.
+          {rspvDeadline ? (
+            <>
+              Please confirm your attendance by{" "}
+              {new Date(rspvDeadline).toLocaleString("en-US", {
+                timeZone: "America/New_York",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              }) + " ET"}
+              . Failure to do so means you are giving up your spot, and we will
+              admit someone from the waitlist.
+            </>
+          ) : (
+            "Please confirm your attendance to reserve your spot."
+          )}
         </p>
         <p>
           If you're no longer able to attend, please withdraw your application
@@ -119,14 +194,66 @@ function Accepted({ name }: AcceptedProps) {
         </p>
       </div>
       <div className="flex flex-col w-fit items-start gap-2">
-        <Button onClick={handleConfirmAttendance}>Confirm Attendance</Button>
+        <Button
+          onClick={handleConfirmAttendance}
+          isDisabled={
+            confirmAttendance.isPending || withdrawApplication.isPending
+          }
+          size="md"
+          className="w-[200px] max-w-full min-h-10"
+        >
+          {confirmAttendance.isPending ? "Confirming..." : "Confirm Attendance"}
+        </Button>
         <Button
           onClick={handleWithdrawApplication}
-          className="max-w-45 py-2 mt-2"
-          variant="secondary"
-          size="sm"
+          isDisabled={
+            confirmAttendance.isPending || withdrawApplication.isPending
+          }
+          size="md"
+          className="w-[200px] max-w-full min-h-10"
+          variant="danger"
         >
-          Withdraw Application
+          {withdrawApplication.isPending
+            ? "Withdrawing..."
+            : "Withdraw Attendance"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function Confirmed({ name }: { name: string }) {
+  const { withdrawApplication } = useApplicationActions();
+
+  const handleWithdraw = () => {
+    if (
+      window.confirm(
+        "Withdraw your attendance? This releases your spot at SwampHacks XII.",
+      )
+    ) {
+      withdrawApplication.mutate();
+    }
+  };
+
+  return (
+    <div className="w-full sm:max-w-200 mx-auto font-figtree p-2 relative">
+      <h1 className="text-2xl">You're confirmed, {name}! 🎉</h1>
+      <div className="my-3 flex flex-col gap-3">
+        <p>Your attendance at SwampHacks XII is confirmed.</p>
+        <p>
+          If you can no longer attend, withdraw your attendance so we can offer
+          your spot to another applicant.
+        </p>
+        <Button
+          onClick={handleWithdraw}
+          isDisabled={withdrawApplication.isPending}
+          size="md"
+          className="w-[200px] max-w-full min-h-10"
+          variant="danger"
+        >
+          {withdrawApplication.isPending
+            ? "Withdrawing..."
+            : "Withdraw Attendance"}
         </Button>
       </div>
     </div>
@@ -138,6 +265,9 @@ interface RejectedProps {
 }
 
 function Rejected({ name }: RejectedProps) {
+  const { joinWaitlist } = useApplicationActions();
+  const waitlistClosed = Date.now() >= Date.parse("2026-10-16T00:00:00-04:00");
+
   return (
     <div className="w-full sm:max-w-200 mx-auto font-figtree p-2 relative">
       <h1 className="text-2xl">Hi, {name}!</h1>
@@ -153,30 +283,46 @@ function Rejected({ name }: RejectedProps) {
           other ways:
         </p>
 
+        <Button
+          onClick={() => joinWaitlist.mutate()}
+          isDisabled={joinWaitlist.isPending || waitlistClosed}
+          className="w-fit"
+        >
+          {waitlistClosed
+            ? "Waitlist Closed"
+            : joinWaitlist.isPending
+              ? "Joining..."
+              : "Join Waitlist"}
+        </Button>
+
+        <p>The deadline to join is October 15, 2026 at 11:59 PM ET.</p>
+
         <ol className="flex flex-col gap-2">
           <li>
             1. <strong>Join the Waitlist</strong>: We may have openings
-            available closer to the event. You can join the waitlist in the{" "}
-            <a className="underline" href="https://app.swamphacks.com/">
-              SwampHacks Portal
-            </a>{" "}
-            or by signing up in person on the day of check-in if space allows.
-            The waitlist operates on a first-come, first-served basis.
+            available closer to the event. Use the Join Waitlist button to join
+            the waitlist. Joining does not guarantee a spot; we will contact you
+            if you are offered admission.
           </li>
           <li>
             2. <strong>Mentor</strong>: Share your knowledge and guide hackers
             through their projects.{" "}
-            <a className="underline" href="https://swamphacks.com/mentor">
+            <a
+              className="underline"
+              href="https://swamphack.notion.site/3973b41de22f80b788ced816145e0a2d"
+            >
               Sign up to be a mentor here
             </a>
             .
           </li>
           <li>
             3. <strong>Volunteer</strong>: Help us run the event smoothly.{" "}
-            <a className="underline" href="https://swamphacks.com/volunteer">
+            <a
+              className="underline"
+              href="https://swamphack.notion.site/3ae3b41de22f806ba9d5cb3f8ec65bed"
+            >
               Sign up to volunteer here
             </a>
-            .
           </li>
         </ol>
 
@@ -193,32 +339,54 @@ function Rejected({ name }: RejectedProps) {
 
 interface WaitlistedProps {
   name: string;
+  dayOf: boolean;
 }
 
-function Waitlisted({ name }: WaitlistedProps) {
+function Waitlisted({ name, dayOf }: WaitlistedProps) {
+  const { leaveWaitlist } = useApplicationActions();
+
+  const handleLeave = () => {
+    if (
+      window.confirm(
+        "Leave the waitlist? You will lose your current place. If you rejoin before the deadline, you will join at the end of the queue.",
+      )
+    ) {
+      leaveWaitlist.mutate();
+    }
+  };
+
   return (
     <div className="w-full sm:max-w-200 mx-auto font-figtree p-2 relative">
       <h1 className="text-2xl">Hi, {name}!</h1>
-
       <div className="my-3 flex flex-col gap-3">
         <p>
-          Thank you for applying to SwampHacks XII! We were very impressed by
-          your application. At this time, we’re placing you on our{" "}
-          <strong>waitlist</strong> due to limited capacity.
+          You are on the <strong>SwampHacks XII waitlist</strong>. Joining does
+          not guarantee admission.
         </p>
-
         <p>
-          If spots open up, we’ll be sending out invitations on a rolling basis
-          leading up to the event. Waitlist decisions are made as space becomes
-          available. Please keep an eye out on your email or the hacker portal
-          for updates!
+          {dayOf
+            ? "Your registration is complete, but your arrival has not been recorded. Go to the day-of standby line at the venue and ask staff to record your arrival. Previously registered hackers take priority. Wait for staff to accept you when space opens."
+            : "Your place is based on when you joined. If you receive an invitation, you will have 12 hours to confirm your attendance. Keep an eye on your inbox and spam folder."}
         </p>
-
+        <Button
+          onClick={handleLeave}
+          isDisabled={leaveWaitlist.isPending}
+          variant="danger"
+          size="md"
+          className="w-[200px] max-w-full min-h-10"
+        >
+          {leaveWaitlist.isPending ? "Leaving..." : "Leave Waitlist"}
+        </Button>
         <p>
-          If you have questions, feel free to reach out on our{" "}
-          <a href="https://discord.com/invite/NfRPv9JtAG">Discord server</a> or
-          email us at{" "}
-          <a href="mailto:contact@swamphacks.com">contact@swamphacks.com</a>
+          If you have questions, reach out on our{" "}
+          <a className="underline" href="https://discord.com/invite/NfRPv9JtAG">
+            Discord server
+          </a>{" "}
+          or email{" "}
+          <a className="underline" href="mailto:contact@swamphacks.com">
+            contact@swamphacks.com
+          </a>
+          .
         </p>
       </div>
     </div>
@@ -230,36 +398,52 @@ interface WithdrawnProps {
 }
 
 function Withdrawn({ name }: WithdrawnProps) {
+  const { joinWaitlist } = useApplicationActions();
+  const waitlistClosed = Date.now() >= Date.parse("2026-10-16T00:00:00-04:00");
+
   return (
     <div className="w-full sm:max-w-200 mx-auto font-figtree p-2 relative">
       <h1 className="text-2xl">Hi, {name}!</h1>
-
       <div className="my-3 flex flex-col gap-3">
-        <p>Your application for SwampHacks XII has been withdrawn.</p>
-
+        <p>Your application for SwampHacks XII is marked as withdrawn.</p>
         <p>
-          We appreciate your interest in SwampHacks and the time you took to
-          apply. While we're sorry you won't be able to join us this year, we
-          hope to see you at a future event.
+          If you still want to participate, you can join the waitlist before
+          October 15 at 11:59 PM ET. This creates a new place at the end of the
+          queue and does not restore a previous acceptance. Joining does not
+          guarantee admission.
         </p>
-
+        <Button
+          onClick={() => {
+            if (
+              window.confirm(
+                "Join the waitlist? You will join at the end of the queue. This does not restore your previous acceptance.",
+              )
+            ) {
+              joinWaitlist.mutate();
+            }
+          }}
+          isDisabled={joinWaitlist.isPending || waitlistClosed}
+          size="md"
+          className="w-[200px] max-w-full min-h-10"
+        >
+          {waitlistClosed
+            ? "Waitlist Closed"
+            : joinWaitlist.isPending
+              ? "Joining..."
+              : "Join Waitlist"}
+        </Button>
         <p>
-          If your plans change and registration is still open, please reach out
-          to our team and we'll do our best to help.
+          If you believe you already confirmed attendance and this status is
+          incorrect, contact staff so we can review your application.
         </p>
-
         <p>
-          You can also stay connected with the SwampHacks community through our{" "}
-          <a className="underline" href="https://discord.com/invite/NfRPv9JtAG">
-            Discord server
-          </a>{" "}
-          and follow future announcements for upcoming events and opportunities.
-        </p>
-
-        <p>
-          If you have any questions, feel free to contact us at{" "}
+          Contact us at{" "}
           <a className="underline" href="mailto:contact@swamphacks.com">
             contact@swamphacks.com
+          </a>{" "}
+          or in the{" "}
+          <a className="underline" href="https://discord.gg/rKD2vKVWd">
+            SwampHacks Discord
           </a>
           .
         </p>

@@ -571,16 +571,16 @@ export const RatingFields = ({
         <div className="flex items-center gap-2 justify-end">
           <Input
             min={0}
-            max={100}
+            max={10}
             value={experience}
             onChange={(e) =>
               onExperienceChange(
-                Math.max(0, Math.min(100, Number(e.target.value))),
+                Math.max(0, Math.min(10, Number(e.target.value))),
               )
             }
             className="w-14 text-right rounded-md px-1"
           />
-          <span className="text-sm text-text-secondary">/ 100</span>
+          <span className="text-sm text-text-secondary">/ 10</span>
         </div>
       </div>
 
@@ -589,16 +589,14 @@ export const RatingFields = ({
         <div className="flex items-center gap-2 justify-end">
           <Input
             min={0}
-            max={100}
+            max={10}
             value={passion}
             onChange={(e) =>
-              onPassionChange(
-                Math.max(0, Math.min(100, Number(e.target.value))),
-              )
+              onPassionChange(Math.max(0, Math.min(10, Number(e.target.value))))
             }
             className="w-14 text-right rounded-md px-1"
           />
-          <span className="text-sm text-text-secondary">/ 100</span>
+          <span className="text-sm text-text-secondary">/ 10</span>
         </div>
       </div>
     </div>

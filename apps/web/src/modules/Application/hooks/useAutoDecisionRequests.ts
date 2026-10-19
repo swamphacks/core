@@ -1,6 +1,7 @@
 import { api } from "@/lib/ky";
 import type { operations } from "@/lib/openapi/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { searchAutoDecisionRequestsQueryKey } from "./useSearchAutoDecisionRequests";
 
 export type AutoDecisionRequestResponse =
   operations["get-auto-decision-requests"]["responses"]["200"]["content"]["application/json"];
@@ -38,7 +39,9 @@ export function useUpdateAutoDecisionRequest() {
   return useMutation({
     mutationFn: updateAutoDecisionRequest,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: autoDecisionRequestsQueryKey });
+      queryClient.invalidateQueries({
+        queryKey: searchAutoDecisionRequestsQueryKey,
+      });
     },
   });
 }

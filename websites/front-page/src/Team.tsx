@@ -1,6 +1,5 @@
 import { memo, useState } from "react";
 import "./Team.css";
-import "./StudentOrgs.css";
 
 import Abby from "./assets/headshots/Abigail_Moore_cropped.jpg";
 import Chris from "./assets/headshots/Christian_Cardenas_cropped.jpg";
@@ -20,6 +19,8 @@ import Oliver from "./assets/headshots/Oliver_Jen_cropped.png";
 import Lara from "./assets/headshots/Lara_Afont_cropped.jpg";
 import Nam from "./assets/headshots/Nam_Tran_cropped.png";
 import Maria from "./assets/headshots/Maria_Davis_cropped.jpg";
+
+import MariaGaitan from "./assets/headshots/Maria_Gaitan_cropped.jpg";
 import Christopher from "./assets/headshots/Christopher_Silva_cropped.jpg";
 import Matilde from "./assets/headshots/Matilde_Gillia_cropped.jpg";
 import Kian from "./assets/headshots/Kian_Hidalgo_cropped.jpg";
@@ -32,6 +33,9 @@ import Ayushi from "./assets/headshots/Ayushi_Srivastava_cropped.jpg";
 import Kaiden from "./assets/headshots/Kaiden_Joy_cropped.jpg";
 import Ivette from "./assets/headshots/Ivette_S_Hernandez_cropped.jpg";
 import Will from "./assets/headshots/William_Chi_cropped.jpg";
+import Blanchard from "./assets/headshots/blanchard.jpg";
+import Robert from "./assets/headshots/robert.webp";
+import Elle from "./assets/headshots/elle.jpg";
 
 // import bat1 from "./assets/bat_without_sign1.png";
 // import bat2 from "./assets/bat_without_sign2.png";
@@ -226,6 +230,13 @@ const teamMembers = [
     img: Ayushi,
   },
   {
+    name: "Maria Gaitan",
+    linkedin: "https://www.linkedin.com/in/maria-gaitan-411430239/",
+    role: "Marketing",
+    isExec: false,
+    img: MariaGaitan,
+  },
+  {
     name: "Kaiden Joy",
     linkedin: "https://www.linkedin.com/in/kaiden-joy-934a84261/",
     role: "Finance",
@@ -245,6 +256,30 @@ const teamMembers = [
     role: "Technology",
     isExec: false,
     img: Will,
+  },
+  {
+    name: "Dr. Jeremiah Blanchard",
+    linkedin: "https://www.linkedin.com/in/jeremiahblanchard/",
+    role: "Advisors",
+    isExec: false,
+    img: Blanchard,
+    isAdvisor: true,
+  },
+  {
+    name: "Robert Conde",
+    linkedin: "https://www.linkedin.com/in/rcond/",
+    role: "Advisors",
+    isExec: false,
+    img: Robert,
+    isAdvisor: true,
+  },
+  {
+    name: "Elle Strauss",
+    linkedin: "https://www.linkedin.com/in/ellestrauss/",
+    role: "Advisors",
+    isExec: false,
+    img: Elle,
+    isAdvisor: true,
   },
 ];
 
@@ -271,7 +306,12 @@ const groupedMembers = [
     role: "Marketing",
     members: teamMembers.filter((member) => member.role === "Marketing"),
   },
+  {
+    role: "Advisors",
+    members: teamMembers.filter((member) => member.role === "Advisors"),
+  },
 ];
+
 
 type TeamMember = (typeof teamMembers)[number];
 
@@ -282,17 +322,31 @@ const TeamMemberCard = memo(function TeamMemberCard({
   member: TeamMember;
   compact: boolean;
 }) {
+  const detail =
+    member.name === "Dr. Jeremiah Blanchard"
+      ? "Computer Engineering · Faculty Advisor"
+      : member.name === "Robert Conde"
+        ? "Computer Engineering · Staff Advisor"
+        : member.isExec
+          ? "Executive"
+          : null;
+
   return (
-    <a className="team-member-card" href={member.linkedin} target="_blank">
+    <a
+      className="team-member-card"
+      href={member.linkedin}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
       <img
         className={`team-member-image ${compact ? "is-compact" : ""}`.trim()}
         src={member.img}
         alt={member.name}
       />
-      <p className="team-member-name">
-        {member.name}
-        {member.isExec && " (Executive)"}
-      </p>
+      <span className="team-member-caption">
+        <span className="team-member-name">{member.name}</span>
+        {detail && <span className="team-member-detail">{detail}</span>}
+      </span>
     </a>
   );
 });
@@ -308,53 +362,6 @@ export default function Team() {
 
   return (
     <div id="team" className="team-container">
-      <div className="background5">
-        {/* <div className="layer vegetation"></div>
-        <div className="layer canopy"></div>
-        <div className="layer trees-back1"></div>
-        <div className="layer foreground1"></div>
-
-        <img
-          className="bat"
-          src={bat1}
-          style={{
-            left: "10%",
-          }}
-        />
-        <img
-          className="bat"
-          src={bat2}
-          style={{
-            top: "15%",
-            right: "10%",
-          }}
-        />
-        <img
-          className="bat"
-          src={bat3}
-          style={{
-            top: "-12%",
-            right: "15%",
-          }}
-        />
-        <img
-          className="bat"
-          src={bat2}
-          style={{
-            top: "-12%",
-            left: "30%",
-          }}
-        />
-
-        <img
-          className="bat"
-          src={bat3}
-          style={{
-            left: "15%",
-            bottom: "80%",
-          }}
-        /> */}
-      </div>
       <h1 className="team-header">Meet the XII Team!</h1>
 
       <div className="team-area">
@@ -370,7 +377,7 @@ export default function Team() {
                   role="tab"
                   aria-selected={isActive}
                   aria-controls={`team-panel-${index}`}
-                  className={`team-tab ${isActive ? "is-active" : ""}`.trim()}
+                  className={`team-tab pixel-button ${isActive ? "is-active" : ""}`.trim()}
                   onClick={() => handleTabSelect(index)}
                 >
                   {group.role}
@@ -392,7 +399,7 @@ export default function Team() {
                 >
                   <h2 className="team-role-title">{group.role}</h2>
 
-                  <div className="team-role-members">
+                    <div className="team-role-members">
                     {group.members.map((member) => (
                       <TeamMemberCard
                         key={`${group.role}-${member.name}`}

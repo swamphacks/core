@@ -2,17 +2,37 @@ package teams
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 	"github.com/swamphacks/core/apps/api/internal/ctxutils"
+	"github.com/swamphacks/core/apps/api/internal/database/sqlc"
 )
 
 type GetMyTeamOutput struct {
 	Body TeamDetailsDto
+}
+
+func parseMemberStatus(member *sqlc.GetTeamMembersRow) TeamMemberStatus {
+	if member == nil {
+		return TeamMemberStatusNotAccepted
+	}
+
+	if member.ApplicationStatus.Valid {
+		switch member.ApplicationStatus.ApplicationStatus {
+		case sqlc.ApplicationStatusConfirmed:
+			return TeamMemberStatusConfirmed
+		case sqlc.ApplicationStatusAccepted:
+			return TeamMemberStatusAccepted
+		}
+	} else if member.Role == sqlc.RoleAttendee {
+		// I don't believe it is possible for someone to be an "attendee" without first
+		// submitting an application, but we add this branch as a safety measure
+		return TeamMemberStatusConfirmed
+	}
+	return TeamMemberStatusNotAccepted
 }
 
 func (h *handler) handleGetMyTeam(ctx context.Context, input *struct{}) (*GetMyTeamOutput, error) {
@@ -32,14 +52,18 @@ func (h *handler) handleGetMyTeam(ctx context.Context, input *struct{}) (*GetMyT
 	}
 
 	teamMembers, err := h.teamService.GetTeamMembers(ctx, team.ID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("Failed to get team members")
+	}
 
 	teamMembersDto := make([]TeamMemberDto, len(teamMembers))
 
 	for i, val := range teamMembers {
 		teamMembersDto[i] = TeamMemberDto{
-			ID:    val.UserID,
-			Name:  val.Name,
-			Image: val.Image,
+			ID:     val.UserID,
+			Name:   val.Name,
+			Image:  val.Image,
+			Status: parseMemberStatus(&val),
 		}
 	}
 
@@ -58,26 +82,34 @@ type GetTeamDetailsOutput struct {
 func (h *handler) handleGetTeamDetails(ctx context.Context, input *struct {
 	TeamId uuid.UUID `path:"teamId"`
 }) (*GetTeamDetailsOutput, error) {
-	teamDetails, err := h.teamService.GetTeamDetails(ctx, input.TeamId)
+	team, err := h.teamService.GetTeamById(ctx, input.TeamId)
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Fail to get team details")
 	}
 
-	var members []TeamMemberDto
-	err = json.Unmarshal(teamDetails.Members, &members)
-
+	teamMembers, err := h.teamService.GetTeamMembers(ctx, team.ID)
 	if err != nil {
-		h.logger.Err(err).Msg("Fail to parse team member details")
-		return nil, huma.Error500InternalServerError("Fail to get team members")
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+
+	teamMembersDto := make([]TeamMemberDto, len(teamMembers))
+
+	for i, val := range teamMembers {
+		teamMembersDto[i] = TeamMemberDto{
+			ID:     val.UserID,
+			Name:   val.Name,
+			Image:  val.Image,
+			Status: parseMemberStatus(&val),
+		}
 	}
 
 	return &GetTeamDetailsOutput{Body: TeamDetailsDto{
-		ID:      teamDetails.ID,
-		Name:    teamDetails.Name,
-		OwnerID: teamDetails.OwnerID,
+		ID:      team.ID,
+		Name:    team.Name,
+		OwnerID: team.OwnerID,
 		// CreatedAt: teamDetails.CreatedAt,
-		Members: members,
+		Members: teamMembersDto,
 	}}, nil
 }
 
@@ -91,7 +123,7 @@ func (h *handler) handleGetTeamByInvitationId(ctx context.Context, input *struct
 	team, err := h.teamService.GetTeamByInvitationId(ctx, input.InviteId)
 
 	if err != nil {
-		return nil, huma.Error500InternalServerError("Fail to get team")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &GetTeamByInvitationIdOutput{Body: TeamDto{
@@ -118,9 +150,10 @@ func (h *handler) handleGetTeamMembers(ctx context.Context, input *struct {
 
 	for i, val := range members {
 		teamMembersDto[i] = TeamMemberDto{
-			ID:    val.UserID,
-			Name:  val.Name,
-			Image: val.Image,
+			ID:     val.UserID,
+			Name:   val.Name,
+			Image:  val.Image,
+			Status: parseMemberStatus(&val),
 		}
 	}
 
@@ -195,6 +228,30 @@ func (h *handler) handleJoinTeam(ctx context.Context, input *struct {
 
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
+	}
+
+	// Check if team has been "accepted"
+	// A team is treated as accepted if any one of its members has been accepted
+	members, err := h.teamService.GetTeamMembers(ctx, invitation.TeamID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+	teamIsAccepted := false
+	for _, member := range members {
+		status := parseMemberStatus(&member)
+		if status == TeamMemberStatusConfirmed || status == TeamMemberStatusAccepted {
+			teamIsAccepted = true
+			break
+		}
+	}
+	userIsAccepted := userCtx.Role == sqlc.RoleAttendee
+
+	// A user cannot join a non-accepted team if they are already accepted
+	// A user can join an accepted team if they too are accepted
+	if userIsAccepted && !teamIsAccepted {
+		return nil, huma.Error400BadRequest("You cannot join a non-accepted team if you are already accepted!")
+	} else if !userIsAccepted && teamIsAccepted {
+		return nil, huma.Error400BadRequest("You cannot join an accepted team if you are not yet accepted!")
 	}
 
 	err = h.teamService.JoinTeam(ctx, userCtx.UserID, invitation.TeamID)

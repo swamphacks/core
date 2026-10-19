@@ -57,14 +57,15 @@ func (ns NullApplicationAutoDecisionType) Value() (driver.Value, error) {
 type ApplicationStatus string
 
 const (
-	ApplicationStatusStarted     ApplicationStatus = "started"
-	ApplicationStatusSubmitted   ApplicationStatus = "submitted"
-	ApplicationStatusUnderReview ApplicationStatus = "under_review"
-	ApplicationStatusAccepted    ApplicationStatus = "accepted"
-	ApplicationStatusRejected    ApplicationStatus = "rejected"
-	ApplicationStatusWaitlisted  ApplicationStatus = "waitlisted"
-	ApplicationStatusWithdrawn   ApplicationStatus = "withdrawn"
-	ApplicationStatusConfirmed   ApplicationStatus = "confirmed"
+	ApplicationStatusStarted           ApplicationStatus = "started"
+	ApplicationStatusSubmitted         ApplicationStatus = "submitted"
+	ApplicationStatusUnderReview       ApplicationStatus = "under_review"
+	ApplicationStatusAccepted          ApplicationStatus = "accepted"
+	ApplicationStatusRejected          ApplicationStatus = "rejected"
+	ApplicationStatusWaitlisted        ApplicationStatus = "waitlisted"
+	ApplicationStatusWithdrawn         ApplicationStatus = "withdrawn"
+	ApplicationStatusConfirmed         ApplicationStatus = "confirmed"
+	ApplicationStatusWaitlistConfirmed ApplicationStatus = "waitlist_confirmed"
 )
 
 func (e *ApplicationStatus) Scan(src interface{}) error {
@@ -475,6 +476,12 @@ type ApplicationReview struct {
 	UpdatedAt        time.Time  `json:"updated_at"`
 }
 
+type ApplicationWaitlistOffer struct {
+	ApplicationID        uuid.UUID `json:"application_id"`
+	OfferedAt            time.Time `json:"offered_at"`
+	ConfirmationDeadline time.Time `json:"confirmation_deadline"`
+}
+
 type BatRun struct {
 	ID                 uuid.UUID    `json:"id"`
 	AcceptedApplicants []uuid.UUID  `json:"accepted_applicants"`
@@ -483,6 +490,19 @@ type BatRun struct {
 	CreatedAt          time.Time    `json:"created_at"`
 	CompletedAt        *time.Time   `json:"completed_at"`
 	HackathonID        string       `json:"hackathon_id"`
+}
+
+type ConfirmedQrEmailOutbox struct {
+	ApplicationID uuid.UUID  `json:"application_id"`
+	UserID        uuid.UUID  `json:"user_id"`
+	HackathonID   string     `json:"hackathon_id"`
+	CreatedAt     time.Time  `json:"created_at"`
+	SentAt        *time.Time `json:"sent_at"`
+	CancelledAt   *time.Time `json:"cancelled_at"`
+	Attempts      int32      `json:"attempts"`
+	NextAttemptAt time.Time  `json:"next_attempt_at"`
+	LastError     *string    `json:"last_error"`
+	MessageID     *string    `json:"message_id"`
 }
 
 type EmailCampaign struct {
@@ -535,14 +555,40 @@ type InterestSubmission struct {
 	HackathonID string    `json:"hackathon_id"`
 }
 
+type NfcTagsRedeemable struct {
+	ID           uuid.UUID `json:"id"`
+	RedeemableID uuid.UUID `json:"redeemable_id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	UserID       uuid.UUID `json:"user_id"`
+	TagID        *string   `json:"tag_id"`
+}
+
+type NfcTagsUser struct {
+	ID        uuid.UUID  `json:"id"`
+	TagID     string     `json:"tag_id"`
+	UserID    *uuid.UUID `json:"user_id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+}
+
+type NfcTagsWorkshop struct {
+	ID         uuid.UUID `json:"id"`
+	WorkshopID uuid.UUID `json:"workshop_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	UserID     uuid.UUID `json:"user_id"`
+	TagID      *string   `json:"tag_id"`
+}
+
 type Redeemable struct {
 	ID            uuid.UUID `json:"id"`
 	Name          string    `json:"name"`
-	Amount        int32     `json:"amount"`
 	MaxUserAmount int32     `json:"max_user_amount"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 	HackathonID   string    `json:"hackathon_id"`
+	Type          string    `json:"type"`
 }
 
 type Session struct {
@@ -620,6 +666,54 @@ type UserRedemption struct {
 	HackathonID  string    `json:"hackathon_id"`
 }
 
+type Waitlist struct {
+	HackathonID        string     `json:"hackathon_id"`
+	UserID             uuid.UUID  `json:"user_id"`
+	CreatedAt          time.Time  `json:"created_at"`
+	InPersonJoinedAt   *time.Time `json:"in_person_joined_at"`
+	InPersonRecordedBy *uuid.UUID `json:"in_person_recorded_by"`
+	SignupSource       string     `json:"signup_source"`
+}
+
+type WaitlistDispatchPolicy struct {
+	HackathonID        string    `json:"hackathon_id"`
+	Enabled            bool      `json:"enabled"`
+	InvitationsOpenAt  time.Time `json:"invitations_open_at"`
+	OnlineJoinClosesAt time.Time `json:"online_join_closes_at"`
+	InPersonOpensAt    time.Time `json:"in_person_opens_at"`
+	InvitationsCloseAt time.Time `json:"invitations_close_at"`
+}
+
+type WaitlistInvitationOutbox struct {
+	ID                   uuid.UUID  `json:"id"`
+	ApplicationID        uuid.UUID  `json:"application_id"`
+	OfferedAt            time.Time  `json:"offered_at"`
+	ConfirmationDeadline time.Time  `json:"confirmation_deadline"`
+	Recipient            string     `json:"recipient"`
+	FirstName            string     `json:"first_name"`
+	CreatedAt            time.Time  `json:"created_at"`
+	SentAt               *time.Time `json:"sent_at"`
+	CancelledAt          *time.Time `json:"cancelled_at"`
+	Attempts             int32      `json:"attempts"`
+	NextAttemptAt        time.Time  `json:"next_attempt_at"`
+	LastError            *string    `json:"last_error"`
+}
+
+type WaitlistReceiptEmailOutbox struct {
+	ID            uuid.UUID  `json:"id"`
+	HackathonID   string     `json:"hackathon_id"`
+	UserID        uuid.UUID  `json:"user_id"`
+	Kind          string     `json:"kind"`
+	SignupSource  string     `json:"signup_source"`
+	ActionAt      time.Time  `json:"action_at"`
+	CreatedAt     time.Time  `json:"created_at"`
+	SentAt        *time.Time `json:"sent_at"`
+	CancelledAt   *time.Time `json:"cancelled_at"`
+	Attempts      int32      `json:"attempts"`
+	NextAttemptAt time.Time  `json:"next_attempt_at"`
+	LastError     *string    `json:"last_error"`
+}
+
 type Workshop struct {
 	ID           uuid.UUID `json:"id"`
 	Title        string    `json:"title"`
@@ -631,6 +725,7 @@ type Workshop struct {
 	Presenter    *string   `json:"presenter"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
+	Type         string    `json:"type"`
 }
 
 type WorkshopRegistration struct {
