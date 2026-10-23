@@ -129,7 +129,7 @@ SELECT
         ELSE u.email
     END)::text AS contact_email
 FROM users u
-WHERE u.role = ANY(sqlc.arg(roles)::text[]::user_role[])
+WHERE u.role = ANY(sqlc.arg(roles)::text[]::role[])
     AND NOT u.is_fake;
 
 -- name: DeleteEmailCampaign :execrows

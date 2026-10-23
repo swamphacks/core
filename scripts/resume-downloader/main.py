@@ -36,11 +36,10 @@ def main():
 
         with open(CSV_PATH, mode='r', newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
-            folder = EVENT_ID
             for row in reader:
                 id = row['id'].strip()
                 name = row['name'].strip()
-                key = f"{folder}/{id}"
+                key = f"xii/{id}"
                 filename= f"{DOWNLOAD_PATH}/{name}.pdf"
                 download_file_from_r2(s3, BUCKET_NAME, key, filename)
                 print(f"Saved {BUCKET_NAME}/{key}' to {filename}")
