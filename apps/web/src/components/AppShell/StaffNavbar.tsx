@@ -1,3 +1,4 @@
+import TablerGift from "~icons/tabler/gift";
 import { NavLink } from "@/components/AppShell/NavLink";
 import TablerInfoCircle from "~icons/tabler/info-circle";
 import TablerClipboardCheck from "~icons/tabler/clipboard-check";
@@ -20,9 +21,20 @@ export default function StaffNavbar({ pathname }: StaffNavbarProps) {
   const commonNavLinks = (
     <>
       <NavLink
+        label="Workshop attendance"
+        href="/workshop-attendance"
+        active={pathname.startsWith("/workshop-attendance")}
+      />
+      <NavLink
         label="Check-in Dashboard"
         href="/check-in"
         active={pathname.startsWith("/check-in")}
+      />
+      <NavLink
+        label="Redeemables"
+        href="/redeemables"
+        leftSection={<TablerGift className="w-5 aspect-square" />}
+        active={pathname.startsWith("/redeemables")}
       />
       <NavLink
         label="Information"

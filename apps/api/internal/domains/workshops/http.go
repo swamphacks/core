@@ -19,6 +19,7 @@ import (
 
 
 func RegisterRoutes(workshopHandler *handler, group huma.API, mw *middleware.Middleware) {
+ registerAttendanceRoutes(workshopHandler, group, mw)
 	huma.Register(group, huma.Operation{
 		OperationID: "register-for-workshop",
 		Method: http.MethodPost,
