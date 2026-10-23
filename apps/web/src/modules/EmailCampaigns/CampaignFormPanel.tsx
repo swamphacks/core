@@ -290,7 +290,7 @@ export function CampaignFormPanel({
               disabled={isReadOnly}
               onClick={() => setFormatValue(option.value)}
               className={cn(
-                "cursor-pointer rounded-[3px] px-3 py-1 text-sm leading-5 transition-colors",
+                "cursor-pointer rounded-[3px] px-3 py-1 text-sm leading-5 transition-colors disabled:cursor-not-allowed",
                 formatValue === option.value
                   ? "bg-[#2b7fff] font-medium text-white"
                   : "text-zinc-600 hover:bg-zinc-200 dark:text-zinc-400 dark:hover:bg-zinc-800",
@@ -354,7 +354,7 @@ export function CampaignFormPanel({
               size="auto"
               onPress={() => setScheduling(true)}
               isDisabled={isSaving}
-              className="h-[26px] cursor-pointer rounded-[4px] border border-[#d08700] px-3 text-xs leading-4 font-medium text-[#d08700]"
+              className="h-[26px] rounded-[4px] border border-[#d08700] px-3 text-xs leading-4 font-medium text-[#d08700]"
             >
               Reschedule
             </Button>
@@ -363,7 +363,7 @@ export function CampaignFormPanel({
               size="auto"
               onPress={handleUnschedule}
               isDisabled={isSaving}
-              className="h-[26px] cursor-pointer rounded-[4px] border border-[#d08700] bg-[#d08700] px-3 text-xs leading-4 font-medium text-white"
+              className="h-[26px] rounded-[4px] border border-[#d08700] bg-[#d08700] px-3 text-xs leading-4 font-medium text-white"
             >
               {unscheduleCampaign.isPending ? "Unscheduling..." : "Unschedule"}
             </Button>
@@ -386,7 +386,7 @@ export function CampaignFormPanel({
             size="auto"
             onPress={() => setConfirmingSend(true)}
             isDisabled={!canSave || isSaving}
-            className="h-full cursor-pointer rounded-l-[4px] pr-1 pl-3 text-xs leading-4 font-medium text-white"
+            className="h-full rounded-l-[4px] bg-transparent pr-1 dark:bg-transparent pl-3 text-xs leading-4 font-medium text-white"
           >
             {isSaving ? "Working..." : "Send"}
           </Button>
@@ -397,7 +397,7 @@ export function CampaignFormPanel({
               size="auto"
               aria-label="More send options"
               isDisabled={!canSave || isSaving}
-              className="h-full cursor-pointer rounded-r-[4px] pr-2.5 pl-1 text-white"
+              className="h-full rounded-r-[4px] bg-transparent pr-2.5 dark:bg-transparent pl-1 text-white"
             >
               <TablerChevronDown className="size-2.5" />
             </Button>
@@ -423,7 +423,7 @@ export function CampaignFormPanel({
           onPress={handleSaveDraft}
           isDisabled={!canSave || isSaving}
           className={cn(
-            "h-[26px] cursor-pointer rounded-[4px] border border-zinc-300 bg-zinc-200 px-3 text-xs leading-4 font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700",
+            "h-[26px] rounded-[4px] border border-zinc-300 bg-zinc-200 px-3 text-xs leading-4 font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700",
             (!canSave || isSaving) && "opacity-50",
           )}
         >
